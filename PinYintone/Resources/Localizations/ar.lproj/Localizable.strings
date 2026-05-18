@@ -1,0 +1,63 @@
+/* العربية (الدارجة المغربية) */
+
+// الموجود
+"welcome_title" = "مرحباً بك في Pinyintone";
+"role_student" = "أنا طالب/ة";
+"role_teacher" = "أنا أستاذ/ة";
+"stage1_title" = "تدريب النفس";
+"stage2_title" = "تدريب النبرات";
+"stage3_title" = "ممارسة النص الحر";
+"guest_bind_prompt" = "أدخل رمز الفصل";
+"error_invalid_class_code" = "رمز الفصل غير صالح";
+
+// الإعداد الأولي
+"onboarding_mic_body" = "يحتاج Pinyintone إلى الوصول للميكروفون لتحليل نطقك.";
+"onboarding_mic_allow" = "السماح بالميكروفون";
+"onboarding_language_title" = "اختر لغتك";
+
+// اختيار الدور
+"role_select_title" = "من أنت؟";
+
+// تسجيل الطالب
+"student_signup_subtitle" = "أدخل اسماً مستعاراً ورمز الفصل (اختياريان).\naترك الرمز فارغاً للمتابعة كزائر.";
+"signup_nickname_label" = "الاسم المستعار (اختياري)";
+"signup_nickname_hint" = "مثال: أحمد";
+"signup_classcode_label" = "رمز الفصل (اختياري)";
+"signup_classcode_hint" = "6 أرقام";
+"signup_classcode_footer" = "اتركه فارغاً للبدء كزائر، يمكنك إضافته لاحقاً.";
+"signup_submit" = "متابعة";
+"signup_skip_code" = "تخطى — متابعة كزائر";
+
+// تسجيل الأستاذ
+"teacher_signup_subtitle" = "أنشئ حساب الأستاذ.\nسيتم إنشاء رمز فصل فريد لطلابك تلقائياً.";
+"teacher_signup_name" = "الاسم الكامل";
+"teacher_signup_email" = "البريد الإلكتروني";
+"teacher_signup_password" = "كلمة المرور";
+"teacher_classcode_title" = "رمز فصلك";
+"teacher_classcode_body" = "شارك هذا الرمز مع طلابك حتى ينضموا إلى فصلك.";
+"teacher_classcode_share" = "انضم إلى فصل Pinyintone الخاص بي برمز %@";
+"teacher_classcode_share_btn" = "مشاركة الرمز";
+"teacher_classcode_go_dashboard" = "الذهاب إلى لوحة التحكم";
+
+// الرئيسية
+"home_greeting" = "مرحباً!";
+"home_greeting_name" = "مرحباً، %@!";
+"stage1_subtitle" = "الأصوات المنفوثة مقابل غير المنفوثة";
+"stage2_subtitle" = "التعرف على النبرات 1 · 2 · 3 · 4";
+"stage3_subtitle" = "تدرب على أي نص صيني";
+
+// شارة رمز الفصل
+"badge_class_code_prefix" = "الفصل";
+
+// بطاقة تنبيه الزائر
+"guest_bind_subtitle" = "اربط نتائجك بالفصل";
+"guest_bind_btn" = "انضمام";
+
+// صفحة الربط
+"bind_classcode_title" = "الانضمام إلى فصل";
+"bind_classcode_body" = "أدخل الرمز المكون من 6 أرقام الذي أعطاك إياه أستاذك.";
+"bind_classcode_submit" = "الانضمام إلى الفصل";
+
+// عام
+"cancel" = "إلغاء";
+"error_email_already_exists" = "البريد الإلكتروني مسجل بالفعل.";

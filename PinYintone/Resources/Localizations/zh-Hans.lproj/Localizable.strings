@@ -1,0 +1,63 @@
+/* 中文（简体）本地化 */
+
+// 已有
+"welcome_title" = "欢迎使用 Pinyintone";
+"role_student" = "我是学生";
+"role_teacher" = "我是教师";
+"stage1_title" = "送气训练";
+"stage2_title" = "声调训练";
+"stage3_title" = "自由文本练习";
+"guest_bind_prompt" = "输入班级码绑定课堂";
+"error_invalid_class_code" = "班级码无效，请检查后重试";
+
+// 引导页
+"onboarding_mic_body" = "Pinyintone 需要麦克风权限来分析您的发音。";
+"onboarding_mic_allow" = "允许使用麦克风";
+"onboarding_language_title" = "选择您的语言";
+
+// 角色选择
+"role_select_title" = "您的身份是？";
+
+// 学生注册
+"student_signup_subtitle" = "输入昵称和班级码（均可选）。\n不输入班级码将以游客身份继续。";
+"signup_nickname_label" = "昵称（可选）";
+"signup_nickname_hint" = "例如：小明";
+"signup_classcode_label" = "班级码（可选）";
+"signup_classcode_hint" = "6 位数字";
+"signup_classcode_footer" = "留空以游客身份开始，稍后可绑定。";
+"signup_submit" = "继续";
+"signup_skip_code" = "跳过 — 以游客身份继续";
+
+// 教师注册
+"teacher_signup_subtitle" = "创建教师账户。\n系统将为您的学生自动生成唯一班级码。";
+"teacher_signup_name" = "姓名";
+"teacher_signup_email" = "电子邮箱";
+"teacher_signup_password" = "密码";
+"teacher_classcode_title" = "您的班级码";
+"teacher_classcode_body" = "将此码告知学生，他们即可加入您的班级。";
+"teacher_classcode_share" = "使用班级码 %@ 加入我的 Pinyintone 班级";
+"teacher_classcode_share_btn" = "分享班级码";
+"teacher_classcode_go_dashboard" = "进入数据面板";
+
+// 主页
+"home_greeting" = "你好！";
+"home_greeting_name" = "你好，%@！";
+"stage1_subtitle" = "送气音 vs. 不送气音";
+"stage2_subtitle" = "声调 1 · 2 · 3 · 4 识别";
+"stage3_subtitle" = "使用任意中文文本练习";
+
+// 班级码徽章
+"badge_class_code_prefix" = "班级";
+
+// 游客提示卡
+"guest_bind_subtitle" = "将您的结果关联到班级";
+"guest_bind_btn" = "加入";
+
+// 绑定 Sheet
+"bind_classcode_title" = "加入班级";
+"bind_classcode_body" = "输入教师提供的 6 位班级码。";
+"bind_classcode_submit" = "加入班级";
+
+// 通用
+"cancel" = "取消";
+"error_email_already_exists" = "该邮箱已注册。";

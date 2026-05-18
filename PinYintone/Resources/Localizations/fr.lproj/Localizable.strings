@@ -1,0 +1,63 @@
+/* Français */
+
+// Existing
+"welcome_title" = "Bienvenue sur Pinyintone";
+"role_student" = "Je suis étudiant(e)";
+"role_teacher" = "Je suis enseignant(e)";
+"stage1_title" = "Entraînement aspiration";
+"stage2_title" = "Entraînement des tons";
+"stage3_title" = "Pratique texte libre";
+"guest_bind_prompt" = "Entrez le code de classe";
+"error_invalid_class_code" = "Code de classe invalide";
+
+// Onboarding
+"onboarding_mic_body" = "Pinyintone a besoin du microphone pour analyser votre prononciation.";
+"onboarding_mic_allow" = "Autoriser le microphone";
+"onboarding_language_title" = "Choisissez votre langue";
+
+// Role select
+"role_select_title" = "Qui êtes-vous ?";
+
+// Student signup
+"student_signup_subtitle" = "Entrez un surnom et votre code de classe (optionnels).\nLaissez le code vide pour continuer en tant qu'invité.";
+"signup_nickname_label" = "Surnom (optionnel)";
+"signup_nickname_hint" = "ex. Ahmed";
+"signup_classcode_label" = "Code de classe (optionnel)";
+"signup_classcode_hint" = "6 chiffres";
+"signup_classcode_footer" = "Laissez vide pour commencer en tant qu'invité — vous pourrez l'ajouter plus tard.";
+"signup_submit" = "Continuer";
+"signup_skip_code" = "Passer — continuer en tant qu'invité";
+
+// Teacher signup
+"teacher_signup_subtitle" = "Créez votre compte enseignant.\nUn code de classe unique sera généré pour vos étudiants.";
+"teacher_signup_name" = "Nom complet";
+"teacher_signup_email" = "Adresse e-mail";
+"teacher_signup_password" = "Mot de passe";
+"teacher_classcode_title" = "Votre code de classe";
+"teacher_classcode_body" = "Partagez ce code avec vos étudiants pour qu'ils rejoignent votre classe.";
+"teacher_classcode_share" = "Rejoignez ma classe Pinyintone avec le code %@";
+"teacher_classcode_share_btn" = "Partager le code";
+"teacher_classcode_go_dashboard" = "Accéder au tableau de bord";
+
+// Home
+"home_greeting" = "Bonjour !";
+"home_greeting_name" = "Bonjour, %@ !";
+"stage1_subtitle" = "Consonnes aspirées vs. non-aspirées";
+"stage2_subtitle" = "Reconnaissance des tons 1 · 2 · 3 · 4";
+"stage3_subtitle" = "Pratiquez avec n'importe quel texte chinois";
+
+// Class code badge
+"badge_class_code_prefix" = "Classe";
+
+// Guest bind card
+"guest_bind_subtitle" = "Liez vos résultats à une classe";
+"guest_bind_btn" = "Rejoindre";
+
+// Bind sheet
+"bind_classcode_title" = "Rejoindre une classe";
+"bind_classcode_body" = "Entrez le code à 6 chiffres donné par votre enseignant.";
+"bind_classcode_submit" = "Rejoindre la classe";
+
+// General
+"cancel" = "Annuler";
+"error_email_already_exists" = "Cette adresse e-mail est déjà enregistrée.";
