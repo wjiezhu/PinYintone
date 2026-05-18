@@ -24,6 +24,7 @@ struct OnboardingFlowView: View {
                 RoleSelectView()
             }
         }
+        .onAppear { checkExistingMicPermission() }
     }
 
     // MARK: - Mic permission page
@@ -94,6 +95,22 @@ struct OnboardingFlowView: View {
     }
 
     // MARK: - Helpers
+
+    /// 检查是否已授权（重启 app 时跳过权限页）
+    private func checkExistingMicPermission() {
+        let status: AVAudioSession.RecordPermission
+        if #available(iOS 17, *) {
+            status = AVAudioApplication.shared.recordPermission
+        } else {
+            status = AVAudioSession.sharedInstance().recordPermission
+        }
+        switch status {
+        case .granted:  micGranted = true
+        case .denied:   micGranted = false
+        case .undetermined: break   // 停在权限申请页
+        @unknown default: break
+        }
+    }
 
     private func requestMicPermission() {
         if #available(iOS 17, *) {

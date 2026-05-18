@@ -1,9 +1,46 @@
 <?xml version="1.0" encoding="UTF-8" standalone="yes"?>
-<model type="com.apple.IDECoreDataModeler.DataModel" documentVersion="1.0" lastSavedToolsVersion="1" systemVersion="11A491" minimumToolsVersion="Automatic" sourceLanguage="Swift" usedWithCloudKit="false" userDefinedModelVersionIdentifier="">
-    <entity name="Item" representedClassName="Item" syncable="YES" codeGenerationType="class">
-        <attribute name="timestamp" optional="YES" attributeType="Date" usesScalarValueType="NO"/>
+<model type="com.apple.IDECoreDataModeler.DataModel" documentVersion="1.0" lastSavedToolsVersion="22225" systemVersion="23F79" minimumToolsVersion="Automatic" sourceLanguage="Swift" usedWithCloudKit="false" userDefinedModelVersionIdentifier="">
+    <entity name="AspirationAttempt" representedClassName="AspirationAttempt" syncable="YES" codeGenerationType="none">
+        <attribute name="classCode" optional="YES" attributeType="String"/>
+        <attribute name="deviceID" attributeType="String"/>
+        <attribute name="id" attributeType="UUID" usesScalarValueType="NO"/>
+        <attribute name="passed" attributeType="Boolean" usesScalarValueType="YES"/>
+        <attribute name="role" attributeType="String"/>
+        <attribute name="synced" attributeType="Boolean" usesScalarValueType="YES"/>
+        <attribute name="targetWord" attributeType="String"/>
+        <attribute name="timestamp" attributeType="Date" usesScalarValueType="NO"/>
+        <attribute name="triggerRate" attributeType="Double" usesScalarValueType="YES"/>
+    </entity>
+    <entity name="FreeTextRecord" representedClassName="FreeTextRecord" syncable="YES" codeGenerationType="none">
+        <attribute name="classCode" optional="YES" attributeType="String"/>
+        <attribute name="deviceID" attributeType="String"/>
+        <attribute name="duration" attributeType="Double" usesScalarValueType="YES"/>
+        <attribute name="f0TrackData" optional="YES" attributeType="Binary" allowsExternalBinaryDataStorage="YES"/>
+        <attribute name="id" attributeType="UUID" usesScalarValueType="NO"/>
+        <attribute name="originalText" attributeType="String"/>
+        <attribute name="pinyin" attributeType="String"/>
+        <attribute name="role" attributeType="String"/>
+        <attribute name="synced" attributeType="Boolean" usesScalarValueType="YES"/>
+        <attribute name="timestamp" attributeType="Date" usesScalarValueType="NO"/>
+        <attribute name="tokenizedWord" attributeType="String"/>
+        <attribute name="toneSequenceData" optional="YES" attributeType="Binary" allowsExternalBinaryDataStorage="YES"/>
+    </entity>
+    <entity name="TrainingSession" representedClassName="TrainingSession" syncable="YES" codeGenerationType="none">
+        <attribute name="attemptNumber" attributeType="Integer 32" usesScalarValueType="YES"/>
+        <attribute name="classCode" optional="YES" attributeType="String"/>
+        <attribute name="deviceID" attributeType="String"/>
+        <attribute name="dtwScore" attributeType="Double" usesScalarValueType="YES"/>
+        <attribute name="grade" attributeType="String"/>
+        <attribute name="groupAssignment" attributeType="String"/>
+        <attribute name="id" attributeType="UUID" usesScalarValueType="NO"/>
+        <attribute name="lexemeID" attributeType="String"/>
+        <attribute name="role" attributeType="String"/>
+        <attribute name="synced" attributeType="Boolean" usesScalarValueType="YES"/>
+        <attribute name="timestamp" attributeType="Date" usesScalarValueType="NO"/>
     </entity>
     <elements>
-        <element name="Item" positionX="-63" positionY="-18" width="128" height="44"/>
+        <element name="AspirationAttempt" positionX="0" positionY="0" width="128" height="194"/>
+        <element name="FreeTextRecord" positionX="200" positionY="0" width="128" height="284"/>
+        <element name="TrainingSession" positionX="400" positionY="0" width="128" height="254"/>
     </elements>
 </model>

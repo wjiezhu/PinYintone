@@ -6,15 +6,42 @@ final class FreeTextRepository {
 
     private init() {}
 
-    func save(word: String, f0Track: [Float], timestamp: Date) {
-        fatalError("TODO: 实现")
+    @discardableResult
+    func save(deviceID: String, classCode: String?, role: String,
+              originalText: String, tokenizedWord: String, pinyin: String,
+              toneSequence: [Int], f0Track: [Float],
+              duration: Double, timestamp: Date) -> FreeTextRecord {
+        let record = FreeTextRecord(context: context)
+        record.id = UUID()
+        record.deviceID = deviceID
+        record.classCode = classCode
+        record.role = role
+        record.originalText = originalText
+        record.tokenizedWord = tokenizedWord
+        record.pinyin = pinyin
+        record.toneSequence = toneSequence   // computed var: JSON-encodes to toneSequenceData
+        record.f0Track = f0Track             // computed var: JSON-encodes to f0TrackData
+        record.duration = duration
+        record.synced = false
+        record.timestamp = timestamp
+        saveContext()
+        return record
     }
 
     func fetchUnsynced() -> [FreeTextRecord] {
-        fatalError("TODO: 实现")
+        let req = FreeTextRecord.fetchRequest()
+        req.predicate = NSPredicate(format: "synced == NO")
+        req.sortDescriptors = [NSSortDescriptor(key: "timestamp", ascending: true)]
+        return (try? context.fetch(req)) ?? []
     }
 
     func markSynced(_ records: [FreeTextRecord]) {
-        fatalError("TODO: 实现")
+        records.forEach { $0.synced = true }
+        saveContext()
+    }
+
+    private func saveContext() {
+        guard context.hasChanges else { return }
+        try? context.save()
     }
 }

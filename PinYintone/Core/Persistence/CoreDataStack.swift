@@ -8,7 +8,7 @@ final class CoreDataStack {
     var context: NSManagedObjectContext { container.viewContext }
 
     private init() {
-        container = NSPersistentContainer(name: "Pinyintone")
+        container = NSPersistentContainer(name: "PinYintone")
         container.loadPersistentStores { _, error in
             if let error {
                 fatalError("Core Data 加载失败: \(error)")
