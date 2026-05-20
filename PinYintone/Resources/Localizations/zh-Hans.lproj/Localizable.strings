@@ -62,3 +62,21 @@
 // 通用
 "cancel" = "取消";
 "error_email_already_exists" = "该邮箱已注册。";
+
+// 设置
+"settings_title" = "设置";
+"settings_done" = "完成";
+"settings_account" = "账户";
+"settings_language" = "语言";
+"settings_role" = "角色";
+"settings_nickname" = "昵称";
+"settings_classcode" = "班级码";
+"settings_email" = "邮箱";
+"settings_group" = "实验分组";
+"settings_switch_account" = "切换账号";
+"settings_logout" = "退出登录";
+"settings_switch_confirm" = "退出当前账号并切换到其他账号？";
+"settings_logout_confirm" = "确定要退出登录吗？";
+"role_guest" = "游客";
+"role_student_short" = "学生";
+"role_teacher_short" = "教师";

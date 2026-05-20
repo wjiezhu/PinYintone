@@ -62,3 +62,21 @@
 // عام
 "cancel" = "إلغاء";
 "error_email_already_exists" = "البريد الإلكتروني مسجل بالفعل.";
+
+// الإعدادات
+"settings_title" = "الإعدادات";
+"settings_done" = "تم";
+"settings_account" = "الحساب";
+"settings_language" = "اللغة";
+"settings_role" = "الدور";
+"settings_nickname" = "الاسم المستعار";
+"settings_classcode" = "رمز الفصل";
+"settings_email" = "البريد الإلكتروني";
+"settings_group" = "مجموعة التجربة";
+"settings_switch_account" = "تبديل الحساب";
+"settings_logout" = "تسجيل الخروج";
+"settings_switch_confirm" = "تسجيل الخروج واختيار حساب آخر؟";
+"settings_logout_confirm" = "هل أنت متأكد من تسجيل الخروج؟";
+"role_guest" = "زائر";
+"role_student_short" = "طالب";
+"role_teacher_short" = "أستاذ";

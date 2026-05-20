@@ -69,40 +69,8 @@ struct StudentHomeView: View {
                 .environmentObject(userManager)
         }
         .sheet(isPresented: $showSettings) {
-            SettingsPlaceholderView()
+            SettingsView()
                 .environmentObject(userManager)
-        }
-    }
-}
-
-// MARK: - Settings placeholder（第五章实现完整设置页）
-private struct SettingsPlaceholderView: View {
-    @EnvironmentObject var userManager: UserManager
-    @Environment(\.dismiss) private var dismiss
-
-    var body: some View {
-        NavigationStack {
-            List {
-                Section("账户") {
-                    if let profile = userManager.profile {
-                        LabeledContent("角色", value: profile.role.rawValue)
-                        if let nick = profile.nickname {
-                            LabeledContent("昵称", value: nick)
-                        }
-                        if let code = profile.classCode {
-                            LabeledContent("班级码", value: code)
-                        }
-                        LabeledContent("实验组", value: profile.experimentGroup)
-                    }
-                }
-            }
-            .navigationTitle("设置")
-            .navigationBarTitleDisplayMode(.inline)
-            .toolbar {
-                ToolbarItem(placement: .confirmationAction) {
-                    Button("完成") { dismiss() }
-                }
-            }
         }
     }
 }

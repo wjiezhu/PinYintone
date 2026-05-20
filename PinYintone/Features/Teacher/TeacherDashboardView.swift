@@ -5,6 +5,7 @@ import UIKit
 struct TeacherDashboardView: View {
     @StateObject private var vm = TeacherDashboardViewModel()
     @EnvironmentObject var userManager: UserManager
+    @State private var showSettings = false
 
     private var profile: UserProfile? { userManager.profile }
 
@@ -43,6 +44,13 @@ struct TeacherDashboardView: View {
             }
             .navigationTitle("班级数据面板")
             .navigationBarTitleDisplayMode(.large)
+            .toolbar {
+                ToolbarItem(placement: .topBarTrailing) {
+                    Button { showSettings = true } label: {
+                        Image(systemName: "gearshape")
+                    }
+                }
+            }
             .overlay {
                 if vm.isLoading && vm.summary == nil {
                     ProgressView().scaleEffect(1.2)
@@ -62,6 +70,11 @@ struct TeacherDashboardView: View {
                 if let url = vm.exportURL {
                     ShareSheet(items: [url])
                 }
+            }
+            // 设置
+            .sheet(isPresented: $showSettings) {
+                SettingsView()
+                    .environmentObject(userManager)
             }
         }
     }

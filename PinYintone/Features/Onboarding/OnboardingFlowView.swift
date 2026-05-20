@@ -2,23 +2,21 @@ import AVFoundation
 import SwiftUI
 
 /// 首次启动流程：麦克风权限申请 → 语言选择 → 角色选择
+/// 退出登录后再次进入：麦克风已授权、语言已选择，直接进入角色选择
 struct OnboardingFlowView: View {
-    @AppStorage("pt_app_language") private var appLanguage: String = "fr"
+    @ObservedObject private var localization = LocalizationManager.shared
+    @AppStorage("pt_language_chosen") private var languageChosen = false
     @State private var micGranted: Bool? = nil
-    @State private var languageSelected = false
 
-    private let languages: [(code: String, flag: String, label: String)] = [
-        ("fr", "🇫🇷", "Français"),
-        ("zh", "🇨🇳", "中文"),
-        ("en", "🇬🇧", "English"),
-        ("ar", "🇸🇦", "العربية"),
-    ]
+    private var languages: [(code: String, flag: String, label: String)] {
+        LocalizationManager.supported
+    }
 
     var body: some View {
         NavigationStack {
             if micGranted == nil {
                 micPermissionPage
-            } else if !languageSelected {
+            } else if !languageChosen {
                 languageSelectionPage
             } else {
                 RoleSelectView()
@@ -70,8 +68,8 @@ struct OnboardingFlowView: View {
             LazyVGrid(columns: [GridItem(.flexible()), GridItem(.flexible())], spacing: 16) {
                 ForEach(languages, id: \.code) { lang in
                     Button {
-                        appLanguage = lang.code
-                        withAnimation { languageSelected = true }
+                        localization.setLanguage(lang.code)
+                        withAnimation { languageChosen = true }
                     } label: {
                         VStack(spacing: 8) {
                             Text(lang.flag).font(.system(size: 40))
@@ -79,10 +77,10 @@ struct OnboardingFlowView: View {
                         }
                         .frame(maxWidth: .infinity)
                         .padding(.vertical, 20)
-                        .background(appLanguage == lang.code ? Color.accentColor.opacity(0.15) : Color(.secondarySystemBackground))
+                        .background(localization.language == lang.code ? Color.accentColor.opacity(0.15) : Color(.secondarySystemBackground))
                         .overlay(
                             RoundedRectangle(cornerRadius: 14)
-                                .strokeBorder(appLanguage == lang.code ? Color.accentColor : .clear, lineWidth: 2)
+                                .strokeBorder(localization.language == lang.code ? Color.accentColor : .clear, lineWidth: 2)
                         )
                         .clipShape(RoundedRectangle(cornerRadius: 14))
                     }

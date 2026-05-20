@@ -75,6 +75,15 @@ final class UserManager: ObservableObject {
         profile = p
     }
 
+    /// 退出登录 / 切换账号：清除本地档案，回到引导（角色选择）流程。
+    /// 注意：
+    /// - 不清除实验分组（CLAUDE.md：安装时随机一次，UserDefaults 持久化，不可更改）
+    /// - 不清除语言偏好
+    func logout() {
+        UserDefaults.standard.removeObject(forKey: Self.storageKey)
+        profile = nil
+    }
+
     private func save(_ profile: UserProfile) {
         guard let data = try? JSONEncoder().encode(profile) else { return }
         UserDefaults.standard.set(data, forKey: Self.storageKey)

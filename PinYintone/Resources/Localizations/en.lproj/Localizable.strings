@@ -62,3 +62,21 @@
 // General
 "cancel" = "Cancel";
 "error_email_already_exists" = "This email is already registered.";
+
+// Settings
+"settings_title" = "Settings";
+"settings_done" = "Done";
+"settings_account" = "Account";
+"settings_language" = "Language";
+"settings_role" = "Role";
+"settings_nickname" = "Nickname";
+"settings_classcode" = "Class code";
+"settings_email" = "Email";
+"settings_group" = "Experiment group";
+"settings_switch_account" = "Switch account";
+"settings_logout" = "Log out";
+"settings_switch_confirm" = "Log out and choose a different account?";
+"settings_logout_confirm" = "Are you sure you want to log out?";
+"role_guest" = "Guest";
+"role_student_short" = "Student";
+"role_teacher_short" = "Teacher";

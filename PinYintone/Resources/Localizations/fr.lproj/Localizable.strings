@@ -62,3 +62,21 @@
 // General
 "cancel" = "Annuler";
 "error_email_already_exists" = "Cette adresse e-mail est déjà enregistrée.";
+
+// Settings
+"settings_title" = "Réglages";
+"settings_done" = "Terminé";
+"settings_account" = "Compte";
+"settings_language" = "Langue";
+"settings_role" = "Rôle";
+"settings_nickname" = "Surnom";
+"settings_classcode" = "Code de classe";
+"settings_email" = "E-mail";
+"settings_group" = "Groupe d'expérience";
+"settings_switch_account" = "Changer de compte";
+"settings_logout" = "Se déconnecter";
+"settings_switch_confirm" = "Se déconnecter et choisir un autre compte ?";
+"settings_logout_confirm" = "Voulez-vous vraiment vous déconnecter ?";
+"role_guest" = "Invité";
+"role_student_short" = "Étudiant";
+"role_teacher_short" = "Enseignant";
