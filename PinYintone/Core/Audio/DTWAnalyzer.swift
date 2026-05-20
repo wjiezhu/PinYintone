@@ -46,7 +46,7 @@ final class DTWAnalyzer {
         switch dtwScore {
         case ..<0.2:  return .excellent
         case ..<0.35: return .good
-        case ..<0.5:  return .needsPractice   // ≤0.5 仍算通关
+        case ...0.5:  return .needsPractice   // 0.35–0.5（含 0.5）仍算通关
         default:      return .fail            // >0.5 不通关
         }
     }

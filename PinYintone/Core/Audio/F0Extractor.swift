@@ -47,7 +47,10 @@ final class F0Extractor {
         guard minTau <= maxTau else { return 0 }
 
         for tau in minTau...maxTau where dn[tau] < yinThreshold {
-            let refined = parabolicInterpolation(dn, at: tau)
+            // 走到该「凹陷」的局部极小，再做抛物线插值（标准 YIN 步骤，提升精度）
+            var t = tau
+            while t + 1 <= maxTau, dn[t + 1] < dn[t] { t += 1 }
+            let refined = parabolicInterpolation(dn, at: t)
             return refined > 0 ? sampleRate / refined : 0
         }
         return 0  // 无声/无音高帧
