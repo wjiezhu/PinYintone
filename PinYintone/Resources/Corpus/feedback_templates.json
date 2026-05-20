@@ -1,0 +1,90 @@
+{
+  "excellent": {
+    "fr": [
+      "Parfait ! Ta prononciation est excellente !",
+      "Bravo ! On dirait un locuteur natif !",
+      "Superbe ! Tes tons sont parfaitement justes !"
+    ],
+    "zh": [
+      "完美！发音非常标准！",
+      "太棒了！声调完全正确！",
+      "出色！简直像母语者！"
+    ],
+    "en": [
+      "Perfect! Your pronunciation is excellent!",
+      "Amazing! You sound like a native speaker!",
+      "Outstanding! Your tones are spot on!"
+    ],
+    "ar": [
+      "ممتاز! نطقك رائع جداً!",
+      "أحسنت! تبدو كأنك متحدث أصلي!",
+      "رائع! نبراتك صحيحة تماماً!"
+    ]
+  },
+  "good": {
+    "fr": [
+      "Bien joué ! C'est presque parfait.",
+      "Très bien ! Continue comme ça.",
+      "Bon travail ! Tu y es presque."
+    ],
+    "zh": [
+      "不错！已经很接近了。",
+      "很好！继续保持。",
+      "做得好！就差一点点。"
+    ],
+    "en": [
+      "Well done! That's almost perfect.",
+      "Nice! Keep it up.",
+      "Good job! You're almost there."
+    ],
+    "ar": [
+      "أحسنت! اقتربت كثيراً.",
+      "جيد جداً! واصل هكذا.",
+      "عمل جيد! بقي القليل."
+    ]
+  },
+  "needsPractice": {
+    "fr": [
+      "Pas mal ! Encore un peu d'entraînement.",
+      "Tu progresses ! Réessaie pour t'améliorer.",
+      "Continue ! Écoute bien le modèle."
+    ],
+    "zh": [
+      "还可以！再多练习一下。",
+      "在进步！再试一次会更好。",
+      "加油！仔细听一下范例。"
+    ],
+    "en": [
+      "Not bad! A little more practice.",
+      "You're improving! Try again to refine it.",
+      "Keep going! Listen to the model closely."
+    ],
+    "ar": [
+      "لا بأس! تحتاج لمزيد من التدريب.",
+      "أنت تتحسن! حاول مرة أخرى.",
+      "واصل! استمع جيداً إلى النموذج."
+    ]
+  },
+  "fail": {
+    "fr": [
+      "Continue d'essayer ! Écoute encore le modèle.",
+      "Ne lâche pas ! Reprends doucement.",
+      "Réessaie ! Concentre-toi sur les tons."
+    ],
+    "zh": [
+      "再试试！多听几遍范例。",
+      "别灰心！慢慢再来一次。",
+      "重来一次！注意声调的起伏。"
+    ],
+    "en": [
+      "Keep trying! Listen to the model again.",
+      "Don't give up! Take it slowly.",
+      "Try again! Focus on the tones."
+    ],
+    "ar": [
+      "واصل المحاولة! استمع إلى النموذج مجدداً.",
+      "لا تستسلم! خذ وقتك.",
+      "حاول مجدداً! ركّز على النبرات."
+    ]
+  }
+}
