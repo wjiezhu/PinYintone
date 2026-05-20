@@ -100,3 +100,15 @@
 "aspiration_calibrating" = "正在校准环境噪声...";
 "aspiration_success" = "✓ 送气成功！";
 "aspiration_keep_going" = "继续加油！";
+
+// 自由文本（关卡 3）
+"freetext_input_hint" = "粘贴或输入中文文本，逐词练习声调";
+"freetext_placeholder" = "例如：今天天气很好";
+"freetext_tokenize" = "自动分词";
+"freetext_edit_title" = "编辑词条";
+"freetext_edit_hint" = "点 × 删除词条，或在下方添加自定义词";
+"freetext_add_word" = "添加词条";
+"freetext_start_practice" = "开始练习";
+"freetext_prev" = "上一词";
+"freetext_next" = "下一词";
+"freetext_legend_ideal" = "理想";

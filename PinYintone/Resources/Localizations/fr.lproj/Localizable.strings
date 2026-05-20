@@ -100,3 +100,15 @@
 "aspiration_calibrating" = "Calibration du bruit ambiant...";
 "aspiration_success" = "✓ Bien soufflé !";
 "aspiration_keep_going" = "Continue !";
+
+// Texte libre (Niveau 3)
+"freetext_input_hint" = "Colle ou saisis un texte chinois pour t'entraîner ton par ton";
+"freetext_placeholder" = "ex. 今天天气很好";
+"freetext_tokenize" = "Segmenter les mots";
+"freetext_edit_title" = "Modifier les mots";
+"freetext_edit_hint" = "Touche × pour retirer un mot, ou ajoute le tien ci-dessous";
+"freetext_add_word" = "Ajouter un mot";
+"freetext_start_practice" = "Commencer";
+"freetext_prev" = "Précédent";
+"freetext_next" = "Suivant";
+"freetext_legend_ideal" = "Idéal";

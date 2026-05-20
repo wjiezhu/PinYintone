@@ -100,3 +100,15 @@
 "aspiration_calibrating" = "Calibrating ambient noise...";
 "aspiration_success" = "✓ Great burst!";
 "aspiration_keep_going" = "Keep going!";
+
+// Free text (Stage 3)
+"freetext_input_hint" = "Paste or type Chinese text to practice tone by tone";
+"freetext_placeholder" = "e.g. 今天天气很好";
+"freetext_tokenize" = "Segment words";
+"freetext_edit_title" = "Edit words";
+"freetext_edit_hint" = "Tap × to remove a word, or add your own below";
+"freetext_add_word" = "Add a word";
+"freetext_start_practice" = "Start practice";
+"freetext_prev" = "Previous";
+"freetext_next" = "Next";
+"freetext_legend_ideal" = "Ideal";

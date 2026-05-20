@@ -1,35 +1,90 @@
 import Combine
 import Foundation
 
+/// 关卡 3 逐词练习业务逻辑：AudioEngine → AudioFramer → F0Extractor 实时取 F0，
+/// 理想声调形状由 PinyinConverter 取声调 → ToneContour 合成（与声调训练一致）。
 @MainActor
 final class FreeWordPracticeViewModel: ObservableObject {
     @Published var studentF0: [Float] = []
-    @Published var idealShape: [Float] = []   // AVSpeechSynthesizer TTS F0
+    @Published var idealShape: [Float] = []     // 理想声调轮廓（归一化）
+    @Published var currentTones: [Int] = []
     @Published var isRecording: Bool = false
 
+    /// 由 View 注入的原始整段文本（用于研究数据 originalText 字段）
+    var originalText: String = ""
+
     private let audioEngine = AudioEngine()
+    private let framer = AudioFramer()
     private let f0Extractor = F0Extractor()
+    private let pinyinConverter = PinyinConverter()
     private var accumulated: [Float] = []
     private var currentWord: String = ""
+    private var recordingStart = Date()
+
+    init() {
+        framer.onFrame = { [weak self] frame in
+            guard let self else { return }
+            let hz = self.f0Extractor.extract(frame: frame)
+            Task { @MainActor in
+                self.accumulated.append(hz)
+                self.studentF0 = self.f0Extractor.normalize(self.accumulated)
+            }
+        }
+        audioEngine.onChunk = { [weak self] pcm in self?.framer.feed(pcm) }
+    }
+
+    /// 切换到某个词：计算声调与理想形状（不录音）
+    func prepare(word: String) {
+        currentWord = word
+        currentTones = pinyinConverter.toneSequence(for: word)
+        idealShape = f0Extractor.normalize(ToneContour.ideal(for: currentTones))
+        studentF0 = []
+        accumulated = []
+        isRecording = false
+    }
 
     func toggleRecording(targetWord: String) {
-        fatalError("TODO: 实现")
+        isRecording ? stopRecording() : startRecording(targetWord: targetWord)
     }
 
     func reset() {
-        fatalError("TODO: 实现")
+        studentF0 = []
+        accumulated = []
+        isRecording = false
     }
 
+    // MARK: - 私有
+
     private func startRecording(targetWord: String) {
-        fatalError("TODO: 实现 — 合成 TTS F0 作理想形状 + 启动 AudioEngine")
+        if currentWord != targetWord { prepare(word: targetWord) }
+        accumulated = []
+        studentF0 = []
+        framer.reset()
+        recordingStart = Date()
+        isRecording = true
+        try? audioEngine.start()
     }
 
     private func stopRecording() {
-        fatalError("TODO: 实现 — 停止录音 + 保存 FreeTextRecord")
+        audioEngine.stop()
+        isRecording = false
+        studentF0 = f0Extractor.normalize(accumulated)
+        persist()
     }
 
-    /// 用 AVSpeechSynthesizer 合成目标词，提取 F0 作为理想声调形状
-    private func synthesizeIdealShape(for word: String) async -> [Float] {
-        fatalError("TODO: 实现 — AVSpeechUtterance(zh-CN, rate=0.4) → 录制 → YIN F0")
+    private func persist() {
+        guard let profile = UserManager.shared.profile, !currentWord.isEmpty else { return }
+        FreeTextRepository.shared.save(
+            deviceID: profile.deviceID,
+            classCode: profile.classCode,
+            role: profile.role.rawValue,
+            originalText: originalText.isEmpty ? currentWord : originalText,
+            tokenizedWord: currentWord,
+            pinyin: pinyinConverter.pinyin(for: currentWord),
+            toneSequence: currentTones,
+            f0Track: accumulated,          // 原始 Hz 序列（含 0 无声帧）
+            duration: Date().timeIntervalSince(recordingStart),
+            timestamp: Date()
+        )
     }
 }

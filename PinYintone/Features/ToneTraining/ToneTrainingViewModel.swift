@@ -101,27 +101,7 @@ final class ToneTrainingViewModel: ObservableObject {
     // MARK: - 理想四声轮廓合成
 
     /// 按声调序列生成理想 F0 轮廓（Hz 量级）；归一化后作母语者参照。
-    /// 阴平=高平 / 阳平=上升 / 上声=降后升 / 去声=下降。
     static func idealContour(for tones: [Int]) -> [Float] {
-        let perSyllable = 24
-        let low: Float = 150, high: Float = 280, dip: Float = 110
-        var contour: [Float] = []
-        for tone in tones {
-            for i in 0..<perSyllable {
-                let t = Float(i) / Float(perSyllable - 1)
-                let hz: Float
-                switch tone {
-                case 1: hz = high                                   // 阴平：高平
-                case 2: hz = low + (high - low) * t                 // 阳平：上升
-                case 3: hz = t < 0.5                                 // 上声：降后升
-                    ? low + (dip - low) * (t / 0.5)
-                    : dip + (high - dip) * ((t - 0.5) / 0.5)
-                case 4: hz = high + (low - high) * t                // 去声：下降
-                default: hz = (low + high) / 2
-                }
-                contour.append(hz)
-            }
-        }
-        return contour
+        ToneContour.ideal(for: tones)
     }
 }

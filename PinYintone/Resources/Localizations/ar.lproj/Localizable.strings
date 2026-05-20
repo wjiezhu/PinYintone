@@ -100,3 +100,15 @@
 "aspiration_calibrating" = "جارٍ معايرة الضوضاء المحيطة...";
 "aspiration_success" = "✓ نفث رائع!";
 "aspiration_keep_going" = "واصل!";
+
+// النص الحر (المرحلة 3)
+"freetext_input_hint" = "الصق أو اكتب نصاً صينياً للتدرب كلمة بكلمة";
+"freetext_placeholder" = "مثال: 今天天气很好";
+"freetext_tokenize" = "تقسيم الكلمات";
+"freetext_edit_title" = "تعديل الكلمات";
+"freetext_edit_hint" = "اضغط × لحذف كلمة، أو أضف كلمتك أدناه";
+"freetext_add_word" = "إضافة كلمة";
+"freetext_start_practice" = "ابدأ التدريب";
+"freetext_prev" = "السابق";
+"freetext_next" = "التالي";
+"freetext_legend_ideal" = "المثالي";
