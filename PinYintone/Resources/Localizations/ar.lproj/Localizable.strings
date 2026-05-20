@@ -80,3 +80,23 @@
 "role_guest" = "زائر";
 "role_student_short" = "طالب";
 "role_teacher_short" = "أستاذ";
+
+// بطاقات الوحدات
+"module_teacher_console" = "لوحة المعلم";
+"module_teacher_console_sub" = "تقدم الصف · تحليل الأخطاء";
+
+// واجهة التدريب
+"grade_excellent" = "ممتاز";
+"grade_good" = "جيد";
+"grade_needs_practice" = "واصل التدريب";
+"grade_fail" = "حاول مجدداً";
+"legend_native" = "متحدث أصلي";
+"legend_you" = "أنت";
+"feedback_continue" = "متابعة";
+"feedback_retry" = "حاول مجدداً";
+"record_start" = "بدء التسجيل";
+"record_stop" = "إيقاف التسجيل";
+"aspiration_prompt" = "انفخ بقوة في الميكروفون لإحداث صوت النفث";
+"aspiration_calibrating" = "جارٍ معايرة الضوضاء المحيطة...";
+"aspiration_success" = "✓ نفث رائع!";
+"aspiration_keep_going" = "واصل!";

@@ -80,3 +80,23 @@
 "role_guest" = "Invité";
 "role_student_short" = "Étudiant";
 "role_teacher_short" = "Enseignant";
+
+// Module cards
+"module_teacher_console" = "Console enseignant";
+"module_teacher_console_sub" = "Progrès de la classe · Analyse des erreurs";
+
+// Training UI
+"grade_excellent" = "Excellent";
+"grade_good" = "Bien";
+"grade_needs_practice" = "Continue à t'entraîner";
+"grade_fail" = "Réessaie";
+"legend_native" = "Natif";
+"legend_you" = "Toi";
+"feedback_continue" = "Continuer";
+"feedback_retry" = "Réessayer";
+"record_start" = "Démarrer l'enregistrement";
+"record_stop" = "Arrêter l'enregistrement";
+"aspiration_prompt" = "Souffle fort dans le micro pour produire l'explosion aspirée";
+"aspiration_calibrating" = "Calibration du bruit ambiant...";
+"aspiration_success" = "✓ Bien soufflé !";
+"aspiration_keep_going" = "Continue !";

@@ -80,3 +80,23 @@
 "role_guest" = "Guest";
 "role_student_short" = "Student";
 "role_teacher_short" = "Teacher";
+
+// Module cards
+"module_teacher_console" = "Teacher Console";
+"module_teacher_console_sub" = "Class progress · Error analysis";
+
+// Training UI
+"grade_excellent" = "Excellent";
+"grade_good" = "Good";
+"grade_needs_practice" = "Keep practicing";
+"grade_fail" = "Try again";
+"legend_native" = "Native";
+"legend_you" = "You";
+"feedback_continue" = "Continue";
+"feedback_retry" = "Try again";
+"record_start" = "Start recording";
+"record_stop" = "Stop recording";
+"aspiration_prompt" = "Blow hard into the mic to make the aspirated burst";
+"aspiration_calibrating" = "Calibrating ambient noise...";
+"aspiration_success" = "✓ Great burst!";
+"aspiration_keep_going" = "Keep going!";

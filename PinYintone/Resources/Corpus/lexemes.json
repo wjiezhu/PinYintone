@@ -1,9 +1,14 @@
 [
-  {
-    "id": "placeholder_01",
-    "hanzi": "待填充",
-    "pinyin": "dài tián chōng",
-    "tones": [4, 2, 1],
-    "audioFilename": null
-  }
+  { "id": "mama_01",     "hanzi": "妈妈",   "pinyin": "mā ma",      "tones": [1, 1], "audioFilename": null },
+  { "id": "laoshi_01",   "hanzi": "老师",   "pinyin": "lǎo shī",    "tones": [3, 1], "audioFilename": null },
+  { "id": "xuexi_01",    "hanzi": "学习",   "pinyin": "xué xí",     "tones": [2, 2], "audioFilename": null },
+  { "id": "zaijian_01",  "hanzi": "再见",   "pinyin": "zài jiàn",   "tones": [4, 4], "audioFilename": null },
+  { "id": "nihao_01",    "hanzi": "你好",   "pinyin": "nǐ hǎo",     "tones": [3, 3], "audioFilename": null },
+  { "id": "beijing_01",  "hanzi": "北京",   "pinyin": "běi jīng",   "tones": [3, 1], "audioFilename": null },
+  { "id": "pengyou_01",  "hanzi": "朋友",   "pinyin": "péng you",   "tones": [2, 3], "audioFilename": null },
+  { "id": "xiexie_01",   "hanzi": "谢谢",   "pinyin": "xiè xie",    "tones": [4, 4], "audioFilename": null },
+  { "id": "zhongguo_01", "hanzi": "中国",   "pinyin": "zhōng guó",  "tones": [1, 2], "audioFilename": null },
+  { "id": "paobu_01",    "hanzi": "跑步",   "pinyin": "pǎo bù",     "tones": [3, 4], "audioFilename": null },
+  { "id": "shuiguo_01",  "hanzi": "水果",   "pinyin": "shuǐ guǒ",   "tones": [3, 3], "audioFilename": null },
+  { "id": "kafei_01",    "hanzi": "咖啡",   "pinyin": "kā fēi",     "tones": [1, 1], "audioFilename": null }
 ]

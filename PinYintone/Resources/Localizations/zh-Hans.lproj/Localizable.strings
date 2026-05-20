@@ -80,3 +80,23 @@
 "role_guest" = "游客";
 "role_student_short" = "学生";
 "role_teacher_short" = "教师";
+
+// 模块卡片
+"module_teacher_console" = "教师控制台";
+"module_teacher_console_sub" = "班级进度 · 个体偏误分析";
+
+// 训练界面
+"grade_excellent" = "优秀";
+"grade_good" = "良好";
+"grade_needs_practice" = "继续练习";
+"grade_fail" = "再试一次";
+"legend_native" = "母语者";
+"legend_you" = "你";
+"feedback_continue" = "继续";
+"feedback_retry" = "再试一次";
+"record_start" = "开始录音";
+"record_stop" = "停止录音";
+"aspiration_prompt" = "对着麦克风用力送气，发出爆破声";
+"aspiration_calibrating" = "正在校准环境噪声...";
+"aspiration_success" = "✓ 送气成功！";
+"aspiration_keep_going" = "继续加油！";
