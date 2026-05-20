@@ -1,11 +1,11 @@
 import Foundation
 
-/// 语料库加载器：从 Bundle 读取 Resources/Corpus/lexemes.json，并提供顺序循环取词。
+/// 语料库加载器：从 Bundle 读取 Resources/Corpus/lexemes.json，按关卡类别顺序循环取词。
 final class CorpusLoader {
     static let shared = CorpusLoader()
 
     private let lexemes: [Lexeme]
-    private var cursor = 0
+    private var cursors: [LexemeCategory: Int] = [:]
 
     private init() {
         lexemes = Self.loadFromBundle()
@@ -14,11 +14,18 @@ final class CorpusLoader {
     /// 全部词条
     func loadLexemes() -> [Lexeme] { lexemes }
 
-    /// 顺序循环返回下一词；语料为空时返回占位词
-    func nextLexeme() -> Lexeme {
-        guard !lexemes.isEmpty else { return Self.placeholder }
-        defer { cursor = (cursor + 1) % lexemes.count }
-        return lexemes[cursor]
+    /// 指定类别的词条
+    func lexemes(in category: LexemeCategory) -> [Lexeme] {
+        lexemes.filter { $0.category == category }
+    }
+
+    /// 按类别顺序循环返回下一词；该类别为空时返回占位词
+    func nextLexeme(category: LexemeCategory) -> Lexeme {
+        let pool = lexemes.filter { $0.category == category }
+        guard !pool.isEmpty else { return Self.placeholder(category) }
+        let idx = (cursors[category] ?? 0) % pool.count
+        cursors[category] = idx + 1
+        return pool[idx]
     }
 
     /// 按 id 查找
@@ -36,11 +43,17 @@ final class CorpusLoader {
         return decoded
     }
 
-    private static let placeholder = Lexeme(
-        id: "placeholder",
-        hanzi: "你好",
-        pinyin: "nǐ hǎo",
-        tones: [3, 3],
-        audioFilename: nil
-    )
+    private static func placeholder(_ category: LexemeCategory) -> Lexeme {
+        Lexeme(
+            id: "placeholder",
+            hanzi: "你好",
+            pinyin: "nǐ hǎo",
+            tones: [3, 3],
+            category: category,
+            focus: "",
+            french: "Bonjour",
+            darija: "Salam (سلام)",
+            audioFilename: nil
+        )
+    }
 }

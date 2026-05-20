@@ -22,7 +22,7 @@ final class AspirationViewModel: ObservableObject {
     // MARK: - 词条
 
     func loadNextLexeme() {
-        currentLexeme = CorpusLoader.shared.nextLexeme()
+        currentLexeme = CorpusLoader.shared.nextLexeme(category: .aspiration)
         resetState()
         startCalibration()
     }

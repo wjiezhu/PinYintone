@@ -23,6 +23,26 @@ struct LexemeCardView: View {
                         .clipShape(Circle())
                 }
             }
+
+            // 法语释义 + Darija 对译（面向摩洛哥学习者）
+            if !lexeme.french.isEmpty || !lexeme.darija.isEmpty {
+                VStack(spacing: 2) {
+                    Text(lexeme.french)
+                        .font(.subheadline.weight(.medium))
+                    Text(lexeme.darija)
+                        .font(.caption)
+                        .foregroundStyle(.secondary)
+                }
+                .multilineTextAlignment(.center)
+                .padding(.top, 2)
+            }
+
+            // 考察重点
+            if !lexeme.focus.isEmpty {
+                Text(lexeme.focus)
+                    .font(.caption2)
+                    .foregroundStyle(.tertiary)
+            }
         }
         .frame(maxWidth: .infinity)
         .padding(20)

@@ -47,7 +47,7 @@ final class ToneTrainingViewModel: ObservableObject {
     }
 
     func loadNext() {
-        loadLexeme(CorpusLoader.shared.nextLexeme())
+        loadLexeme(CorpusLoader.shared.nextLexeme(category: .tone))
     }
 
     // MARK: - 录音
