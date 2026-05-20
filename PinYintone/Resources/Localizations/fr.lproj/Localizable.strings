@@ -41,6 +41,7 @@
 
 // Home
 "home_greeting" = "Bonjour !";
+"home_practice_subtitle" = "Continuez à pratiquer !";
 "home_greeting_name" = "Bonjour, %@ !";
 "stage1_subtitle" = "Consonnes aspirées vs. non-aspirées";
 "stage2_subtitle" = "Reconnaissance des tons 1 · 2 · 3 · 4";

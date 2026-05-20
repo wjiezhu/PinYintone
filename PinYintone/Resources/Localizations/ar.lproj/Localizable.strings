@@ -41,6 +41,7 @@
 
 // الرئيسية
 "home_greeting" = "مرحباً!";
+"home_practice_subtitle" = "واصل التدريب اليوم!";
 "home_greeting_name" = "مرحباً، %@!";
 "stage1_subtitle" = "الأصوات المنفوثة مقابل غير المنفوثة";
 "stage2_subtitle" = "التعرف على النبرات 1 · 2 · 3 · 4";

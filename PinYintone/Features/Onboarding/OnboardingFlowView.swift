@@ -98,17 +98,21 @@ struct OnboardingFlowView: View {
 
     /// 检查是否已授权（重启 app 时跳过权限页）
     private func checkExistingMicPermission() {
-        let status: AVAudioSession.RecordPermission
+        // iOS 17+ 与旧版返回类型不同，分别处理
         if #available(iOS 17, *) {
-            status = AVAudioApplication.shared.recordPermission
+            switch AVAudioApplication.shared.recordPermission {
+            case .granted:      micGranted = true
+            case .denied:       micGranted = false
+            case .undetermined: break   // 停在权限申请页
+            @unknown default:   break
+            }
         } else {
-            status = AVAudioSession.sharedInstance().recordPermission
-        }
-        switch status {
-        case .granted:  micGranted = true
-        case .denied:   micGranted = false
-        case .undetermined: break   // 停在权限申请页
-        @unknown default: break
+            switch AVAudioSession.sharedInstance().recordPermission {
+            case .granted:      micGranted = true
+            case .denied:       micGranted = false
+            case .undetermined: break
+            @unknown default:   break
+            }
         }
     }
 

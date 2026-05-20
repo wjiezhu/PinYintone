@@ -41,6 +41,7 @@
 
 // 主页
 "home_greeting" = "你好！";
+"home_practice_subtitle" = "继续今天的练习吧！";
 "home_greeting_name" = "你好，%@！";
 "stage1_subtitle" = "送气音 vs. 不送气音";
 "stage2_subtitle" = "声调 1 · 2 · 3 · 4 识别";

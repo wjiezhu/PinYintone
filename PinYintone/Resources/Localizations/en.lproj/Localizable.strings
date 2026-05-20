@@ -41,6 +41,7 @@
 
 // Home
 "home_greeting" = "Hello!";
+"home_practice_subtitle" = "Keep up the practice today!";
 "home_greeting_name" = "Hello, %@!";
 "stage1_subtitle" = "Aspirated vs. unaspirated consonants";
 "stage2_subtitle" = "Tone 1 · 2 · 3 · 4 recognition";

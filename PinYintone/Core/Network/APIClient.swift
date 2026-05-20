@@ -89,28 +89,47 @@ final class APIClient {
 
     // MARK: - Teacher Dashboard (Chapter 4)
 
+    /// 教师面板接口需 Bearer Token；从当前登录档案读取
+    private func teacherToken() async throws -> String {
+        guard let token = await MainActor.run(body: { UserManager.shared.profile?.teacherToken }) else {
+            throw RegisterError.networkError(URLError(.userAuthenticationRequired))
+        }
+        return token
+    }
+
     func fetchClassSummary() async throws -> ClassSummary {
-        fatalError("TODO: 第四章实现")
+        try await request("teacher/class/summary", token: try await teacherToken())
     }
 
     func fetchGroupComparison() async throws -> GroupComparisonData {
-        fatalError("TODO: 第四章实现")
+        try await request("teacher/class/comparison", token: try await teacherToken())
     }
 
     func fetchToneBreakdown() async throws -> ToneBreakdownData {
-        fatalError("TODO: 第四章实现")
+        try await request("teacher/class/tone-breakdown", token: try await teacherToken())
     }
 
     func fetchStudents() async throws -> [StudentRowData] {
-        fatalError("TODO: 第四章实现")
+        try await request("teacher/students", token: try await teacherToken())
     }
 
     func fetchStudentDetail(deviceID: String) async throws -> StudentDetailData {
-        fatalError("TODO: 第四章实现")
+        try await request("teacher/students/\(deviceID)", token: try await teacherToken())
     }
 
+    /// 直接下载后端生成的 CSV 至临时文件，返回本地 URL
     func exportClassCSV() async throws -> URL {
-        fatalError("TODO: 第四章实现")
+        let token = try await teacherToken()
+        var req = URLRequest(url: baseURL.appendingPathComponent("teacher/export/csv"))
+        req.setValue("Bearer \(token)", forHTTPHeaderField: "Authorization")
+        let (data, response) = try await URLSession.shared.data(for: req)
+        guard let http = response as? HTTPURLResponse, (200..<300).contains(http.statusCode) else {
+            throw RegisterError.networkError(URLError(.badServerResponse))
+        }
+        let url = FileManager.default.temporaryDirectory
+            .appendingPathComponent("pinyintone_class.csv")
+        try data.write(to: url)
+        return url
     }
 }
 
