@@ -23,4 +23,13 @@ final class GroupAssignment {
             UserDefaults.standard.set(group.rawValue, forKey: Self.key)
         }
     }
+
+    #if DEBUG
+    /// 仅供开发调试切换 A/B 分组；生产构建不编译此方法，
+    /// 真实被试的分组仍是安装随机、不可更改（符合 CLAUDE.md 实验约束）。
+    func debugOverride(_ newGroup: ExperimentGroup) {
+        group = newGroup
+        UserDefaults.standard.set(newGroup.rawValue, forKey: Self.key)
+    }
+    #endif
 }

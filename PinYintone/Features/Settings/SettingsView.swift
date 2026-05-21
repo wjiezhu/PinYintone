@@ -7,6 +7,10 @@ struct SettingsView: View {
     @ObservedObject private var localization = LocalizationManager.shared
     @Environment(\.dismiss) private var dismiss
 
+    #if DEBUG
+    @EnvironmentObject private var appState: AppState
+    #endif
+
     @State private var showLogoutConfirm = false
     @State private var showSwitchConfirm = false
 
@@ -18,6 +22,9 @@ struct SettingsView: View {
                 accountSection
                 languageSection
                 accountActionsSection
+                #if DEBUG
+                debugSection
+                #endif
             }
             .navigationTitle(NSLocalizedString("settings_title", comment: ""))
             .navigationBarTitleDisplayMode(.inline)
@@ -119,6 +126,33 @@ struct SettingsView: View {
             }
         }
     }
+
+    // MARK: - 调试（仅 DEBUG 构建）
+
+    #if DEBUG
+    private var debugSection: some View {
+        Section {
+            Picker("A/B 分组", selection: debugGroupBinding) {
+                Text("A · 静态色块").tag(ExperimentGroup.staticColor)
+                Text("B · 动态 F0").tag(ExperimentGroup.dynamicF0)
+            }
+        } header: {
+            Text("调试（仅开发构建）")
+        } footer: {
+            Text("切换后进入「声调训练」即可看到对应模式。生产构建中此项不存在，真实被试分组随机不可改。")
+        }
+    }
+
+    private var debugGroupBinding: Binding<ExperimentGroup> {
+        Binding(
+            get: { appState.group },
+            set: { newValue in
+                GroupAssignment.shared.debugOverride(newValue)
+                appState.group = newValue
+            }
+        )
+    }
+    #endif
 
     // MARK: - Helpers
 

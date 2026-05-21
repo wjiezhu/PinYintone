@@ -5,6 +5,9 @@ import UIKit
 struct TeacherDashboardView: View {
     @StateObject private var vm = TeacherDashboardViewModel()
     @EnvironmentObject var userManager: UserManager
+    #if DEBUG
+    @EnvironmentObject private var appState: AppState
+    #endif
     @State private var showSettings = false
 
     private var profile: UserProfile? { userManager.profile }
@@ -73,8 +76,12 @@ struct TeacherDashboardView: View {
             }
             // 设置
             .sheet(isPresented: $showSettings) {
-                SettingsView()
-                    .environmentObject(userManager)
+                let settings = SettingsView().environmentObject(userManager)
+                #if DEBUG
+                settings.environmentObject(appState)
+                #else
+                settings
+                #endif
             }
         }
     }

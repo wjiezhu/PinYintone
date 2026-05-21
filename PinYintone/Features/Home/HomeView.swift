@@ -76,7 +76,9 @@ struct HomeView: View {
             BindClassCodeSheet().environmentObject(userManager)
         }
         .sheet(isPresented: $showSettings) {
-            SettingsView().environmentObject(userManager)
+            SettingsView()
+                .environmentObject(userManager)
+                .environmentObject(appState)
         }
     }
 }
