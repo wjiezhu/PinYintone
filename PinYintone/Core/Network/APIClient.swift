@@ -73,18 +73,20 @@ final class APIClient {
                                         body: Body(deviceID: deviceID, classCode: classCode))
     }
 
-    // MARK: - Sync (Chapter 3)
+    // MARK: - Sync（数据上行，POST /api/sync/*）
 
-    func syncSession(_ session: TrainingSession) async throws {
-        fatalError("TODO: 第三章实现")
+    private struct SyncAck: Codable {}   // 后端返回 {} 即视为成功
+
+    func syncSession(_ dto: TrainingSessionDTO) async throws {
+        let _: SyncAck = try await request("api/sync/session", method: "POST", body: dto)
     }
 
-    func syncAspiration(_ attempt: AspirationAttempt) async throws {
-        fatalError("TODO: 第三章实现")
+    func syncAspiration(_ dto: AspirationAttemptDTO) async throws {
+        let _: SyncAck = try await request("api/sync/aspiration", method: "POST", body: dto)
     }
 
-    func syncFreeText(_ record: FreeTextRecord) async throws {
-        fatalError("TODO: 第三章实现")
+    func syncFreeText(_ dto: FreeTextRecordDTO) async throws {
+        let _: SyncAck = try await request("api/sync/freetext", method: "POST", body: dto)
     }
 
     // MARK: - Teacher Dashboard (Chapter 4)
