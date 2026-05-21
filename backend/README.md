@@ -57,31 +57,45 @@ iOS 端 `APIClient.baseURL` 已指向 `http://localhost:8000`，模拟器可直�
 - 通关线 `DTW ≤ 0.5`、班级码 6 位纯数字且禁全同位，均遵循 `CLAUDE.md`。
 - 游客记录 `classCode = null` 不丢弃，进入"未绑定班级"池（论文辅助数据）。
 
-## 部署
+## 部署（Render + Neon，免费）
 
-已附部署配置：`Procfile`、`railway.json`、`Dockerfile`、`runtime.txt` / `.python-version`（固定 Python 3.12，避免新版 wheel 缺失）。
-`DATABASE_URL` 会自动把云平台注入的 `postgres://` / `postgresql://` 适配为 SQLAlchemy 所需的 `postgresql+psycopg2://`；服务监听 `$PORT`。
+已附配置：`render.yaml`、`Procfile`、`Dockerfile`、`runtime.txt` / `.python-version`（固定 Python 3.12，避免新版 wheel 缺失）。
+`DATABASE_URL` 会自动把 `postgres://` / `postgresql://` 适配为 SQLAlchemy 所需的 `postgresql+psycopg2://`（兼容 Neon 的 `?sslmode=require`）；服务监听 `$PORT`。
 
-### Railway（推荐）
-1. 把仓库推到 GitHub（已完成）。
-2. Railway → New Project → Deploy from GitHub repo，选本仓库。
-3. **Root Directory 设为 `backend`**（仓库根是 iOS 工程，后端在子目录）。
-4. 添加插件 **PostgreSQL**：Railway 会自动注入 `DATABASE_URL`。
-5. 在 Variables 里加 **`JWT_SECRET`**（用 `python -c "import secrets;print(secrets.token_hex(32))"` 生成）。
-6. 部署完成后在 Settings → Networking 生成公网域名，例如 `https://xxx.up.railway.app`。
-7. 验证：`GET https://xxx.up.railway.app/health` → `{"status":"ok"}`；`/docs` 看交互文档。
+### 第 1 步：免费 Postgres（Neon）
+1. 注册 [neon.tech](https://neon.tech)（免费、不过期、无需信用卡）。
+2. 建一个 Project，复制连接串（形如 `postgresql://user:pass@ep-xxx.region.aws.neon.tech/dbname?sslmode=require`）。
+   - 用 **non-pooled / direct** 连接串即可；若日志报 `channel_binding` 相关错误，从串尾删掉 `&channel_binding=require`。
 
-> Render / Fly.io 同理：Root=`backend`，加 Postgres，设 `JWT_SECRET`，Start = `uvicorn app.main:app --host 0.0.0.0 --port $PORT`。
-> 或用 `Dockerfile` 一键容器部署。
+### 第 2 步：部署后端（Render）
+**蓝图方式（最快）**：Render → New → **Blueprint** → 选本仓库 → 它会读 `backend/render.yaml`。
+随后只需在生成的服务里把 **`DATABASE_URL`** 填成第 1 步的 Neon 连接串（`JWT_SECRET` 已自动生成）。
 
-### iOS 指向生产后端
-App 默认连 `http://localhost:8000`。上线后在 **Info.plist 增加键 `PT_API_BASE_URL`**，值填生产域名（如 `https://xxx.up.railway.app`），无需改代码（`APIClient` 已优先读取该键）。
+**手动方式（不依赖蓝图）**：Render → New → **Web Service** → 连本仓库：
+- **Root Directory**：`backend`（仓库根是 iOS 工程，后端在子目录）
+- **Build**：`pip install -r requirements.txt`
+- **Start**：`uvicorn app.main:app --host 0.0.0.0 --port $PORT`
+- **Plan**：Free
+- Environment 加：`DATABASE_URL`=Neon 连接串、`JWT_SECRET`=`python -c "import secrets;print(secrets.token_hex(32))"`、`PYTHON_VERSION`=`3.12.7`
+
+### 第 3 步：验证
+```bash
+python3 scripts/smoke.py https://你的服务.onrender.com
+```
+脚本会跑 health → 教师注册 → 班级码校验 → 同步 → 教师概览。
+（Render 免费版闲置会休眠，首次请求冷启动 ~30–60s，属正常。）
+
+### 第 4 步：iOS 指向生产后端
+App 默认连 `http://localhost:8000`。上线后在 **Info.plist 增加键 `PT_API_BASE_URL`**，值填生产域名（如 `https://你的服务.onrender.com`），无需改代码（`APIClient` 已优先读取该键）。
+
+### 其他平台
+`Dockerfile` 可直接用于任意容器平台（Fly.io / HF Space 等）；`Procfile` 兼容 Heroku 风格平台。
 
 ### 环境变量
 | 变量 | 必填 | 说明 |
 |------|------|------|
-| `DATABASE_URL` | 生产必填 | Railway Postgres 自动注入；本地缺省 SQLite |
-| `JWT_SECRET` | 生产必填 | ≥32 字节随机串 |
+| `DATABASE_URL` | 生产必填 | Neon Postgres 连接串；本地缺省 SQLite |
+| `JWT_SECRET` | 生产必填 | ≥32 字节随机串（Render 蓝图自动生成） |
 | `PORT` | 平台注入 | 监听端口 |
 
 ## 待完善（骨架未覆盖）

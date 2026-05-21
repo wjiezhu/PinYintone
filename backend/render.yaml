@@ -1,0 +1,18 @@
+# Render 蓝图（Blueprint）。仓库根是 iOS 工程，后端在 backend/ 子目录。
+# 用法：Render → New → Blueprint → 选本仓库；DATABASE_URL 填 Neon 连接串。
+services:
+  - type: web
+    name: pinyintone-backend
+    runtime: python
+    rootDir: backend
+    plan: free
+    buildCommand: pip install -r requirements.txt
+    startCommand: uvicorn app.main:app --host 0.0.0.0 --port $PORT
+    healthCheckPath: /health
+    envVars:
+      - key: PYTHON_VERSION
+        value: 3.12.7
+      - key: JWT_SECRET
+        generateValue: true       # Render 自动生成强随机值
+      - key: DATABASE_URL
+        sync: false               # 手动填 Neon Postgres 连接串
