@@ -53,6 +53,7 @@ struct OnboardingFlowView: View {
                     .foregroundStyle(.white)
                     .clipShape(RoundedRectangle(cornerRadius: 14))
             }
+            .accessibilityIdentifier("onboarding.allowMic")
             .padding(.horizontal, 32)
             .padding(.bottom, 48)
         }
