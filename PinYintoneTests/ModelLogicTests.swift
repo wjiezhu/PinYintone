@@ -3,14 +3,24 @@ import XCTest
 
 final class ModelLogicTests: XCTestCase {
 
-    // MARK: - A/B 分组（论文 4.4）
+    // MARK: - A/B 分组（班级码前缀决定）
 
-    func testGroupAssignmentIsStable() {
-        // 已分配后多次读取应一致（实验期间不可更改）
-        let g1 = GroupAssignment.shared.group
-        let g2 = GroupAssignment.shared.group
-        XCTAssertEqual(g1, g2, "分组在同一安装内应保持不变")
-        XCTAssertTrue(g1 == .staticColor || g1 == .dynamicF0, "分组应为两组之一")
+    func testGroupFromClassCodePrefix() {
+        XCTAssertEqual(GroupAssignment.group(forClassCode: "100001"), .staticColor, "1 开头 → A")
+        XCTAssertEqual(GroupAssignment.group(forClassCode: "234567"), .dynamicF0, "2 开头 → B")
+    }
+
+    func testGroupGuestAndOtherPrefixesDefaultB() {
+        XCTAssertEqual(GroupAssignment.group(forClassCode: nil), .dynamicF0, "游客（无码）→ B")
+        XCTAssertEqual(GroupAssignment.group(forClassCode: ""), .dynamicF0)
+        XCTAssertEqual(GroupAssignment.group(forClassCode: "987654"), .dynamicF0, "其余前缀 → B")
+    }
+
+    @MainActor
+    func testClassCodeFormatValidation() {
+        XCTAssertTrue(UserManager.isValidClassCodeFormat("123456"))
+        XCTAssertFalse(UserManager.isValidClassCodeFormat("12345"), "5 位不合法")
+        XCTAssertFalse(UserManager.isValidClassCodeFormat("12a456"), "含非数字不合法")
     }
 
     // MARK: - 理想四声轮廓合成

@@ -17,8 +17,8 @@ struct PinyintoneApp: App {
                 .environmentObject(appState)
                 .environment(\.managedObjectContext, CoreDataStack.shared.context)
                 .onAppear {
-                    // 首次启动：确定 A/B 分组（安装时随机，不可更改）
-                    appState.group = GroupAssignment.shared.group
+                    // A/B 分组由班级码前缀决定，已存于 profile；从档案同步
+                    appState.sync(with: UserManager.shared.profile)
                 }
         }
         .onChange(of: scenePhase) { _, phase in

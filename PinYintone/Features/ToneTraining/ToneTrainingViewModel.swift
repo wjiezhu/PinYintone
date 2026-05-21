@@ -89,7 +89,7 @@ final class ToneTrainingViewModel: ObservableObject {
             deviceID: profile.deviceID,
             classCode: profile.classCode,
             role: profile.role.rawValue,
-            groupAssignment: GroupAssignment.shared.group.rawValue,
+            groupAssignment: profile.experimentGroup,
             lexemeID: lexeme.id,
             dtwScore: Double(result.dtwScore),
             grade: result.grade.rawValue,

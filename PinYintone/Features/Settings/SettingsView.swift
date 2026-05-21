@@ -139,17 +139,14 @@ struct SettingsView: View {
         } header: {
             Text("调试（仅开发构建）")
         } footer: {
-            Text("切换后进入「声调训练」即可看到对应模式。生产构建中此项不存在，真实被试分组随机不可改。")
+            Text("仅预览模式 A/B 视觉效果；进入「声调训练」即可看到。正式分组由班级码前缀决定（1→A / 2→B），此开关不改变已存档分组。")
         }
     }
 
     private var debugGroupBinding: Binding<ExperimentGroup> {
         Binding(
             get: { appState.group },
-            set: { newValue in
-                GroupAssignment.shared.debugOverride(newValue)
-                appState.group = newValue
-            }
+            set: { newValue in appState.group = newValue }
         )
     }
     #endif

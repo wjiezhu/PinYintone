@@ -5,31 +5,22 @@ enum ExperimentGroup: String, Codable {
     case dynamicF0    // 模式 B：动态 F0 波形反馈
 }
 
-/// A/B 分组单例：安装时随机一次，UserDefaults 持久化，不可更改。
+/// A/B 分组：由班级码（测试码）前缀决定，研究者通过发不同前缀的码控制分组。
 /// 作用域仅限关卡 2（声调训练），关卡 3 不参与分流。
-final class GroupAssignment {
-    static let shared = GroupAssignment()
-
-    private static let key = "pt_experiment_group"
-
-    private(set) var group: ExperimentGroup
-
-    private init() {
-        if let saved = UserDefaults.standard.string(forKey: Self.key),
-           let g = ExperimentGroup(rawValue: saved) {
-            group = g
-        } else {
-            group = Bool.random() ? .staticColor : .dynamicF0
-            UserDefaults.standard.set(group.rawValue, forKey: Self.key)
+///
+/// 规则（客户端本地判定，离线可用）：
+/// - `1` 开头 → 组 A（staticColor）
+/// - `2` 开头 → 组 B（dynamicF0）
+/// - 其余前缀 / 游客（无码）→ 组 B（dynamicF0）
+enum GroupAssignment {
+    static func group(forClassCode code: String?) -> ExperimentGroup {
+        guard let first = code?.trimmingCharacters(in: .whitespacesAndNewlines).first else {
+            return .dynamicF0   // 游客（无码）默认 B
+        }
+        switch first {
+        case "1": return .staticColor
+        case "2": return .dynamicF0
+        default:  return .dynamicF0
         }
     }
-
-    #if DEBUG
-    /// 仅供开发调试切换 A/B 分组；生产构建不编译此方法，
-    /// 真实被试的分组仍是安装随机、不可更改（符合 CLAUDE.md 实验约束）。
-    func debugOverride(_ newGroup: ExperimentGroup) {
-        group = newGroup
-        UserDefaults.standard.set(newGroup.rawValue, forKey: Self.key)
-    }
-    #endif
 }
