@@ -4,8 +4,15 @@ final class APIClient {
     static let shared = APIClient()
     private init() {}
 
-    // 后端地址；正式部署时通过 Info.plist 或环境变量覆盖
-    private let baseURL = URL(string: "http://localhost:8000")!
+    // 后端地址：优先读 Info.plist 的 PT_API_BASE_URL（部署后填生产域名），否则回退本地。
+    private let baseURL: URL = {
+        if let override = Bundle.main.object(forInfoDictionaryKey: "PT_API_BASE_URL") as? String,
+           !override.trimmingCharacters(in: .whitespaces).isEmpty,
+           let url = URL(string: override) {
+            return url
+        }
+        return URL(string: "http://localhost:8000")!
+    }()
 
     // MARK: - Private helpers
 
