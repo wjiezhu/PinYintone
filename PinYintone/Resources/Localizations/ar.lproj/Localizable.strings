@@ -19,12 +19,12 @@
 "role_select_title" = "من أنت؟";
 
 // تسجيل الطالب
-"student_signup_subtitle" = "أدخل اسماً مستعاراً ورمز الفصل (اختياريان).\naترك الرمز فارغاً للمتابعة كزائر.";
+"student_signup_subtitle" = "أدخل اسمك المستعار ورمز الاختبار المكوّن من 6 أرقام الذي حصلت عليه.";
 "signup_nickname_label" = "الاسم المستعار (اختياري)";
 "signup_nickname_hint" = "مثال: أحمد";
-"signup_classcode_label" = "رمز الفصل (اختياري)";
+"signup_classcode_label" = "رمز الاختبار (مطلوب)";
 "signup_classcode_hint" = "6 أرقام";
-"signup_classcode_footer" = "اتركه فارغاً للبدء كزائر، يمكنك إضافته لاحقاً.";
+"signup_classcode_footer" = "أدخل الرمز المكوّن من 6 أرقام من معلمك / الباحث.";
 "signup_submit" = "متابعة";
 "signup_skip_code" = "تخطى — متابعة كزائر";
 

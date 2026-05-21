@@ -19,12 +19,12 @@
 "role_select_title" = "Who are you?";
 
 // Student signup
-"student_signup_subtitle" = "Enter an optional nickname and your class code.\nLeave the code blank to continue as a guest.";
+"student_signup_subtitle" = "Enter your nickname and the 6-digit test code you were given.";
 "signup_nickname_label" = "Nickname (optional)";
 "signup_nickname_hint" = "e.g. Ahmed";
-"signup_classcode_label" = "Class Code (optional)";
+"signup_classcode_label" = "Test code (required)";
 "signup_classcode_hint" = "6-digit code";
-"signup_classcode_footer" = "Leave blank to start as a guest — you can add it later.";
+"signup_classcode_footer" = "Enter the 6-digit code from your teacher / researcher.";
 "signup_submit" = "Continue";
 "signup_skip_code" = "Skip — continue as guest";
 

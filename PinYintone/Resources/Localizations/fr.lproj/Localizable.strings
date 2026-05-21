@@ -19,12 +19,12 @@
 "role_select_title" = "Qui êtes-vous ?";
 
 // Student signup
-"student_signup_subtitle" = "Entrez un surnom et votre code de classe (optionnels).\nLaissez le code vide pour continuer en tant qu'invité.";
+"student_signup_subtitle" = "Entrez votre surnom et le code de test à 6 chiffres qui vous a été remis.";
 "signup_nickname_label" = "Surnom (optionnel)";
 "signup_nickname_hint" = "ex. Ahmed";
-"signup_classcode_label" = "Code de classe (optionnel)";
+"signup_classcode_label" = "Code de test (obligatoire)";
 "signup_classcode_hint" = "6 chiffres";
-"signup_classcode_footer" = "Laissez vide pour commencer en tant qu'invité — vous pourrez l'ajouter plus tard.";
+"signup_classcode_footer" = "Saisissez le code à 6 chiffres de votre enseignant / chercheur.";
 "signup_submit" = "Continuer";
 "signup_skip_code" = "Passer — continuer en tant qu'invité";
 

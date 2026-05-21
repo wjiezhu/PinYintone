@@ -1,6 +1,6 @@
 import SwiftUI
 
-/// 学生注册：昵称（可选）+ 班级码（可选；留空 = 游客）
+/// 学生注册：昵称（可选）+ 测试码（必填，决定 A/B 分组）
 struct StudentSignupView: View {
     @EnvironmentObject var userManager: UserManager
     @Environment(\.dismiss) private var dismiss
@@ -10,6 +10,11 @@ struct StudentSignupView: View {
     @State private var isLoading = false
     @State private var errorMessage: String?
 
+    /// 必填校验：6 位纯数字
+    private var isCodeValid: Bool {
+        classCode.count == 6 && classCode.allSatisfy(\.isNumber)
+    }
+
     var body: some View {
         ScrollView {
             VStack(spacing: 28) {
@@ -17,7 +22,6 @@ struct StudentSignupView: View {
                 formSection
                 errorLabel
                 submitButton
-                skipButton
             }
             .padding(24)
         }
@@ -86,7 +90,7 @@ struct StudentSignupView: View {
 
     private var submitButton: some View {
         Button {
-            submit(asGuest: false)
+            submit()
         } label: {
             Group {
                 if isLoading {
@@ -98,34 +102,24 @@ struct StudentSignupView: View {
             }
             .frame(maxWidth: .infinity)
             .padding()
-            .background(Color.accentColor)
+            .background(isCodeValid ? Color.accentColor : Color.gray.opacity(0.4))
             .foregroundStyle(.white)
             .clipShape(RoundedRectangle(cornerRadius: 14))
         }
-        .disabled(isLoading)
-    }
-
-    private var skipButton: some View {
-        Button {
-            submit(asGuest: true)
-        } label: {
-            Text(NSLocalizedString("signup_skip_code", comment: ""))
-                .font(.callout)
-                .foregroundStyle(.secondary)
-        }
+        .disabled(isLoading || !isCodeValid)
     }
 
     // MARK: - Actions
 
-    private func submit(asGuest: Bool) {
+    private func submit() {
+        guard isCodeValid else { return }
         errorMessage = nil
         isLoading = true
-        let code: String? = (asGuest || classCode.isEmpty) ? nil : classCode
         Task {
             do {
                 try await userManager.registerStudent(
                     nickname: nickname.isEmpty ? nil : nickname,
-                    classCode: code
+                    classCode: classCode
                 )
             } catch let e as RegisterError {
                 errorMessage = e.errorDescription
