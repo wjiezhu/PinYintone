@@ -6,6 +6,7 @@ struct FreeWordPracticeView: View {
     var originalText: String = ""
 
     @StateObject private var vm = FreeWordPracticeViewModel()
+    @ObservedObject private var savedWords = SavedWordsStore.shared
     @State private var currentIndex: Int = 0
 
     private let pinyinConverter = PinyinConverter()
@@ -79,6 +80,17 @@ struct FreeWordPracticeView: View {
         .padding()
         .navigationTitle(NSLocalizedString("stage3_title", comment: ""))
         .navigationBarTitleDisplayMode(.inline)
+        .toolbar {
+            ToolbarItem(placement: .topBarTrailing) {
+                Button {
+                    savedWords.toggle(currentWord)
+                } label: {
+                    Image(systemName: savedWords.contains(currentWord) ? "bookmark.fill" : "bookmark")
+                }
+                .disabled(currentWord.isEmpty)
+                .accessibilityLabel(NSLocalizedString("save_word", comment: ""))
+            }
+        }
         .onAppear {
             vm.originalText = originalText
             vm.prepare(word: currentWord)

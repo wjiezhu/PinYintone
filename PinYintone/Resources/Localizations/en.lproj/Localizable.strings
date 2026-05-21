@@ -112,3 +112,8 @@
 "freetext_prev" = "Previous";
 "freetext_next" = "Next";
 "freetext_legend_ideal" = "Ideal";
+
+// Saved words (Stage 3)
+"saved_words_title" = "My words";
+"saved_words_empty" = "No saved words yet. Tap the bookmark while practicing to add one.";
+"save_word" = "Save word";

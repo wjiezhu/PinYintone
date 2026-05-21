@@ -112,3 +112,8 @@
 "freetext_prev" = "السابق";
 "freetext_next" = "التالي";
 "freetext_legend_ideal" = "المثالي";
+
+// الكلمات المحفوظة (المرحلة 3)
+"saved_words_title" = "كلماتي";
+"saved_words_empty" = "لا توجد كلمات محفوظة بعد. اضغط على العلامة أثناء التدريب لإضافتها.";
+"save_word" = "حفظ الكلمة";

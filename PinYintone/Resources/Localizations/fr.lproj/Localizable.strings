@@ -112,3 +112,8 @@
 "freetext_prev" = "Précédent";
 "freetext_next" = "Suivant";
 "freetext_legend_ideal" = "Idéal";
+
+// Mots enregistrés (Niveau 3)
+"saved_words_title" = "Mes mots";
+"saved_words_empty" = "Aucun mot enregistré. Touche le marque-page pendant l'entraînement pour en ajouter.";
+"save_word" = "Enregistrer le mot";

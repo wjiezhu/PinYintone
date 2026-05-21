@@ -58,6 +58,16 @@ struct FreeTextInputView: View {
         .padding(20)
         .navigationTitle(NSLocalizedString("stage3_title", comment: ""))
         .navigationBarTitleDisplayMode(.inline)
+        .toolbar {
+            ToolbarItem(placement: .topBarTrailing) {
+                NavigationLink {
+                    SavedWordsView()
+                } label: {
+                    Image(systemName: "bookmark")
+                }
+                .accessibilityLabel(NSLocalizedString("saved_words_title", comment: ""))
+            }
+        }
         .navigationDestination(isPresented: $showEditor) {
             TokenEditorView(tokens: $tokens, originalText: rawText)
         }
