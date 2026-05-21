@@ -95,6 +95,12 @@ struct FreeWordPracticeView: View {
             vm.originalText = originalText
             vm.prepare(word: currentWord)
         }
+        // 录音评分完成后，若该词已收藏则记录练习进度（最佳分/次数）
+        .onChange(of: vm.feedbackResult?.dtwScore) { _, newValue in
+            if newValue != nil, let result = vm.feedbackResult {
+                savedWords.recordPractice(word: currentWord, score: result.score)
+            }
+        }
     }
 
     private func move(by delta: Int) {

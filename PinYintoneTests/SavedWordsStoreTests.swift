@@ -62,4 +62,28 @@ final class SavedWordsStoreTests: XCTestCase {
         let reloaded = SavedWordsStore(defaults: defaults)
         XCTAssertEqual(reloaded.words.map(\.word), ["朋友"])
     }
+
+    func testRecordPracticeKeepsBestAndCounts() {
+        store.add("学习")
+        store.recordPractice(word: "学习", score: 70)
+        store.recordPractice(word: "学习", score: 85)
+        store.recordPractice(word: "学习", score: 60)
+        let w = store.words[0]
+        XCTAssertEqual(w.bestScore, 85, "应保留最高分")
+        XCTAssertEqual(w.practiceCount, 3, "应累计练习次数")
+        XCTAssertNotNil(w.lastPracticedAt)
+    }
+
+    func testRecordPracticeNoopForUnsavedWord() {
+        store.recordPractice(word: "没收藏", score: 90)
+        XCTAssertTrue(store.words.isEmpty, "未收藏的词不应被记录或创建")
+    }
+
+    func testProgressPersists() {
+        store.add("北京")
+        store.recordPractice(word: "北京", score: 92)
+        let reloaded = SavedWordsStore(defaults: defaults)
+        XCTAssertEqual(reloaded.words[0].bestScore, 92)
+        XCTAssertEqual(reloaded.words[0].practiceCount, 1)
+    }
 }

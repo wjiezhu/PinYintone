@@ -117,3 +117,4 @@
 "saved_words_title" = "Mes mots";
 "saved_words_empty" = "Aucun mot enregistré. Touche le marque-page pendant l'entraînement pour en ajouter.";
 "save_word" = "Enregistrer le mot";
+"saved_words_practice_count" = "%d pratiques";

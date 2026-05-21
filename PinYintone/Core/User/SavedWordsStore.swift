@@ -54,6 +54,18 @@ final class SavedWordsStore: ObservableObject {
         contains(word) ? removeWord(word) : add(word)
     }
 
+    /// 记录一次练习成绩（仅对已收藏的词生效）：更新最佳分、次数、时间。
+    func recordPractice(word: String, score: Int) {
+        let key = word.trimmingCharacters(in: .whitespacesAndNewlines)
+        guard let idx = words.firstIndex(where: { $0.word == key }) else { return }
+        var entry = words[idx]
+        entry.bestScore = max(entry.bestScore ?? 0, score)
+        entry.practiceCount += 1
+        entry.lastPracticedAt = Date()
+        words[idx] = entry
+        persist()
+    }
+
     // MARK: - 私有
 
     private func load() {

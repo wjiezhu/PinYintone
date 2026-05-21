@@ -117,3 +117,4 @@
 "saved_words_title" = "كلماتي";
 "saved_words_empty" = "لا توجد كلمات محفوظة بعد. اضغط على العلامة أثناء التدريب لإضافتها.";
 "save_word" = "حفظ الكلمة";
+"saved_words_practice_count" = "تدربت %d مرة";

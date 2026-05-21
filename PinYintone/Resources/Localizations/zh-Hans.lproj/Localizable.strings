@@ -117,3 +117,4 @@
 "saved_words_title" = "我的词条";
 "saved_words_empty" = "还没有收藏的词条。练习时点书签即可添加。";
 "save_word" = "收藏词条";
+"saved_words_practice_count" = "练习 %d 次";

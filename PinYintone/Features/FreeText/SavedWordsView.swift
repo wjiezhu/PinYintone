@@ -52,8 +52,35 @@ struct SavedWordsView: View {
                 }
             }
             Spacer()
+
+            // 练习进度：最佳得分 + 次数
+            if let best = entry.bestScore {
+                VStack(alignment: .trailing, spacing: 2) {
+                    HStack(alignment: .firstTextBaseline, spacing: 1) {
+                        Text("\(best)")
+                            .font(.headline.monospacedDigit())
+                            .foregroundStyle(scoreColor(best))
+                        Text("/100")
+                            .font(.caption2)
+                            .foregroundStyle(.secondary)
+                    }
+                    Text(String(format: NSLocalizedString("saved_words_practice_count", comment: ""),
+                                entry.practiceCount))
+                        .font(.caption2)
+                        .foregroundStyle(.tertiary)
+                }
+            }
         }
         .padding(.vertical, 4)
+    }
+
+    private func scoreColor(_ score: Int) -> Color {
+        switch score {
+        case 90...:  return .green
+        case 75..<90: return .mint
+        case 60..<75: return .orange
+        default:      return .red
+        }
     }
 
     private func color(for tone: Int) -> Color {
