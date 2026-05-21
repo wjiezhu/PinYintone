@@ -43,6 +43,12 @@ struct FreeWordPracticeView: View {
                 .frame(height: 200)
                 .animation(.easeInOut(duration: 0.1), value: vm.studentF0.count)
 
+            // 百分制评分（录音结束后）
+            if let result = vm.feedbackResult {
+                DTWScoreView(result: result)
+                    .transition(.opacity)
+            }
+
             Spacer()
 
             RecordButton(isRecording: vm.isRecording) {

@@ -9,6 +9,7 @@ final class FreeWordPracticeViewModel: ObservableObject {
     @Published var idealShape: [Float] = []     // 理想声调轮廓（归一化）
     @Published var currentTones: [Int] = []
     @Published var isRecording: Bool = false
+    @Published var feedbackResult: FeedbackResult?   // 录音结束后的百分制评分
 
     /// 由 View 注入的原始整段文本（用于研究数据 originalText 字段）
     var originalText: String = ""
@@ -16,6 +17,7 @@ final class FreeWordPracticeViewModel: ObservableObject {
     private let audioEngine = AudioEngine()
     private let framer = AudioFramer()
     private let f0Extractor = F0Extractor()
+    private let dtwAnalyzer = DTWAnalyzer()
     private let pinyinConverter = PinyinConverter()
     private var accumulated: [Float] = []
     private var currentWord: String = ""
@@ -40,6 +42,7 @@ final class FreeWordPracticeViewModel: ObservableObject {
         idealShape = f0Extractor.normalize(ToneContour.ideal(for: currentTones))
         studentF0 = []
         accumulated = []
+        feedbackResult = nil
         isRecording = false
     }
 
@@ -59,6 +62,7 @@ final class FreeWordPracticeViewModel: ObservableObject {
         if currentWord != targetWord { prepare(word: targetWord) }
         accumulated = []
         studentF0 = []
+        feedbackResult = nil
         framer.reset()
         recordingStart = Date()
         isRecording = true
@@ -68,7 +72,16 @@ final class FreeWordPracticeViewModel: ObservableObject {
     private func stopRecording() {
         audioEngine.stop()
         isRecording = false
-        studentF0 = f0Extractor.normalize(accumulated)
+        let normalized = f0Extractor.normalize(accumulated)
+        studentF0 = normalized
+        // 与理想声调形状比对，给出百分制评分
+        let dtw = dtwAnalyzer.distance(reference: idealShape, candidate: normalized)
+        feedbackResult = FeedbackResult(
+            dtwScore: dtw,
+            grade: dtwAnalyzer.grade(dtwScore: dtw),
+            attemptNumber: 1,
+            toneErrors: []
+        )
         persist()
     }
 

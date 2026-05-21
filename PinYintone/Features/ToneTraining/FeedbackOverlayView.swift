@@ -12,6 +12,11 @@ struct FeedbackOverlayView: View {
             Color.black.opacity(0.35).ignoresSafeArea()
                 .onTapGesture { onDismiss() }
 
+            // 优秀评分：彩带庆祝
+            if result.grade == .excellent {
+                ConfettiView().ignoresSafeArea()
+            }
+
             VStack(spacing: 18) {
                 Image(systemName: icon)
                     .font(.system(size: 56))
