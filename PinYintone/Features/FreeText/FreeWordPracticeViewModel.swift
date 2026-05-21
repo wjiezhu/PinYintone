@@ -39,11 +39,26 @@ final class FreeWordPracticeViewModel: ObservableObject {
     func prepare(word: String) {
         currentWord = word
         currentTones = pinyinConverter.toneSequence(for: word)
+        // 即时占位：几何理想轮廓；随后异步升级为 TTS 合成参照
         idealShape = f0Extractor.normalize(ToneContour.ideal(for: currentTones))
         studentF0 = []
         accumulated = []
         feedbackResult = nil
         isRecording = false
+
+        Task { [weak self] in
+            let tts = await SpeechService.shared.synthesizeReferenceF0(for: word)
+            await MainActor.run {
+                guard let self, self.currentWord == word, !tts.isEmpty else { return }
+                self.idealShape = tts
+            }
+        }
+    }
+
+    /// 朗读样例读音
+    func playSample() {
+        guard !currentWord.isEmpty else { return }
+        SpeechService.shared.speak(currentWord)
     }
 
     func toggleRecording(targetWord: String) {

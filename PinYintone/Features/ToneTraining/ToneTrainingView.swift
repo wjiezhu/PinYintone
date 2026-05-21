@@ -11,6 +11,16 @@ struct ToneTrainingView: View {
             if let lexeme = vm.currentLexeme {
                 LexemeCardView(lexeme: lexeme)
 
+                // 听样例读音
+                Button {
+                    vm.playSample()
+                } label: {
+                    Label(NSLocalizedString("play_sample", comment: ""), systemImage: "speaker.wave.2.fill")
+                        .font(.subheadline)
+                }
+                .buttonStyle(.bordered)
+                .disabled(vm.isRecording)
+
                 // ── A/B 分组视觉反馈分支 ──────────────────
                 Group {
                     switch appState.group {

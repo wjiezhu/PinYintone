@@ -39,11 +39,27 @@ final class ToneTrainingViewModel: ObservableObject {
 
     func loadLexeme(_ lexeme: Lexeme) {
         currentLexeme = lexeme
+        // 即时占位：几何理想轮廓；随后异步升级为 TTS 合成的母语者参照
         referenceF0 = f0Extractor.normalize(Self.idealContour(for: lexeme.tones))
         studentF0 = []
         accumulatedF0 = []
         feedbackResult = nil
         attemptCount = 0
+
+        let targetID = lexeme.id
+        Task { [weak self] in
+            let tts = await SpeechService.shared.synthesizeReferenceF0(for: lexeme.hanzi)
+            await MainActor.run {
+                guard let self, self.currentLexeme?.id == targetID, !tts.isEmpty else { return }
+                self.referenceF0 = tts
+            }
+        }
+    }
+
+    /// 朗读样例读音
+    func playSample() {
+        guard let hanzi = currentLexeme?.hanzi else { return }
+        SpeechService.shared.speak(hanzi)
     }
 
     func loadNext() {

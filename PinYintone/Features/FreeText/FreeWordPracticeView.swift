@@ -37,6 +37,16 @@ struct FreeWordPracticeView: View {
             .background(Color(.secondarySystemBackground))
             .clipShape(RoundedRectangle(cornerRadius: 18))
 
+            // 听样例读音
+            Button {
+                vm.playSample()
+            } label: {
+                Label(NSLocalizedString("play_sample", comment: ""), systemImage: "speaker.wave.2.fill")
+                    .font(.subheadline)
+            }
+            .buttonStyle(.bordered)
+            .disabled(vm.isRecording)
+
             // 实时 F0 画布
             FreeF0Canvas(studentF0: vm.studentF0,
                          idealToneShape: vm.idealShape,
