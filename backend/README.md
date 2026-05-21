@@ -68,8 +68,10 @@ iOS 端 `APIClient.baseURL` 已指向 `http://localhost:8000`，模拟器可直�
    - 用 **non-pooled / direct** 连接串即可；若日志报 `channel_binding` 相关错误，从串尾删掉 `&channel_binding=require`。
 
 ### 第 2 步：部署后端（Render）
-**蓝图方式（最快）**：Render → New → **Blueprint** → 选本仓库 → 它会读 `backend/render.yaml`。
+**蓝图方式（最快）**：Render → New → **Blueprint** → 选本仓库 → 它读**仓库根**的 `render.yaml`（Blueprint Path 留空即可，默认根目录；该文件用 `rootDir: backend` 指向后端）。
 随后只需在生成的服务里把 **`DATABASE_URL`** 填成第 1 步的 Neon 连接串（`JWT_SECRET` 已自动生成）。
+
+> 报「Blueprint file render.yaml not found」= 蓝图文件不在仓库根。本仓库已放在根目录，点 **Retry** 即可。
 
 **手动方式（不依赖蓝图）**：Render → New → **Web Service** → 连本仓库：
 - **Root Directory**：`backend`（仓库根是 iOS 工程，后端在子目录）
