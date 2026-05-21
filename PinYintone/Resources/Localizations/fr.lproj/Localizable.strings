@@ -119,3 +119,11 @@
 "save_word" = "Enregistrer le mot";
 "saved_words_practice_count" = "%d pratiques";
 "play_sample" = "Écouter";
+
+// Aide / instructions
+"help_title" = "Comment utiliser";
+"help_stage1_body" = "Soufflez fort dans le micro pour disperser le pissenlit — entraîne les sons aspirés (p / t / k).";
+"help_stage2_body" = "Touchez Écouter pour le modèle, puis enregistrez-vous. Vous obtenez un score sur 100 (≥ 60 = réussi).";
+"help_stage3_body" = "Collez ou saisissez du chinois, il se découpe en mots, entraînez chaque mot. Marquez des mots pour les revoir dans Mes mots.";
+"help_tip" = "Pratiquez dans un endroit calme, micro près de la bouche. Le score s'améliore avec la pratique.";
+"help_privacy" = "Aucun enregistrement n'est envoyé — seulement les résultats d'analyse (scores), à des fins de recherche.";

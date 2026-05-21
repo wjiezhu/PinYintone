@@ -119,3 +119,11 @@
 "save_word" = "Save word";
 "saved_words_practice_count" = "Practiced %d times";
 "play_sample" = "Listen";
+
+// Help / instructions
+"help_title" = "How to use";
+"help_stage1_body" = "Blow hard into the mic to scatter the dandelion — practices aspirated sounds (p / t / k).";
+"help_stage2_body" = "Tap Listen for the model, then record yourself. You get a score out of 100 (60+ passes).";
+"help_stage3_body" = "Paste or type Chinese, it splits into words, practice each one. Bookmark words to review later in My words.";
+"help_tip" = "Practice in a quiet place with the mic near your mouth. Your score improves with practice.";
+"help_privacy" = "Your audio is never uploaded — only analysis results (scores), for research.";

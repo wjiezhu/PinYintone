@@ -10,6 +10,7 @@ struct HomeView: View {
 
     @State private var showBindSheet = false
     @State private var showSettings = false
+    @State private var showHelp = false
 
     private var profile: UserProfile? { userManager.profile }
 
@@ -71,6 +72,19 @@ struct HomeView: View {
                     }
                 }
             }
+            // 右下角浮动「i」使用说明
+            .overlay(alignment: .bottomTrailing) {
+                Button { showHelp = true } label: {
+                    Image(systemName: "info.circle.fill")
+                        .font(.system(size: 44))
+                        .symbolRenderingMode(.palette)
+                        .foregroundStyle(.white, Color.accentColor)
+                        .background(Circle().fill(.white).padding(6))
+                        .shadow(radius: 4, y: 2)
+                }
+                .accessibilityLabel(NSLocalizedString("help_title", comment: ""))
+                .padding(20)
+            }
         }
         .sheet(isPresented: $showBindSheet) {
             BindClassCodeSheet().environmentObject(userManager)
@@ -79,6 +93,9 @@ struct HomeView: View {
             SettingsView()
                 .environmentObject(userManager)
                 .environmentObject(appState)
+        }
+        .sheet(isPresented: $showHelp) {
+            HelpView()
         }
     }
 }
