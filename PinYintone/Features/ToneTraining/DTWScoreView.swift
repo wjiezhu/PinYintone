@@ -1,19 +1,19 @@
 import SwiftUI
 
-/// 归一化 DTW 得分显示：分数 + 等级标签（通关线 ≤ 0.5）。
+/// 百分制得分显示：大号分数 + 等级标签（用户友好，不暴露原始 DTW）。
 struct DTWScoreView: View {
-    let score: Float
-    let grade: FeedbackGrade
+    let result: FeedbackResult
 
     var body: some View {
         HStack(spacing: 12) {
-            VStack(alignment: .leading, spacing: 2) {
-                Text("DTW")
-                    .font(.caption)
-                    .foregroundStyle(.secondary)
-                Text(String(format: "%.2f", score))
-                    .font(.title3.bold().monospacedDigit())
+            HStack(alignment: .firstTextBaseline, spacing: 2) {
+                Text("\(result.score)")
+                    .font(.system(size: 34, weight: .bold, design: .rounded))
                     .foregroundStyle(color)
+                    .monospacedDigit()
+                Text("/100")
+                    .font(.subheadline)
+                    .foregroundStyle(.secondary)
             }
             Spacer()
             Text(label)
@@ -30,7 +30,7 @@ struct DTWScoreView: View {
     }
 
     private var color: Color {
-        switch grade {
+        switch result.grade {
         case .excellent:     return .green
         case .good:          return .mint
         case .needsPractice: return .orange
@@ -39,7 +39,7 @@ struct DTWScoreView: View {
     }
 
     private var label: String {
-        switch grade {
+        switch result.grade {
         case .excellent:     return NSLocalizedString("grade_excellent", comment: "")
         case .good:          return NSLocalizedString("grade_good", comment: "")
         case .needsPractice: return NSLocalizedString("grade_needs_practice", comment: "")

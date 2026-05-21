@@ -22,6 +22,12 @@ struct AspirationView: View {
                 DandelionView(triggerRate: vm.triggerRate)
                     .frame(width: 220, height: 220)
 
+                // 送气强度（百分比，用户友好）
+                Text("\(Int((vm.triggerRate * 100).rounded()))%")
+                    .font(.system(size: 34, weight: .bold, design: .rounded))
+                    .monospacedDigit()
+                    .foregroundStyle(vm.triggered ? .green : .orange)
+
                 ProgressView(value: Double(vm.triggerRate))
                     .tint(vm.triggered ? .green : .orange)
                     .animation(.easeInOut, value: vm.triggerRate)

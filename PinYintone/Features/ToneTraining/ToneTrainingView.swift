@@ -32,7 +32,7 @@ struct ToneTrainingView: View {
                 .animation(.easeInOut(duration: 0.1), value: vm.studentF0.count)
 
                 if let result = vm.feedbackResult {
-                    DTWScoreView(score: result.dtwScore, grade: result.grade)
+                    DTWScoreView(result: result)
                 }
 
                 Spacer()

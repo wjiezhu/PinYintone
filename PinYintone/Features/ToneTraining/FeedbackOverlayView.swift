@@ -17,14 +17,20 @@ struct FeedbackOverlayView: View {
                     .font(.system(size: 56))
                     .foregroundStyle(color)
 
+                HStack(alignment: .firstTextBaseline, spacing: 2) {
+                    Text("\(result.score)")
+                        .font(.system(size: 44, weight: .bold, design: .rounded))
+                        .foregroundStyle(color)
+                        .monospacedDigit()
+                    Text("/100")
+                        .font(.title3)
+                        .foregroundStyle(.secondary)
+                }
+
                 Text(feedbackText)
                     .font(.headline)
                     .multilineTextAlignment(.center)
                     .padding(.horizontal)
-
-                Text(String(format: "DTW %.2f", result.dtwScore))
-                    .font(.subheadline.monospacedDigit())
-                    .foregroundStyle(.secondary)
 
                 Button(action: onDismiss) {
                     Text(continueLabel)
