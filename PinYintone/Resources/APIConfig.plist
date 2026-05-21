@@ -1,0 +1,9 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
+<plist version="1.0">
+<dict>
+	<!-- 后端基址。改成本地调试时填 http://localhost:8000 -->
+	<key>BaseURL</key>
+	<string>https://pinyintone-backend.onrender.com</string>
+</dict>
+</plist>

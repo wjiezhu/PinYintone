@@ -4,12 +4,20 @@ final class APIClient {
     static let shared = APIClient()
     private init() {}
 
-    // 后端地址：优先读 Info.plist 的 PT_API_BASE_URL（部署后填生产域名），否则回退本地。
+    // 后端地址：优先读打包资源 APIConfig.plist 的 BaseURL（部署后填生产域名），
+    // 其次 Info.plist 的 PT_API_BASE_URL，最后回退本地。
     private let baseURL: URL = {
-        if let override = Bundle.main.object(forInfoDictionaryKey: "PT_API_BASE_URL") as? String,
-           !override.trimmingCharacters(in: .whitespaces).isEmpty,
-           let url = URL(string: override) {
-            return url
+        func parse(_ s: String?) -> URL? {
+            guard let s, !s.trimmingCharacters(in: .whitespaces).isEmpty else { return nil }
+            return URL(string: s)
+        }
+        if let url = Bundle.main.url(forResource: "APIConfig", withExtension: "plist"),
+           let dict = NSDictionary(contentsOf: url),
+           let parsed = parse(dict["BaseURL"] as? String) {
+            return parsed
+        }
+        if let parsed = parse(Bundle.main.object(forInfoDictionaryKey: "PT_API_BASE_URL") as? String) {
+            return parsed
         }
         return URL(string: "http://localhost:8000")!
     }()
