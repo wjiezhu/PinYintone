@@ -15,7 +15,7 @@ Pour les participant·e·s. L'app est en chinois / français / anglais / arabe (
 1. 点「**允许麦克风**」（练习需要录音分析发音）。
 2. 选择语言。
 3. 选 **「我是学生」**。
-4. 输入研究者发给你的 **6 位测试码**（必填），昵称可留空 → 继续。
+4. 选 **「我是学生」** → **填写你的名字**（必填）→ 继续。（无需任何测试码，系统会自动分组。）
 
 ### 3. 三个练习
 - **送气训练**：对着麦克风用力送气，吹散蒲公英。
@@ -39,7 +39,7 @@ Pour les participant·e·s. L'app est en chinois / français / anglais / arabe (
 1. Touchez « **Autoriser le microphone** » (l'analyse de prononciation nécessite l'enregistrement).
 2. Choisissez la langue.
 3. Choisissez **« Je suis étudiant·e »**.
-4. Saisissez le **code de test à 6 chiffres** remis par le chercheur (obligatoire) ; le surnom est facultatif → Continuer.
+4. Choisissez **« Je suis étudiant·e »** → **entrez votre nom** (obligatoire) → Continuer. (Aucun code n'est nécessaire ; le groupe est attribué automatiquement.)
 
 ### 3. Les trois exercices
 - **Aspiration** : soufflez fort dans le micro pour disperser le pissenlit.
@@ -54,5 +54,5 @@ Pour les participant·e·s. L'app est en chinois / français / anglais / arabe (
 ---
 
 ## 给研究者备注 / Note chercheur
-- 发码分组：`1` 开头 = 组 A（静态色块）；`2` 开头 = 组 B（动态 F0）。每人可发不同尾号便于区分（如 `100001`、`100002` / `200001`、`200002`）。
-- 数据导出见 `backend/analysis/export.sql`（按 `group_assignment` 拉 A/B 两组）。
+- 分组：**无需发码**，被试注册（填名字）时由后端**均衡随机**分配 A/B，两组人数自动均衡。
+- 数据导出见 `backend/analysis/export.sql`（按 `group_assignment` 拉 A/B 两组；用 `nickname` 对回个人）。

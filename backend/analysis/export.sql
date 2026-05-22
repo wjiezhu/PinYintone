@@ -4,17 +4,12 @@
 --   · Neon 控制台 SQL Editor 里逐段运行，右上角可「Download as CSV」。
 --   · 或本地 psql：psql "<NEON_DATABASE_URL>" -c "\copy (这里粘贴某段 SELECT) TO 'out.csv' WITH CSV HEADER"
 -- 说明：
---   · 声调数据 training_sessions 自带 group_assignment（最权威）。
---   · 送气数据 aspiration_attempts 无分组列 → join users.experiment_group，
---     并用班级码前缀（1→A / 2→B）兜底。
+--   · 分组由后端注册时均衡随机分配，存于 users.experiment_group 与
+--     training_sessions.group_assignment（最权威），按名字 nickname 对回个人。
+--   · 声调数据 training_sessions 自带 group_assignment。
+--   · 送气数据 aspiration_attempts 无分组列 → 先 join users.experiment_group，
+--     缺失时回退到该设备在 training_sessions 里的分组。
 --   · 只取正式两组，排除教师 n/a 与异常。
-
-
--- =====================================================================
--- 0) 分组工具：班级码前缀 → 分组（兜底用）
---    1 开头=staticColor(A)，2 开头=dynamicF0(B)，其余按 dynamicF0
--- =====================================================================
--- 在下方查询中以内联 CASE 使用，无需单独建函数。
 
 
 -- =====================================================================
@@ -43,11 +38,7 @@ SELECT
     a.class_code,
     COALESCE(
         u.experiment_group,
-        CASE LEFT(a.class_code, 1)
-            WHEN '1' THEN 'staticColor'
-            WHEN '2' THEN 'dynamicF0'
-            ELSE 'dynamicF0'
-        END
+        (SELECT ts.group_assignment FROM training_sessions ts WHERE ts.device_id = a.device_id LIMIT 1)
     )                               AS group_assignment,
     a.target_word,
     a.trigger_rate,                          -- 0–1，触发率
@@ -57,8 +48,7 @@ FROM aspiration_attempts a
 LEFT JOIN users u ON u.device_id = a.device_id
 WHERE COALESCE(
         u.experiment_group,
-        CASE LEFT(a.class_code, 1)
-            WHEN '1' THEN 'staticColor' WHEN '2' THEN 'dynamicF0' ELSE 'dynamicF0' END
+        (SELECT ts.group_assignment FROM training_sessions ts WHERE ts.device_id = a.device_id LIMIT 1)
       ) IN ('staticColor', 'dynamicF0')
 ORDER BY a.device_id, a.timestamp;
 
@@ -96,7 +86,7 @@ ORDER BY group_assignment, device_id;
 SELECT
     a.device_id,
     COALESCE(u.experiment_group,
-        CASE LEFT(a.class_code,1) WHEN '1' THEN 'staticColor' WHEN '2' THEN 'dynamicF0' ELSE 'dynamicF0' END
+        (SELECT ts.group_assignment FROM training_sessions ts WHERE ts.device_id = a.device_id LIMIT 1)
     )                                                     AS group_assignment,
     COUNT(*)                                              AS n_attempts,
     ROUND(AVG(a.trigger_rate)::numeric, 4)                AS mean_trigger_rate,
@@ -106,7 +96,7 @@ FROM aspiration_attempts a
 LEFT JOIN users u ON u.device_id = a.device_id
 GROUP BY a.device_id, 2
 HAVING COALESCE(u.experiment_group,
-        CASE LEFT(a.class_code,1) WHEN '1' THEN 'staticColor' WHEN '2' THEN 'dynamicF0' ELSE 'dynamicF0' END
+        (SELECT ts.group_assignment FROM training_sessions ts WHERE ts.device_id = a.device_id LIMIT 1)
       ) IN ('staticColor', 'dynamicF0')
 ORDER BY group_assignment, a.device_id;
 
@@ -164,7 +154,7 @@ GROUP BY group_assignment;
 -- 6b 送气
 SELECT
     COALESCE(u.experiment_group,
-        CASE LEFT(a.class_code,1) WHEN '1' THEN 'staticColor' WHEN '2' THEN 'dynamicF0' ELSE 'dynamicF0' END
+        (SELECT ts.group_assignment FROM training_sessions ts WHERE ts.device_id = a.device_id LIMIT 1)
     )                                                     AS group_assignment,
     COUNT(DISTINCT a.device_id)                           AS n_participants,
     COUNT(*)                                              AS n_attempts,
@@ -174,7 +164,7 @@ FROM aspiration_attempts a
 LEFT JOIN users u ON u.device_id = a.device_id
 GROUP BY 1
 HAVING COALESCE(u.experiment_group,
-        CASE LEFT(a.class_code,1) WHEN '1' THEN 'staticColor' WHEN '2' THEN 'dynamicF0' ELSE 'dynamicF0' END
+        (SELECT ts.group_assignment FROM training_sessions ts WHERE ts.device_id = a.device_id LIMIT 1)
       ) IN ('staticColor', 'dynamicF0');
 
 
