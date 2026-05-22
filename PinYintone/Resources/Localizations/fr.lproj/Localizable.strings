@@ -19,8 +19,8 @@
 "role_select_title" = "Qui êtes-vous ?";
 
 // Student signup
-"student_signup_subtitle" = "Entrez votre surnom et le code de test à 6 chiffres qui vous a été remis.";
-"signup_nickname_label" = "Surnom (optionnel)";
+"student_signup_subtitle" = "Entrez votre nom pour commencer à vous entraîner.";
+"signup_nickname_label" = "Votre nom";
 "signup_nickname_hint" = "ex. Ahmed";
 "signup_classcode_label" = "Code de test (obligatoire)";
 "signup_classcode_hint" = "6 chiffres";

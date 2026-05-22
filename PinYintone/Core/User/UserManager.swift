@@ -19,33 +19,24 @@ final class UserManager: ObservableObject {
         profile = p
     }
 
-    /// 班级码（测试码）本地格式校验：6 位纯数字。
-    static func isValidClassCodeFormat(_ code: String) -> Bool {
-        code.count == 6 && code.allSatisfy(\.isNumber)
-    }
-
-    /// 学生/游客注册（classCode 为 nil 时注册为游客）。
-    /// 分组由班级码前缀本地判定（1→A / 2→B / 其余&游客→B）。
-    func registerStudent(nickname: String?, classCode: String?) async throws {
-        // 有班级码则做本地格式校验；后端校验为尽力而为，不阻塞离线测试
-        if let code = classCode {
-            guard Self.isValidClassCodeFormat(code) else { throw RegisterError.invalidClassCode }
-            _ = try? await APIClient.shared.verifyClassCode(code)
-        }
-        let group = GroupAssignment.group(forClassCode: classCode)
-        let p = UserProfile(
+    /// 学生注册（无需班级码）。分组由**后端均衡随机分配**；离线时本地随机兜底。
+    func registerStudent(nickname: String?) async throws {
+        var p = UserProfile(
             deviceID: UIDevice.current.identifierForVendor?.uuidString ?? UUID().uuidString,
-            role: classCode == nil ? .guest : .student,
+            role: .student,
             nickname: nickname,
-            classCode: classCode,
+            classCode: nil,
             teacherEmail: nil,
             teacherToken: nil,
-            experimentGroup: group.rawValue,
+            experimentGroup: GroupAssignment.randomGroup().rawValue,  // 离线兜底
             nativeLanguage: Locale.current.languageCode,
             registeredAt: Date()
         )
-        // 上报云端（游客同样上报，便于研究数据收集），失败不阻塞本地注册
-        try? await APIClient.shared.registerUser(p)
+        // 后端均衡分配（在线则以后端返回为准）
+        if let assigned = try? await APIClient.shared.registerUser(p),
+           ExperimentGroup(rawValue: assigned) != nil {
+            p.experimentGroup = assigned
+        }
         save(p)
         profile = p
     }
@@ -70,14 +61,13 @@ final class UserManager: ObservableObject {
         return resp.classCode
     }
 
-    /// 游客绑定班级码，升级为 student；分组按新班级码前缀重新判定。
+    /// 游客绑定班级码（保留能力；当前研究流程不再使用游客路径）。
     func bindClassCode(_ code: String) async throws {
         guard var p = profile, p.role == .guest else { return }
-        guard Self.isValidClassCodeFormat(code) else { throw RegisterError.invalidClassCode }
-        _ = try? await APIClient.shared.verifyClassCode(code)   // 尽力校验，不阻塞离线
+        guard code.count == 6, code.allSatisfy(\.isNumber) else { throw RegisterError.invalidClassCode }
+        _ = try? await APIClient.shared.verifyClassCode(code)
         p.classCode = code
         p.role = .student
-        p.experimentGroup = GroupAssignment.group(forClassCode: code).rawValue
         try? await APIClient.shared.updateUserBinding(deviceID: p.deviceID, classCode: code)
         save(p)
         profile = p

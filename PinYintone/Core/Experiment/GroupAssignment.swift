@@ -5,22 +5,12 @@ enum ExperimentGroup: String, Codable {
     case dynamicF0    // 模式 B：动态 F0 波形反馈
 }
 
-/// A/B 分组：由班级码（测试码）前缀决定，研究者通过发不同前缀的码控制分组。
+/// A/B 分组：注册时由**后端均衡随机分配**（哪组人少进哪组），结果存 profile.experimentGroup。
 /// 作用域仅限关卡 2（声调训练），关卡 3 不参与分流。
-///
-/// 规则（客户端本地判定，离线可用）：
-/// - `1` 开头 → 组 A（staticColor）
-/// - `2` 开头 → 组 B（dynamicF0）
-/// - 其余前缀 / 游客（无码）→ 组 B（dynamicF0）
+/// 离线无法联系后端时，用本地随机兜底。
 enum GroupAssignment {
-    static func group(forClassCode code: String?) -> ExperimentGroup {
-        guard let first = code?.trimmingCharacters(in: .whitespacesAndNewlines).first else {
-            return .dynamicF0   // 游客（无码）默认 B
-        }
-        switch first {
-        case "1": return .staticColor
-        case "2": return .dynamicF0
-        default:  return .dynamicF0
-        }
+    /// 离线兜底：本地 50/50 随机
+    static func randomGroup() -> ExperimentGroup {
+        Bool.random() ? .staticColor : .dynamicF0
     }
 }

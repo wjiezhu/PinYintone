@@ -3,24 +3,19 @@ import XCTest
 
 final class ModelLogicTests: XCTestCase {
 
-    // MARK: - A/B 分组（班级码前缀决定）
+    // MARK: - A/B 分组（后端均衡随机；离线本地随机兜底）
 
-    func testGroupFromClassCodePrefix() {
-        XCTAssertEqual(GroupAssignment.group(forClassCode: "100001"), .staticColor, "1 开头 → A")
-        XCTAssertEqual(GroupAssignment.group(forClassCode: "234567"), .dynamicF0, "2 开头 → B")
+    func testRandomGroupReturnsValidGroup() {
+        for _ in 0..<50 {
+            let g = GroupAssignment.randomGroup()
+            XCTAssertTrue(g == .staticColor || g == .dynamicF0)
+        }
     }
 
-    func testGroupGuestAndOtherPrefixesDefaultB() {
-        XCTAssertEqual(GroupAssignment.group(forClassCode: nil), .dynamicF0, "游客（无码）→ B")
-        XCTAssertEqual(GroupAssignment.group(forClassCode: ""), .dynamicF0)
-        XCTAssertEqual(GroupAssignment.group(forClassCode: "987654"), .dynamicF0, "其余前缀 → B")
-    }
-
-    @MainActor
-    func testClassCodeFormatValidation() {
-        XCTAssertTrue(UserManager.isValidClassCodeFormat("123456"))
-        XCTAssertFalse(UserManager.isValidClassCodeFormat("12345"), "5 位不合法")
-        XCTAssertFalse(UserManager.isValidClassCodeFormat("12a456"), "含非数字不合法")
+    func testRandomGroupCoversBothOverManyDraws() {
+        var seen = Set<ExperimentGroup>()
+        for _ in 0..<200 { seen.insert(GroupAssignment.randomGroup()) }
+        XCTAssertEqual(seen, [.staticColor, .dynamicF0], "多次抽样应覆盖两组")
     }
 
     // MARK: - 理想四声轮廓合成

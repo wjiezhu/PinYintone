@@ -37,7 +37,7 @@ class VerifyResponse(BaseModel):
 class StudentRegisterRequest(BaseModel):
     deviceID: str
     role: str
-    experimentGroup: str
+    experimentGroup: Optional[str] = None   # 服务端均衡分配，客户端值忽略
     nickname: Optional[str] = None
     classCode: Optional[str] = None
     teacherEmail: Optional[str] = None

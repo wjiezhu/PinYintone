@@ -19,9 +19,9 @@
 "role_select_title" = "您的身份是？";
 
 // 学生注册
-"student_signup_subtitle" = "输入昵称和你收到的 6 位测试码。";
-"signup_nickname_label" = "昵称（可选）";
-"signup_nickname_hint" = "例如：小明";
+"student_signup_subtitle" = "输入你的名字即可开始练习。";
+"signup_nickname_label" = "你的名字";
+"signup_nickname_hint" = "例如：Ahmed";
 "signup_classcode_label" = "测试码（必填）";
 "signup_classcode_hint" = "6 位数字";
 "signup_classcode_footer" = "请输入老师 / 研究者发给你的 6 位测试码。";

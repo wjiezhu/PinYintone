@@ -19,8 +19,8 @@
 "role_select_title" = "من أنت؟";
 
 // تسجيل الطالب
-"student_signup_subtitle" = "أدخل اسمك المستعار ورمز الاختبار المكوّن من 6 أرقام الذي حصلت عليه.";
-"signup_nickname_label" = "الاسم المستعار (اختياري)";
+"student_signup_subtitle" = "أدخل اسمك لبدء التدريب.";
+"signup_nickname_label" = "اسمك";
 "signup_nickname_hint" = "مثال: أحمد";
 "signup_classcode_label" = "رمز الاختبار (مطلوب)";
 "signup_classcode_hint" = "6 أرقام";

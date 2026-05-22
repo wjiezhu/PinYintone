@@ -32,11 +32,10 @@
 ## A/B 实验
 - 作用域：**仅关卡 2（声调训练）**
 - 分组：`A = staticColor`，`B = dynamicF0`
-- 分组依据：**由班级码（测试码）前缀决定，客户端本地判定**
-  - `1` 开头 → 组 A（staticColor）
-  - `2` 开头 → 组 B（dynamicF0）
-  - 其余前缀 / 游客（无码）→ 组 B（dynamicF0）
-- 分组存于 `profile.experimentGroup`，绑定新码时按新前缀重新判定
+- 分组依据：**学生注册时由后端均衡随机分配**（`/student/register` 把人分到当前人数较少的组，等量时随机），保证两组人数均衡；幂等（同一 deviceID 重注册不变组）
+- 离线兜底：联系不到后端时客户端本地 50/50 随机（`GroupAssignment.randomGroup()`）
+- 分组存于 `profile.experimentGroup` 与后端 `users.experiment_group`，并随每条训练记录上报
+- 学生注册**只需填名字**，不再使用班级码/测试码
 - 关卡 3（自由文本）**不参与** A/B 分流，统一用实时 F0 可视化
 
 ## 班级码

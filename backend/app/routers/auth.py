@@ -1,3 +1,4 @@
+import random
 from datetime import datetime, timezone
 
 from fastapi import APIRouter, Depends, HTTPException
@@ -57,13 +58,22 @@ def student_register(body: schemas.StudentRegisterRequest, db: Session = Depends
     if user is None:
         user = models.User(device_id=body.deviceID, install_date=datetime.now(timezone.utc))
         db.add(user)
+    # 均衡随机分组：仅在该设备尚无有效分组时分配（幂等：重装/重注册不变组）
+    if user.experiment_group not in ("staticColor", "dynamicF0"):
+        a = db.query(models.User).filter(models.User.experiment_group == "staticColor").count()
+        b = db.query(models.User).filter(models.User.experiment_group == "dynamicF0").count()
+        if a < b:
+            user.experiment_group = "staticColor"
+        elif b < a:
+            user.experiment_group = "dynamicF0"
+        else:
+            user.experiment_group = random.choice(["staticColor", "dynamicF0"])
     user.nickname = body.nickname
-    user.class_code = body.classCode
-    user.role = body.role
-    user.experiment_group = body.experimentGroup
+    user.role = "student"
+    user.class_code = None
     user.native_language = body.nativeLanguage
     db.commit()
-    return {}
+    return {"experimentGroup": user.experiment_group}
 
 
 @router.put("/student/bind")

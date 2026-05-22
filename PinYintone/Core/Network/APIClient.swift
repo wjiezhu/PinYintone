@@ -76,9 +76,12 @@ final class APIClient {
         return resp.valid
     }
 
-    func registerUser(_ profile: UserProfile) async throws {
-        struct Void: Codable {}
-        let _: Void = try await request("student/register", method: "POST", body: profile)
+    /// 注册学生；返回后端均衡分配的实验分组（rawValue）。
+    @discardableResult
+    func registerUser(_ profile: UserProfile) async throws -> String {
+        struct Resp: Codable { let experimentGroup: String }
+        let resp: Resp = try await request("student/register", method: "POST", body: profile)
+        return resp.experimentGroup
     }
 
     func updateUserBinding(deviceID: String, classCode: String) async throws {

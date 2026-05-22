@@ -1,18 +1,17 @@
 import SwiftUI
 
-/// 学生注册：昵称（可选）+ 测试码（必填，决定 A/B 分组）
+/// 学生注册：填名字即可（分组由后端均衡随机分配，无需测试码）。
 struct StudentSignupView: View {
     @EnvironmentObject var userManager: UserManager
     @Environment(\.dismiss) private var dismiss
 
     @State private var nickname = ""
-    @State private var classCode = ""
     @State private var isLoading = false
     @State private var errorMessage: String?
 
-    /// 必填校验：6 位纯数字
-    private var isCodeValid: Bool {
-        classCode.count == 6 && classCode.allSatisfy(\.isNumber)
+    /// 必填校验：名字非空
+    private var isNameValid: Bool {
+        !nickname.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty
     }
 
     var body: some View {
@@ -46,35 +45,16 @@ struct StudentSignupView: View {
     }
 
     private var formSection: some View {
-        VStack(spacing: 16) {
-            VStack(alignment: .leading, spacing: 6) {
-                Label(NSLocalizedString("signup_nickname_label", comment: ""), systemImage: "person")
-                    .font(.caption)
-                    .foregroundStyle(.secondary)
-                TextField(NSLocalizedString("signup_nickname_hint", comment: ""), text: $nickname)
-                    .textContentType(.nickname)
-                    .padding(12)
-                    .background(Color(.secondarySystemBackground))
-                    .clipShape(RoundedRectangle(cornerRadius: 10))
-            }
-
-            VStack(alignment: .leading, spacing: 6) {
-                Label(NSLocalizedString("signup_classcode_label", comment: ""), systemImage: "number")
-                    .font(.caption)
-                    .foregroundStyle(.secondary)
-                TextField(NSLocalizedString("signup_classcode_hint", comment: ""), text: $classCode)
-                    .keyboardType(.numberPad)
-                    .textContentType(.oneTimeCode)
-                    .onChange(of: classCode) { _, new in
-                        if new.count > 6 { classCode = String(new.prefix(6)) }
-                    }
-                    .padding(12)
-                    .background(Color(.secondarySystemBackground))
-                    .clipShape(RoundedRectangle(cornerRadius: 10))
-                Text(NSLocalizedString("signup_classcode_footer", comment: ""))
-                    .font(.caption2)
-                    .foregroundStyle(.tertiary)
-            }
+        VStack(alignment: .leading, spacing: 6) {
+            Label(NSLocalizedString("signup_nickname_label", comment: ""), systemImage: "person")
+                .font(.caption)
+                .foregroundStyle(.secondary)
+            TextField(NSLocalizedString("signup_nickname_hint", comment: ""), text: $nickname)
+                .textContentType(.name)
+                .submitLabel(.done)
+                .padding(12)
+                .background(Color(.secondarySystemBackground))
+                .clipShape(RoundedRectangle(cornerRadius: 10))
         }
     }
 
@@ -102,24 +82,23 @@ struct StudentSignupView: View {
             }
             .frame(maxWidth: .infinity)
             .padding()
-            .background(isCodeValid ? Color.accentColor : Color.gray.opacity(0.4))
+            .background(isNameValid ? Color.accentColor : Color.gray.opacity(0.4))
             .foregroundStyle(.white)
             .clipShape(RoundedRectangle(cornerRadius: 14))
         }
-        .disabled(isLoading || !isCodeValid)
+        .disabled(isLoading || !isNameValid)
     }
 
     // MARK: - Actions
 
     private func submit() {
-        guard isCodeValid else { return }
+        guard isNameValid else { return }
         errorMessage = nil
         isLoading = true
         Task {
             do {
                 try await userManager.registerStudent(
-                    nickname: nickname.isEmpty ? nil : nickname,
-                    classCode: classCode
+                    nickname: nickname.trimmingCharacters(in: .whitespacesAndNewlines)
                 )
             } catch let e as RegisterError {
                 errorMessage = e.errorDescription
