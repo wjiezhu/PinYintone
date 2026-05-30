@@ -46,12 +46,6 @@ def teacher_login(body: schemas.TeacherLoginRequest, db: Session = Depends(get_d
     )
 
 
-@router.get("/class-code/verify/{code}", response_model=schemas.VerifyResponse)
-def verify_class_code(code: str, db: Session = Depends(get_db)):
-    exists = db.query(models.Teacher).filter(models.Teacher.class_code == code).first()
-    return schemas.VerifyResponse(valid=exists is not None)
-
-
 @router.post("/student/register")
 def student_register(body: schemas.StudentRegisterRequest, db: Session = Depends(get_db)):
     user = db.get(models.User, body.deviceID)
@@ -76,13 +70,3 @@ def student_register(body: schemas.StudentRegisterRequest, db: Session = Depends
     return {"experimentGroup": user.experiment_group}
 
 
-@router.put("/student/bind")
-def student_bind(body: schemas.BindRequest, db: Session = Depends(get_db)):
-    user = db.get(models.User, body.deviceID)
-    if user is None:
-        user = models.User(device_id=body.deviceID, role="student")
-        db.add(user)
-    user.class_code = body.classCode
-    user.role = "student"
-    db.commit()
-    return {}

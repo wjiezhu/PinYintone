@@ -30,10 +30,6 @@ class TeacherLoginResponse(BaseModel):
     classCode: str
 
 
-class VerifyResponse(BaseModel):
-    valid: bool
-
-
 class StudentRegisterRequest(BaseModel):
     deviceID: str
     role: str
@@ -45,11 +41,6 @@ class StudentRegisterRequest(BaseModel):
     nativeLanguage: Optional[str] = None
     # 客户端用 Apple 参考时间(数字)编码，服务端忽略并以 now() 入库
     registeredAt: Optional[float] = None
-
-
-class BindRequest(BaseModel):
-    deviceID: str
-    classCode: str
 
 
 # ───────────── Sync（上行 DTO）─────────────

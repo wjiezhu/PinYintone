@@ -30,9 +30,7 @@ iOS 端 `APIClient.baseURL` 已指向 `http://localhost:8000`，模拟器可直�
 |------|------|------|
 | POST | `/teacher/register` | 教师注册，服务端生成 6 位唯一班级码（禁全同位），返回 JWT |
 | POST | `/teacher/login` | 教师登录 |
-| GET  | `/class-code/verify/{code}` | 校验班级码是否存在 → `{valid}` |
 | POST | `/student/register` | 学生注册（设备级，只填名字）；服务端**均衡随机**分配 A/B 并返回 `{experimentGroup}`，幂等 |
-| PUT  | `/student/bind` | （保留，当前研究流程不使用） |
 
 ### 数据同步（上行）
 | 方法 | 路径 | 说明 |
