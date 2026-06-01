@@ -7,8 +7,6 @@
 "stage1_title" = "تدريب النفس";
 "stage2_title" = "تدريب النبرات";
 "stage3_title" = "ممارسة النص الحر";
-"guest_bind_prompt" = "أدخل رمز الفصل";
-"error_invalid_class_code" = "رمز الفصل غير صالح";
 
 // الإعداد الأولي
 "onboarding_mic_body" = "يحتاج Pinyintone إلى الوصول للميكروفون لتحليل نطقك.";
@@ -22,11 +20,7 @@
 "student_signup_subtitle" = "أدخل اسمك لبدء التدريب.";
 "signup_nickname_label" = "اسمك";
 "signup_nickname_hint" = "مثال: أحمد";
-"signup_classcode_label" = "رمز الاختبار (مطلوب)";
-"signup_classcode_hint" = "6 أرقام";
-"signup_classcode_footer" = "أدخل الرمز المكوّن من 6 أرقام من معلمك / الباحث.";
 "signup_submit" = "متابعة";
-"signup_skip_code" = "تخطى — متابعة كزائر";
 
 // تسجيل الأستاذ
 "teacher_signup_subtitle" = "أنشئ حساب الأستاذ.\nسيتم إنشاء رمز فصل فريد لطلابك تلقائياً.";
@@ -50,15 +44,6 @@
 // شارة رمز الفصل
 "badge_class_code_prefix" = "الفصل";
 
-// بطاقة تنبيه الزائر
-"guest_bind_subtitle" = "اربط نتائجك بالفصل";
-"guest_bind_btn" = "انضمام";
-
-// صفحة الربط
-"bind_classcode_title" = "الانضمام إلى فصل";
-"bind_classcode_body" = "أدخل الرمز المكون من 6 أرقام الذي أعطاك إياه أستاذك.";
-"bind_classcode_submit" = "الانضمام إلى الفصل";
-
 // عام
 "cancel" = "إلغاء";
 "error_email_already_exists" = "البريد الإلكتروني مسجل بالفعل.";
@@ -77,7 +62,6 @@
 "settings_logout" = "تسجيل الخروج";
 "settings_switch_confirm" = "تسجيل الخروج واختيار حساب آخر؟";
 "settings_logout_confirm" = "هل أنت متأكد من تسجيل الخروج؟";
-"role_guest" = "زائر";
 "role_student_short" = "طالب";
 "role_teacher_short" = "أستاذ";
 

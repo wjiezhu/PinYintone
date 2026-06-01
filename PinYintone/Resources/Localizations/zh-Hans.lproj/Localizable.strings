@@ -7,8 +7,6 @@
 "stage1_title" = "送气训练";
 "stage2_title" = "声调训练";
 "stage3_title" = "自由文本练习";
-"guest_bind_prompt" = "输入班级码绑定课堂";
-"error_invalid_class_code" = "班级码无效，请检查后重试";
 
 // 引导页
 "onboarding_mic_body" = "Pinyintone 需要麦克风权限来分析您的发音。";
@@ -22,11 +20,7 @@
 "student_signup_subtitle" = "输入你的名字即可开始练习。";
 "signup_nickname_label" = "你的名字";
 "signup_nickname_hint" = "例如：Ahmed";
-"signup_classcode_label" = "测试码（必填）";
-"signup_classcode_hint" = "6 位数字";
-"signup_classcode_footer" = "请输入老师 / 研究者发给你的 6 位测试码。";
 "signup_submit" = "继续";
-"signup_skip_code" = "跳过 — 以游客身份继续";
 
 // 教师注册
 "teacher_signup_subtitle" = "创建教师账户。\n系统将为您的学生自动生成唯一班级码。";
@@ -50,15 +44,6 @@
 // 班级码徽章
 "badge_class_code_prefix" = "班级";
 
-// 游客提示卡
-"guest_bind_subtitle" = "将您的结果关联到班级";
-"guest_bind_btn" = "加入";
-
-// 绑定 Sheet
-"bind_classcode_title" = "加入班级";
-"bind_classcode_body" = "输入教师提供的 6 位班级码。";
-"bind_classcode_submit" = "加入班级";
-
 // 通用
 "cancel" = "取消";
 "error_email_already_exists" = "该邮箱已注册。";
@@ -77,7 +62,6 @@
 "settings_logout" = "退出登录";
 "settings_switch_confirm" = "退出当前账号并切换到其他账号？";
 "settings_logout_confirm" = "确定要退出登录吗？";
-"role_guest" = "游客";
 "role_student_short" = "学生";
 "role_teacher_short" = "教师";
 

@@ -69,26 +69,12 @@ final class APIClient {
                                  body: Body(email: email, password: password))
     }
 
-    /// 学生绑定班级码前验证；返回 true = 有效
-    func verifyClassCode(_ code: String) async throws -> Bool {
-        struct Resp: Codable { let valid: Bool }
-        let resp: Resp = try await request("class-code/verify/\(code)")
-        return resp.valid
-    }
-
-    /// 注册学生；返回后端均衡分配的实验分组（rawValue）。
+    /// 注册学生（只填名字，无需班级码）；返回后端均衡分配的实验分组（rawValue）。
     @discardableResult
     func registerUser(_ profile: UserProfile) async throws -> String {
         struct Resp: Codable { let experimentGroup: String }
         let resp: Resp = try await request("student/register", method: "POST", body: profile)
         return resp.experimentGroup
-    }
-
-    func updateUserBinding(deviceID: String, classCode: String) async throws {
-        struct Body: Encodable { let deviceID, classCode: String }
-        struct Void: Codable {}
-        let _: Void = try await request("student/bind", method: "PUT",
-                                        body: Body(deviceID: deviceID, classCode: classCode))
     }
 
     // MARK: - Sync（数据上行，POST /api/sync/*）

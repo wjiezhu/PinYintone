@@ -61,18 +61,6 @@ final class UserManager: ObservableObject {
         return resp.classCode
     }
 
-    /// 游客绑定班级码（保留能力；当前研究流程不再使用游客路径）。
-    func bindClassCode(_ code: String) async throws {
-        guard var p = profile, p.role == .guest else { return }
-        guard code.count == 6, code.allSatisfy(\.isNumber) else { throw RegisterError.invalidClassCode }
-        _ = try? await APIClient.shared.verifyClassCode(code)
-        p.classCode = code
-        p.role = .student
-        try? await APIClient.shared.updateUserBinding(deviceID: p.deviceID, classCode: code)
-        save(p)
-        profile = p
-    }
-
     /// 退出登录 / 切换账号：清除本地档案，回到引导（角色选择）流程。
     /// 注意：
     /// - 不清除实验分组（CLAUDE.md：安装时随机一次，UserDefaults 持久化，不可更改）

@@ -17,7 +17,7 @@ struct PinyintoneApp: App {
                 .environmentObject(appState)
                 .environment(\.managedObjectContext, CoreDataStack.shared.context)
                 .onAppear {
-                    // A/B 分组由班级码前缀决定，已存于 profile；从档案同步
+                    // A/B 分组由后端注册时分配，已存于 profile；从档案同步
                     appState.sync(with: UserManager.shared.profile)
                 }
         }
