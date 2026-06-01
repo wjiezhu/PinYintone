@@ -7,8 +7,6 @@
 "stage1_title" = "Entraînement aspiration";
 "stage2_title" = "Entraînement des tons";
 "stage3_title" = "Pratique texte libre";
-"guest_bind_prompt" = "Entrez le code de classe";
-"error_invalid_class_code" = "Code de classe invalide";
 
 // Onboarding
 "onboarding_mic_body" = "Pinyintone a besoin du microphone pour analyser votre prononciation.";
@@ -22,11 +20,7 @@
 "student_signup_subtitle" = "Entrez votre nom pour commencer à vous entraîner.";
 "signup_nickname_label" = "Votre nom";
 "signup_nickname_hint" = "ex. Ahmed";
-"signup_classcode_label" = "Code de test (obligatoire)";
-"signup_classcode_hint" = "6 chiffres";
-"signup_classcode_footer" = "Saisissez le code à 6 chiffres de votre enseignant / chercheur.";
 "signup_submit" = "Continuer";
-"signup_skip_code" = "Passer — continuer en tant qu'invité";
 
 // Teacher signup
 "teacher_signup_subtitle" = "Créez votre compte enseignant.\nUn code de classe unique sera généré pour vos étudiants.";
@@ -50,15 +44,6 @@
 // Class code badge
 "badge_class_code_prefix" = "Classe";
 
-// Guest bind card
-"guest_bind_subtitle" = "Liez vos résultats à une classe";
-"guest_bind_btn" = "Rejoindre";
-
-// Bind sheet
-"bind_classcode_title" = "Rejoindre une classe";
-"bind_classcode_body" = "Entrez le code à 6 chiffres donné par votre enseignant.";
-"bind_classcode_submit" = "Rejoindre la classe";
-
 // General
 "cancel" = "Annuler";
 "error_email_already_exists" = "Cette adresse e-mail est déjà enregistrée.";
@@ -77,7 +62,6 @@
 "settings_logout" = "Se déconnecter";
 "settings_switch_confirm" = "Se déconnecter et choisir un autre compte ?";
 "settings_logout_confirm" = "Voulez-vous vraiment vous déconnecter ?";
-"role_guest" = "Invité";
 "role_student_short" = "Étudiant";
 "role_teacher_short" = "Enseignant";
 

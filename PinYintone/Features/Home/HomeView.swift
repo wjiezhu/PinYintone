@@ -2,13 +2,12 @@ import SwiftUI
 
 /// 主页（对应论文图 1 三大模块入口）。
 /// AppState 驱动：所有人可见送气/声调训练；教师模式额外显示教师控制台。
-/// 保留游客绑定提示、班级码徽章、设置入口。
+/// 教师端显示班级码徽章；设置入口常驻。
 struct HomeView: View {
     @EnvironmentObject var userManager: UserManager
     @EnvironmentObject var appState: AppState
     @Environment(\.horizontalSizeClass) private var sizeClass
 
-    @State private var showBindSheet = false
     @State private var showSettings = false
     @State private var showHelp = false
 
@@ -20,10 +19,8 @@ struct HomeView: View {
                 VStack(spacing: 20) {
                     HeaderBannerView(nickname: profile?.nickname)
 
-                    // 游客：引导绑定班级码；已绑定学生：显示班级码徽章
-                    if profile?.role == .guest {
-                        GuestBindCardView { showBindSheet = true }
-                    } else if let code = profile?.classCode {
+                    // 教师：显示班级码徽章（学生无班级码）
+                    if let code = profile?.classCode {
                         ClassCodeBadgeView(code: code)
                     }
 
@@ -85,9 +82,6 @@ struct HomeView: View {
                 .accessibilityLabel(NSLocalizedString("help_title", comment: ""))
                 .padding(20)
             }
-        }
-        .sheet(isPresented: $showBindSheet) {
-            BindClassCodeSheet().environmentObject(userManager)
         }
         .sheet(isPresented: $showSettings) {
             SettingsView()

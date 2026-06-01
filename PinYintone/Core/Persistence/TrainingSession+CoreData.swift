@@ -11,8 +11,8 @@ extension TrainingSession {
 
     @NSManaged public var id: UUID
     @NSManaged public var deviceID: String
-    @NSManaged public var classCode: String?   // nil = 游客
-    @NSManaged public var role: String         // "guest" | "student"
+    @NSManaged public var classCode: String?   // 学生为 nil（未绑定班级池）
+    @NSManaged public var role: String         // "student" | "teacher"
     @NSManaged public var groupAssignment: String // "staticColor" | "dynamicF0"
     @NSManaged public var lexemeID: String
     @NSManaged public var dtwScore: Double

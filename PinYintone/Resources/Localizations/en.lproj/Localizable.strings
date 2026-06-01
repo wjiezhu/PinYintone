@@ -7,8 +7,6 @@
 "stage1_title" = "Aspiration Training";
 "stage2_title" = "Tone Training";
 "stage3_title" = "Free Text Practice";
-"guest_bind_prompt" = "Enter class code to join";
-"error_invalid_class_code" = "Invalid class code, please check and retry";
 
 // Onboarding
 "onboarding_mic_body" = "Pinyintone needs microphone access to analyze your pronunciation.";
@@ -22,11 +20,7 @@
 "student_signup_subtitle" = "Enter your name to start practicing.";
 "signup_nickname_label" = "Your name";
 "signup_nickname_hint" = "e.g. Ahmed";
-"signup_classcode_label" = "Test code (required)";
-"signup_classcode_hint" = "6-digit code";
-"signup_classcode_footer" = "Enter the 6-digit code from your teacher / researcher.";
 "signup_submit" = "Continue";
-"signup_skip_code" = "Skip — continue as guest";
 
 // Teacher signup
 "teacher_signup_subtitle" = "Create your teacher account.\nA unique class code will be generated for your students.";
@@ -50,15 +44,6 @@
 // Class code badge
 "badge_class_code_prefix" = "Class";
 
-// Guest bind card
-"guest_bind_subtitle" = "Link your results to a class";
-"guest_bind_btn" = "Join";
-
-// Bind sheet
-"bind_classcode_title" = "Join a Class";
-"bind_classcode_body" = "Enter the 6-digit code given by your teacher.";
-"bind_classcode_submit" = "Join Class";
-
 // General
 "cancel" = "Cancel";
 "error_email_already_exists" = "This email is already registered.";
@@ -77,7 +62,6 @@
 "settings_logout" = "Log out";
 "settings_switch_confirm" = "Log out and choose a different account?";
 "settings_logout_confirm" = "Are you sure you want to log out?";
-"role_guest" = "Guest";
 "role_student_short" = "Student";
 "role_teacher_short" = "Teacher";
 

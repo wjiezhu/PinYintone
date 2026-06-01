@@ -139,7 +139,7 @@ struct SettingsView: View {
         } header: {
             Text("调试（仅开发构建）")
         } footer: {
-            Text("仅预览模式 A/B 视觉效果；进入「声调训练」即可看到。正式分组由班级码前缀决定（1→A / 2→B），此开关不改变已存档分组。")
+            Text("仅预览模式 A/B 视觉效果；进入「声调训练」即可看到。正式分组由后端注册时均衡随机分配，此开关不改变已存档分组。")
         }
     }
 
@@ -155,7 +155,6 @@ struct SettingsView: View {
 
     private func roleLabel(_ role: UserRole) -> String {
         switch role {
-        case .guest:   return NSLocalizedString("role_guest", comment: "")
         case .student: return NSLocalizedString("role_student_short", comment: "")
         case .teacher: return NSLocalizedString("role_teacher_short", comment: "")
         }
