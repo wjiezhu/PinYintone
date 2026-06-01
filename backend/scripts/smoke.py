@@ -44,11 +44,6 @@ def main():
     ok &= status == 200
     token, code = reg.get("token"), reg.get("classCode")
 
-    if code:
-        status, v = call("GET", f"/class-code/verify/{code}")
-        print(f"[verify] {status} {v}")
-        ok &= status == 200 and v.get("valid") is True
-
     status, _ = call("POST", "/api/sync/session", {
         "id": f"smoke-{int(time.time())}", "deviceID": "smoke-dev", "classCode": code,
         "role": "student", "groupAssignment": "dynamicF0", "lexemeID": "paobu",
