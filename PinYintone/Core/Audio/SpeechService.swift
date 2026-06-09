@@ -40,7 +40,12 @@ final class SpeechService {
     /// 合成目标词并提取归一化 F0；有声帧过少时返回 []（让调用方回退）。
     func synthesizeReferenceF0(for text: String) async -> [Float] {
         let samples = await render16k(text)
-        guard samples.count >= 512 else { return [] }
+        guard samples.count >= 512 else {
+            #if DEBUG
+            print("[SpeechService] TTS 合成失败 (samples=\(samples.count)) '\(text)' → 回退几何轮廓")
+            #endif
+            return []
+        }
 
         // 512 帧长 / 128 帧移（CLAUDE.md）逐帧提 F0
         var hz: [Float] = []
@@ -49,7 +54,16 @@ final class SpeechService {
             hz.append(f0Extractor.extract(frame: Array(samples[i..<(i + 512)])))
             i += 128
         }
-        guard hz.filter({ $0 > 0 }).count >= 3 else { return [] }
+        let voicedCount = hz.filter { $0 > 0 }.count
+        guard voicedCount >= 3 else {
+            #if DEBUG
+            print("[SpeechService] TTS 有声帧不足 (\(voicedCount)/\(hz.count)) '\(text)' → 回退几何轮廓")
+            #endif
+            return []
+        }
+        #if DEBUG
+        print("[SpeechService] TTS OK '\(text)': \(hz.count) 帧, \(voicedCount) 有声")
+        #endif
         return f0Extractor.normalize(hz)
     }
 

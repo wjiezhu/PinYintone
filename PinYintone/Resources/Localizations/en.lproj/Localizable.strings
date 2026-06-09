@@ -85,6 +85,15 @@
 "aspiration_success" = "✓ Great burst!";
 "aspiration_keep_going" = "Keep going!";
 
+// Per-character diagnostic
+"diagnostic_title" = "Per-character feedback";
+"direction_ok" = "Nailed it";
+"direction_should_stay_high" = "Stay high";
+"direction_should_rise" = "Go up";
+"direction_should_dip_then_rise" = "Dip then rise";
+"direction_should_fall" = "Go down";
+"direction_neutral" = "Try again";
+
 // Free text (Stage 3)
 "freetext_input_hint" = "Paste or type Chinese text to practice tone by tone";
 "freetext_placeholder" = "e.g. 今天天气很好";

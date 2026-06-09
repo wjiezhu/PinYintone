@@ -85,6 +85,15 @@
 "aspiration_success" = "✓ نفث رائع!";
 "aspiration_keep_going" = "واصل!";
 
+// تحليل كل حرف
+"diagnostic_title" = "تحليل كل حرف";
+"direction_ok" = "ممتاز";
+"direction_should_stay_high" = "خلّيه عالي";
+"direction_should_rise" = "صعّد";
+"direction_should_dip_then_rise" = "نزّل ثم صعّد";
+"direction_should_fall" = "نزّل";
+"direction_neutral" = "حاول مجدداً";
+
 // النص الحر (المرحلة 3)
 "freetext_input_hint" = "الصق أو اكتب نصاً صينياً للتدرب كلمة بكلمة";
 "freetext_placeholder" = "مثال: 今天天气很好";

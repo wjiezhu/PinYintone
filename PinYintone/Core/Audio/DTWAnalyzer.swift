@@ -54,6 +54,40 @@ final class DTWAnalyzer {
     /// 是否通关（归一化 DTW ≤ 0.5）
     func passed(_ dtwScore: Float) -> Bool { dtwScore <= 0.5 }
 
+    /// 把参照与候选序列各等分为 nSegments 段，对每段独立计算归一化 DTW。
+    /// 用于按字粒度反馈：每个汉字一段。
+    ///
+    /// **限制**：对 `ToneContour.ideal()` 生成的参照精确分段（每音节固定帧数）；
+    /// 对 TTS 合成的参照只能近似等分，因为不同音节实际时长不同。
+    /// 学生 F0 同理按等分切——足够给"哪个字偏差大"的提示，但不是音段级精确切分。
+    ///
+    /// - Returns: 长度 = nSegments；某段任意一侧无有效帧则该段返回 `.infinity`。
+    func segmentScores(reference: [Float], candidate: [Float], nSegments: Int) -> [Float] {
+        guard nSegments > 0 else { return [] }
+        let a = reference.filter { $0 != 0 }
+        let b = candidate.filter { $0 != 0 }
+        guard !a.isEmpty, !b.isEmpty else {
+            return Array(repeating: .infinity, count: nSegments)
+        }
+
+        var scores: [Float] = []
+        scores.reserveCapacity(nSegments)
+        for i in 0..<nSegments {
+            let aStart = (a.count * i) / nSegments
+            let aEnd   = (a.count * (i + 1)) / nSegments
+            let bStart = (b.count * i) / nSegments
+            let bEnd   = (b.count * (i + 1)) / nSegments
+            let aSeg = Array(a[aStart..<aEnd])
+            let bSeg = Array(b[bStart..<bEnd])
+            if aSeg.isEmpty || bSeg.isEmpty {
+                scores.append(.infinity)
+            } else {
+                scores.append(distance(reference: aSeg, candidate: bSeg))
+            }
+        }
+        return scores
+    }
+
     // MARK: - 私有
 
     private func tracePathLength(_ prev: [[UInt8]], m: Int, n: Int) -> Int {

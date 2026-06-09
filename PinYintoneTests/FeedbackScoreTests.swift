@@ -4,7 +4,7 @@ import XCTest
 final class FeedbackScoreTests: XCTestCase {
 
     private func score(_ dtw: Float) -> Int {
-        FeedbackResult(dtwScore: dtw, grade: .good, attemptNumber: 1, toneErrors: []).score
+        FeedbackResult(dtwScore: dtw, grade: .good, attemptNumber: 1, segments: []).score
     }
 
     func testPerfectAndWorst() {

@@ -85,6 +85,15 @@
 "aspiration_success" = "✓ Bien soufflé !";
 "aspiration_keep_going" = "Continue !";
 
+// Diagnostic par caractère
+"diagnostic_title" = "Détails par caractère";
+"direction_ok" = "Réussi";
+"direction_should_stay_high" = "Reste aigu";
+"direction_should_rise" = "Monte";
+"direction_should_dip_then_rise" = "Descends puis monte";
+"direction_should_fall" = "Descends";
+"direction_neutral" = "Réessaie";
+
 // Texte libre (Niveau 3)
 "freetext_input_hint" = "Colle ou saisis un texte chinois pour t'entraîner ton par ton";
 "freetext_placeholder" = "ex. 今天天气很好";

@@ -51,7 +51,7 @@ struct AspirationView: View {
             if vm.passed {
                 FeedbackOverlayView(
                     result: FeedbackResult(dtwScore: 0, grade: .excellent,
-                                           attemptNumber: 1, toneErrors: [])
+                                           attemptNumber: 1, segments: [])
                 ) {
                     vm.loadNextLexeme()
                 }
