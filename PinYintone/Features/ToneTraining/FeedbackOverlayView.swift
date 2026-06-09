@@ -17,14 +17,14 @@ struct FeedbackOverlayView: View {
                 ConfettiView().ignoresSafeArea()
             }
 
-            VStack(spacing: 18) {
+            VStack(spacing: 14) {
                 Image(systemName: icon)
-                    .font(.system(size: 56))
+                    .font(.system(size: 48))
                     .foregroundStyle(color)
 
                 HStack(alignment: .firstTextBaseline, spacing: 2) {
                     Text("\(result.score)")
-                        .font(.system(size: 44, weight: .bold, design: .rounded))
+                        .font(.system(size: 40, weight: .bold, design: .rounded))
                         .foregroundStyle(color)
                         .monospacedDigit()
                     Text("/100")
@@ -33,25 +33,32 @@ struct FeedbackOverlayView: View {
                 }
 
                 Text(feedbackText)
-                    .font(.headline)
+                    .font(.subheadline)
                     .multilineTextAlignment(.center)
                     .padding(.horizontal)
+
+                // 按字诊断格（A、B 两组都看，论文 3.4 共享反馈）
+                if !result.segments.isEmpty {
+                    ToneDiagnosticGrid(segments: result.segments)
+                        .padding(.top, 4)
+                }
 
                 Button(action: onDismiss) {
                     Text(continueLabel)
                         .font(.headline)
                         .frame(maxWidth: .infinity)
-                        .padding()
+                        .padding(.vertical, 12)
                         .background(color)
                         .foregroundStyle(.white)
                         .clipShape(RoundedRectangle(cornerRadius: 14))
                 }
+                .padding(.top, 4)
             }
-            .padding(28)
-            .frame(maxWidth: 320)
+            .padding(24)
+            .frame(maxWidth: 360)
             .background(.regularMaterial)
             .clipShape(RoundedRectangle(cornerRadius: 24))
-            .padding(40)
+            .padding(24)
         }
     }
 

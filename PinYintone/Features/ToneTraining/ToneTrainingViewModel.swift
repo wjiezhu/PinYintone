@@ -86,14 +86,86 @@ final class ToneTrainingViewModel: ObservableObject {
         studentF0 = normalized
         let score = dtwAnalyzer.distance(reference: referenceF0, candidate: normalized)
         let grade = dtwAnalyzer.grade(dtwScore: score)
+
+        let segments = buildSegments(student: normalized)
         let result = FeedbackResult(
             dtwScore: score,
             grade: grade,
             attemptNumber: attemptCount,
-            toneErrors: []
+            segments: segments
         )
         feedbackResult = result
         persist(result)
+    }
+
+    // MARK: - 按字诊断
+
+    /// 计算每个音节的分段 DTW + 方向提示。两组（A/B）都在录完后看。
+    private func buildSegments(student: [Float]) -> [ToneSegmentResult] {
+        guard let lexeme = currentLexeme, !lexeme.tones.isEmpty else { return [] }
+        let n = lexeme.tones.count
+        let segScores = dtwAnalyzer.segmentScores(
+            reference: referenceF0, candidate: student, nSegments: n
+        )
+
+        // 学生 F0 同步等分（去 0 后），用于方向分析
+        let voiced = student.filter { $0 != 0 }
+        let chars = Array(lexeme.hanzi)
+
+        var out: [ToneSegmentResult] = []
+        out.reserveCapacity(n)
+        for i in 0..<n {
+            let tone = lexeme.tones[i]
+            let segStart = (voiced.count * i) / n
+            let segEnd   = (voiced.count * (i + 1)) / n
+            let studentSeg = (segStart < segEnd) ? Array(voiced[segStart..<segEnd]) : []
+            let hint = directionHint(for: tone, studentSegment: studentSeg,
+                                     overallPassed: segScores[i] <= 0.5)
+            let ch = i < chars.count ? String(chars[i]) : "?"
+            out.append(ToneSegmentResult(
+                syllableIndex: i,
+                hanziChar: ch,
+                expectedTone: tone,
+                segmentScore: segScores[i],
+                directionHint: hint
+            ))
+        }
+        return out
+    }
+
+    /// 通过学生段的三等分（起/中/末）均值，识别走向并对照目标声调，输出方向提示。
+    /// 若分段评分已通关（≤ 0.5），返回 `.ok`，不画箭头。
+    private func directionHint(for tone: Int,
+                               studentSegment voiced: [Float],
+                               overallPassed: Bool) -> DirectionHint {
+        if overallPassed { return .ok }
+        guard voiced.count >= 3 else { return .neutral }
+
+        let third = max(1, voiced.count / 3)
+        let start = voiced.prefix(third)
+        let mid   = voiced.dropFirst(third).prefix(third)
+        let end   = voiced.suffix(third)
+        let avg: ([Float]) -> Float = { s in
+            guard !s.isEmpty else { return 0 }
+            return s.reduce(0, +) / Float(s.count)
+        }
+        let aStart = avg(Array(start))
+        let aMid   = avg(Array(mid))
+        let aEnd   = avg(Array(end))
+
+        // z-score 单位下，0.5 是一个明显的走向阈值
+        let SLOPE: Float = 0.5
+        let DIP: Float   = 0.3
+
+        switch tone {
+        case 1: return .shouldStayHigh                                   // 没保持平
+        case 2: return aEnd > aStart + SLOPE ? .ok : .shouldRise         // 没升上去
+        case 3: return (min(aStart, aEnd) - aMid) > DIP ? .ok            // 中段确实更低
+                       : .shouldDipThenRise
+        case 4: return aEnd < aStart - SLOPE ? .ok : .shouldFall         // 没降下来
+        case 5: return .neutral                                          // 轻声不指点
+        default: return .neutral
+        }
     }
 
     // MARK: - 持久化

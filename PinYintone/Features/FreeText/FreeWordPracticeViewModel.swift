@@ -95,7 +95,7 @@ final class FreeWordPracticeViewModel: ObservableObject {
             dtwScore: dtw,
             grade: dtwAnalyzer.grade(dtwScore: dtw),
             attemptNumber: 1,
-            toneErrors: []
+            segments: []
         )
         persist()
     }
