@@ -72,6 +72,14 @@ final class AudioEngine {
     func start(duration: TimeInterval? = nil) throws {
         guard !isRecording else { return }
 
+        // 0) 防御性清理：即便逻辑上没在录音，也可能残留 tap / 引擎仍在跑
+        // （前次录音被电话/Siri/后台切换打断、teardown 未跑完等情形）。
+        // 在已装 tap 的 AVAudioNode 上再装 tap 会抛 NSException → 直接闪退。
+        // 必须无条件先 removeTap + stop engine 一次。
+        let input = engine.inputNode
+        input.removeTap(onBus: 0)
+        if engine.isRunning { engine.stop() }
+
         // 1) 配置音频会话：measurement 模式关闭额外处理，保证电平/基频分析准确
         let session = AVAudioSession.sharedInstance()
         try session.setCategory(.record, mode: .measurement, options: [])
@@ -79,7 +87,6 @@ final class AudioEngine {
         try session.setActive(true, options: .notifyOthersOnDeactivation)
 
         // 2) 建立 硬件格式 → 目标格式 的转换器
-        let input = engine.inputNode
         let hwFormat = input.outputFormat(forBus: 0)
         guard let converter = AVAudioConverter(from: hwFormat, to: targetFormat) else {
             throw AudioEngineError.converterUnavailable
