@@ -19,15 +19,24 @@ final class ToneTrainingViewModel: ObservableObject {
 
     private var accumulatedF0: [Float] = []      // 原始 Hz 序列（含 0 无声帧）
     private var attemptCount = 0
+    /// 实时曲线刷新节流时间戳。帧移 128 samples ≈ 每 8ms 一帧，
+    /// 若每帧都对整条累积序列做全量 normalize + 触发 Canvas 重绘（模式 B），
+    /// 主线程会被打爆 → watchdog 终止进程。节流到 ~12fps 既流畅又不崩。
+    private var lastCurveRefresh: Date = .distantPast
+    private let curveRefreshInterval: TimeInterval = 0.08   // ≈12fps
 
     init() {
-        // 帧化层每凑满 512 样本 → 提 F0 → 累积 → 刷新归一化曲线
+        // 帧化层每凑满帧 → 提 F0 → 累积；实时曲线节流刷新（见 lastCurveRefresh）
         framer.onFrame = { [weak self] frame in
             guard let self else { return }
             let hz = self.f0Extractor.extract(frame: frame)
             Task { @MainActor in
                 self.accumulatedF0.append(hz)
-                self.studentF0 = self.f0Extractor.normalize(self.accumulatedF0)
+                // 节流：高频全量 normalize + Canvas 重绘会拖垮主线程（模式 B 闪退根因）
+                if Date().timeIntervalSince(self.lastCurveRefresh) >= self.curveRefreshInterval {
+                    self.lastCurveRefresh = Date()
+                    self.studentF0 = self.f0Extractor.normalize(self.accumulatedF0)
+                }
             }
         }
         audioEngine.onChunk = { [weak self] pcm in
@@ -72,6 +81,7 @@ final class ToneTrainingViewModel: ObservableObject {
         accumulatedF0 = []
         studentF0 = []
         feedbackResult = nil
+        lastCurveRefresh = .distantPast   // 让本次录音第一帧立即刷新曲线
         framer.reset()
         isRecording = true
         try? audioEngine.start()
