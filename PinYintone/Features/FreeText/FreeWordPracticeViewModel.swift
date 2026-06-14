@@ -81,7 +81,11 @@ final class FreeWordPracticeViewModel: ObservableObject {
         framer.reset()
         recordingStart = Date()
         isRecording = true
-        try? audioEngine.start()
+        do {
+            try audioEngine.start()
+        } catch {
+            isRecording = false
+        }
     }
 
     private func stopRecording() {
