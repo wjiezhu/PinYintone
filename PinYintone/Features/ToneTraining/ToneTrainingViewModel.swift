@@ -84,7 +84,12 @@ final class ToneTrainingViewModel: ObservableObject {
         lastCurveRefresh = .distantPast   // 让本次录音第一帧立即刷新曲线
         framer.reset()
         isRecording = true
-        try? audioEngine.start()
+        // start 失败（无麦克风 / 权限被拒）时回滚，避免 UI 卡在"录音中"
+        do {
+            try audioEngine.start()
+        } catch {
+            isRecording = false
+        }
     }
 
     func stopRecordingAndEvaluate() {

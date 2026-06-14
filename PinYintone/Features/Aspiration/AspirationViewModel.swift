@@ -49,7 +49,11 @@ final class AspirationViewModel: ObservableObject {
             self.calibrated = true
             self.startDetection()
         }
-        try? audioEngine.start(duration: 0.5)
+        do {
+            try audioEngine.start(duration: 0.5)
+        } catch {
+            calibrated = false
+        }
     }
 
     // MARK: - 检测（600ms 滑动窗口）
@@ -62,7 +66,11 @@ final class AspirationViewModel: ObservableObject {
             let frame = AudioEngine.floatSamples(from: pcm)
             Task { @MainActor in self?.process(frame) }
         }
-        try? audioEngine.start()
+        do {
+            try audioEngine.start()
+        } catch {
+            isRecording = false
+        }
     }
 
     private func process(_ frame: [Float]) {

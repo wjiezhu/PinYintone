@@ -18,6 +18,7 @@ final class AudioEngine {
     enum AudioEngineError: Error {
         case converterUnavailable      // 无法创建 AVAudioConverter
         case engineStartFailed(Error)  // AVAudioEngine 启动失败
+        case invalidInputFormat        // 输入格式无效（模拟器无麦克风 / 权限被拒 / 会话被占用）
     }
 
     // MARK: - 固定参数（不可更改）
@@ -88,6 +89,13 @@ final class AudioEngine {
 
         // 2) 建立 硬件格式 → 目标格式 的转换器
         let hwFormat = input.outputFormat(forBus: 0)
+        // 模拟器无麦克风 / 麦克风权限被拒 / 会话被占用时，inputNode 可能返回 sampleRate
+        // 或 channelCount 为 0 的无效格式；直接传给 installTap 会抛
+        // IsFormatSampleRateAndChannelCountValid 异常导致进程崩溃。先校验，优雅失败。
+        guard hwFormat.sampleRate > 0, hwFormat.channelCount > 0 else {
+            try? session.setActive(false, options: .notifyOthersOnDeactivation)
+            throw AudioEngineError.invalidInputFormat
+        }
         guard let converter = AVAudioConverter(from: hwFormat, to: targetFormat) else {
             throw AudioEngineError.converterUnavailable
         }
