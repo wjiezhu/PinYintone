@@ -22,6 +22,10 @@ final class FreeWordPracticeViewModel: ObservableObject {
     private var accumulated: [Float] = []
     private var currentWord: String = ""
     private var recordingStart = Date()
+    /// 实时曲线刷新节流（同 ToneTrainingViewModel）：帧移 128 samples ≈ 每 8ms 一帧，
+    /// 全量 normalize + Canvas 重绘会拖垮主线程 → watchdog 终止进程，节流到 ~12fps。
+    private var lastCurveRefresh: Date = .distantPast
+    private let curveRefreshInterval: TimeInterval = 0.08   // ≈12fps
 
     init() {
         framer.onFrame = { [weak self] frame in
@@ -29,7 +33,10 @@ final class FreeWordPracticeViewModel: ObservableObject {
             let hz = self.f0Extractor.extract(frame: frame)
             Task { @MainActor in
                 self.accumulated.append(hz)
-                self.studentF0 = self.f0Extractor.normalize(self.accumulated)
+                if Date().timeIntervalSince(self.lastCurveRefresh) >= self.curveRefreshInterval {
+                    self.lastCurveRefresh = Date()
+                    self.studentF0 = self.f0Extractor.normalize(self.accumulated)
+                }
             }
         }
         audioEngine.onChunk = { [weak self] pcm in self?.framer.feed(pcm) }
@@ -79,6 +86,7 @@ final class FreeWordPracticeViewModel: ObservableObject {
         studentF0 = []
         feedbackResult = nil
         framer.reset()
+        lastCurveRefresh = .distantPast
         recordingStart = Date()
         isRecording = true
         do {

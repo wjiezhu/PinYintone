@@ -53,7 +53,8 @@ struct FreeF0Canvas: View {
         var p = Path()
         var started = false
         let n = max(track.count - 1, 1)
-        for (i, v) in track.enumerated() where v != 0 {
+        // 同时过滤 NaN/Inf：非有限值坐标传入 CoreGraphics 会直接 abort 进程
+        for (i, v) in track.enumerated() where v != 0 && v.isFinite {
             let x = CGFloat(i) / CGFloat(n) * size.width
             let clamped = min(max(v, vMin), vMax)
             let y = size.height * (1 - CGFloat((clamped - vMin) / (vMax - vMin)))
