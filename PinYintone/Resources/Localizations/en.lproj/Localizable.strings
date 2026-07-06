@@ -17,10 +17,11 @@
 "role_select_title" = "Who are you?";
 
 // Student signup
-"student_signup_subtitle" = "Enter your name to start practicing.";
-"signup_nickname_label" = "Your name";
+"student_signup_subtitle" = "Sign in with your Apple ID to start practicing.";
+"signup_nickname_label" = "Your name (optional — provided by Apple ID)";
 "signup_nickname_hint" = "e.g. Ahmed";
 "signup_submit" = "Continue";
+"signup_apple_failed" = "Sign in with Apple failed. Please try again.";
 
 // Teacher signup
 "teacher_signup_subtitle" = "Create your teacher account.\nA unique class code will be generated for your students.";

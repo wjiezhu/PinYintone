@@ -33,6 +33,7 @@ class TeacherLoginResponse(BaseModel):
 class StudentRegisterRequest(BaseModel):
     deviceID: str
     role: str
+    appleUserID: Optional[str] = None       # Sign in with Apple 稳定标识
     experimentGroup: Optional[str] = None   # 服务端均衡分配，客户端值忽略
     nickname: Optional[str] = None
     classCode: Optional[str] = None

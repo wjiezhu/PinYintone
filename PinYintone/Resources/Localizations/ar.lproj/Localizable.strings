@@ -17,10 +17,11 @@
 "role_select_title" = "من أنت؟";
 
 // تسجيل الطالب
-"student_signup_subtitle" = "أدخل اسمك لبدء التدريب.";
-"signup_nickname_label" = "اسمك";
+"student_signup_subtitle" = "سجّل الدخول بحساب Apple لبدء التدريب.";
+"signup_nickname_label" = "اسمك (اختياري — يوفره حساب Apple)";
 "signup_nickname_hint" = "مثال: أحمد";
 "signup_submit" = "متابعة";
+"signup_apple_failed" = "فشل تسجيل الدخول بواسطة Apple. حاول مرة أخرى.";
 
 // تسجيل الأستاذ
 "teacher_signup_subtitle" = "أنشئ حساب الأستاذ.\nسيتم إنشاء رمز فصل فريد لطلابك تلقائياً.";

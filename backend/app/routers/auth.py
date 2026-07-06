@@ -54,14 +54,31 @@ def student_register(body: schemas.StudentRegisterRequest, db: Session = Depends
         db.add(user)
     # 均衡随机分组：仅在该设备尚无有效分组时分配（幂等：重装/重注册不变组）
     if user.experiment_group not in ("staticColor", "dynamicF0"):
-        a = db.query(models.User).filter(models.User.experiment_group == "staticColor").count()
-        b = db.query(models.User).filter(models.User.experiment_group == "dynamicF0").count()
-        if a < b:
-            user.experiment_group = "staticColor"
-        elif b < a:
-            user.experiment_group = "dynamicF0"
+        # Sign in with Apple 跨设备幂等：同一 Apple ID 在其它设备已有分组 → 直接继承，
+        # 避免同一被试在两台设备被分进不同组污染 A/B 数据
+        prior = None
+        if body.appleUserID:
+            prior = (
+                db.query(models.User)
+                .filter(
+                    models.User.apple_user_id == body.appleUserID,
+                    models.User.experiment_group.in_(["staticColor", "dynamicF0"]),
+                )
+                .first()
+            )
+        if prior is not None:
+            user.experiment_group = prior.experiment_group
         else:
-            user.experiment_group = random.choice(["staticColor", "dynamicF0"])
+            a = db.query(models.User).filter(models.User.experiment_group == "staticColor").count()
+            b = db.query(models.User).filter(models.User.experiment_group == "dynamicF0").count()
+            if a < b:
+                user.experiment_group = "staticColor"
+            elif b < a:
+                user.experiment_group = "dynamicF0"
+            else:
+                user.experiment_group = random.choice(["staticColor", "dynamicF0"])
+    if body.appleUserID:
+        user.apple_user_id = body.appleUserID
     user.nickname = body.nickname
     user.role = "student"
     user.class_code = None
