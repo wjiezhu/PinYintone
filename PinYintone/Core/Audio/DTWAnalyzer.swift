@@ -7,7 +7,12 @@ import Foundation
 /// - 通关线：归一化 DTW ≤ 0.5
 final class DTWAnalyzer {
 
-    /// 计算两条 F0 序列的归一化 DTW 距离（值域 ≥ 0，越小越接近）
+    /// 评分上限（有限哨兵值）。任一侧无有声帧时返回此值而非 .infinity：
+    /// Float.infinity 无法被 JSONEncoder 编码，会导致训练记录同步失败且 UI 显示 "inf"。
+    /// 9.99 远超通关线 0.5，语义仍是 fail。
+    static let maxScore: Float = 9.99
+
+    /// 计算两条 F0 序列的归一化 DTW 距离（值域 0–maxScore，越小越接近）
     /// - Parameters:
     ///   - reference: 母语者归一化 F0 轨迹
     ///   - candidate: 学习者归一化 F0 轨迹
@@ -16,7 +21,7 @@ final class DTWAnalyzer {
         let a = reference.filter { $0 != 0 }
         let b = candidate.filter { $0 != 0 }
         let m = a.count, n = b.count
-        guard m > 0, n > 0 else { return .infinity }
+        guard m > 0, n > 0 else { return Self.maxScore }
 
         // dp[i][j] = 到达 (i,j) 的最小累积代价
         var dp = [[Float]](repeating: [Float](repeating: .infinity, count: n + 1), count: m + 1)
@@ -38,7 +43,7 @@ final class DTWAnalyzer {
 
         // 路径长度归一化：D_norm = D_dtw / W（W = 最优路径步数）
         let pathLen = tracePathLength(prev, m: m, n: n)
-        return dp[m][n] / Float(max(pathLen, 1))
+        return min(dp[m][n] / Float(max(pathLen, 1)), Self.maxScore)
     }
 
     /// 根据归一化 DTW 距离返回评分等级（CLAUDE.md 通关线 ≤ 0.5）
@@ -61,13 +66,13 @@ final class DTWAnalyzer {
     /// 对 TTS 合成的参照只能近似等分，因为不同音节实际时长不同。
     /// 学生 F0 同理按等分切——足够给"哪个字偏差大"的提示，但不是音段级精确切分。
     ///
-    /// - Returns: 长度 = nSegments；某段任意一侧无有效帧则该段返回 `.infinity`。
+    /// - Returns: 长度 = nSegments；某段任意一侧无有效帧则该段返回 `maxScore`。
     func segmentScores(reference: [Float], candidate: [Float], nSegments: Int) -> [Float] {
         guard nSegments > 0 else { return [] }
         let a = reference.filter { $0 != 0 }
         let b = candidate.filter { $0 != 0 }
         guard !a.isEmpty, !b.isEmpty else {
-            return Array(repeating: .infinity, count: nSegments)
+            return Array(repeating: Self.maxScore, count: nSegments)
         }
 
         var scores: [Float] = []
@@ -80,7 +85,7 @@ final class DTWAnalyzer {
             let aSeg = Array(a[aStart..<aEnd])
             let bSeg = Array(b[bStart..<bEnd])
             if aSeg.isEmpty || bSeg.isEmpty {
-                scores.append(.infinity)
+                scores.append(Self.maxScore)
             } else {
                 scores.append(distance(reference: aSeg, candidate: bSeg))
             }

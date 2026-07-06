@@ -52,9 +52,13 @@ struct FreeF0Canvas: View {
     private func path(from track: [Float], in size: CGSize) -> Path {
         var p = Path()
         var started = false
-        let n = max(track.count - 1, 1)
+        // trim 首尾无声帧：录音前静音会把曲线推到画布中段，与理想形状起点错位
+        guard let first = track.firstIndex(where: { $0 != 0 && $0.isFinite }),
+              let last = track.lastIndex(where: { $0 != 0 && $0.isFinite }) else { return p }
+        let trimmed = Array(track[first...last])
+        let n = max(trimmed.count - 1, 1)
         // 同时过滤 NaN/Inf：非有限值坐标传入 CoreGraphics 会直接 abort 进程
-        for (i, v) in track.enumerated() where v != 0 && v.isFinite {
+        for (i, v) in trimmed.enumerated() where v != 0 && v.isFinite {
             let x = CGFloat(i) / CGFloat(n) * size.width
             let clamped = min(max(v, vMin), vMax)
             let y = size.height * (1 - CGFloat((clamped - vMin) / (vMax - vMin)))

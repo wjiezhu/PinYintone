@@ -64,7 +64,8 @@ final class SpeechService {
         #if DEBUG
         print("[SpeechService] TTS OK '\(text)': \(hz.count) 帧, \(voicedCount) 有声")
         #endif
-        return f0Extractor.normalize(hz)
+        // clean：TTS 提取的参照同样有八度错误/尖峰，先清理再归一化
+        return f0Extractor.normalize(f0Extractor.clean(hz))
     }
 
     /// 用 AVSpeechSynthesizer.write 离线渲染为 16kHz 单声道 Float PCM。

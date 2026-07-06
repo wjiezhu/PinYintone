@@ -35,7 +35,9 @@ final class FreeWordPracticeViewModel: ObservableObject {
                 self.accumulated.append(hz)
                 if Date().timeIntervalSince(self.lastCurveRefresh) >= self.curveRefreshInterval {
                     self.lastCurveRefresh = Date()
-                    self.studentF0 = self.f0Extractor.normalize(self.accumulated)
+                    // clean：八度纠错 + 去尖峰，避免曲线出现 2× 跳变毛刺
+                    self.studentF0 = self.f0Extractor.normalize(
+                        self.f0Extractor.clean(self.accumulated))
                 }
             }
         }
@@ -99,7 +101,7 @@ final class FreeWordPracticeViewModel: ObservableObject {
     private func stopRecording() {
         audioEngine.stop()
         isRecording = false
-        let normalized = f0Extractor.normalize(accumulated)
+        let normalized = f0Extractor.normalize(f0Extractor.clean(accumulated))
         studentF0 = normalized
         // 与理想声调形状比对，给出百分制评分
         let dtw = dtwAnalyzer.distance(reference: idealShape, candidate: normalized)

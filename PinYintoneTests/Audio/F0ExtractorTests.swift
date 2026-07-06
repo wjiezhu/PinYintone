@@ -63,4 +63,51 @@ final class F0ExtractorTests: XCTestCase {
         // 仅一个有声帧时无法求标准差 → 全 0
         XCTAssertEqual(extractor.normalize([0, 100, 0]), [0, 0, 0])
     }
+
+    // MARK: - clean() 后处理
+
+    func testCleanRemovesIsolatedSpikes() {
+        // 孤立 1–2 帧的"有声"段（<24ms）是冲击噪声，应置 0
+        var track = [Float](repeating: 0, count: 20)
+        track[5] = 300                        // 单帧尖峰
+        track[10] = 250; track[11] = 260      // 双帧尖峰
+        let cleaned = extractor.clean(track)
+        XCTAssertEqual(cleaned[5], 0, "单帧孤立尖峰应被清除")
+        XCTAssertEqual(cleaned[10], 0, "双帧孤立尖峰应被清除")
+        XCTAssertEqual(cleaned[11], 0, "双帧孤立尖峰应被清除")
+    }
+
+    func testCleanFixesOctaveDoubling() {
+        // 稳定 200 Hz 序列中混入一帧 400 Hz（倍频错误）→ 应折回 ≈200
+        var track = [Float](repeating: 200, count: 12)
+        track[6] = 400
+        let cleaned = extractor.clean(track)
+        XCTAssertEqual(cleaned[6], 200, accuracy: 1, "倍频八度错误应折回")
+    }
+
+    func testCleanFixesOctaveHalving() {
+        // 稳定 300 Hz 序列中混入一帧 150 Hz（半频错误）→ 应折回 ≈300
+        var track = [Float](repeating: 300, count: 12)
+        track[6] = 150
+        let cleaned = extractor.clean(track)
+        XCTAssertEqual(cleaned[6], 300, accuracy: 1, "半频八度错误应折回")
+    }
+
+    func testCleanKeepsUnvoicedZero() {
+        // clean 不得给无声帧插值（CLAUDE.md）
+        let track: [Float] = [200, 210, 220, 0, 0, 0, 230, 240, 250]
+        let cleaned = extractor.clean(track)
+        XCTAssertEqual(cleaned[3], 0)
+        XCTAssertEqual(cleaned[4], 0)
+        XCTAssertEqual(cleaned[5], 0)
+    }
+
+    func testCleanPreservesLegitimateToneMovement() {
+        // 真实二声上升（160→248，逐帧 ≈6%）不应被八度纠错破坏
+        let rise = (0..<20).map { 160 + Float($0) * 4.6 }
+        let cleaned = extractor.clean(rise)
+        for (orig, out) in zip(rise, cleaned) {
+            XCTAssertEqual(out, orig, accuracy: 6, "平滑允许微调，但不得大改合法上升轨迹")
+        }
+    }
 }
