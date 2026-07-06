@@ -17,10 +17,11 @@
 "role_select_title" = "您的身份是？";
 
 // 学生注册
-"student_signup_subtitle" = "输入你的名字即可开始练习。";
-"signup_nickname_label" = "你的名字";
+"student_signup_subtitle" = "使用 Apple 账户登录即可开始练习。";
+"signup_nickname_label" = "你的名字（可选，Apple 账户会自动提供）";
 "signup_nickname_hint" = "例如：Ahmed";
 "signup_submit" = "继续";
+"signup_apple_failed" = "Apple 登录失败，请重试。";
 
 // 教师注册
 "teacher_signup_subtitle" = "创建教师账户。\n系统将为您的学生自动生成唯一班级码。";

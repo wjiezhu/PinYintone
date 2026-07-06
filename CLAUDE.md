@@ -32,10 +32,10 @@
 ## A/B 实验
 - 作用域：**仅关卡 2（声调训练）**
 - 分组：`A = staticColor`，`B = dynamicF0`
-- 分组依据：**学生注册时由后端均衡随机分配**（`/student/register` 把人分到当前人数较少的组，等量时随机），保证两组人数均衡；幂等（同一 deviceID 重注册不变组）
+- 分组依据：**学生注册时由后端均衡随机分配**（`/student/register` 把人分到当前人数较少的组，等量时随机），保证两组人数均衡；幂等（同一 deviceID 重注册不变组；同一 Apple ID 跨设备登录继承原组，见 `users.apple_user_id`）
 - 离线兜底：联系不到后端时客户端本地 50/50 随机（`GroupAssignment.randomGroup()`）
 - 分组存于 `profile.experimentGroup` 与后端 `users.experiment_group`，并随每条训练记录上报
-- 学生注册**只需填名字**，不再使用班级码/测试码
+- 学生注册使用 **Sign in with Apple**（名字可选：Apple 首次授权自动提供，可手动覆盖），不使用班级码/测试码
 - 关卡 3（自由文本）**不参与** A/B 分流，统一用实时 F0 可视化
 
 ## 班级码

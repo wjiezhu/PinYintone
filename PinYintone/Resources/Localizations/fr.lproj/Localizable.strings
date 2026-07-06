@@ -17,10 +17,11 @@
 "role_select_title" = "Qui êtes-vous ?";
 
 // Student signup
-"student_signup_subtitle" = "Entrez votre nom pour commencer à vous entraîner.";
-"signup_nickname_label" = "Votre nom";
+"student_signup_subtitle" = "Connectez-vous avec votre identifiant Apple pour commencer.";
+"signup_nickname_label" = "Votre nom (facultatif — fourni par l'identifiant Apple)";
 "signup_nickname_hint" = "ex. Ahmed";
 "signup_submit" = "Continuer";
+"signup_apple_failed" = "Échec de la connexion avec Apple. Veuillez réessayer.";
 
 // Teacher signup
 "teacher_signup_subtitle" = "Créez votre compte enseignant.\nUn code de classe unique sera généré pour vos étudiants.";

@@ -1,11 +1,19 @@
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
+from sqlalchemy import text
 
 from .database import Base, engine
 from .routers import auth, sync, teacher
 
 # 开发期自动建表（生产建议改用 Alembic 迁移）
 Base.metadata.create_all(bind=engine)
+
+# 轻量迁移：create_all 不会给已存在的表加新列，这里补 Sign in with Apple 标识列
+with engine.connect() as _conn:
+    _conn.execute(text("ALTER TABLE users ADD COLUMN IF NOT EXISTS apple_user_id VARCHAR"))
+    _conn.execute(text(
+        "CREATE INDEX IF NOT EXISTS ix_users_apple_user_id ON users (apple_user_id)"))
+    _conn.commit()
 
 app = FastAPI(title="Pinyintone Backend", version="0.1.0")
 

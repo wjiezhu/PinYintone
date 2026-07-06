@@ -19,11 +19,13 @@ final class UserManager: ObservableObject {
         profile = p
     }
 
-    /// 学生注册（无需班级码）。分组由**后端均衡随机分配**；离线时本地随机兜底。
-    func registerStudent(nickname: String?) async throws {
+    /// 学生注册（Sign in with Apple）。分组由**后端均衡随机分配**；
+    /// 同一 Apple ID 跨设备重新登录会继承原分组（后端幂等）；离线时本地随机兜底。
+    func registerStudent(appleUserID: String, nickname: String?) async throws {
         var p = UserProfile(
             deviceID: UIDevice.current.identifierForVendor?.uuidString ?? UUID().uuidString,
             role: .student,
+            appleUserID: appleUserID,
             nickname: nickname,
             classCode: nil,
             teacherEmail: nil,
@@ -48,6 +50,7 @@ final class UserManager: ObservableObject {
         let p = UserProfile(
             deviceID: UIDevice.current.identifierForVendor?.uuidString ?? UUID().uuidString,
             role: .teacher,
+            appleUserID: nil,
             nickname: name,
             classCode: resp.classCode,
             teacherEmail: email,

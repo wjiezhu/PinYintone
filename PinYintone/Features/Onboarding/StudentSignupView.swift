@@ -1,18 +1,17 @@
+import AuthenticationServices
 import SwiftUI
 
-/// 学生注册：填名字即可（分组由后端均衡随机分配，无需测试码）。
+/// 学生注册：Sign in with Apple。
+/// - 名字可选：Apple 首次授权会返回 fullName，自动作为昵称；也可手动输入覆盖
+/// - 分组由后端均衡随机分配；同一 Apple ID 跨设备登录继承原分组（幂等）
 struct StudentSignupView: View {
     @EnvironmentObject var userManager: UserManager
     @Environment(\.dismiss) private var dismiss
+    @Environment(\.colorScheme) private var colorScheme
 
     @State private var nickname = ""
     @State private var isLoading = false
     @State private var errorMessage: String?
-
-    /// 必填校验：名字非空
-    private var isNameValid: Bool {
-        !nickname.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty
-    }
 
     var body: some View {
         ScrollView {
@@ -20,13 +19,14 @@ struct StudentSignupView: View {
                 headerSection
                 formSection
                 errorLabel
-                submitButton
+                appleButton
             }
             .padding(24)
         }
         .navigationTitle(NSLocalizedString("role_student", comment: ""))
         .navigationBarTitleDisplayMode(.large)
         .disabled(isLoading)
+        .overlay { if isLoading { ProgressView() } }
     }
 
     // MARK: - Sub-views
@@ -68,38 +68,50 @@ struct StudentSignupView: View {
         }
     }
 
-    private var submitButton: some View {
-        Button {
-            submit()
-        } label: {
-            Group {
-                if isLoading {
-                    ProgressView()
-                } else {
-                    Text(NSLocalizedString("signup_submit", comment: ""))
-                        .font(.headline)
-                }
-            }
-            .frame(maxWidth: .infinity)
-            .padding()
-            .background(isNameValid ? Color.accentColor : Color.gray.opacity(0.4))
-            .foregroundStyle(.white)
-            .clipShape(RoundedRectangle(cornerRadius: 14))
+    private var appleButton: some View {
+        SignInWithAppleButton(.signIn) { request in
+            request.requestedScopes = [.fullName]
+        } onCompletion: { result in
+            handleAppleResult(result)
         }
-        .disabled(isLoading || !isNameValid)
+        .signInWithAppleButtonStyle(colorScheme == .dark ? .white : .black)
+        .frame(height: 50)
+        .clipShape(RoundedRectangle(cornerRadius: 14))
     }
 
     // MARK: - Actions
 
-    private func submit() {
-        guard isNameValid else { return }
+    private func handleAppleResult(_ result: Result<ASAuthorization, Error>) {
+        switch result {
+        case .success(let auth):
+            guard let cred = auth.credential as? ASAuthorizationAppleIDCredential else {
+                errorMessage = NSLocalizedString("signup_apple_failed", comment: "")
+                return
+            }
+            // Apple 仅在首次授权返回 fullName；手动输入优先，其次 Apple 名字
+            let appleName = [cred.fullName?.givenName, cred.fullName?.familyName]
+                .compactMap { $0 }
+                .joined(separator: " ")
+            let typed = nickname.trimmingCharacters(in: .whitespacesAndNewlines)
+            let finalName = typed.isEmpty ? (appleName.isEmpty ? nil : appleName) : typed
+            submit(appleUserID: cred.user, nickname: finalName)
+
+        case .failure(let error):
+            // 用户主动取消不算错误，不打扰
+            if let authError = error as? ASAuthorizationError, authError.code == .canceled {
+                return
+            }
+            errorMessage = error.localizedDescription
+        }
+    }
+
+    private func submit(appleUserID: String, nickname: String?) {
         errorMessage = nil
         isLoading = true
         Task {
             do {
                 try await userManager.registerStudent(
-                    nickname: nickname.trimmingCharacters(in: .whitespacesAndNewlines)
-                )
+                    appleUserID: appleUserID, nickname: nickname)
             } catch let e as RegisterError {
                 errorMessage = e.errorDescription
             } catch {

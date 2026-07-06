@@ -23,6 +23,7 @@ class User(Base):
     """设备级用户，不含 PII。游客 class_code 为空。"""
     __tablename__ = "users"
     device_id = Column(String, primary_key=True)
+    apple_user_id = Column(String, index=True, nullable=True)  # Sign in with Apple 稳定标识
     nickname = Column(String, nullable=True)
     class_code = Column(String, index=True, nullable=True)
     role = Column(String, nullable=False, default="guest")
