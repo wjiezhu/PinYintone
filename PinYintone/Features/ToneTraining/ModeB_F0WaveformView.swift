@@ -39,9 +39,14 @@ struct ModeB_F0WaveformView: View {
     private func path(from track: [Float], in size: CGSize) -> Path {
         var p = Path()
         var started = false
-        let n = max(track.count - 1, 1)
+        // trim 首尾无声帧：录音前的静音/TTS 开头静音会把曲线推到画布中段，
+        // 与参照曲线起点错位；裁掉后两条曲线都从左缘开始，形状可比。
+        guard let first = track.firstIndex(where: { $0 != 0 && $0.isFinite }),
+              let last = track.lastIndex(where: { $0 != 0 && $0.isFinite }) else { return p }
+        let trimmed = Array(track[first...last])
+        let n = max(trimmed.count - 1, 1)
         // 过滤 0（无声帧）与任何非有限值：NaN/Inf 坐标传入 CoreGraphics 会直接 abort 进程。
-        for (i, v) in track.enumerated() where v != 0 && v.isFinite {
+        for (i, v) in trimmed.enumerated() where v != 0 && v.isFinite {
             let x = CGFloat(i) / CGFloat(n) * size.width
             let clamped = min(max(v, vMin), vMax)
             let norm = CGFloat((clamped - vMin) / (vMax - vMin))

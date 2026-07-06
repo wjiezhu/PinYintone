@@ -35,7 +35,9 @@ final class ToneTrainingViewModel: ObservableObject {
                 // 节流：高频全量 normalize + Canvas 重绘会拖垮主线程（模式 B 闪退根因）
                 if Date().timeIntervalSince(self.lastCurveRefresh) >= self.curveRefreshInterval {
                     self.lastCurveRefresh = Date()
-                    self.studentF0 = self.f0Extractor.normalize(self.accumulatedF0)
+                    // clean：八度纠错 + 去尖峰，避免曲线出现 2× 跳变毛刺
+                    self.studentF0 = self.f0Extractor.normalize(
+                        self.f0Extractor.clean(self.accumulatedF0))
                 }
             }
         }
@@ -97,7 +99,7 @@ final class ToneTrainingViewModel: ObservableObject {
         isRecording = false
         attemptCount += 1
 
-        let normalized = f0Extractor.normalize(accumulatedF0)
+        let normalized = f0Extractor.normalize(f0Extractor.clean(accumulatedF0))
         studentF0 = normalized
         let score = dtwAnalyzer.distance(reference: referenceF0, candidate: normalized)
         let grade = dtwAnalyzer.grade(dtwScore: score)

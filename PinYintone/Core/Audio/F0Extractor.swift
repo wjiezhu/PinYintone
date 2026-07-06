@@ -65,6 +65,52 @@ final class F0Extractor {
         return Float(tau) + (s0 - s2) / denom
     }
 
+    /// F0 轨迹后处理：去孤立尖峰 → 八度纠错 → 中值平滑。
+    /// YIN 原始输出常见两类误差：① 冲击噪声产生 1–2 帧的孤立"有声"尖峰；
+    /// ② 倍频/半频错误（八度错误）使个别帧跳到 2×/0.5× 真实值。
+    /// 二者都会撑大 z-score 的标准差、压扁真实曲线并抬高 DTW 距离。
+    /// 仅修正有声（>0）帧的值；无声帧保持 0（CLAUDE.md：不做插值）。
+    func clean(_ track: [Float]) -> [Float] {
+        guard track.count > 2 else { return track }
+        var out = track
+
+        // 1) 去孤立有声段：连续有声帧 < 3（<24ms）不可能是音节，视为噪声置 0
+        var i = 0
+        while i < out.count {
+            if out[i] > 0 {
+                var j = i
+                while j < out.count, out[j] > 0 { j += 1 }
+                if j - i < 3 { for k in i..<j { out[k] = 0 } }
+                i = j
+            } else {
+                i += 1
+            }
+        }
+
+        // 2) 八度纠错：与近期有声帧中值偏离约 2×/0.5× 时折回（结果须仍在检测范围内）
+        var recent: [Float] = []
+        for i in 0..<out.count where out[i] > 0 {
+            if recent.count >= 3 {
+                let med = recent.sorted()[recent.count / 2]
+                if out[i] > med * 1.8, out[i] / 2 >= minF0 {
+                    out[i] /= 2
+                } else if out[i] < med * 0.55, out[i] * 2 <= maxF0 {
+                    out[i] *= 2
+                }
+            }
+            recent.append(out[i])
+            if recent.count > 9 { recent.removeFirst() }
+        }
+
+        // 3) 3 点中值平滑（仅连续有声帧内部，不跨无声边界）
+        var smoothed = out
+        for i in 1..<(out.count - 1) where out[i - 1] > 0 && out[i] > 0 && out[i + 1] > 0 {
+            smoothed[i] = max(min(out[i - 1], out[i + 1]),
+                              min(max(out[i - 1], out[i + 1]), out[i]))
+        }
+        return smoothed
+    }
+
     /// z-score 归一化整条 F0 轨迹（per utterance，忽略 0 值帧）
     /// CLAUDE.md：归一化方式 = z-score per utterance；无声帧保持 0.0
     func normalize(_ track: [Float]) -> [Float] {

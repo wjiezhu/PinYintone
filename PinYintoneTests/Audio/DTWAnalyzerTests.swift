@@ -20,9 +20,11 @@ final class DTWAnalyzerTests: XCTestCase {
                        "相同序列的归一化 DTW 距离应为 0")
     }
 
-    func testEmptyAfterZeroFilteringReturnsInfinity() {
-        // 全 0（无声）序列在过滤后为空 → 无法比较
-        XCTAssertEqual(analyzer.distance(reference: [0, 0], candidate: [1, 2]), .infinity)
+    func testEmptyAfterZeroFilteringReturnsMaxScore() {
+        // 全 0（无声）序列在过滤后为空 → 无法比较，返回有限哨兵值
+        // （不能用 .infinity：JSONEncoder 编码 infinity 会抛错，导致记录无法上报）
+        XCTAssertEqual(analyzer.distance(reference: [0, 0], candidate: [1, 2]),
+                       DTWAnalyzer.maxScore)
     }
 
     func testTimeShiftedSequenceLowerDistanceThanDissimilar() {
