@@ -10,7 +10,11 @@ final class SessionRepository {
     func save(deviceID: String, classCode: String?, role: String,
               groupAssignment: String, lexemeID: String,
               dtwScore: Double, grade: String,
-              attemptNumber: Int, timestamp: Date) -> TrainingSession {
+              attemptNumber: Int, timestamp: Date,
+              referenceType: String? = nil,
+              voicedFrameCount: Int = 0,
+              qualityFlag: Bool = false,
+              referenceSwitchedDuringAttempt: Bool = false) -> TrainingSession {
         let session = TrainingSession(context: context)
         session.id = UUID()
         session.deviceID = deviceID
@@ -23,6 +27,11 @@ final class SessionRepository {
         session.attemptNumber = Int32(attemptNumber)
         session.synced = false
         session.timestamp = timestamp
+        // 诊断埋点（P1-3）
+        session.referenceType = referenceType
+        session.voicedFrameCount = Int32(voicedFrameCount)
+        session.qualityFlag = qualityFlag
+        session.referenceSwitchedDuringAttempt = referenceSwitchedDuringAttempt
         saveContext()
         return session
     }

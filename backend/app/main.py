@@ -13,6 +13,14 @@ with engine.connect() as _conn:
     _conn.execute(text("ALTER TABLE users ADD COLUMN IF NOT EXISTS apple_user_id VARCHAR"))
     _conn.execute(text(
         "CREATE INDEX IF NOT EXISTS ix_users_apple_user_id ON users (apple_user_id)"))
+    # 关卡 2 诊断埋点列
+    for _ddl in (
+        "ALTER TABLE training_sessions ADD COLUMN IF NOT EXISTS reference_type VARCHAR",
+        "ALTER TABLE training_sessions ADD COLUMN IF NOT EXISTS voiced_frame_count INTEGER",
+        "ALTER TABLE training_sessions ADD COLUMN IF NOT EXISTS quality_flag BOOLEAN",
+        "ALTER TABLE training_sessions ADD COLUMN IF NOT EXISTS reference_switched BOOLEAN",
+    ):
+        _conn.execute(text(_ddl))
     _conn.commit()
 
 app = FastAPI(title="Pinyintone Backend", version="0.1.0")

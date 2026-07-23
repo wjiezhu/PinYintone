@@ -45,6 +45,11 @@ class TrainingSession(Base):
     grade = Column(String, nullable=False)
     attempt_number = Column(Integer, nullable=False)
     timestamp = Column(DateTime, nullable=False)
+    # 诊断埋点：区分"卡词/技术性失败/参照质量"，供数据自查
+    reference_type = Column(String, nullable=True)          # real | tts | ideal
+    voiced_frame_count = Column(Integer, nullable=True)
+    quality_flag = Column(Boolean, nullable=True)           # 异常高分标记
+    reference_switched = Column(Boolean, nullable=True)     # 应恒为 False
 
 
 class AspirationAttempt(Base):

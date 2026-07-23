@@ -20,4 +20,16 @@ extension TrainingSession {
     @NSManaged public var attemptNumber: Int32
     @NSManaged public var synced: Bool
     @NSManaged public var timestamp: Date
+
+    // MARK: - 诊断埋点（P1-3）
+    // 均为可选/带默认值，走 Core Data 轻量迁移，旧库可直接升级。
+
+    /// 参照来源："real" | "tts" | "ideal"（ReferenceType.rawValue）
+    @NSManaged public var referenceType: String?
+    /// 本次录音的有声帧数，用于区分"没录好"与"发音错"
+    @NSManaged public var voicedFrameCount: Int32
+    /// 异常高分标记，分析时可剔除
+    @NSManaged public var qualityFlag: Bool
+    /// 录音过程中参照曲线是否被替换（P0-3 修复后应恒为 false）
+    @NSManaged public var referenceSwitchedDuringAttempt: Bool
 }

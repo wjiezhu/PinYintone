@@ -49,12 +49,12 @@ struct AspirationView: View {
         .onDisappear { vm.stop() }
         .overlay {
             if vm.passed {
+                // 关卡 1 沿用单按钮形态（不传 onNext）：行为与此前一致
                 FeedbackOverlayView(
                     result: FeedbackResult(dtwScore: 0, grade: .excellent,
-                                           attemptNumber: 1, segments: [])
-                ) {
-                    vm.loadNextLexeme()
-                }
+                                           attemptNumber: 1, segments: []),
+                    onRetry: { vm.loadNextLexeme() }
+                )
                 .transition(.scale.combined(with: .opacity))
             }
         }
