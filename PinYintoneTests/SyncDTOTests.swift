@@ -7,13 +7,19 @@ final class SyncDTOTests: XCTestCase {
         let dto = TrainingSessionDTO(
             id: "abc", deviceID: "dev", classCode: "123456", role: "student",
             groupAssignment: "dynamicF0", lexemeID: "paobu", dtwScore: 0.42,
-            grade: "good", attemptNumber: 2, timestamp: "2026-05-20T10:00:00Z"
+            grade: "good", attemptNumber: 2, timestamp: "2026-05-20T10:00:00Z",
+            referenceType: "tts", voicedFrameCount: 42,
+            qualityFlag: false, referenceSwitchedDuringAttempt: false
         )
         let data = try JSONEncoder().encode(dto)
         let json = try XCTUnwrap(JSONSerialization.jsonObject(with: data) as? [String: Any])
         XCTAssertEqual(json["lexemeID"] as? String, "paobu")
         XCTAssertEqual(json["groupAssignment"] as? String, "dynamicF0")
         XCTAssertEqual(json["attemptNumber"] as? Int, 2)
+        // 诊断埋点字段应随记录一并上报（P1-3）
+        XCTAssertEqual(json["referenceType"] as? String, "tts")
+        XCTAssertEqual(json["voicedFrameCount"] as? Int, 42)
+        XCTAssertEqual(json["referenceSwitchedDuringAttempt"] as? Bool, false)
     }
 
     func testNilClassCodeEncodesAndDecodes() throws {

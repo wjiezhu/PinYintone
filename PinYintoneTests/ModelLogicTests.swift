@@ -29,9 +29,14 @@ final class ModelLogicTests: XCTestCase {
 
     @MainActor
     func testTone1IsLevelHigh() {
+        // 阴平（55）在自然语流中并非绝对水平：ToneContour 依 Xu (1997) 设计为
+        // 高平且末尾轻微下倾（约 270→258 Hz）。故断言"接近水平且不上升"，
+        // 而非首尾严格相等。
         let contour = ToneTrainingViewModel.idealContour(for: [1])
         XCTAssertEqual(contour.count, 24)
-        XCTAssertEqual(contour.first!, contour.last!, accuracy: 1e-3, "阴平应为高平调（首尾相等）")
+        let start = contour.first!, end = contour.last!
+        XCTAssertLessThanOrEqual(end, start, "阴平不应上升")
+        XCTAssertLessThan((start - end) / start, 0.08, "阴平应基本保持高平（降幅 < 8%）")
     }
 
     @MainActor

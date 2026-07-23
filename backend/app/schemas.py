@@ -57,6 +57,11 @@ class TrainingSessionDTO(BaseModel):
     grade: str
     attemptNumber: int
     timestamp: str   # ISO8601
+    # 诊断埋点（旧版客户端不带这些字段，故全部可选）
+    referenceType: Optional[str] = None
+    voicedFrameCount: Optional[int] = None
+    qualityFlag: Optional[bool] = None
+    referenceSwitchedDuringAttempt: Optional[bool] = None
 
 
 class AspirationAttemptDTO(BaseModel):

@@ -20,6 +20,11 @@ nonisolated struct TrainingSessionDTO: Codable {
     let grade: String
     let attemptNumber: Int
     let timestamp: String
+    // 诊断埋点（P1-3）：用于下一轮自查"卡词/失败/技术问题"
+    let referenceType: String?      // real | tts | ideal
+    let voicedFrameCount: Int
+    let qualityFlag: Bool
+    let referenceSwitchedDuringAttempt: Bool
 }
 
 nonisolated struct AspirationAttemptDTO: Codable {
@@ -61,7 +66,11 @@ extension TrainingSession {
             dtwScore: dtwScore,
             grade: grade,
             attemptNumber: Int(attemptNumber),
-            timestamp: iso8601.string(from: timestamp)
+            timestamp: iso8601.string(from: timestamp),
+            referenceType: referenceType,
+            voicedFrameCount: Int(voicedFrameCount),
+            qualityFlag: qualityFlag,
+            referenceSwitchedDuringAttempt: referenceSwitchedDuringAttempt
         )
     }
 }

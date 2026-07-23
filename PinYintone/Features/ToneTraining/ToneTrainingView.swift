@@ -22,27 +22,46 @@ struct ToneTrainingView: View {
                 .disabled(vm.isRecording)
 
                 // ── A/B 分组视觉反馈分支 ──────────────────
+                // 参照曲线用 vm.displayReference：录音中固定为锁定值，
+                // 保证一次录音全程参照线不变（所见即所评）。
                 Group {
                     switch appState.group {
                     case .staticColor:
                         ModeA_StaticView(
                             lexeme: lexeme,
                             studentF0: vm.studentF0,
-                            referenceF0: vm.referenceF0
+                            referenceF0: vm.displayReference
                         )
                     case .dynamicF0:
                         ModeB_F0WaveformView(
                             lexeme: lexeme,
                             studentF0: vm.studentF0,
-                            referenceF0: vm.referenceF0
+                            referenceF0: vm.displayReference
                         )
                     }
                 }
                 .frame(height: 200)
+                .overlay {
+                    // 参照加载中：轻量提示，此时录音按钮禁用（P0-4）
+                    if !vm.isReferenceReady && !vm.isRecording {
+                        ProgressView()
+                            .padding(10)
+                            .background(.regularMaterial)
+                            .clipShape(RoundedRectangle(cornerRadius: 10))
+                    }
+                }
                 .animation(.easeInOut(duration: 0.1), value: vm.studentF0.count)
 
                 if let result = vm.feedbackResult {
                     DTWScoreView(result: result)
+                }
+
+                // 技术性失败提示（没录好），与发音评价区分开
+                if let hint = vm.retryHint {
+                    Label(hint, systemImage: "mic.slash")
+                        .font(.footnote)
+                        .foregroundStyle(.orange)
+                        .multilineTextAlignment(.center)
                 }
 
                 Spacer()
@@ -50,6 +69,8 @@ struct ToneTrainingView: View {
                 RecordButton(isRecording: vm.isRecording) {
                     vm.isRecording ? vm.stopRecordingAndEvaluate() : vm.startRecording()
                 }
+                // 参照未就绪不给录，堵住"看到的线≠评分的线"的竞态窗口
+                .disabled(!vm.isReferenceReady && !vm.isRecording)
             } else {
                 ProgressView()
             }
@@ -69,10 +90,13 @@ struct ToneTrainingView: View {
         }
         .overlay {
             if let result = vm.feedbackResult, !vm.isRecording {
-                FeedbackOverlayView(result: result) {
-                    vm.feedbackResult = nil
-                    if result.grade != .fail { vm.loadNext() }
-                }
+                // 推进不再以通关为前提：由学习者选择再试或换词（P0-1）
+                FeedbackOverlayView(
+                    result: result,
+                    showSkipHint: vm.consecutiveFailures >= vm.skipHintThreshold,
+                    onRetry: { vm.feedbackResult = nil },
+                    onNext: { vm.feedbackResult = nil; vm.loadNext() }
+                )
                 .transition(.scale.combined(with: .opacity))
             }
         }
