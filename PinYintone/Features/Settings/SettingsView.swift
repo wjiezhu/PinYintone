@@ -13,6 +13,9 @@ struct SettingsView: View {
 
     @State private var showLogoutConfirm = false
     @State private var showSwitchConfirm = false
+    @State private var showDeleteConfirm = false
+    @State private var isDeleting = false
+    @State private var deleteError: String?
 
     private var profile: UserProfile? { userManager.profile }
 
@@ -22,6 +25,7 @@ struct SettingsView: View {
                 accountSection
                 languageSection
                 accountActionsSection
+                deleteAccountSection
                 #if DEBUG
                 debugSection
                 #endif
@@ -57,6 +61,42 @@ struct SettingsView: View {
                 }
                 Button(NSLocalizedString("cancel", comment: ""), role: .cancel) {}
             }
+            // 删除账号确认（不可逆，二次确认）
+            .confirmationDialog(
+                NSLocalizedString("settings_delete_confirm_title", comment: ""),
+                isPresented: $showDeleteConfirm,
+                titleVisibility: .visible
+            ) {
+                Button(NSLocalizedString("settings_delete_account", comment: ""),
+                       role: .destructive) {
+                    Task { await performDelete() }
+                }
+                Button(NSLocalizedString("cancel", comment: ""), role: .cancel) {}
+            } message: {
+                Text(NSLocalizedString("settings_delete_confirm_message", comment: ""))
+            }
+            .alert(NSLocalizedString("settings_delete_failed", comment: ""),
+                   isPresented: Binding(get: { deleteError != nil },
+                                        set: { if !$0 { deleteError = nil } })) {
+                Button("OK", role: .cancel) { deleteError = nil }
+            } message: {
+                Text(deleteError ?? "")
+            }
+            .disabled(isDeleting)
+            .overlay { if isDeleting { ProgressView() } }
+        }
+    }
+
+    /// 先删服务端，成功后再清本地；失败则提示且不清本地，
+    /// 避免给用户"已删除"的错觉（数据其实还在后端）。
+    private func performDelete() async {
+        isDeleting = true
+        defer { isDeleting = false }
+        do {
+            try await userManager.deleteAccount()
+            dismiss()
+        } catch {
+            deleteError = NSLocalizedString("settings_delete_failed_message", comment: "")
         }
     }
 
@@ -124,6 +164,20 @@ struct SettingsView: View {
                 Label(NSLocalizedString("settings_logout", comment: ""),
                       systemImage: "rectangle.portrait.and.arrow.right")
             }
+        }
+    }
+
+    /// 删除账号（App Store 5.1.1(v) 要求；亦为研究"撤回同意"通道）
+    private var deleteAccountSection: some View {
+        Section {
+            Button(role: .destructive) {
+                showDeleteConfirm = true
+            } label: {
+                Label(NSLocalizedString("settings_delete_account", comment: ""),
+                      systemImage: "trash")
+            }
+        } footer: {
+            Text(NSLocalizedString("settings_delete_footer", comment: ""))
         }
     }
 

@@ -78,6 +78,13 @@
 "legend_native" = "متحدث أصلي";
 "legend_you" = "أنت";
 "feedback_continue" = "متابعة";
+"settings_delete_account" = "حذف الحساب";
+"settings_delete_footer" = "سيتم حذف حسابك وجميع سجلات التدريب نهائياً. لا يمكن التراجع عن هذا الإجراء.";
+"settings_delete_confirm_title" = "هل تريد حذف حسابك؟";
+"settings_delete_confirm_message" = "سيتم حذف حسابك وجميع سجلات التدريب نهائياً ولا يمكن استرجاعها.";
+"settings_delete_failed" = "فشل الحذف";
+"settings_delete_failed_message" = "تعذّر الاتصال بالخادم. لم يتم حذف حسابك. تحقق من الاتصال وحاول مجدداً.";
+
 "feedback_retry" = "حاول مجدداً";
 "feedback_next_word" = "الكلمة التالية";
 "feedback_skip_hint" = "هذه الكلمة صعبة — يمكنك تخطيها والعودة إليها لاحقاً.";

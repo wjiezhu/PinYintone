@@ -77,6 +77,29 @@ final class APIClient {
         return resp.experimentGroup
     }
 
+    /// 删除账号：清除服务端该用户及其全部训练数据。
+    /// App Store 审核指南 5.1.1(v) 强制要求；亦作为研究伦理的「撤回同意」通道。
+    func deleteAccount(deviceID: String, appleUserID: String?) async throws {
+        var comps = URLComponents(
+            url: baseURL.appendingPathComponent("student/account"),
+            resolvingAgainstBaseURL: false)
+        var items = [URLQueryItem(name: "deviceID", value: deviceID)]
+        if let appleUserID, !appleUserID.isEmpty {
+            items.append(URLQueryItem(name: "appleUserID", value: appleUserID))
+        }
+        comps?.queryItems = items
+        guard let url = comps?.url else {
+            throw RegisterError.networkError(URLError(.badURL))
+        }
+        var req = URLRequest(url: url)
+        req.httpMethod = "DELETE"
+        let (_, response) = try await URLSession.shared.data(for: req)
+        guard let http = response as? HTTPURLResponse,
+              (200..<300).contains(http.statusCode) else {
+            throw RegisterError.networkError(URLError(.badServerResponse))
+        }
+    }
+
     // MARK: - Sync（数据上行，POST /api/sync/*）
 
     private struct SyncAck: Codable {}   // 后端返回 {} 即视为成功

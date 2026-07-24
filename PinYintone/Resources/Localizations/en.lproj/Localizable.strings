@@ -78,6 +78,13 @@
 "legend_native" = "Native";
 "legend_you" = "You";
 "feedback_continue" = "Continue";
+"settings_delete_account" = "Delete Account";
+"settings_delete_footer" = "Permanently deletes your account and all practice records. This cannot be undone.";
+"settings_delete_confirm_title" = "Delete your account?";
+"settings_delete_confirm_message" = "Your account and all practice records will be permanently deleted and cannot be recovered.";
+"settings_delete_failed" = "Deletion failed";
+"settings_delete_failed_message" = "Could not reach the server. Your account was not deleted. Check your connection and try again.";
+
 "feedback_retry" = "Try again";
 "feedback_next_word" = "Next word";
 "feedback_skip_hint" = "This one is tricky — you can skip it and come back later.";
