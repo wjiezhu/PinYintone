@@ -124,9 +124,11 @@ final class SpeechService {
             return []
         }
 
-        var cleaned = f0Extractor.clean(hz)
+        // 参照线是给学习者模仿的「模板」，应比学习者自己的实时曲线更平滑
+        var cleaned = smoothReference(f0Extractor.clean(hz))
         if !tones.isEmpty {
             cleaned = removeExcessDeclination(cleaned, tones: tones)
+            cleaned = blendTowardIdeal(cleaned, tones: tones)
             guard !contourContradictsTones(cleaned, tones: tones) else {
                 #if DEBUG
                 print("[SpeechService] \(tag) 走向与目标声调 \(tones) 矛盾 → 回退理想轮廓")
@@ -138,6 +140,80 @@ final class SpeechService {
         print("[SpeechService] OK \(tag): \(hz.count) 帧, \(voicedCount) 有声, tones=\(tones)")
         #endif
         return f0Extractor.normalize(cleaned)
+    }
+
+    // MARK: - 参照曲线整形
+    // 以下方法为 internal（非 private）以便单元测试直接验证。
+
+    /// 参照专用重平滑：在连续有声段**内部**做加宽中值 + 三点滑动平均，不跨无声边界。
+    /// TTS 提取的 F0 帧级抖动明显，而参照线是模板，抖动会让学习者无从模仿。
+    func smoothReference(_ track: [Float], window: Int = 5) -> [Float] {
+        var out = track
+        var i = 0
+        while i < track.count {
+            guard track[i] > 0 else { i += 1; continue }
+            var j = i
+            while j < track.count, track[j] > 0 { j += 1 }
+            let run = Array(track[i..<j])
+            if run.count >= 3 {
+                let smoothed = movingAverage(medianFilter(run, window: window), window: 3)
+                for (k, v) in smoothed.enumerated() { out[i + k] = v }
+            }
+            i = j
+        }
+        return out
+    }
+
+    /// 向理想轮廓混合：保留 TTS 的真实时长与细节，把**形状**拉向正确的声调轮廓。
+    ///
+    /// 线性去下倾只能消除匀速下滑，TTS 还有非线性的句末降调与残留抖动。
+    /// 这里在各自 z 标准化后按 `alpha` 加权混合，再换算回 TTS 的音域，
+    /// 使参照线既保留自然语流的节奏，又不会把声调形状教错。
+    /// - Parameter alpha: TTS 权重（其余权重给理想轮廓）。
+    func blendTowardIdeal(_ track: [Float], tones: [Int], alpha: Float = 0.55) -> [Float] {
+        guard !tones.isEmpty else { return track }
+        let positions = track.indices.filter { track[$0] > 0 }
+        let n = positions.count
+        guard n >= 4 else { return track }
+
+        let tts = positions.map { track[$0] }
+        guard let (tMean, _) = meanSD(tts) else { return track }
+        let ideal = resample(ToneContour.ideal(for: tones), to: n)
+        guard ideal.count == n, let (iMean, _) = meanSD(ideal) else { return track }
+
+        var out = track
+        for (k, pos) in positions.enumerated() {
+            // 只对齐均值，保留理想轮廓**自身的真实幅度**。
+            // 若改为按标准差缩放到 TTS 音域，1+1 这类幅度极小的轮廓（真实仅降约 12 Hz）
+            // 会被放大近一个数量级，等于把虚假的大幅下降重新注入参照线。
+            // 绝对音高无关紧要——下游 normalize 会做 z-score，只有形状进入 DTW。
+            let aligned = ideal[k] - iMean + tMean
+            out[pos] = max(alpha * tts[k] + (1 - alpha) * aligned, 1)
+        }
+        return out
+    }
+
+    /// 中值滤波（窗口为奇数，边界收缩）
+    private func medianFilter(_ xs: [Float], window: Int) -> [Float] {
+        let w = max(3, window | 1)
+        let half = w / 2
+        guard xs.count > w else { return xs }
+        return xs.indices.map { i in
+            let lo = max(0, i - half), hi = min(xs.count - 1, i + half)
+            let slice = xs[lo...hi].sorted()
+            return slice[slice.count / 2]
+        }
+    }
+
+    /// 滑动平均（边界收缩）
+    private func movingAverage(_ xs: [Float], window: Int) -> [Float] {
+        let half = max(1, window) / 2
+        guard xs.count > window else { return xs }
+        return xs.indices.map { i in
+            let lo = max(0, i - half), hi = min(xs.count - 1, i + half)
+            let slice = xs[lo...hi]
+            return slice.reduce(0, +) / Float(slice.count)
+        }
     }
 
     // MARK: - 句调下倾矫正
@@ -153,30 +229,28 @@ final class SpeechService {
     /// 1+1 的理想轮廓近乎水平 → 下倾被扣掉；4+4 的理想轮廓本就下行 → 几乎不动。
     ///
     /// 斜率在各自标准化（z）后比较以消除音域差异，再按 TTS 自身标准差换算回 Hz。
-    private func removeExcessDeclination(_ track: [Float], tones: [Int]) -> [Float] {
+    func removeExcessDeclination(_ track: [Float], tones: [Int]) -> [Float] {
         let positions = track.indices.filter { track[$0] > 0 }
         let n = positions.count
         guard n >= 6 else { return track }
 
         let ttsHz = positions.map { track[$0] }
-        guard let (tMean, tSD) = meanSD(ttsHz), tSD > 0 else { return track }
-
         // 理想轮廓重采样到相同点数，用于估计"这组声调本身应有的"斜率
         let ideal = resample(ToneContour.ideal(for: tones), to: n)
-        guard let (_, iSD) = meanSD(ideal), iSD > 0 else { return track }
+        guard ideal.count == n else { return track }
 
+        // 斜率在**原始 Hz 域**比较：两者本就都是人声音高尺度，可直接相减。
+        // 早期版本先各自 z 标准化再比斜率，但 1+1 这类理想轮廓方差极小（SD≈4 Hz），
+        // z 化会把它的斜率放大近一个数量级，导致下倾只被扣掉一半。
         let xs = (0..<n).map { Float($0) }
-        let slopeTTS = slope(xs, ttsHz.map { ($0 - tMean) / tSD })
-        let slopeIdeal = slope(xs, ideal.map { ($0 - (meanSD(ideal)?.0 ?? 0)) / iSD })
-        let excessZ = slopeTTS - slopeIdeal
-        guard abs(excessZ) > 1e-4 else { return track }
+        let excess = slope(xs, ttsHz) - slope(xs, ideal)   // Hz / 帧
+        guard abs(excess) > 1e-3 else { return track }
 
-        // 以序列中点为轴做校正，避免整体平移（平移不影响 z-score，但保持数值稳健）
+        // 以序列中点为轴做校正，避免整体平移
         let mid = Float(n - 1) / 2
         var out = track
         for (k, pos) in positions.enumerated() {
-            let delta = excessZ * tSD * (Float(k) - mid)
-            out[pos] = max(track[pos] - delta, 1)   // 保底为正，避免被误判成无声帧
+            out[pos] = max(ttsHz[k] - excess * (Float(k) - mid), 1)  // 保底为正
         }
         return out
     }
