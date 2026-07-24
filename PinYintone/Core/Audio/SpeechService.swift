@@ -61,7 +61,8 @@ final class SpeechService {
             #endif
             return []
         }
-        return f0Track(from: samples, tag: "真人音 \(filename)")
+        // 真人录音本就是孤立字本调，不做下倾矫正（tones 传空）
+        return f0Track(from: samples, tag: "真人音 \(filename)", tones: [])
     }
 
     /// 读取 bundle 音频并重采样为 16 kHz 单声道 Float（与 CLAUDE.md 锁定采样率一致）
@@ -105,8 +106,10 @@ final class SpeechService {
         return Array(UnsafeBufferPointer(start: ch[0], count: Int(outBuf.frameLength)))
     }
 
-    /// 逐帧提 F0 → clean → normalize（512 帧长 / 128 帧移，CLAUDE.md 锁定）
-    private func f0Track(from samples: [Float], tag: String) -> [Float] {
+    /// 逐帧提 F0 → clean → 去句调下倾 → normalize（512 帧长 / 128 帧移，CLAUDE.md 锁定）
+    /// - Parameter tones: 目标声调序列。传入后可消除 TTS 的句调下倾并校验结果可信度；
+    ///                    传空数组则跳过这两步（与旧行为一致）。
+    private func f0Track(from samples: [Float], tag: String, tones: [Int]) -> [Float] {
         var hz: [Float] = []
         var i = 0
         while i + 512 <= samples.count {
@@ -120,16 +123,131 @@ final class SpeechService {
             #endif
             return []
         }
+
+        var cleaned = f0Extractor.clean(hz)
+        if !tones.isEmpty {
+            cleaned = removeExcessDeclination(cleaned, tones: tones)
+            guard !contourContradictsTones(cleaned, tones: tones) else {
+                #if DEBUG
+                print("[SpeechService] \(tag) 走向与目标声调 \(tones) 矛盾 → 回退理想轮廓")
+                #endif
+                return []
+            }
+        }
         #if DEBUG
-        print("[SpeechService] OK \(tag): \(hz.count) 帧, \(voicedCount) 有声")
+        print("[SpeechService] OK \(tag): \(hz.count) 帧, \(voicedCount) 有声, tones=\(tones)")
         #endif
-        return f0Extractor.normalize(f0Extractor.clean(hz))
+        return f0Extractor.normalize(cleaned)
+    }
+
+    // MARK: - 句调下倾矫正
+
+    /// 消除 TTS 的**多余**下倾。
+    ///
+    /// TTS（AVSpeechSynthesizer）会把词当成一句话来读，叠加句子级的下倾（declination）
+    /// 与句末降调。结果是像「医生」(1+1 全高平) 这种词被合成成一路下滑的曲线——
+    /// 学习者照着模仿会学错调，DTW 也会拿这条错线打分。
+    ///
+    /// 直接做全局去趋势会误伤本来就该下降的词（如「现在」4+4）。因此这里以
+    /// **同声调序列的理想轮廓**为基准，只减去 TTS 相对理想轮廓**多出来**的那部分斜率：
+    /// 1+1 的理想轮廓近乎水平 → 下倾被扣掉；4+4 的理想轮廓本就下行 → 几乎不动。
+    ///
+    /// 斜率在各自标准化（z）后比较以消除音域差异，再按 TTS 自身标准差换算回 Hz。
+    private func removeExcessDeclination(_ track: [Float], tones: [Int]) -> [Float] {
+        let positions = track.indices.filter { track[$0] > 0 }
+        let n = positions.count
+        guard n >= 6 else { return track }
+
+        let ttsHz = positions.map { track[$0] }
+        guard let (tMean, tSD) = meanSD(ttsHz), tSD > 0 else { return track }
+
+        // 理想轮廓重采样到相同点数，用于估计"这组声调本身应有的"斜率
+        let ideal = resample(ToneContour.ideal(for: tones), to: n)
+        guard let (_, iSD) = meanSD(ideal), iSD > 0 else { return track }
+
+        let xs = (0..<n).map { Float($0) }
+        let slopeTTS = slope(xs, ttsHz.map { ($0 - tMean) / tSD })
+        let slopeIdeal = slope(xs, ideal.map { ($0 - (meanSD(ideal)?.0 ?? 0)) / iSD })
+        let excessZ = slopeTTS - slopeIdeal
+        guard abs(excessZ) > 1e-4 else { return track }
+
+        // 以序列中点为轴做校正，避免整体平移（平移不影响 z-score，但保持数值稳健）
+        let mid = Float(n - 1) / 2
+        var out = track
+        for (k, pos) in positions.enumerated() {
+            let delta = excessZ * tSD * (Float(k) - mid)
+            out[pos] = max(track[pos] - delta, 1)   // 保底为正，避免被误判成无声帧
+        }
+        return out
+    }
+
+    /// 校验矫正后的走向是否与目标声调**明显矛盾**（如二声却在下降）。
+    /// 只在半数以上音节矛盾时才判定不可信，避免把可用的参照误杀。
+    private func contourContradictsTones(_ track: [Float], tones: [Int]) -> Bool {
+        let voiced = track.filter { $0 > 0 }
+        let n = tones.count
+        guard n > 0, voiced.count >= n * 3 else { return false }
+        guard let (_, sd) = meanSD(voiced), sd > 0 else { return false }
+
+        var checked = 0, contradictions = 0
+        for i in 0..<n {
+            let seg = Array(voiced[(voiced.count * i / n)..<(voiced.count * (i + 1) / n)])
+            guard seg.count >= 3 else { continue }
+            let third = max(1, seg.count / 3)
+            let head = seg.prefix(third).reduce(0, +) / Float(third)
+            let tail = seg.suffix(third).reduce(0, +) / Float(third)
+            let deltaZ = (tail - head) / sd
+
+            switch tones[i] {
+            case 2: checked += 1; if deltaZ < -0.6 { contradictions += 1 }   // 该升却明显降
+            case 4: checked += 1; if deltaZ > 0.6  { contradictions += 1 }   // 该降却明显升
+            case 1: checked += 1; if abs(deltaZ) > 1.6 { contradictions += 1 } // 该平却大起大落
+            default: break   // 三声（曲折）与轻声不做方向判定
+            }
+        }
+        return checked > 0 && contradictions * 2 > checked
+    }
+
+    // MARK: - 数值小工具
+
+    private func meanSD(_ xs: [Float]) -> (Float, Float)? {
+        guard !xs.isEmpty else { return nil }
+        let m = xs.reduce(0, +) / Float(xs.count)
+        let v = xs.reduce(0) { $0 + ($1 - m) * ($1 - m) } / Float(xs.count)
+        return (m, sqrt(v))
+    }
+
+    /// 最小二乘斜率
+    private func slope(_ xs: [Float], _ ys: [Float]) -> Float {
+        guard xs.count == ys.count, xs.count > 1 else { return 0 }
+        let mx = xs.reduce(0, +) / Float(xs.count)
+        let my = ys.reduce(0, +) / Float(ys.count)
+        var num: Float = 0, den: Float = 0
+        for i in xs.indices {
+            let dx = xs[i] - mx
+            num += dx * (ys[i] - my)
+            den += dx * dx
+        }
+        return den > 0 ? num / den : 0
+    }
+
+    /// 线性插值重采样到指定点数
+    private func resample(_ xs: [Float], to n: Int) -> [Float] {
+        guard xs.count >= 2, n >= 2 else { return xs }
+        return (0..<n).map { k in
+            let pos = Float(k) / Float(n - 1) * Float(xs.count - 1)
+            let i = min(Int(pos), xs.count - 2)
+            return xs[i] + (xs[i + 1] - xs[i]) * (pos - Float(i))
+        }
     }
 
     // MARK: - 合成母语者参照 F0
 
-    /// 合成目标词并提取归一化 F0；有声帧过少时返回 []（让调用方回退）。
-    func synthesizeReferenceF0(for text: String) async -> [Float] {
+    /// 合成目标词并提取归一化 F0；有声帧过少或走向与目标声调矛盾时返回 []（让调用方回退）。
+    /// - Parameter tones: 目标声调序列，用于去除 TTS 句调下倾并校验可信度。
+    ///   关卡 2 来自语料库，关卡 3 来自 `PinyinConverter`——两处都拿得到，
+    ///   因此本矫正对任意文本都适用（自由文本无法预录真人音，只能靠 TTS）。
+    func synthesizeReferenceF0(for text: String, tones: [Int] = []) async -> [Float] {
         let samples = await render16k(text)
         guard samples.count >= 512 else {
             #if DEBUG
@@ -138,7 +256,7 @@ final class SpeechService {
             return []
         }
         // clean：TTS 提取的参照同样有八度错误/尖峰，先清理再归一化
-        return f0Track(from: samples, tag: "TTS '\(text)'")
+        return f0Track(from: samples, tag: "TTS '\(text)'", tones: tones)
     }
 
     /// 用 AVSpeechSynthesizer.write 离线渲染为 16kHz 单声道 Float PCM。

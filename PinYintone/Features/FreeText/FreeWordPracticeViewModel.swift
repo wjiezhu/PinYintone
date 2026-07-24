@@ -55,8 +55,11 @@ final class FreeWordPracticeViewModel: ObservableObject {
         feedbackResult = nil
         isRecording = false
 
+        let tones = currentTones
         Task { [weak self] in
-            let tts = await SpeechService.shared.synthesizeReferenceF0(for: word)
+            // 自由文本无法预录真人音，只能用 TTS；传入 PinyinConverter 推出的声调
+            // 以消除句调下倾（否则参照线会一路下滑，教错声调）
+            let tts = await SpeechService.shared.synthesizeReferenceF0(for: word, tones: tones)
             await MainActor.run {
                 guard let self, self.currentWord == word, !tts.isEmpty else { return }
                 self.idealShape = tts

@@ -115,7 +115,9 @@ final class ToneTrainingViewModel: ObservableObject {
                 if !track.isEmpty { type = .real }
             }
             if track.isEmpty {
-                track = await SpeechService.shared.synthesizeReferenceF0(for: lexeme.hanzi)
+                // 传入目标声调：用于消除 TTS 句调下倾并校验可信度
+                track = await SpeechService.shared.synthesizeReferenceF0(
+                    for: lexeme.hanzi, tones: lexeme.tones)
                 if !track.isEmpty { type = .tts }
             }
             await MainActor.run {
