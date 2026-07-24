@@ -78,6 +78,13 @@
 "legend_native" = "Natif";
 "legend_you" = "Toi";
 "feedback_continue" = "Continuer";
+"settings_delete_account" = "Supprimer le compte";
+"settings_delete_footer" = "Supprime définitivement votre compte et tous vos enregistrements de pratique. Action irréversible.";
+"settings_delete_confirm_title" = "Supprimer votre compte ?";
+"settings_delete_confirm_message" = "Votre compte et tous vos enregistrements seront définitivement supprimés et ne pourront pas être récupérés.";
+"settings_delete_failed" = "Échec de la suppression";
+"settings_delete_failed_message" = "Serveur injoignable. Votre compte n'a pas été supprimé. Vérifiez votre connexion et réessayez.";
+
 "feedback_retry" = "Réessayer";
 "feedback_next_word" = "Mot suivant";
 "feedback_skip_hint" = "Ce mot est difficile — vous pouvez le passer et y revenir plus tard.";

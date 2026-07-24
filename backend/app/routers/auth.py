@@ -87,3 +87,32 @@ def student_register(body: schemas.StudentRegisterRequest, db: Session = Depends
     return {"experimentGroup": user.experiment_group}
 
 
+@router.delete("/student/account")
+def student_delete_account(deviceID: str, appleUserID: str | None = None,
+                           db: Session = Depends(get_db)):
+    """彻底删除该用户及其全部训练数据（App Store 审核指南 5.1.1(v) 强制要求）。
+
+    同时也是研究伦理上的「撤回同意」通道：被试有权随时退出并删除其数据。
+    若提供 appleUserID，则一并清除该 Apple 账户在其它设备上的记录，
+    避免用户在一台设备上"删除"后数据仍留存在另一台设备的记录里。
+    """
+    device_ids = {deviceID}
+    if appleUserID:
+        rows = db.query(models.User.device_id).filter(
+            models.User.apple_user_id == appleUserID).all()
+        device_ids.update(r[0] for r in rows)
+
+    ids = list(device_ids)
+    deleted = {}
+    for model, key in (
+        (models.TrainingSession, "training_sessions"),
+        (models.AspirationAttempt, "aspiration_attempts"),
+        (models.FreeTextRecord, "freetext_records"),
+        (models.User, "users"),
+    ):
+        deleted[key] = db.query(model).filter(
+            model.device_id.in_(ids)).delete(synchronize_session=False)
+    db.commit()
+    return {"deleted": deleted, "deviceIDs": ids}
+
+

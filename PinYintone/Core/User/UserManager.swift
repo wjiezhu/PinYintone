@@ -73,6 +73,21 @@ final class UserManager: ObservableObject {
         profile = nil
     }
 
+    /// 删除账号：清空服务端与本机的全部个人数据，回到引导流程。
+    /// App Store 审核指南 5.1.1(v) 强制要求（有注册即须可删除）；
+    /// 同时是研究伦理上的「撤回同意」通道——被试有权随时退出并抹除其数据。
+    /// 服务端删除失败时抛错，避免给用户"已删除"的错觉。
+    func deleteAccount() async throws {
+        guard let profile else { return }
+        try await APIClient.shared.deleteAccount(
+            deviceID: profile.deviceID, appleUserID: profile.appleUserID)
+
+        // 服务端删除成功后再清本地：本地训练记录、练习游标、尝试计数
+        LocalDataPurger.purgeAll()
+        UserDefaults.standard.removeObject(forKey: Self.storageKey)
+        self.profile = nil
+    }
+
     private func save(_ profile: UserProfile) {
         guard let data = try? JSONEncoder().encode(profile) else { return }
         UserDefaults.standard.set(data, forKey: Self.storageKey)

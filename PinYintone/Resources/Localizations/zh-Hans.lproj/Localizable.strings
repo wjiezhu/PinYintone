@@ -78,6 +78,13 @@
 "legend_native" = "母语者";
 "legend_you" = "你";
 "feedback_continue" = "继续";
+"settings_delete_account" = "删除账号";
+"settings_delete_footer" = "将永久删除你的账号及全部练习记录，此操作不可撤销。";
+"settings_delete_confirm_title" = "确定要删除账号吗？";
+"settings_delete_confirm_message" = "你的账号和全部练习记录将被永久删除，无法恢复。";
+"settings_delete_failed" = "删除失败";
+"settings_delete_failed_message" = "无法连接服务器，账号未被删除。请检查网络后重试。";
+
 "feedback_retry" = "再试一次";
 "feedback_next_word" = "下一个词";
 "feedback_skip_hint" = "这个词有点难，可以先跳过，稍后再练。";
