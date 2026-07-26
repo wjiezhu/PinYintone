@@ -34,6 +34,7 @@ class StudentRegisterRequest(BaseModel):
     deviceID: str
     role: str
     appleUserID: Optional[str] = None       # Sign in with Apple 稳定标识
+    spokenLanguages: Optional[list[str]] = None  # 会说的语言（多选，母语迁移分析）
     experimentGroup: Optional[str] = None   # 服务端均衡分配，客户端值忽略
     nickname: Optional[str] = None
     classCode: Optional[str] = None

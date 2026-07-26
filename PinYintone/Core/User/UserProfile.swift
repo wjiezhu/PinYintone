@@ -9,6 +9,9 @@ struct UserProfile: Codable {
     var teacherEmail: String?      // 仅 teacher 角色
     var teacherToken: String?      // JWT Bearer Token；仅 teacher 角色
     var experimentGroup: String    // "staticColor" | "dynamicF0" | "n/a"
-    var nativeLanguage: String?    // fr / darija / mixed
+    var nativeLanguage: String?    // fr / darija / mixed（旧字段，保留兼容）
+    /// 学习者会说的语言（多选，SpokenLanguage.rawValue）。母语迁移分析用。
+    /// 旧档案无此字段，解码时默认空数组。
+    var spokenLanguages: [String]?
     var registeredAt: Date
 }

@@ -22,6 +22,14 @@
 "signup_nickname_hint" = "e.g. Ahmed";
 "signup_submit" = "Continue";
 "signup_apple_failed" = "Sign in with Apple failed. Please try again.";
+"signup_languages_label" = "Which languages do you speak? (select all, for research)";
+"lang_darija" = "Darija";
+"lang_arabic" = "Standard Arabic";
+"lang_french" = "French";
+"lang_english" = "English";
+"lang_spanish" = "Spanish";
+"lang_amazigh" = "Tamazight";
+"lang_other" = "Other";
 
 // Teacher signup
 "teacher_signup_subtitle" = "Create your teacher account.\nA unique class code will be generated for your students.";

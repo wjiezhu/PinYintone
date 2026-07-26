@@ -29,6 +29,7 @@ class User(Base):
     role = Column(String, nullable=False, default="guest")
     experiment_group = Column(String, nullable=True)
     native_language = Column(String, nullable=True)
+    spoken_languages = Column(JSON, nullable=True)   # 会说的语言列表（母语迁移分析）
     install_date = Column(DateTime, default=_utcnow)
 
 

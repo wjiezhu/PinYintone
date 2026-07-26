@@ -21,7 +21,8 @@ final class UserManager: ObservableObject {
 
     /// 学生注册（Sign in with Apple）。分组由**后端均衡随机分配**；
     /// 同一 Apple ID 跨设备重新登录会继承原分组（后端幂等）；离线时本地随机兜底。
-    func registerStudent(appleUserID: String, nickname: String?) async throws {
+    func registerStudent(appleUserID: String, nickname: String?,
+                         spokenLanguages: [SpokenLanguage] = []) async throws {
         var p = UserProfile(
             deviceID: UIDevice.current.identifierForVendor?.uuidString ?? UUID().uuidString,
             role: .student,
@@ -31,7 +32,8 @@ final class UserManager: ObservableObject {
             teacherEmail: nil,
             teacherToken: nil,
             experimentGroup: GroupAssignment.randomGroup().rawValue,  // 离线兜底
-            nativeLanguage: Locale.current.languageCode,
+            nativeLanguage: Locale.current.language.languageCode?.identifier,
+            spokenLanguages: spokenLanguages.map(\.rawValue),
             registeredAt: Date()
         )
         // 后端均衡分配（在线则以后端返回为准）
@@ -57,6 +59,7 @@ final class UserManager: ObservableObject {
             teacherToken: resp.token,
             experimentGroup: "n/a",
             nativeLanguage: nil,
+            spokenLanguages: nil,
             registeredAt: Date()
         )
         save(p)

@@ -79,6 +79,8 @@ def student_register(body: schemas.StudentRegisterRequest, db: Session = Depends
                 user.experiment_group = random.choice(["staticColor", "dynamicF0"])
     if body.appleUserID:
         user.apple_user_id = body.appleUserID
+    if body.spokenLanguages is not None:
+        user.spoken_languages = body.spokenLanguages
     user.nickname = body.nickname
     user.role = "student"
     user.class_code = None
