@@ -10,6 +10,7 @@ struct StudentSignupView: View {
     @Environment(\.colorScheme) private var colorScheme
 
     @State private var nickname = ""
+    @State private var selectedLanguages: Set<SpokenLanguage> = []
     @State private var isLoading = false
     @State private var errorMessage: String?
 
@@ -18,6 +19,7 @@ struct StudentSignupView: View {
             VStack(spacing: 28) {
                 headerSection
                 formSection
+                languagesSection
                 errorLabel
                 appleButton
             }
@@ -58,6 +60,42 @@ struct StudentSignupView: View {
         }
     }
 
+    /// 会说的语言（多选，母语迁移分析用）
+    private var languagesSection: some View {
+        VStack(alignment: .leading, spacing: 10) {
+            Label(NSLocalizedString("signup_languages_label", comment: ""),
+                  systemImage: "globe")
+                .font(.caption)
+                .foregroundStyle(.secondary)
+            // 自适应换行的多选标签
+            FlowLayout(spacing: 10) {
+                ForEach(SpokenLanguage.displayOrder) { lang in
+                    languageChip(lang)
+                }
+            }
+        }
+    }
+
+    private func languageChip(_ lang: SpokenLanguage) -> some View {
+        let selected = selectedLanguages.contains(lang)
+        return Button {
+            if selected { selectedLanguages.remove(lang) }
+            else { selectedLanguages.insert(lang) }
+        } label: {
+            HStack(spacing: 6) {
+                Text(lang.flag)
+                Text(NSLocalizedString(lang.localizationKey, comment: ""))
+                    .font(.subheadline)
+            }
+            .padding(.horizontal, 14)
+            .padding(.vertical, 9)
+            .background(selected ? Color.accentColor : Color(.secondarySystemBackground))
+            .foregroundStyle(selected ? .white : .primary)
+            .clipShape(Capsule())
+        }
+        .buttonStyle(.plain)
+    }
+
     @ViewBuilder
     private var errorLabel: some View {
         if let msg = errorMessage {
@@ -94,7 +132,8 @@ struct StudentSignupView: View {
                 .joined(separator: " ")
             let typed = nickname.trimmingCharacters(in: .whitespacesAndNewlines)
             let finalName = typed.isEmpty ? (appleName.isEmpty ? nil : appleName) : typed
-            submit(appleUserID: cred.user, nickname: finalName)
+            submit(appleUserID: cred.user, nickname: finalName,
+                   languages: Array(selectedLanguages))
 
         case .failure(let error):
             // 用户主动取消不算错误，不打扰
@@ -105,13 +144,15 @@ struct StudentSignupView: View {
         }
     }
 
-    private func submit(appleUserID: String, nickname: String?) {
+    private func submit(appleUserID: String, nickname: String?,
+                        languages: [SpokenLanguage]) {
         errorMessage = nil
         isLoading = true
         Task {
             do {
                 try await userManager.registerStudent(
-                    appleUserID: appleUserID, nickname: nickname)
+                    appleUserID: appleUserID, nickname: nickname,
+                    spokenLanguages: languages)
             } catch let e as RegisterError {
                 errorMessage = e.errorDescription
             } catch {

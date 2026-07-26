@@ -13,6 +13,7 @@ with engine.connect() as _conn:
     _conn.execute(text("ALTER TABLE users ADD COLUMN IF NOT EXISTS apple_user_id VARCHAR"))
     _conn.execute(text(
         "CREATE INDEX IF NOT EXISTS ix_users_apple_user_id ON users (apple_user_id)"))
+    _conn.execute(text("ALTER TABLE users ADD COLUMN IF NOT EXISTS spoken_languages JSONB"))
     # 关卡 2 诊断埋点列
     for _ddl in (
         "ALTER TABLE training_sessions ADD COLUMN IF NOT EXISTS reference_type VARCHAR",
