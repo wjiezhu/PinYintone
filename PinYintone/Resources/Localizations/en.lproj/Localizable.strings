@@ -6,11 +6,11 @@
 "role_teacher" = "I am a Teacher";
 "stage1_title" = "Aspiration Training";
 "stage2_title" = "Tone Training";
-"stage3_title" = "Free Text Practice";
+"stage3_title" = "Text Practice";
 
 // Onboarding
 "onboarding_mic_body" = "Pinyintone needs microphone access to analyze your pronunciation.";
-"onboarding_mic_allow" = "Allow Microphone";
+"onboarding_mic_allow" = "Continue";
 "onboarding_language_title" = "Select your language";
 
 // Role select

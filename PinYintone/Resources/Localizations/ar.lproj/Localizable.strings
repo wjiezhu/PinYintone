@@ -6,11 +6,11 @@
 "role_teacher" = "أنا أستاذ/ة";
 "stage1_title" = "تدريب النفس";
 "stage2_title" = "تدريب النبرات";
-"stage3_title" = "ممارسة النص الحر";
+"stage3_title" = "ممارسة النص";
 
 // الإعداد الأولي
 "onboarding_mic_body" = "يحتاج Pinyintone إلى الوصول للميكروفون لتحليل نطقك.";
-"onboarding_mic_allow" = "السماح بالميكروفون";
+"onboarding_mic_allow" = "متابعة";
 "onboarding_language_title" = "اختر لغتك";
 
 // اختيار الدور
