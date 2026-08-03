@@ -6,11 +6,11 @@
 "role_teacher" = "我是教师";
 "stage1_title" = "送气训练";
 "stage2_title" = "声调训练";
-"stage3_title" = "自由文本练习";
+"stage3_title" = "文本练习";
 
 // 引导页
 "onboarding_mic_body" = "Pinyintone 需要麦克风权限来分析您的发音。";
-"onboarding_mic_allow" = "允许使用麦克风";
+"onboarding_mic_allow" = "继续";
 "onboarding_language_title" = "选择您的语言";
 
 // 角色选择
