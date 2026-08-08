@@ -6,12 +6,21 @@ enum LexemeCategory: String, Codable {
     case tone         // 关卡 2：声调连读与辅音
 }
 
+/// 声调词的子集归属（受试内前后测设计）。送气词为 nil。
+enum LexemeSubset: String, Codable {
+    case test        // 前后测测试词（不进训练池）
+    case trainingA   // 训练词 A 子集
+    case trainingB   // 训练词 B 子集
+}
+
 struct Lexeme: Codable, Identifiable {
     let id: String              // 唯一标识，如 "paobu"
     let hanzi: String           // 汉字，如 "跑步"
     let pinyin: String          // 拼音，如 "pǎo bù"
     let tones: [Int]            // 声调序列，如 [3, 4]；轻声 = 5
     let category: LexemeCategory // 所属关卡
+    /// 声调词的子集（test / trainingA / trainingB）；送气词与旧数据为 nil
+    let subset: LexemeSubset?
     let focus: String           // 考察重点，如 "P(送气)vs B(不送气)"
     let french: String          // 法语释义
     let darija: String          // 摩洛哥阿拉伯语对译
