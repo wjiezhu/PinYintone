@@ -36,6 +36,8 @@ def sync_session(dto: schemas.TrainingSessionDTO, db: Session = Depends(get_db))
     obj.voiced_frame_count = dto.voicedFrameCount
     obj.quality_flag = dto.qualityFlag
     obj.reference_switched = dto.referenceSwitchedDuringAttempt
+    obj.phase = dto.phase
+    obj.app_version = dto.appVersion
     db.commit()
     return {}
 

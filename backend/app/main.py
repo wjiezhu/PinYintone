@@ -20,6 +20,8 @@ with engine.connect() as _conn:
         "ALTER TABLE training_sessions ADD COLUMN IF NOT EXISTS voiced_frame_count INTEGER",
         "ALTER TABLE training_sessions ADD COLUMN IF NOT EXISTS quality_flag BOOLEAN",
         "ALTER TABLE training_sessions ADD COLUMN IF NOT EXISTS reference_switched BOOLEAN",
+        "ALTER TABLE training_sessions ADD COLUMN IF NOT EXISTS phase VARCHAR",
+        "ALTER TABLE training_sessions ADD COLUMN IF NOT EXISTS app_version VARCHAR",
     ):
         _conn.execute(text(_ddl))
     _conn.commit()

@@ -32,4 +32,11 @@ extension TrainingSession {
     @NSManaged public var qualityFlag: Bool
     /// 录音过程中参照曲线是否被替换（P0-3 修复后应恒为 false）
     @NSManaged public var referenceSwitchedDuringAttempt: Bool
+
+    // MARK: - 实验阶段与版本（P0-6 / P1-5）
+
+    /// 实验阶段："pretest" | "training" | "posttest"（TrainingPhase.rawValue）
+    @NSManaged public var phase: String?
+    /// App 版本字符串，如 "1.0 (16)"（AppInfo.versionString）
+    @NSManaged public var appVersion: String?
 }

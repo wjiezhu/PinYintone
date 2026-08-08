@@ -13,18 +13,24 @@ final class CorpusLoader {
     private let lexemes: [Lexeme]
     private var cursors: [LexemeCategory: Int] = [:]
 
-    /// 关卡 2 固定词序（由易到难）。两组学习者按同一顺序推进。
-    /// 依据：1+1 平调基准 → 轻声 → 单向调 → 调域跨度大的 1+3 →
-    /// 先降后升的 3+1 / 4+3 → 全去声 4+4（最难，放最后避免开局劝退）。
-    /// 未列入的 tone 词条按 JSON 原序追加在后，便于后续扩充语料。
-    private static let toneOrder: [String] = [
-        "yisheng", "canjia",              // 1+1 基准平调
-        "xiuxi", "qingchu",               // 1+5 轻声
-        "xiangxin",                       // 1+4
-        "heshui", "shenti", "jingli",     // 1+3 调域跨度
-        "zaocan",                         // 3+1
-        "ziji",                           // 4+3
-        "xianzai", "dianshi", "sushe", "hanzi",  // 4+4 全去声（最难）
+    /// 训练词固定顺序（A/B 子集按调型交替）。使每次练习都覆盖 A、B 两组，
+    /// 且两子集在时间上均衡分布，不受"练了哪些词"混杂。测试词不在此列
+    /// （P1-5#2：前后测词不进训练池）。
+    private static let trainingOrder: [String] = [
+        "kafei", "jintian",       // 1+1
+        "jiating", "zhongwen",    // 1+2
+        "qianbi", "shenti",       // 1+3
+        "xuexi", "yinhang",       // 2+2
+        "niunai", "cidian",       // 2+3
+        "shoubiao", "shuiguo",    // 3+3
+        "mianbao", "yisheng",     // 4+1 / 1+1（见词表脚注②对称性待定）
+        "qiche", "jiaoshi",       // 4+1 / 4+4
+    ]
+
+    /// 测试词固定顺序（前测与后测同题同序，共 10 词）。
+    private static let testOrder: [String] = [
+        "gongsi", "zhongguo", "laoshi", "shijian", "pingguo",
+        "keyi", "dianhua", "shangke", "hanyu", "xiexie",
     ]
 
     private init() {
@@ -40,18 +46,37 @@ final class CorpusLoader {
         lexemes.filter { $0.category == category }
     }
 
-    /// 指定类别的**实际推进顺序**（关卡 2 为固定词序，其它类别为 JSON 原序）
+    /// 指定类别的**实际推进顺序**。
+    /// 关卡 2（tone）只返回**训练词**（A+B，排除测试词），按 trainingOrder 固定序；
+    /// 其它类别为 JSON 原序。
     func orderedPool(category: LexemeCategory) -> [Lexeme] {
-        let pool = lexemes.filter { $0.category == category }
-        guard category == .tone else { return pool }
+        guard category == .tone else {
+            return lexemes.filter { $0.category == category }
+        }
+        return ordered(ids: Self.trainingOrder,
+                       from: lexemes.filter { $0.subset == .trainingA || $0.subset == .trainingB })
+    }
+
+    /// 测试词（前后测），固定顺序共 10 词。供前测/后测流程使用。
+    func testWords() -> [Lexeme] {
+        ordered(ids: Self.testOrder, from: lexemes.filter { $0.subset == .test })
+    }
+
+    /// 某训练子集（A 或 B）的词，用于受试内按词分配呈现方式。
+    func trainingWords(subset: LexemeSubset) -> [Lexeme] {
+        lexemes.filter { $0.subset == subset }
+    }
+
+    /// 按给定 id 顺序排列；未列入的追加在后（便于后续扩充）
+    private func ordered(ids: [String], from pool: [Lexeme]) -> [Lexeme] {
         var remaining = pool
-        var ordered: [Lexeme] = []
-        for id in Self.toneOrder {
+        var out: [Lexeme] = []
+        for id in ids {
             if let i = remaining.firstIndex(where: { $0.id == id }) {
-                ordered.append(remaining.remove(at: i))
+                out.append(remaining.remove(at: i))
             }
         }
-        return ordered + remaining   // 未列入固定序的新词追加在后
+        return out + remaining
     }
 
     /// 按类别顺序循环返回下一词；该类别为空时返回占位词。
@@ -118,6 +143,7 @@ final class CorpusLoader {
             pinyin: "nǐ hǎo",
             tones: [3, 3],
             category: category,
+            subset: nil,
             focus: "",
             french: "Bonjour",
             darija: "Salam (سلام)",

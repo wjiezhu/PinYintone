@@ -51,6 +51,8 @@ class TrainingSession(Base):
     voiced_frame_count = Column(Integer, nullable=True)
     quality_flag = Column(Boolean, nullable=True)           # 异常高分标记
     reference_switched = Column(Boolean, nullable=True)     # 应恒为 False
+    phase = Column(String, nullable=True)                   # pretest | training | posttest
+    app_version = Column(String, nullable=True)             # 如 "1.0 (16)"
 
 
 class AspirationAttempt(Base):
