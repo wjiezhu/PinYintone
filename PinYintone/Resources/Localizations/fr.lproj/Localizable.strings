@@ -97,6 +97,7 @@
 "feedback_next_word" = "Mot suivant";
 "feedback_skip_hint" = "Ce mot est difficile — vous pouvez le passer et y revenir plus tard.";
 "tone_retry_no_voice" = "Je n'ai pas bien entendu. Rapprochez-vous du micro et réessayez.";
+"assessment_read_aloud" = "Lisez ce mot à voix haute (test en cours — aucun score affiché)";
 "record_start" = "Démarrer l'enregistrement";
 "record_stop" = "Arrêter l'enregistrement";
 "aspiration_prompt" = "Souffle fort dans le micro pour produire l'explosion aspirée";

@@ -315,6 +315,22 @@ final class ToneTrainingViewModel: ObservableObject {
 
     // MARK: - 持久化
 
+    /// 该被试的平衡顺序（来自 profile.experimentGroup；缺省 dynamicF0）
+    private var counterbalanceOrder: ExperimentGroup {
+        ExperimentGroup(rawValue: UserManager.shared.profile?.experimentGroup ?? "")
+            ?? .dynamicF0
+    }
+
+    /// 当前词的呈现方式（受试内：按词子集 + 平衡顺序）。
+    /// 训练词返回 A 或 B；测试词/送气词返回 nil（前后测裸测无 A/B 呈现）。
+    var currentPresentationMode: ExperimentGroup? {
+        GroupAssignment.presentationMode(subset: currentLexeme?.subset,
+                                         order: counterbalanceOrder)
+    }
+
+    /// 当前是否应展示反馈：仅训练期展示；前后测为裸测。
+    var showsFeedback: Bool { phase.showsFeedback }
+
     private func persist(_ result: FeedbackResult,
                          referenceType: ReferenceType,
                          voicedFrameCount: Int,
@@ -322,11 +338,15 @@ final class ToneTrainingViewModel: ObservableObject {
                          referenceSwitched: Bool) {
         guard let profile = UserManager.shared.profile,
               let lexeme = currentLexeme else { return }
+        // group_assignment 按词标注：训练词记实际呈现方式，前后测记 "assessment"
+        let groupAssignment = (phase == .training
+            ? currentPresentationMode?.rawValue
+            : nil) ?? "assessment"
         SessionRepository.shared.save(
             deviceID: profile.deviceID,
             classCode: profile.classCode,
             role: profile.role.rawValue,
-            groupAssignment: profile.experimentGroup,
+            groupAssignment: groupAssignment,
             lexemeID: lexeme.id,
             dtwScore: Double(result.dtwScore),
             grade: result.grade.rawValue,
