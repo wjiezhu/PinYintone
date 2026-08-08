@@ -97,6 +97,7 @@
 "feedback_next_word" = "下一个词";
 "feedback_skip_hint" = "这个词有点难，可以先跳过，稍后再练。";
 "tone_retry_no_voice" = "没听清，请靠近麦克风重录。";
+"assessment_read_aloud" = "请读出这个词（测试中，不显示评分）";
 "record_start" = "开始录音";
 "record_stop" = "停止录音";
 "aspiration_prompt" = "对着麦克风用力送气，发出爆破声";
