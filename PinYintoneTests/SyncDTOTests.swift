@@ -9,7 +9,8 @@ final class SyncDTOTests: XCTestCase {
             groupAssignment: "dynamicF0", lexemeID: "paobu", dtwScore: 0.42,
             grade: "good", attemptNumber: 2, timestamp: "2026-05-20T10:00:00Z",
             referenceType: "tts", voicedFrameCount: 42,
-            qualityFlag: false, referenceSwitchedDuringAttempt: false
+            qualityFlag: false, referenceSwitchedDuringAttempt: false,
+            phase: "training", appVersion: "1.0 (16)"
         )
         let data = try JSONEncoder().encode(dto)
         let json = try XCTUnwrap(JSONSerialization.jsonObject(with: data) as? [String: Any])

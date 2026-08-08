@@ -14,7 +14,9 @@ final class SessionRepository {
               referenceType: String? = nil,
               voicedFrameCount: Int = 0,
               qualityFlag: Bool = false,
-              referenceSwitchedDuringAttempt: Bool = false) -> TrainingSession {
+              referenceSwitchedDuringAttempt: Bool = false,
+              phase: String = TrainingPhase.training.rawValue,
+              appVersion: String = AppInfo.versionString) -> TrainingSession {
         let session = TrainingSession(context: context)
         session.id = UUID()
         session.deviceID = deviceID
@@ -32,6 +34,8 @@ final class SessionRepository {
         session.voicedFrameCount = Int32(voicedFrameCount)
         session.qualityFlag = qualityFlag
         session.referenceSwitchedDuringAttempt = referenceSwitchedDuringAttempt
+        session.phase = phase
+        session.appVersion = appVersion
         saveContext()
         return session
     }

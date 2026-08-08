@@ -20,6 +20,9 @@ final class ToneTrainingViewModel: ObservableObject {
     @Published var referenceF0: [Float] = []    // 母语者参照 F0（已归一化）
     @Published var feedbackResult: FeedbackResult?
     @Published var isRecording: Bool = false
+    /// 当前实验阶段。前测/后测为裸测（不显示反馈），仅训练期显示反馈。
+    /// 由上层（前测引导 / 后测入口）设置；默认训练期。
+    @Published var phase: TrainingPhase = .training
     /// 参照曲线是否已定稿。未就绪时视图层禁用录音按钮（堵住竞态窗口）
     @Published var isReferenceReady: Bool = false
     /// 技术性失败提示（如"没听清，请靠近麦克风重录"）；非发音评价
@@ -332,7 +335,9 @@ final class ToneTrainingViewModel: ObservableObject {
             referenceType: referenceType.rawValue,
             voicedFrameCount: voicedFrameCount,
             qualityFlag: qualityFlag,
-            referenceSwitchedDuringAttempt: referenceSwitched
+            referenceSwitchedDuringAttempt: referenceSwitched,
+            phase: phase.rawValue,
+            appVersion: AppInfo.versionString
         )
     }
 

@@ -33,7 +33,9 @@
         <attribute name="grade" attributeType="String"/>
         <attribute name="groupAssignment" attributeType="String"/>
         <attribute name="id" attributeType="UUID" usesScalarValueType="NO"/>
+        <attribute name="appVersion" optional="YES" attributeType="String"/>
         <attribute name="lexemeID" attributeType="String"/>
+        <attribute name="phase" optional="YES" attributeType="String" defaultValueString="training"/>
         <attribute name="qualityFlag" optional="YES" attributeType="Boolean" defaultValueString="NO" usesScalarValueType="YES"/>
         <attribute name="referenceSwitchedDuringAttempt" optional="YES" attributeType="Boolean" defaultValueString="NO" usesScalarValueType="YES"/>
         <attribute name="referenceType" optional="YES" attributeType="String"/>

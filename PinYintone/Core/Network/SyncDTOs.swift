@@ -6,6 +6,9 @@ import Foundation
 private let iso8601: ISO8601DateFormatter = {
     let f = ISO8601DateFormatter()
     f.formatOptions = [.withInternetDateTime]
+    // 显式锁 UTC：摩洛哥与中国有时差，本地时区会让"第几周/练习间隔"算错（P1-5#3）。
+    // ISO8601DateFormatter 默认已是 UTC，这里显式声明以防未来改动。
+    f.timeZone = TimeZone(identifier: "UTC")
     return f
 }()
 
@@ -25,6 +28,8 @@ nonisolated struct TrainingSessionDTO: Codable {
     let voicedFrameCount: Int
     let qualityFlag: Bool
     let referenceSwitchedDuringAttempt: Bool
+    let phase: String?              // pretest | training | posttest
+    let appVersion: String?         // 如 "1.0 (16)"
 }
 
 nonisolated struct AspirationAttemptDTO: Codable {
@@ -70,7 +75,9 @@ extension TrainingSession {
             referenceType: referenceType,
             voicedFrameCount: Int(voicedFrameCount),
             qualityFlag: qualityFlag,
-            referenceSwitchedDuringAttempt: referenceSwitchedDuringAttempt
+            referenceSwitchedDuringAttempt: referenceSwitchedDuringAttempt,
+            phase: phase,
+            appVersion: appVersion
         )
     }
 }

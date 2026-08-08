@@ -63,6 +63,8 @@ class TrainingSessionDTO(BaseModel):
     voicedFrameCount: Optional[int] = None
     qualityFlag: Optional[bool] = None
     referenceSwitchedDuringAttempt: Optional[bool] = None
+    phase: Optional[str] = None
+    appVersion: Optional[str] = None
 
 
 class AspirationAttemptDTO(BaseModel):
