@@ -48,8 +48,9 @@ extension TrainingSession {
 
     // MARK: - 记录语义与版本（升级需求 §6.1 / §6.2）
 
-    /// **历史列**：该记录实际呈现的反馈条件。A/B 取消后不再写入，恒为 nil。
-    /// 只有 `schemaVersion` < 3 的旧记录才可能是 "staticColor" / "dynamicF0"。
+    /// 该条记录当时用的显示模式："staticColor" / "dynamicF0"；裸测阶段为 nil。
+    /// `schemaVersion` >= 3 是**学习者自选**的偏好——禁止当实验条件做组间比较；
+    /// < 3 的同名值是当年随机分配的条件，语义不同，不可混在一起分析。
     @NSManaged public var feedbackMode: String?
     /// 结果性质："valid_result" | "technical_retry" | "quality_flagged"（ResultStatus.rawValue）
     @NSManaged public var resultStatus: String?
