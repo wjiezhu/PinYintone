@@ -1,6 +1,9 @@
 import SwiftUI
 
-/// 目标词卡片：汉字 + 拼音 + 声调序列徽章。声调/自由文本通用。
+/// 目标词卡片：汉字 + 拼音 + 声调徽章 + 释义。声调 / 自由文本通用。
+///
+/// 「词卡」版式的核心块：一次只回答一个问题——**这次要念什么**。
+/// 研究者视角的语料标注不在这里出现（见 body 内注释）。
 struct LexemeCardView: View {
     let lexeme: Lexeme
 
@@ -37,12 +40,9 @@ struct LexemeCardView: View {
                 .padding(.top, 2)
             }
 
-            // 考察重点
-            if !lexeme.focus.isEmpty {
-                Text(lexeme.focus)
-                    .font(.caption2)
-                    .foregroundStyle(.tertiary)
-            }
+            // 不显示 lexeme.focus：那是语料的"考察重点"标注（硬编码中文），
+            // 对四语界面的学习者读不懂，在裸测阶段还等于提前告知这题考什么。
+            // 它仍保留在语料与导出数据里，供研究者使用。
         }
         .frame(maxWidth: .infinity)
         .padding(20)

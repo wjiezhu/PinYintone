@@ -96,6 +96,7 @@
 "feedback_retry" = "再试一次";
 "feedback_next_word" = "下一个词";
 "feedback_skip_hint" = "这个词有点难，可以先跳过，稍后再练。";
+"tone_retry_mic_unavailable" = "没能开始录音。请确认没有其他 App 正在占用麦克风，然后再试一次。";
 "tone_retry_no_voice" = "没听清，请靠近麦克风重录。";
 "record_start" = "开始录音";
 "record_stop" = "停止录音";
@@ -139,3 +140,53 @@
 "help_stage3_body" = "粘贴或输入中文，自动分词，逐词练习。点书签收藏词条，之后在「我的词条」复习。";
 "help_tip" = "在安静环境练习，麦克风对准嘴。多练分数会进步。";
 "help_privacy" = "不上传录音，只上传分析结果（分数），用于研究。";
+
+// ── 研究阶段（升级需求 §3.1）──────────────────────────
+"phase_pretest" = "前测";
+"phase_training" = "训练";
+"phase_posttest" = "后测";
+"phase_goal_pretest" = "这一轮只录音：不打分、不给颜色和曲线提示。请按你现在的读法读出来。";
+"phase_goal_training" = "听示范 → 录音 → 看反馈 → 再练一次。";
+"phase_goal_posttest" = "这一轮同样只录音：不打分、不给颜色和曲线提示。";
+"phase_complete_title" = "本阶段完成";
+"phase_complete_pretest" = "前测已完成，接下来进入训练。";
+"phase_complete_training" = "训练没有固定终点，随时可以继续练习。";
+"phase_complete_posttest" = "后测已完成，感谢你的参与。";
+"phase_start_posttest" = "开始后测";
+"blind_ready" = "准备好后按下录音。";
+"blind_recording" = "正在录音…";
+"assessment_recorded" = "已记录";
+"tone_next_word" = "下一个词";
+
+// 反馈条件（受试内 A/B，绑定词集而非学习者）
+
+// 四声名称（原为硬编码中文，现随界面语言切换）
+"tone_name_1" = "阴平";
+"tone_name_2" = "阳平";
+"tone_name_3" = "上声";
+"tone_name_4" = "去声";
+
+// 麦克风与数据用途说明（升级需求 §4.1）
+"onboarding_mic_privacy" = "录音只在你的手机上分析音高，原始音频不会上传、不会保存到服务器；只有分析结果（分数与音高曲线）匿名上传，用于本项目的教学研究。你可以随时在设置里删除账号和全部数据。";
+"onboarding_mic_denied_title" = "还没有麦克风权限";
+"onboarding_mic_denied_body" = "声调训练需要录音。请到「设置 → Pinyintone → 麦克风」打开权限，再回到本页继续。";
+"onboarding_open_settings" = "打开系统设置";
+"onboarding_mic_recheck" = "我已开启，重新检查";
+"onboarding_mic_skip" = "暂不开启，先浏览";
+
+// 反馈显示模式（学习者自选，非实验分组）
+"condition_staticColor" = "颜色块";
+"condition_dynamicF0" = "音高曲线";
+"settings_feedback_style" = "反馈显示方式";
+"settings_feedback_style_footer" = "训练时结果怎么显示。两种方式通关标准一样，换了不影响分数。前测和后测两种方式都不显示反馈。";
+"tone_slot_a11y" = "第 %1$d 个字：%2$d 声，%3$@";
+
+// 教练提示卡：一次一条可执行动作（档案 §4.3）
+"coach_title" = "下一次这样做";
+"coach_stay_high" = "「%@」要一直保持高，别往下掉。";
+"coach_rise" = "「%@」从低起，往上扬起来。";
+"coach_dip_then_rise" = "「%@」先往下压，再挑上来。";
+"coach_fall" = "「%@」从高处往下重重地落。";
+"coach_neutral" = "「%@」没听清楚，靠近麦克风再录一次。";
+"coach_all_good" = "这次都念稳了，可以换下一个词。";
+"coach_praise" = "「%@」已经很稳了。";

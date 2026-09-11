@@ -19,11 +19,11 @@ final class UserManager: ObservableObject {
         profile = p
     }
 
-    /// 学生注册（Sign in with Apple）。分组由**后端均衡随机分配**；
-    /// 同一 Apple ID 跨设备重新登录会继承原分组（后端幂等）；离线时本地随机兜底。
+    /// 学生注册（Sign in with Apple）。后端按 deviceID / Apple ID 幂等建档，
+    /// 不再分配任何实验分组或反馈条件。
     func registerStudent(appleUserID: String, nickname: String?,
                          spokenLanguages: [SpokenLanguage] = []) async throws {
-        var p = UserProfile(
+        let p = UserProfile(
             deviceID: UIDevice.current.identifierForVendor?.uuidString ?? UUID().uuidString,
             role: .student,
             appleUserID: appleUserID,
@@ -31,18 +31,30 @@ final class UserManager: ObservableObject {
             classCode: nil,
             teacherEmail: nil,
             teacherToken: nil,
-            experimentGroup: GroupAssignment.randomGroup().rawValue,  // 离线兜底
             nativeLanguage: Locale.current.language.languageCode?.identifier,
             spokenLanguages: spokenLanguages.map(\.rawValue),
             registeredAt: Date()
         )
-        // 后端均衡分配（在线则以后端返回为准）
-        if let assigned = try? await APIClient.shared.registerUser(p),
-           ExperimentGroup(rawValue: assigned) != nil {
-            p.experimentGroup = assigned
-        }
+        // 注册到后端（失败不阻塞本地建档，下次同步补上）
+        _ = try? await APIClient.shared.registerUser(p)
         save(p)
         profile = p
+    }
+
+    /// 修改显示名（升级需求 §4.1：姓名可选，首次授权后允许学习者自行修改）。
+    ///
+    /// 空字符串视为"不填名字"，存 nil。后端 `student/register` 幂等，
+    /// 重新上报只更新 nickname。
+    func updateNickname(_ newName: String?) async {
+        guard var p = profile, p.role == .student else { return }
+        let trimmed = newName?.trimmingCharacters(in: .whitespacesAndNewlines)
+        let resolved = (trimmed?.isEmpty ?? true) ? nil : trimmed
+        guard resolved != p.nickname else { return }
+        p.nickname = resolved
+        save(p)
+        profile = p
+        // 后端不可达时本地已改好，下次注册/同步会补上
+        _ = try? await APIClient.shared.registerUser(p)
     }
 
     /// 教师注册；服务器返回 6 位班级码
@@ -57,7 +69,6 @@ final class UserManager: ObservableObject {
             classCode: resp.classCode,
             teacherEmail: email,
             teacherToken: resp.token,
-            experimentGroup: "n/a",
             nativeLanguage: nil,
             spokenLanguages: nil,
             registeredAt: Date()
@@ -69,7 +80,7 @@ final class UserManager: ObservableObject {
 
     /// 退出登录 / 切换账号：清除本地档案，回到引导（角色选择）流程。
     /// 注意：
-    /// - 不清除实验分组（CLAUDE.md：安装时随机一次，UserDefaults 持久化，不可更改）
+    /// - 不清除实验排程（反平衡格子一经确定不再变，退出重进不得换条件）
     /// - 不清除语言偏好
     func logout() {
         UserDefaults.standard.removeObject(forKey: Self.storageKey)

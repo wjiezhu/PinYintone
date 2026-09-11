@@ -8,11 +8,20 @@ import Foundation
 /// 本类负责机上残留（Core Data 三张表 + UserDefaults 里的游标/计数）。
 enum LocalDataPurger {
 
-    /// 需一并清除的本地进度键（与 CorpusLoader / ToneTrainingViewModel 对应）
+    /// 需一并清除的本地进度键（与 CorpusLoader / ToneSequencer / ToneAttemptStore 对应）
+    ///
+    /// 含实验排程键：删除账号即"撤回同意"，被试重新注册应视为新被试，
+    /// 沿用旧的反平衡格子会让退出重进成为选择条件的后门。
     private static let progressKeys = [
         "pt_corpus_cursor_tone",
         "pt_corpus_cursor_aspiration",
         "pt_tone_attempts",
+        "pt_tone_phase",
+        "pt_tone_cursor_pretest",
+        "pt_tone_cursor_training",
+        "pt_tone_cursor_posttest",
+        "pt_counterbalance_index",   // A/B 时期的历史键，仍需清理
+        FeedbackStyle.storageKey,
     ]
 
     static func purgeAll() {

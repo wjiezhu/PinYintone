@@ -16,4 +16,7 @@ struct Lexeme: Codable, Identifiable {
     let french: String          // 法语释义
     let darija: String          // 摩洛哥阿拉伯语对译
     let audioFilename: String?  // 母语者参照录音文件名（暂为 nil，用合成轮廓）
+    /// 关卡 2 词集归属（升级需求 §3.2）。反馈条件绑定在词集上，不绑定学习者。
+    /// 关卡 1（送气）词条无此字段，解码为 nil。
+    let wordSet: WordSet?
 }

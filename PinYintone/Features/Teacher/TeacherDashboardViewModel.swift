@@ -4,7 +4,6 @@ import Foundation
 @MainActor
 final class TeacherDashboardViewModel: ObservableObject {
     @Published var summary: ClassSummary?
-    @Published var groupData: GroupComparisonData = .init()
     @Published var toneBreakdown: ToneBreakdownData = .init()
     @Published var students: [StudentRowData] = []
     @Published var isLoading: Bool = false
@@ -20,7 +19,6 @@ final class TeacherDashboardViewModel: ObservableObject {
 
     private struct Snapshot: Codable {
         var summary: ClassSummary?
-        var groupBars: [GroupBar]
         var toneItems: [ToneErrorItem]
         var students: [StudentRowData]
     }
@@ -32,14 +30,12 @@ final class TeacherDashboardViewModel: ObservableObject {
         isLoading = true
         errorMessage = nil
         do {
-            // 四个接口并发请求
+            // 三个接口并发请求
             async let s  = APIClient.shared.fetchClassSummary()
-            async let g  = APIClient.shared.fetchGroupComparison()
             async let t  = APIClient.shared.fetchToneBreakdown()
             async let st = APIClient.shared.fetchStudents()
 
             summary       = try await s
-            groupData     = try await g
             toneBreakdown = try await t
             students      = try await st
             cacheSnapshot()
@@ -75,7 +71,6 @@ final class TeacherDashboardViewModel: ObservableObject {
     private func cacheSnapshot() {
         let snap = Snapshot(
             summary:    summary,
-            groupBars:  groupData.bars,
             toneItems:  toneBreakdown.items,
             students:   students
         )
@@ -90,7 +85,6 @@ final class TeacherDashboardViewModel: ObservableObject {
             let snap = try? JSONDecoder().decode(Snapshot.self, from: data)
         else { return }
         summary             = snap.summary
-        groupData.bars      = snap.groupBars
         toneBreakdown.items = snap.toneItems
         students            = snap.students
     }

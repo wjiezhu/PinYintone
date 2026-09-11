@@ -1,12 +1,19 @@
 import AVFoundation
 import SwiftUI
+import UIKit
 
-/// 首次启动流程：麦克风权限申请 → 语言选择 → 角色选择
+/// 首次启动流程：麦克风权限申请（含数据用途说明）→ 语言选择 → 角色选择
 /// 退出登录后再次进入：麦克风已授权、语言已选择，直接进入角色选择
+///
+/// 权限被拒时（升级需求 §4.1）不再默默放行，而是给出**可执行的系统设置入口**，
+/// 并允许"暂不开启，先浏览"——不把学习者锁死在权限页。
 struct OnboardingFlowView: View {
     @ObservedObject private var localization = LocalizationManager.shared
+    @Environment(\.scenePhase) private var scenePhase
     @AppStorage("pt_language_chosen") private var languageChosen = false
     @State private var micGranted: Bool? = nil
+    /// 学习者选择了"暂不开启"，跳过被拒页继续浏览
+    @State private var micSkipped = false
 
     private var languages: [(code: String, flag: String, label: String)] {
         LocalizationManager.supported
@@ -16,6 +23,8 @@ struct OnboardingFlowView: View {
         NavigationStack {
             if micGranted == nil {
                 micPermissionPage
+            } else if micGranted == false && !micSkipped {
+                micDeniedPage
             } else if !languageChosen {
                 languageSelectionPage
             } else {
@@ -23,6 +32,10 @@ struct OnboardingFlowView: View {
             }
         }
         .onAppear { checkExistingMicPermission() }
+        // 从系统设置返回时重新读取授权状态，无需重启 App
+        .onChange(of: scenePhase) { _, phase in
+            if phase == .active { checkExistingMicPermission() }
+        }
     }
 
     // MARK: - Mic permission page
@@ -38,6 +51,12 @@ struct OnboardingFlowView: View {
                 .multilineTextAlignment(.center)
             Text(NSLocalizedString("onboarding_mic_body", comment: ""))
                 .font(.body)
+                .foregroundStyle(.secondary)
+                .multilineTextAlignment(.center)
+                .padding(.horizontal, 32)
+            // 录音处理方式 / 是否上传原始音频 / 数据用途（升级需求 §4.1）
+            Text(NSLocalizedString("onboarding_mic_privacy", comment: ""))
+                .font(.footnote)
                 .foregroundStyle(.secondary)
                 .multilineTextAlignment(.center)
                 .padding(.horizontal, 32)
@@ -57,6 +76,61 @@ struct OnboardingFlowView: View {
             .padding(.horizontal, 32)
             .padding(.bottom, 48)
         }
+    }
+
+    // MARK: - Mic denied page
+
+    /// 权限被拒：给出可执行的系统设置入口，而不是一句"需要麦克风"了事
+    private var micDeniedPage: some View {
+        VStack(spacing: 24) {
+            Spacer()
+            Image(systemName: "mic.slash.fill")
+                .font(.system(size: 56))
+                .foregroundStyle(.orange)
+            Text(NSLocalizedString("onboarding_mic_denied_title", comment: ""))
+                .font(.title2.bold())
+                .multilineTextAlignment(.center)
+            Text(NSLocalizedString("onboarding_mic_denied_body", comment: ""))
+                .font(.body)
+                .foregroundStyle(.secondary)
+                .multilineTextAlignment(.center)
+                .padding(.horizontal, 32)
+            Spacer()
+            VStack(spacing: 12) {
+                Button {
+                    openSystemSettings()
+                } label: {
+                    Text(NSLocalizedString("onboarding_open_settings", comment: ""))
+                        .font(.headline)
+                        .frame(maxWidth: .infinity)
+                        .padding()
+                        .background(Color.accentColor)
+                        .foregroundStyle(.white)
+                        .clipShape(RoundedRectangle(cornerRadius: 14))
+                }
+                .accessibilityIdentifier("onboarding.openSettings")
+
+                Button(NSLocalizedString("onboarding_mic_recheck", comment: "")) {
+                    checkExistingMicPermission()
+                }
+                .font(.subheadline)
+
+                Button(NSLocalizedString("onboarding_mic_skip", comment: "")) {
+                    micSkipped = true
+                }
+                .font(.subheadline)
+                .foregroundStyle(.secondary)
+            }
+            .padding(.horizontal, 32)
+            .padding(.bottom, 40)
+        }
+    }
+
+    /// 跳到本 App 的系统设置页（麦克风开关就在那一页）
+    private func openSystemSettings() {
+        guard let url = URL(string: UIApplication.openSettingsURLString),
+              UIApplication.shared.canOpenURL(url) else { return }
+        UIApplication.shared.open(url)
     }
 
     // MARK: - Language selection page

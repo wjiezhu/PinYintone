@@ -67,24 +67,6 @@ def class_summary(teacher: models.Teacher = Depends(current_teacher), db: Sessio
     )
 
 
-@router.get("/teacher/class/comparison", response_model=schemas.GroupComparisonData)
-def class_comparison(teacher: models.Teacher = Depends(current_teacher), db: Session = Depends(get_db)):
-    buckets: dict[str, list[float]] = defaultdict(list)
-    for s in _class_sessions(db, teacher.class_code):
-        buckets[s.group_assignment].append(s.dtw_score)
-
-    labels = {"staticColor": "A · 静态色", "dynamicF0": "B · 动态F0"}
-    bars = [
-        schemas.GroupBar(
-            group=labels.get(group, group),
-            avgDTW=(sum(scores) / len(scores)) if scores else 0.0,
-            count=len(scores),
-        )
-        for group, scores in sorted(buckets.items())
-    ]
-    return schemas.GroupComparisonData(bars=bars)
-
-
 @router.get("/teacher/class/tone-breakdown", response_model=schemas.ToneBreakdownData)
 def tone_breakdown(teacher: models.Teacher = Depends(current_teacher), db: Session = Depends(get_db)):
     total = {1: 0, 2: 0, 3: 0, 4: 0}
@@ -163,13 +145,23 @@ def student_detail(
 def export_csv(teacher: models.Teacher = Depends(current_teacher), db: Session = Depends(get_db)):
     out = io.StringIO()
     writer = csv.writer(out)
+    # presentation_order 仅历史记录有值（A/B 取消前），schema_version >= 3 为空。
+    # feedback_mode 各版本都有值但语义不同：v1/v2 是随机分配的实验条件，
+    # v3 是学习者自选的显示模式（裸测为空）——导出后不可混在一起分析。
+    # 列集按档案 §8：原始长表 + 质量标记 + 阶段 + 尝试次数 + 应用版本。
     writer.writerow(
-        ["device_id", "group", "lexeme_id", "dtw_score", "grade", "attempt", "timestamp"]
+        ["device_id", "phase", "word_set_id", "feedback_mode", "presentation_order",
+         "assessment_set_version", "lexeme_id", "dtw_score", "grade", "attempt",
+         "result_status", "quality_flag", "schema_version", "app_version", "timestamp"]
     )
     for s in sorted(_class_sessions(db, teacher.class_code), key=lambda s: s.timestamp):
         writer.writerow(
-            [s.device_id, s.group_assignment, s.lexeme_id, f"{s.dtw_score:.4f}",
-             s.grade, s.attempt_number, s.timestamp.isoformat()]
+            [s.device_id, s.phase, s.word_set_id,
+             s.feedback_mode, s.presentation_order,
+             s.assessment_set_version, s.lexeme_id, f"{s.dtw_score:.4f}",
+             s.grade, s.attempt_number,
+             s.result_status, s.quality_flag, s.schema_version, s.app_version,
+             s.timestamp.isoformat()]
         )
     return Response(
         content=out.getvalue(),

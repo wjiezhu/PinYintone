@@ -101,7 +101,8 @@ final class AspirationViewModel: ObservableObject {
             targetWord: lex.hanzi,
             triggerRate: Double(triggerRate),
             passed: passed,
-            timestamp: Date()
+            timestamp: Date(),
+            phase: ToneSequencer.shared.phase.rawValue
         )
     }
 }

@@ -29,6 +29,18 @@ enum DirectionHint: String, Codable {
         }
     }
 
+    /// 教练卡的完整句式模板键（比 `localizationKey` 的短标签多一层"怎么做"）。
+    var coachKey: String {
+        switch self {
+        case .ok:                 return "coach_all_good"
+        case .shouldStayHigh:     return "coach_stay_high"
+        case .shouldRise:         return "coach_rise"
+        case .shouldDipThenRise:  return "coach_dip_then_rise"
+        case .shouldFall:         return "coach_fall"
+        case .neutral:            return "coach_neutral"
+        }
+    }
+
     /// 本地化键。
     var localizationKey: String {
         switch self {
@@ -55,6 +67,18 @@ struct ToneSegmentResult: Codable, Identifiable {
     var passed: Bool { segmentScore <= 0.5 }
 }
 
+/// 教练卡的内容：一条主提示 + 可选的一句鼓励。
+///
+/// 刻意只留一个 `focusChar`——档案 §4.3 要求每次最多突出一个调整方向，
+/// 用类型把"想给两条"这件事挡在编译期之外。
+struct CoachAdvice {
+    /// 这次要改的那个字；全对时为 nil（此时 `hint == .ok`，模板不含占位符）
+    let focusChar: String?
+    let hint: DirectionHint
+    /// 已经念稳了的另一个字，用来先肯定再纠正；没有则为 nil
+    let praiseChar: String?
+}
+
 struct FeedbackResult {
     let dtwScore: Float
     let grade: FeedbackGrade
@@ -64,6 +88,24 @@ struct FeedbackResult {
     /// 错误字下标（向后兼容旧字段，从 segments 推导）。
     var toneErrors: [Int] {
         segments.filter { !$0.passed }.map { $0.syllableIndex }
+    }
+
+    /// 挑出**唯一**一条要给学习者的行动提示。
+    ///
+    /// 选取规则：在所有"没唱对"的音节里取分段 DTW 最差的那个——
+    /// 差得最多的地方改起来收益最大。全部唱对时返回 `.ok`（鼓励文案）。
+    var coachAdvice: CoachAdvice {
+        let needsWork = segments.filter { $0.directionHint != .ok }
+        guard let worst = needsWork.max(by: { $0.segmentScore < $1.segmentScore }) else {
+            return CoachAdvice(focusChar: nil, hint: .ok, praiseChar: nil)
+        }
+        // 只有在"另一个字确实稳了"时才夸，避免全错还说"很稳"
+        let praise = segments.first {
+            $0.syllableIndex != worst.syllableIndex && $0.passed
+        }
+        return CoachAdvice(focusChar: worst.hanziChar,
+                           hint: worst.directionHint,
+                           praiseChar: praise?.hanziChar)
     }
 
     /// 面向用户的百分制得分（0–100，越高越好）。

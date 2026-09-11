@@ -69,12 +69,12 @@ final class APIClient {
                                  body: Body(email: email, password: password))
     }
 
-    /// 注册学生（只填名字，无需班级码）；返回后端均衡分配的实验分组（rawValue）。
+    /// 学生注册（Sign in with Apple，无需班级码）。
+    ///
+    /// 幂等建档；不再返回任何实验分组信息。
     @discardableResult
-    func registerUser(_ profile: UserProfile) async throws -> String {
-        struct Resp: Codable { let experimentGroup: String }
-        let resp: Resp = try await request("student/register", method: "POST", body: profile)
-        return resp.experimentGroup
+    func registerUser(_ profile: UserProfile) async throws -> StudentRegistration {
+        try await request("student/register", method: "POST", body: profile)
     }
 
     /// 删除账号：清除服务端该用户及其全部训练数据。
@@ -130,9 +130,6 @@ final class APIClient {
         try await request("teacher/class/summary", token: try await teacherToken())
     }
 
-    func fetchGroupComparison() async throws -> GroupComparisonData {
-        try await request("teacher/class/comparison", token: try await teacherToken())
-    }
 
     func fetchToneBreakdown() async throws -> ToneBreakdownData {
         try await request("teacher/class/tone-breakdown", token: try await teacherToken())

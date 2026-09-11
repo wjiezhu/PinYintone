@@ -46,6 +46,8 @@ final class AudioEngine {
 
     private let engine = AVAudioEngine()
     private var converter: AVAudioConverter?
+    /// 当前 converter 是按哪个输入格式建的；格式变化时据此重建
+    private var converterSourceFormat: AVAudioFormat?
 
     /// 目标格式：16-bit 整型、16 kHz、单声道、交错
     private let targetFormat = AVAudioFormat(
@@ -81,13 +83,18 @@ final class AudioEngine {
         input.removeTap(onBus: 0)
         if engine.isRunning { engine.stop() }
 
-        // 1) 配置音频会话：measurement 模式关闭额外处理，保证电平/基频分析准确
+        // 1) 配置音频会话：measurement 模式关闭额外处理，保证电平/基频分析准确。
+        //
+        // 这里**不设** setPreferredSampleRate(16000)：CLAUDE.md 锁定的 16 kHz 是
+        // 分析链路（targetFormat → YIN/DTW）的采样率，不是麦克风采集率。
+        // 真机上请求 16 kHz 会让硬件真的切到 16 kHz，而 inputNode 缓存的格式仍是
+        // 48 kHz，装 tap 时两者不一致 → AVAudioEngine 初始化失败（error -10868），
+        // 表现为"按录音没反应"。让硬件跑原生采样率，由下面的 converter 降到 16 kHz。
         let session = AVAudioSession.sharedInstance()
         try session.setCategory(.record, mode: .measurement, options: [])
-        try? session.setPreferredSampleRate(sampleRate)
         try session.setActive(true, options: .notifyOthersOnDeactivation)
 
-        // 2) 建立 硬件格式 → 目标格式 的转换器
+        // 2) 校验输入格式是否可用（converter 改为按 tap 实际交付的格式懒建，见 convert）
         let hwFormat = input.outputFormat(forBus: 0)
         // 模拟器无麦克风 / 麦克风权限被拒 / 会话被占用时，inputNode 可能返回 sampleRate
         // 或 channelCount 为 0 的无效格式；直接传给 installTap 会抛
@@ -96,11 +103,6 @@ final class AudioEngine {
             try? session.setActive(false, options: .notifyOthersOnDeactivation)
             throw AudioEngineError.invalidInputFormat
         }
-        guard let converter = AVAudioConverter(from: hwFormat, to: targetFormat) else {
-            throw AudioEngineError.converterUnavailable
-        }
-        self.converter = converter
-
         // 3) 复位状态
         lock.withLock {
             _isRecording = true
@@ -110,8 +112,10 @@ final class AudioEngine {
             maxSamples = duration.map { Int($0 * sampleRate) }
         }
 
-        // 4) 安装 tap：在音频线程同步转换为 [Int16]，再异步交给处理队列
-        input.installTap(onBus: 0, bufferSize: 4096, format: hwFormat) { [weak self] buffer, _ in
+        // 4) 安装 tap：format 传 nil，让引擎用节点**当时**的真实格式，
+        // 而不是上面那个可能已经过期的 hwFormat 快照（耳机插拔、来电打断后的
+        // 路由切换都会让缓存格式失效）。转换器按第一个 buffer 的格式懒建。
+        input.installTap(onBus: 0, bufferSize: 4096, format: nil) { [weak self] buffer, _ in
             guard let self, let samples = self.convert(buffer) else { return }
             self.processingQueue.async { self.accumulate(samples) }
         }
@@ -154,6 +158,12 @@ final class AudioEngine {
 
     /// 在音频线程同步将硬件缓冲转换为目标格式的 Int16 采样数组。
     private func convert(_ inputBuffer: AVAudioPCMBuffer) -> [Int16]? {
+        // tap 实际交付的格式才是权威值：首个 buffer 到达时建转换器；
+        // 若中途格式变了（路由切换）就按新格式重建，而不是拿旧的硬转。
+        if converter == nil || converterSourceFormat != inputBuffer.format {
+            converter = AVAudioConverter(from: inputBuffer.format, to: targetFormat)
+            converterSourceFormat = converter == nil ? nil : inputBuffer.format
+        }
         guard let converter else { return nil }
 
         // 按采样率比估算输出容量（多留 1 帧余量）
@@ -227,6 +237,7 @@ final class AudioEngine {
         engine.inputNode.removeTap(onBus: 0)
         if engine.isRunning { engine.stop() }
         converter = nil
+        converterSourceFormat = nil
         try? AVAudioSession.sharedInstance().setActive(false, options: .notifyOthersOnDeactivation)
     }
 }

@@ -6,16 +6,17 @@ import Foundation
 /// 并保存训练记录。
 ///
 /// 实验完整性要点（仅作用于关卡 2）：
-/// - **参照锁定**：录音开始时把当前参照曲线拷入 `lockedReference`，本次录音的
-///   显示与评分都用它；异步参照（真人音 / TTS）若在录音中返回则暂存，录完再应用。
-///   保证"所见即所评"——这是动态曲线反馈成立的最低要求。
-/// - **参照优先级**：真人母语者录音 > TTS 合成 > 几何理想轮廓，来源随记录上报。
-/// - **技术性失败不计分**：有声帧过少视为"没录好"，提示重录且不生成/不持久化记录，
-///   避免与"发音错"混为一谈污染统计。
-/// - **按词累计尝试数**：`attemptNumber` 不再每次换词归零，可还原练习轮次。
+/// - **三阶段**：`pretest` / `posttest` 为裸测——照常算分入库，但**不向学习者呈现**
+///   任何分数、等级、颜色或曲线，录完自动进下一题；`training` 才显示反馈。
+/// - **反馈呈现**：训练阶段一律动态 F0 可视化（已取消 A/B 分组）。
 @MainActor
 final class ToneTrainingViewModel: ObservableObject {
     @Published var currentLexeme: Lexeme?
+    /// 当前研究阶段；测试阶段不呈现任何反馈（升级需求 §3.1）
+    @Published private(set) var phase: TrainingPhase = .pretest
+    /// 当前词条的反馈条件；测试阶段与无词集词条为 nil（升级需求 §3.2）
+    /// 测试阶段词表是否已走完
+    @Published private(set) var isPhaseComplete: Bool = false
     @Published var studentF0: [Float] = []      // 学习者实时 F0（已归一化）
     @Published var referenceF0: [Float] = []    // 母语者参照 F0（已归一化）
     @Published var feedbackResult: FeedbackResult?
@@ -26,7 +27,10 @@ final class ToneTrainingViewModel: ObservableObject {
     @Published var retryHint: String?
     /// 当前词连续未通关次数，达到阈值后视图层提示"可以先跳过"
     @Published var consecutiveFailures: Int = 0
+    /// 测试阶段的中性提示（"已记录"）。不含任何评价信息，仅告知录音被保存。
+    @Published private(set) var assessmentNotice: String?
 
+    private let sequencer: ToneSequencer
     private let audioEngine = AudioEngine()
     private let framer = AudioFramer()           // 512/128 帧化（CLAUDE.md）
     private let f0Extractor = F0Extractor()
@@ -46,10 +50,6 @@ final class ToneTrainingViewModel: ObservableObject {
 
     // MARK: - 尝试计数与埋点
 
-    /// 每词累计尝试数，持久化；换词不归零（P1-3）
-    private var attemptsByLexeme: [String: Int] = [:]
-    private static let attemptsKey = "pt_tone_attempts"
-
     /// 有声帧下限：低于此值判为"没录好"，不计分（≈40 ms 有效发声）
     private let minVoicedFrames = 5
     /// 异常高分阈值：超出即打 qualityFlag，分析时可剔除
@@ -66,9 +66,14 @@ final class ToneTrainingViewModel: ObservableObject {
     /// 视图层应绘制的参照：录音中用锁定值，其余用当前值
     var displayReference: [Float] { isRecording ? lockedReference : referenceF0 }
 
-    init() {
-        attemptsByLexeme = (UserDefaults.standard.dictionary(forKey: Self.attemptsKey)
-                            as? [String: Int]) ?? [:]
+    /// 注意：默认参数会在**调用方**的隔离域里求值（`@StateObject` 的 autoclosure
+    /// 是非隔离的），所以不能写成 `sequencer: ToneSequencer = .shared`。
+    /// 传 nil 时在 init 体内取单例——init 本身是 @MainActor，隔离正确。
+    init(sequencer: ToneSequencer? = nil) {
+        let sequencer = sequencer ?? ToneSequencer.shared
+        self.sequencer = sequencer
+        phase = sequencer.phase
+        isPhaseComplete = sequencer.isPhaseComplete
         // 帧化层每凑满帧 → 提 F0 → 累积；实时曲线节流刷新（见 lastCurveRefresh）
         framer.onFrame = { [weak self] frame in
             guard let self else { return }
@@ -102,7 +107,9 @@ final class ToneTrainingViewModel: ObservableObject {
         accumulatedF0 = []
         feedbackResult = nil
         retryHint = nil
+        assessmentNotice = nil
         consecutiveFailures = 0
+        // 条件绑定词集：换词就可能换条件（受试内设计）
 
         let targetID = lexeme.id
         Task { [weak self] in
@@ -149,13 +156,37 @@ final class ToneTrainingViewModel: ObservableObject {
         SpeechService.shared.speak(hanzi)
     }
 
-    func loadNext() {
-        loadLexeme(CorpusLoader.shared.nextLexeme(category: .tone))
+    /// 载入当前阶段的当前题（进入页面 / 阶段切换后调用）
+    func loadCurrent() {
+        syncPhaseState()
+        guard let lexeme = sequencer.currentLexeme else {
+            currentLexeme = nil
+            return
+        }
+        loadLexeme(lexeme)
     }
 
-    /// 当前词表进度（1-based / 总数），供视图显示
-    var progress: (index: Int, total: Int) {
-        CorpusLoader.shared.progress(category: .tone)
+    /// 进入下一题。测试阶段走完最后一题后 `currentLexeme` 为 nil，视图显示阶段完成。
+    func loadNext() {
+        sequencer.advance()
+        loadCurrent()
+    }
+
+    /// 训练阶段解锁后，主动开始后测
+    func beginPosttest() {
+        sequencer.beginPosttest()
+        loadCurrent()
+    }
+
+    var isPosttestUnlocked: Bool { sequencer.isPosttestUnlocked }
+
+    /// 当前阶段词表进度（1-based / 总数），供视图显示
+    var progress: (index: Int, total: Int) { sequencer.progress }
+
+    /// 把排程状态同步到 @Published，供视图分支
+    private func syncPhaseState() {
+        phase = sequencer.phase
+        isPhaseComplete = sequencer.isPhaseComplete
     }
 
     // MARK: - 录音
@@ -171,11 +202,18 @@ final class ToneTrainingViewModel: ObservableObject {
         lockedReference = referenceF0
         lockedReferenceType = referenceType
         isRecording = true
-        // start 失败（无麦克风 / 权限被拒）时回滚，避免 UI 卡在"录音中"
+        // start 失败（无输入设备 / 权限被拒 / 会话被占用 / 路由切换）时回滚，
+        // 并且**必须给出可执行提示**：否则学习者看到的是一个按了没反应的按钮
+        // （档案 §4.2、§11 都要求这条路径有明确恢复路径）。
         do {
             try audioEngine.start()
         } catch {
             isRecording = false
+            retryHint = NSLocalizedString("tone_retry_mic_unavailable", comment: "")
+            // 权限被拒也会以 invalidInputFormat 冒出来，这里再查一次把原因分开，
+            // 否则导出时"没给麦克风权限"和"设备/会话异常"混成一类，没法归因。
+            persistTechnicalRetry(reason: Self.failureReason(for: error),
+                                  voicedFrameCount: 0)
         }
     }
 
@@ -186,10 +224,13 @@ final class ToneTrainingViewModel: ObservableObject {
         let cleaned = f0Extractor.clean(accumulatedF0)
         let voicedFrames = cleaned.filter { $0 != 0 }.count
 
-        // P1-2：技术性失败（没录好）与发音错误分开，不生成结果、不入库
+        // P1-2：技术性失败（没录好）与发音错误分开——不生成结果、不给等级，
+        // 但仍落一条 technical_retry 记录，否则失败率在数据里完全不可见（§6.1）。
         guard voicedFrames >= minVoicedFrames else {
             studentF0 = []
             retryHint = NSLocalizedString("tone_retry_no_voice", comment: "")
+            persistTechnicalRetry(reason: .insufficientVoicedFrames,
+                                  voicedFrameCount: voicedFrames)
             flushPendingReference()
             return
         }
@@ -204,11 +245,7 @@ final class ToneTrainingViewModel: ObservableObject {
 
         // 按词累计尝试数（换词不归零）
         let lexemeID = currentLexeme?.id ?? "unknown"
-        let attempt = (attemptsByLexeme[lexemeID] ?? 0) + 1
-        attemptsByLexeme[lexemeID] = attempt
-        UserDefaults.standard.set(attemptsByLexeme, forKey: Self.attemptsKey)
-
-        consecutiveFailures = (grade == .fail) ? consecutiveFailures + 1 : 0
+        let attempt = ToneAttemptStore.increment(lexemeID)
 
         let segments = buildSegments(student: normalized, reference: reference)
         let result = FeedbackResult(
@@ -217,7 +254,6 @@ final class ToneTrainingViewModel: ObservableObject {
             attemptNumber: attempt,
             segments: segments
         )
-        feedbackResult = result
 
         // 参照在本次录音中是否被换过——P0-3 修复后应恒为 false（不变式自检）
         let switched = !lockedReference.isEmpty && lockedReference != referenceF0
@@ -228,6 +264,27 @@ final class ToneTrainingViewModel: ObservableObject {
                 referenceSwitched: switched)
 
         flushPendingReference()
+
+        // 裸测阶段：算分照常入库，但**不向学习者呈现**分数/等级/曲线，
+        // 也不累计"连续失败"（那是训练阶段的行动提示逻辑）；录完自动进下一题。
+        guard phase.showsFeedback else {
+            studentF0 = []
+            assessmentNotice = NSLocalizedString("assessment_recorded", comment: "")
+            scheduleAssessmentAdvance()
+            return
+        }
+
+        consecutiveFailures = (grade == .fail) ? consecutiveFailures + 1 : 0
+        feedbackResult = result
+    }
+
+    /// 测试阶段自动进入下一题。留出一拍让"已记录"提示可见，避免像是没录上。
+    private func scheduleAssessmentAdvance() {
+        Task { [weak self] in
+            try? await Task.sleep(nanoseconds: 800_000_000)
+            guard let self, !self.isRecording, self.phase.isAssessment else { return }
+            self.loadNext()
+        }
     }
 
     /// 录音结束后应用暂存的异步参照
@@ -312,6 +369,45 @@ final class ToneTrainingViewModel: ObservableObject {
 
     // MARK: - 持久化
 
+    /// 把 AudioEngine 的启动错误映射成匿名的失败原因（不含任何录音内容）。
+    private static func failureReason(for error: Error) -> FailureReason {
+        // 权限被拒最常见，且会伪装成 invalidInputFormat，所以先单独判掉。
+        // 部署目标 iOS 17，AVAudioApplication 可直接用。
+        if AVAudioApplication.shared.recordPermission != .granted {
+            return .permissionDenied
+        }
+        guard let engineError = error as? AudioEngine.AudioEngineError else {
+            return .analysisError
+        }
+        switch engineError {
+        case .engineStartFailed:
+            return .recordingInterrupted           // 会话被占用 / 路由切换
+        case .invalidInputFormat, .converterUnavailable:
+            return .lowSignalQuality               // 无可用输入设备 / 格式异常
+        }
+    }
+
+    /// 落一条技术性失败记录：不生成等级、不计入发音成绩，只让失败率可见。
+    private func persistTechnicalRetry(reason: FailureReason, voicedFrameCount: Int) {
+        guard let profile = UserManager.shared.profile,
+              let lexeme = currentLexeme else { return }
+        SessionRepository.shared.saveTechnicalRetry(
+            deviceID: profile.deviceID,
+            classCode: profile.classCode,
+            role: profile.role.rawValue,
+            lexemeID: lexeme.id,
+            // 不自增：没录上不算练过这个词（否则能刷开后测解锁条件）
+            attemptNumber: ToneAttemptStore.attempts(for: lexeme.id),
+            timestamp: Date(),
+            phase: sequencer.phase.rawValue,
+            wordSetID: lexeme.wordSet?.rawValue,
+            assessmentSetVersion: lexeme.wordSet?.isAssessment == true
+                ? AssessmentSet.version : nil,
+            voicedFrameCount: voicedFrameCount,
+            reason: reason
+        )
+    }
+
     private func persist(_ result: FeedbackResult,
                          referenceType: ReferenceType,
                          voicedFrameCount: Int,
@@ -319,11 +415,16 @@ final class ToneTrainingViewModel: ObservableObject {
                          referenceSwitched: Bool) {
         guard let profile = UserManager.shared.profile,
               let lexeme = currentLexeme else { return }
+        // 已取消 A/B 分组。feedbackMode 记的是"这条记录当时用的哪种显示模式"，
+        // 由学习者自己在设置里选，**不是实验条件**——自选数据不得做组间比较。
+        // 裸测阶段不显示任何反馈，故为 nil。
+        // groupAssignment 是历史必填列，恒写 "n/a" 表示不参与任何分组。
+        let shownStyle = sequencer.phase.showsFeedback ? FeedbackStyle.current.rawValue : nil
         SessionRepository.shared.save(
             deviceID: profile.deviceID,
             classCode: profile.classCode,
             role: profile.role.rawValue,
-            groupAssignment: profile.experimentGroup,
+            groupAssignment: "n/a",
             lexemeID: lexeme.id,
             dtwScore: Double(result.dtwScore),
             grade: result.grade.rawValue,
@@ -332,7 +433,16 @@ final class ToneTrainingViewModel: ObservableObject {
             referenceType: referenceType.rawValue,
             voicedFrameCount: voicedFrameCount,
             qualityFlag: qualityFlag,
-            referenceSwitchedDuringAttempt: referenceSwitched
+            referenceSwitchedDuringAttempt: referenceSwitched,
+            phase: sequencer.phase.rawValue,
+            wordSetID: lexeme.wordSet?.rawValue,
+            assessmentSetVersion: lexeme.wordSet?.isAssessment == true
+                ? AssessmentSet.version : nil,
+            feedbackMode: shownStyle,
+            // 走到这里说明 F0 分析已成功产出评分；质量异常仍保留记录但显式标记，
+            // 供导出时剔除（升级需求 §6.1）。技术失败根本不会走到 persist——
+            // 那条路径只提示重录、不生成记录。
+            resultStatus: qualityFlag ? .qualityFlagged : .validResult
         )
     }
 

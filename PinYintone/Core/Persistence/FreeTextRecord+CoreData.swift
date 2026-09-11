@@ -22,6 +22,12 @@ extension FreeTextRecord {
     @NSManaged public var duration: Double
     @NSManaged public var timestamp: Date
     @NSManaged public var synced: Bool
+    /// 研究阶段（升级需求 §3.1）；关卡 3 不参与 A/B，只记录阶段供筛选
+    @NSManaged public var phase: String?
+    /// 记录字段版本（RecordSchema.version）
+    @NSManaged public var schemaVersion: Int16
+    /// 产生该记录的 App 版本，形如 "1.2 (9)"
+    @NSManaged public var appVersion: String?
 }
 
 extension FreeTextRecord {

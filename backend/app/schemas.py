@@ -35,7 +35,7 @@ class StudentRegisterRequest(BaseModel):
     role: str
     appleUserID: Optional[str] = None       # Sign in with Apple 稳定标识
     spokenLanguages: Optional[list[str]] = None  # 会说的语言（多选，母语迁移分析）
-    experimentGroup: Optional[str] = None   # 服务端均衡分配，客户端值忽略
+    experimentGroup: Optional[str] = None   # 历史兼容字段，服务端分配，客户端值忽略
     nickname: Optional[str] = None
     classCode: Optional[str] = None
     teacherEmail: Optional[str] = None
@@ -44,6 +44,9 @@ class StudentRegisterRequest(BaseModel):
     # 客户端用 Apple 参考时间(数字)编码，服务端忽略并以 now() 入库
     registeredAt: Optional[float] = None
 
+
+class StudentRegisterResponse(BaseModel):
+    """空响应：后端已不再下发任何实验分组字段（A/B 已取消）。"""
 
 # ───────────── Sync（上行 DTO）─────────────
 
@@ -63,6 +66,17 @@ class TrainingSessionDTO(BaseModel):
     voicedFrameCount: Optional[int] = None
     qualityFlag: Optional[bool] = None
     referenceSwitchedDuringAttempt: Optional[bool] = None
+    # 研究字段（升级需求 §3.1 / §3.2；旧版客户端不带，故可选）
+    phase: Optional[str] = None
+    wordSetID: Optional[str] = None
+    presentationOrder: Optional[str] = None
+    assessmentSetVersion: Optional[str] = None
+    # 记录语义与版本（升级需求 §6.1 / §6.2；同样可选，保证旧客户端兼容）
+    feedbackMode: Optional[str] = None
+    resultStatus: Optional[str] = None
+    failureReason: Optional[str] = None
+    schemaVersion: Optional[int] = None
+    appVersion: Optional[str] = None
 
 
 class AspirationAttemptDTO(BaseModel):
@@ -74,6 +88,9 @@ class AspirationAttemptDTO(BaseModel):
     triggerRate: float
     passed: bool
     timestamp: str
+    phase: Optional[str] = None
+    schemaVersion: Optional[int] = None
+    appVersion: Optional[str] = None
 
 
 class FreeTextRecordDTO(BaseModel):
@@ -88,6 +105,9 @@ class FreeTextRecordDTO(BaseModel):
     f0Track: list[float] = []
     duration: float
     timestamp: str
+    phase: Optional[str] = None
+    schemaVersion: Optional[int] = None
+    appVersion: Optional[str] = None
 
 
 # ───────────── Teacher Dashboard（下行响应）─────────────
@@ -97,16 +117,6 @@ class ClassSummary(BaseModel):
     weeklyNewStudents: Optional[int] = None
     avgDTW: float
     passRate: float
-
-
-class GroupBar(BaseModel):
-    group: str
-    avgDTW: float
-    count: int
-
-
-class GroupComparisonData(BaseModel):
-    bars: list[GroupBar] = []
 
 
 class ToneErrorItem(BaseModel):

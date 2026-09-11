@@ -14,7 +14,14 @@ final class SessionRepository {
               referenceType: String? = nil,
               voicedFrameCount: Int = 0,
               qualityFlag: Bool = false,
-              referenceSwitchedDuringAttempt: Bool = false) -> TrainingSession {
+              referenceSwitchedDuringAttempt: Bool = false,
+              phase: String? = nil,
+              wordSetID: String? = nil,
+              presentationOrder: String? = nil,
+              assessmentSetVersion: String? = nil,
+              feedbackMode: String? = nil,
+              resultStatus: ResultStatus = .validResult,
+              failureReason: FailureReason? = nil) -> TrainingSession {
         let session = TrainingSession(context: context)
         session.id = UUID()
         session.deviceID = deviceID
@@ -32,8 +39,46 @@ final class SessionRepository {
         session.voicedFrameCount = Int32(voicedFrameCount)
         session.qualityFlag = qualityFlag
         session.referenceSwitchedDuringAttempt = referenceSwitchedDuringAttempt
+        // 研究字段（升级需求 §3.1 / §3.2）
+        session.phase = phase
+        session.wordSetID = wordSetID
+        session.presentationOrder = presentationOrder
+        session.assessmentSetVersion = assessmentSetVersion
+        // 记录语义与版本（升级需求 §6.1 / §6.2）
+        session.feedbackMode = feedbackMode
+        session.resultStatus = resultStatus.rawValue
+        session.failureReason = failureReason?.rawValue
+        session.schemaVersion = Int16(RecordSchema.version)
+        session.appVersion = RecordSchema.appVersion
         saveContext()
         return session
+    }
+
+    /// 技术性失败记录（升级需求 §6.1）。
+    ///
+    /// 只记"这次录音因技术原因没成"，**不生成发音等级**：`dtwScore` / `grade`
+    /// 写 `RecordSentinel` 的占位值，`resultStatus = technical_retry`。
+    /// 取数时必须按 `resultStatus` 筛掉，不得进入发音成绩统计（CLAUDE.md 禁令 9）。
+    ///
+    /// 不调用 `ToneAttemptStore.increment`：没录上不算"练过这个词"，
+    /// 否则反复启动失败就能把后测解锁条件刷开。
+    @discardableResult
+    func saveTechnicalRetry(deviceID: String, classCode: String?, role: String,
+                            lexemeID: String, attemptNumber: Int, timestamp: Date,
+                            phase: String?, wordSetID: String?,
+                            assessmentSetVersion: String?,
+                            voicedFrameCount: Int,
+                            reason: FailureReason) -> TrainingSession {
+        save(deviceID: deviceID, classCode: classCode, role: role,
+             groupAssignment: "n/a", lexemeID: lexemeID,
+             dtwScore: RecordSentinel.noScore, grade: RecordSentinel.noGrade,
+             attemptNumber: attemptNumber, timestamp: timestamp,
+             voicedFrameCount: voicedFrameCount,
+             phase: phase, wordSetID: wordSetID,
+             assessmentSetVersion: assessmentSetVersion,
+             feedbackMode: nil,
+             resultStatus: .technicalRetry,
+             failureReason: reason)
     }
 
     func fetchUnsynced() -> [TrainingSession] {

@@ -3,19 +3,32 @@ import XCTest
 
 final class ModelLogicTests: XCTestCase {
 
-    // MARK: - A/B 分组（后端均衡随机；离线本地随机兜底）
+    // MARK: - 受试内 A/B 排程（升级需求 §3.2）
 
-    func testRandomGroupReturnsValidGroup() {
-        for _ in 0..<50 {
-            let g = GroupAssignment.randomGroup()
-            XCTAssertTrue(g == .staticColor || g == .dynamicF0)
-        }
+
+
+
+
+
+    // MARK: - 阶段与反馈呈现（升级需求 §3.1）
+
+    /// 取消 A/B 后仍是硬约束：训练池与测试词集不得重叠，
+    /// 否则前后测增益会被"练过的词"污染。
+    func testTrainingPoolDoesNotOverlapAssessmentSet() {
+        let training = Set(WordSet.trainingSets
+            .flatMap { CorpusLoader.shared.tonePool(wordSet: $0) }
+            .map(\.id))
+        let assessment = Set(CorpusLoader.shared.assessmentPool().map(\.id))
+        XCTAssertFalse(training.isEmpty)
+        XCTAssertFalse(assessment.isEmpty)
+        XCTAssertTrue(training.isDisjoint(with: assessment),
+                      "训练池与测试词集重叠：\(training.intersection(assessment))")
     }
 
-    func testRandomGroupCoversBothOverManyDraws() {
-        var seen = Set<ExperimentGroup>()
-        for _ in 0..<200 { seen.insert(GroupAssignment.randomGroup()) }
-        XCTAssertEqual(seen, [.staticColor, .dynamicF0], "多次抽样应覆盖两组")
+    func testOnlyTrainingPhaseShowsFeedback() {
+        XCTAssertFalse(TrainingPhase.pretest.showsFeedback, "前测必须裸测")
+        XCTAssertFalse(TrainingPhase.posttest.showsFeedback, "后测必须裸测")
+        XCTAssertTrue(TrainingPhase.training.showsFeedback)
     }
 
     // MARK: - 理想四声轮廓合成
