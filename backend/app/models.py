@@ -65,10 +65,11 @@ class TrainingSession(Base):
     presentation_order = Column(String, nullable=True)       # 历史列，A/B 取消后停写
     assessment_set_version = Column(String, nullable=True)   # 仅测试词集记录有值
     # 记录语义与版本（升级需求 §6.1 / §6.2）
-    # feedback_mode / presentation_order / group_assignment 是 A/B 时期的历史列：
-    # schema_version >= 3 的记录 feedback_mode 为空、group_assignment 恒为 'n/a'，
-    # 一律等同于"动态 F0 曲线"这唯一呈现方式。
-    feedback_mode = Column(String, nullable=True)            # 历史列，A/B 取消后停写
+    # presentation_order / group_assignment 是 A/B 时期的历史列，schema_version >= 3 停写。
+    # feedback_mode 仍在写：记的是**该条记录当时学习者自选的显示模式**（裸测为空）。
+    # 注意 v3 与 v1/v2 语义不同——v1/v2 是随机分配的实验条件，v3 是自选偏好，
+    # **不可混在一起分析**，也不得拿 v3 的值做组间比较（自选择偏差）。
+    feedback_mode = Column(String, nullable=True)            # staticColor|dynamicF0|NULL(裸测)
     result_status = Column(String, index=True, nullable=True)  # valid_result|technical_retry|quality_flagged
     failure_reason = Column(String, nullable=True)           # 仅技术失败记录有值
     schema_version = Column(Integer, nullable=True)          # 记录字段版本；NULL 视为 1

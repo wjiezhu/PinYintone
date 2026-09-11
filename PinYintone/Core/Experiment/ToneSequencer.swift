@@ -37,7 +37,7 @@ final class ToneSequencer: ObservableObject {
 
     // MARK: - 词表
 
-    /// 当前阶段的词表。测试阶段为固定测试词集；训练阶段按反平衡顺序拼接两个训练词集。
+    /// 当前阶段的词表。测试阶段为固定测试词集；训练阶段为合并后的训练池。
     var pool: [Lexeme] {
         switch phase {
         case .pretest, .posttest:

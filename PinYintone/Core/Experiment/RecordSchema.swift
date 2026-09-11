@@ -10,9 +10,12 @@ enum RecordSchema {
     /// - 1：受试内 A/B 上线前的历史记录（旧客户端不上报本字段，后端读到 nil 视为 1）
     /// - 2：改用 `phase` / `wordSetID` / `presentationOrder` / `assessmentSetVersion`，
     ///      并新增 `feedbackMode` / `resultStatus` / `failureReason`
-    /// - 3：**取消 A/B 分组**。训练阶段唯一呈现方式 = 动态 F0 可视化，
-    ///      `feedbackMode` / `presentationOrder` 不再写入（恒为 nil），
-    ///      `groupAssignment` 恒为 `"n/a"`。据此可把 v3 记录整体视为"动态曲线条件"。
+    /// - 3：**取消 A/B 分组**。`staticColor` / `dynamicF0` 改为学习者在设置里
+    ///      随时可切的显示偏好，两者通关标准一致。
+    ///      `feedbackMode` 记录该条记录当时用的是哪种显示（裸测阶段为 nil）——
+    ///      **因为是自选的，禁止拿它做组间比较**（自选择偏差，不是随机分配）。
+    ///      `presentationOrder` 不再写入（恒为 nil），`groupAssignment` 恒为 `"n/a"`。
+    ///      v3 记录**不可**整体视为单一呈现条件，也不可与 v1/v2 的随机分配值混在一起分析。
     static let version = 3
 
     /// 形如 "1.2 (9)"：短版本号 + 构建号，便于按构建定位数据

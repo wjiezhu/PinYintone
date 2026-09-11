@@ -145,8 +145,9 @@ def student_detail(
 def export_csv(teacher: models.Teacher = Depends(current_teacher), db: Session = Depends(get_db)):
     out = io.StringIO()
     writer = csv.writer(out)
-    # feedback_mode / presentation_order 仅历史记录有值（A/B 取消前）；
-    # schema_version >= 3 的记录一律使用动态 F0 可视化，这两列为空。
+    # presentation_order 仅历史记录有值（A/B 取消前），schema_version >= 3 为空。
+    # feedback_mode 各版本都有值但语义不同：v1/v2 是随机分配的实验条件，
+    # v3 是学习者自选的显示模式（裸测为空）——导出后不可混在一起分析。
     # 列集按档案 §8：原始长表 + 质量标记 + 阶段 + 尝试次数 + 应用版本。
     writer.writerow(
         ["device_id", "phase", "word_set_id", "feedback_mode", "presentation_order",

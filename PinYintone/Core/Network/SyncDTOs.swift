@@ -35,7 +35,7 @@ nonisolated struct TrainingSessionDTO: Codable {
     let presentationOrder: String?     // 历史字段；A/B 取消后恒为 nil
     let assessmentSetVersion: String?  // 仅测试词集记录有值
     // 记录语义与版本（升级需求 §6.1 / §6.2）
-    let feedbackMode: String?          // 历史字段；A/B 取消后恒为 nil
+    let feedbackMode: String?          // 该条记录当时的自选显示模式；裸测为 nil
     let resultStatus: String?          // valid_result | technical_retry | quality_flagged
     let failureReason: String?         // 技术失败原因；有效记录为 nil
     let schemaVersion: Int?            // 记录字段版本
