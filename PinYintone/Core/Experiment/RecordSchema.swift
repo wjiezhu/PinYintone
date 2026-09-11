@@ -23,7 +23,14 @@ enum RecordSchema {
     ///      含一声的词**不可跨版本混合分析**（语料中约 55% 的词含一声）。
     ///      不含一声的词除数不变，分数与 v3 逐位一致，可跨版本比较。
     ///      复现数据与验证见 `docs/LEVEL_TONE_SCORING.md`。
-    static let version = 4
+    /// - 5：新增**平调词走向闸门**。全一声的词若首末下滑超过 3 个半音，
+    ///      直接判 `fail`，不论 DTW 分数——因为 z-score 归一化是尺度不变的，
+    ///      DTW 距离会饱和在通关线以下，判不出"掉调"。
+    ///      因此 v5 起 `grade` **不再是 `dtwScore` 的纯函数**：
+    ///      `grade = 'fail'` 且 `dtwScore <= 0.5` 的记录即被闸门拦下的那些，
+    ///      无需额外字段即可识别。取数时 `passed` 应以 `grade` 为准，
+    ///      不要再用 `dtw_score <= 0.5` 重算。
+    static let version = 5
 
     /// 形如 "1.2 (9)"：短版本号 + 构建号，便于按构建定位数据
     static let appVersion: String = {

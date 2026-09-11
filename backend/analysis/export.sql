@@ -2,6 +2,11 @@
 --
 -- ⚠ 设计变更：**已取消 A/B 分组**。训练阶段有两种反馈呈现方式
 --   （颜色块 / 动态 F0 曲线），由学习者自己在设置里切换，不再有随机分组。
+--   · schema_version >= 5：新增**平调词走向闸门**——全一声的词首末下滑 > 3 个半音
+--     直接判 fail，不论 DTW。因为 z-score 尺度不变，DTW 距离会饱和在通关线以下，
+--     判不出"掉调"。故 v5 起 grade **不是 dtw_score 的纯函数**：
+--     `grade = 'fail' AND dtw_score <= 0.5` 就是被闸门拦下的那些记录。
+--     ⚠ 判通关请一律用 grade，**不要**用 dtw_score <= 0.5 重算（v5 起会算错）。
 --   · schema_version >= 4：dtw_score 用**带下限的归一化** max(sd, mean×0.03)。
 --     此前纯 z-score 对平调退化，一声词读得越平分数越差、读成下滑反而通关。
 --     ⚠ **含一声的词不可与 <=3 的记录混合分析**（语料约 55% 含一声）；
@@ -54,9 +59,13 @@ SELECT
     lexeme_id,
     attempt_number,
     dtw_score,                               -- technical_retry 行为 -1 哨兵，非真实分
-    -- 哨兵 -1 也满足 <= 0.5，必须显式排除，否则技术失败会被算成"通关"
+    -- 以 grade 为准：v5 起走向闸门可以在 dtw_score <= 0.5 时仍判 fail，
+    -- 用分数重算会与学习者实际看到的结果不一致（"所见 ≠ 所评"）。
     CASE WHEN COALESCE(result_status, 'valid_result') = 'technical_retry'
-         THEN NULL ELSE (dtw_score <= 0.5) END  AS passed,   -- 通关线 DTW ≤ 0.5
+         THEN NULL ELSE (grade <> 'fail') END   AS passed,
+    -- 被走向闸门拦下的记录（v5 起）：分数够但掉调
+    (grade = 'fail' AND dtw_score <= 0.5
+     AND COALESCE(result_status, 'valid_result') <> 'technical_retry') AS gated_level_tone,
     grade,
     reference_type,                          -- real / tts / ideal
     voiced_frame_count,

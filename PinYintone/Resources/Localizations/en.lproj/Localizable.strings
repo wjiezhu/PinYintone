@@ -98,6 +98,7 @@
 "feedback_skip_hint" = "This one is tricky — you can skip it and come back later.";
 "tone_retry_mic_unavailable" = "Could not start recording. Check that no other app is using the microphone, then try again.";
 "tone_retry_no_voice" = "Didn't catch that. Move closer to the mic and try again.";
+"tone_hint_keep_level" = "Your pitch slid down. First tone stays high and level all the way — try holding it steady.";
 "record_start" = "Start recording";
 "record_stop" = "Stop recording";
 "aspiration_prompt" = "Blow hard into the mic to make the aspirated burst";
