@@ -241,7 +241,13 @@ final class ToneTrainingViewModel: ObservableObject {
         // 评分用锁定参照，与录音期间显示的是同一条线
         let reference = lockedReference.isEmpty ? referenceF0 : lockedReference
         let score = dtwAnalyzer.distance(reference: reference, candidate: normalized)
-        let grade = dtwAnalyzer.grade(dtwScore: score)
+
+        // 平调词走向闸门：DTW 归一化后尺度不变，判不出全一声的词被读成一路下滑
+        // （距离会饱和在通关线以下）。用保留音程幅度的半音标度补判，
+        // 且**必须**喂原始 Hz 的 cleaned，不能喂 normalized。
+        let tones = currentLexeme?.tones ?? []
+        let droppedPitch = ToneDirectionGate.fails(hzTrack: cleaned, tones: tones)
+        let grade = droppedPitch ? .fail : dtwAnalyzer.grade(dtwScore: score)
 
         // 按词累计尝试数（换词不归零）
         let lexemeID = currentLexeme?.id ?? "unknown"
@@ -275,6 +281,10 @@ final class ToneTrainingViewModel: ObservableObject {
         }
 
         consecutiveFailures = (grade == .fail) ? consecutiveFailures + 1 : 0
+        // 闸门拦下时 DTW 可能还在通关线内，光看分数会让人莫名其妙，必须点明原因
+        if droppedPitch {
+            retryHint = NSLocalizedString("tone_hint_keep_level", comment: "")
+        }
         feedbackResult = result
     }
 
