@@ -113,6 +113,9 @@ final class F0Extractor {
 
     /// z-score 归一化整条 F0 轨迹（per utterance，忽略 0 值帧）
     /// CLAUDE.md：归一化方式 = z-score per utterance；无声帧保持 0.0
+    /// 归一化除数下限占均值的比例（≈0.5 个半音）。见 `normalize` 内说明。
+    static let normalizationFloorRatio: Float = 0.03
+
     func normalize(_ track: [Float]) -> [Float] {
         let voiced = track.filter { $0 > 0 }
         guard voiced.count > 1 else { return track.map { _ in 0 } }
@@ -125,9 +128,26 @@ final class F0Extractor {
         var sumSq: Float = 0
         vDSP_svesq(centered, 1, &sumSq, vDSP_Length(centered.count))
         let std = sqrt(sumSq / Float(voiced.count))
-        guard std > 0 else { return track.map { _ in 0 } }
+
+        // 带下限的 z-score：除数取 max(std, 下限)。
+        //
+        // 纯 z-score 对**平调**是退化的：一声词的真实音高起伏只有几 Hz，
+        // 除以一个接近零的 std 会把微观抖动放大成满量程形状，结果是
+        // 读得越平分数越差、读成下滑反而通关（评分方向是反的）。
+        // 详见 docs/LEVEL_TONE_SCORING.md 的复现数据。
+        //
+        // 下限按均值取比例而非固定 Hz：固定 Hz 会重新引入说话人依赖
+        // （8 Hz 在 120 Hz 男声是 1.15 个半音，在 350 Hz 童声只有 0.39 个半音），
+        // 而 per-utterance 归一化的本意正是消除音域差异。
+        // 取 3% ≈ 0.5 个半音，低于此幅度的起伏不构成可辨的声调轮廓。
+        //
+        // std 远大于下限时（二/三/四声及任何含真实走势的词）除数不变，
+        // 分数与改动前逐位一致，故既有校准与历史可比性不受影响。
+        let floor = mean * Self.normalizationFloorRatio
+        let divisor = max(std, floor)
+        guard divisor > 0 else { return track.map { _ in 0 } }
 
         // 有声帧 → z-score；无声帧（0）保持 0
-        return track.map { $0 > 0 ? ($0 - mean) / std : 0 }
+        return track.map { $0 > 0 ? ($0 - mean) / divisor : 0 }
     }
 }

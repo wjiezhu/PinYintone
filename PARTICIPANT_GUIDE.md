@@ -80,7 +80,8 @@ Pour les participant·e·s. L'app est en chinois / français / anglais / arabe (
 ## 给研究者备注 / Note chercheur
 - **已取消 A/B 分组**：两种反馈显示方式由被试自选（设置里可换），不是随机分组，无需发码。
   `feedback_mode` 只描述"当时屏幕上是哪种"，**不可当实验条件比较**。
-- `phase` 用来区分前测 / 训练 / 后测；`schema_version >= 3` 即代表动态曲线呈现。
+- `phase` 用来区分前测 / 训练 / 后测；`schema_version >= 3` 代表两种显示模式由学习者自选。
+- `schema_version >= 4` 的分数用了带下限的归一化，**含一声的词不可与更早版本混合分析**。
   带 `staticColor` / `dynamicF0` 的是取消分组之前的历史数据，不可与新数据混比。
 - 数据导出见 `backend/analysis/export.sql`（第 3 段前后测；用 `nickname` 对回个人）。
 - 提醒被试：前测/后测不显示分数是**设计如此**，否则他们会以为 App 出故障并反复重录。

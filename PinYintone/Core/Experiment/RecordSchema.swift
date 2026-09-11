@@ -16,7 +16,14 @@ enum RecordSchema {
     ///      **因为是自选的，禁止拿它做组间比较**（自选择偏差，不是随机分配）。
     ///      `presentationOrder` 不再写入（恒为 nil），`groupAssignment` 恒为 `"n/a"`。
     ///      v3 记录**不可**整体视为单一呈现条件，也不可与 v1/v2 的随机分配值混在一起分析。
-    static let version = 3
+    /// - 4：**归一化加下限**，`(x - mean) / max(sd, mean × 0.03)`。
+    ///      此前纯 z-score 对平调是退化的（除以接近零的 sd），导致一声词
+    ///      读得越平分数越差、读成下滑反而通关——**评分方向是反的**。
+    ///      因此 v4 与 v1–v3 的 `dtwScore` / `grade` / `passed` **语义不同**：
+    ///      含一声的词**不可跨版本混合分析**（语料中约 55% 的词含一声）。
+    ///      不含一声的词除数不变，分数与 v3 逐位一致，可跨版本比较。
+    ///      复现数据与验证见 `docs/LEVEL_TONE_SCORING.md`。
+    static let version = 4
 
     /// 形如 "1.2 (9)"：短版本号 + 构建号，便于按构建定位数据
     static let appVersion: String = {
