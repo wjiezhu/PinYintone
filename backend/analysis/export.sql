@@ -1,7 +1,7 @@
 -- Pinyintone 实验数据导出 / 统计（PostgreSQL / Neon）
 --
--- ⚠ 设计变更：**已取消 A/B 分组**。训练阶段唯一的反馈呈现方式是
---   动态 F0 可视化（目标轨迹 + 学习者轨迹），不再有条件对比。
+-- ⚠ 设计变更：**已取消 A/B 分组**。训练阶段有两种反馈呈现方式
+--   （颜色块 / 动态 F0 曲线），由学习者自己在设置里切换，不再有随机分组。
 --   · schema_version >= 3：feedback_mode = 学习者**自己选**的显示模式
 --     （颜色块 / 音高曲线），presentation_order 为空，group_assignment 恒为 'n/a'。
 --     ⚠ 自选不是随机分配：**不要**拿 feedback_mode 做组间比较，会有自选择偏差
@@ -22,7 +22,12 @@
 --   · 或本地 psql：psql "<NEON_DATABASE_URL>" -c "\copy (这里粘贴某段 SELECT) TO 'out.csv' WITH CSV HEADER"
 --
 -- 质量约定：
---   · 技术性失败（有声帧过少）在客户端就不入库，所以这里的每一行都是"录到了"的尝试。
+--   · 技术性失败（没录上）**现在会入库**，标记为 result_status = 'technical_retry'，
+--     并带 failure_reason（匿名原因）。这类行**没有发音成绩**：dtw_score = -1、
+--     grade = 'n/a' 是哨兵值，只为占住非空列。
+--     ⚠ **任何算分数的查询都必须先筛掉它们**，否则 -1 会被当成满分拉低均值。
+--     本文件各段已统一加 `COALESCE(result_status, 'valid_result') <> 'technical_retry'`
+--     （历史行该列为 NULL，用 COALESCE 保住）。想统计失败率见第 4 段。
 --   · quality_flag = true 表示异常高 DTW（疑似录音/参照问题），各段默认已剔除；
 --     想看全量把 `AND NOT COALESCE(quality_flag, false)` 去掉即可。
 --   · reference_switched 理论上恒为 false，出现 true 说明"所见≠所评"，见第 8 段自查。
@@ -37,19 +42,22 @@ SELECT
     phase,                                   -- pretest / training / posttest
     word_set_id,                             -- set1 / set2（同一训练池）/ assessment
     assessment_set_version,                  -- 仅测试词集有值
-    schema_version,                          -- ≥3：动态曲线唯一呈现方式（A/B 已取消）
+    schema_version,                          -- ≥3：feedback_mode 为自选值（非实验条件）
     app_version,
     feedback_mode,                           -- v3：自选显示模式（不可做组间比较）
     presentation_order,                      -- 同上
     lexeme_id,
     attempt_number,
-    dtw_score,
-    (dtw_score <= 0.5)    AS passed,         -- 通关线 DTW ≤ 0.5
+    dtw_score,                               -- technical_retry 行为 -1 哨兵，非真实分
+    -- 哨兵 -1 也满足 <= 0.5，必须显式排除，否则技术失败会被算成"通关"
+    CASE WHEN COALESCE(result_status, 'valid_result') = 'technical_retry'
+         THEN NULL ELSE (dtw_score <= 0.5) END  AS passed,   -- 通关线 DTW ≤ 0.5
     grade,
     reference_type,                          -- real / tts / ideal
     voiced_frame_count,
     quality_flag,
-    result_status,                           -- valid_result / quality_flagged
+    result_status,                           -- valid_result / quality_flagged / technical_retry
+    failure_reason,                          -- 仅 technical_retry 有值（匿名原因）
     reference_switched,
     timestamp
 FROM training_sessions
@@ -81,6 +89,8 @@ WITH assessment AS (
     WHERE phase IN ('pretest', 'posttest')
       AND word_set_id = 'assessment'
       AND NOT COALESCE(quality_flag, false)
+      -- 必须排除：technical_retry 的 dtw_score = -1，会把均值拉低成假"进步"
+      AND COALESCE(result_status, 'valid_result') <> 'technical_retry' 
 )
 SELECT
     device_id,
@@ -105,9 +115,19 @@ SELECT
     phase,
     COUNT(*)                                                        AS n_records,
     COUNT(*) FILTER (WHERE COALESCE(quality_flag, false))           AS n_quality_flagged,
+    -- 技术性失败：分母含它们，看"录音有多难成"；算成绩时务必筛掉
+    COUNT(*) FILTER (WHERE result_status = 'technical_retry')       AS n_technical_retry,
+    ROUND(100.0 * COUNT(*) FILTER (WHERE result_status = 'technical_retry')
+          / NULLIF(COUNT(*), 0), 1)                                 AS pct_technical_retry,
+    COUNT(*) FILTER (WHERE failure_reason = 'permission_denied')    AS n_fail_permission,
+    COUNT(*) FILTER (WHERE failure_reason = 'insufficient_voiced_frames') AS n_fail_no_voice,
+    COUNT(*) FILTER (WHERE failure_reason = 'recording_interrupted') AS n_fail_interrupted,
+    COUNT(*) FILTER (WHERE failure_reason = 'low_signal_quality')   AS n_fail_low_signal,
     COUNT(*) FILTER (WHERE COALESCE(reference_switched, false))     AS n_reference_switched,
     -- ↑ 应恒为 0；非 0 说明参照锁定失效，这批记录"所见 ≠ 所评"，需剔除
-    ROUND(AVG(voiced_frame_count)::numeric, 1)                      AS mean_voiced_frames,
+    ROUND(AVG(voiced_frame_count) FILTER (
+        WHERE COALESCE(result_status, 'valid_result') <> 'technical_retry'
+    )::numeric, 1)                                                  AS mean_voiced_frames,
     COUNT(*) FILTER (WHERE reference_type = 'real')                 AS n_ref_real,
     COUNT(*) FILTER (WHERE reference_type = 'tts')                  AS n_ref_tts,
     COUNT(*) FILTER (WHERE reference_type = 'ideal')                AS n_ref_ideal,

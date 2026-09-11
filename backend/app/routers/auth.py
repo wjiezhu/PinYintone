@@ -50,8 +50,8 @@ def teacher_login(body: schemas.TeacherLoginRequest, db: Session = Depends(get_d
 def student_register(body: schemas.StudentRegisterRequest, db: Session = Depends(get_db)):
     """学生注册（按 deviceID 幂等建档）。
 
-    已取消 A/B 分组：训练阶段唯一呈现方式是动态 F0 可视化，
-    因此这里**不再分配** counterbalance_index / experiment_group。
+    已取消 A/B 分组：两种反馈显示方式由学习者自己在设置里选，
+    不是随机分配的实验条件，因此这里**不再分配** counterbalance_index / experiment_group。
     两列在库中保留，只为让升级前写入的历史记录仍可读。
     """
     user = db.get(models.User, body.deviceID)

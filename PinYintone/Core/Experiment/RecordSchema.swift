@@ -40,6 +40,19 @@ enum ResultStatus: String, Codable {
     case qualityFlagged = "quality_flagged"
 }
 
+/// 技术失败记录的占位值。
+///
+/// 技术性失败没有发音成绩，但 `dtwScore` / `grade` 在库里是非空列，必须写点什么。
+/// **绝不能写 0**——DTW 距离越小越好，0 会被读成满分；也**绝不能写 `fail`**，
+/// 那是发音判定（CLAUDE.md 禁令 9）。这里用真实分数不可能取到的值，
+/// 让漏筛 `resultStatus` 的分析一眼看出异常，而不是被悄悄算进均值。
+enum RecordSentinel {
+    /// 真实 DTW 距离恒 ≥ 0，故 -1 不会与任何有效分撞车
+    static let noScore: Double = -1
+    /// 非 FeedbackGrade 的任何取值，明确表示"未生成等级"
+    static let noGrade = "n/a"
+}
+
 /// 技术失败原因（升级需求 §6.1）。仅记录匿名原因，不含任何录音内容。
 enum FailureReason: String, Codable {
     case insufficientVoicedFrames = "insufficient_voiced_frames"

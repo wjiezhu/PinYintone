@@ -67,6 +67,16 @@ psql "<NEON_DATABASE_URL>" -c "\copy (粘贴某段 SELECT) TO 'out.csv' WITH CSV
   `presentation_order` / `users.experiment_group` / `users.counterbalance_index`
   已停止写入，**分析新数据时不要使用**。
 
+## 6b. 技术性失败（录音没录上）
+- 没录上的尝试**会入库**，标记 `result_status = 'technical_retry'`，
+  并带匿名的 `failure_reason`（权限被拒 / 有声帧过少 / 录音中断 / 信号质量差）。
+- 这类行**没有发音成绩**：`dtw_score = -1`、`grade = 'n/a'` 只是占位哨兵。
+  ⚠ 算任何分数前必须先筛掉，否则 -1 会被当成满分把均值拉低
+  （`export.sql` 各段已统一处理）。
+- 它们也**不计入**"这个词练过没有"，所以不会影响后测解锁。
+- 用途：看失败率和失败原因分布，判断数据质量与设备/权限问题——
+  见 `export.sql` 第 4 段的 `pct_technical_retry`。
+
 ## 7. 结果解释边界（写论文务必遵守）
 - DTW 分数、等级、通关率、触发率都是**形成性反馈与应用日志指标**，
   **不是**语言能力等级，不得直接当作声调习得效果的证据。

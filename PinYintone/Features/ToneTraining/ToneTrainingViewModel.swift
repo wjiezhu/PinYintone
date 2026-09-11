@@ -210,6 +210,10 @@ final class ToneTrainingViewModel: ObservableObject {
         } catch {
             isRecording = false
             retryHint = NSLocalizedString("tone_retry_mic_unavailable", comment: "")
+            // 权限被拒也会以 invalidInputFormat 冒出来，这里再查一次把原因分开，
+            // 否则导出时"没给麦克风权限"和"设备/会话异常"混成一类，没法归因。
+            persistTechnicalRetry(reason: Self.failureReason(for: error),
+                                  voicedFrameCount: 0)
         }
     }
 
@@ -220,10 +224,13 @@ final class ToneTrainingViewModel: ObservableObject {
         let cleaned = f0Extractor.clean(accumulatedF0)
         let voicedFrames = cleaned.filter { $0 != 0 }.count
 
-        // P1-2：技术性失败（没录好）与发音错误分开，不生成结果、不入库
+        // P1-2：技术性失败（没录好）与发音错误分开——不生成结果、不给等级，
+        // 但仍落一条 technical_retry 记录，否则失败率在数据里完全不可见（§6.1）。
         guard voicedFrames >= minVoicedFrames else {
             studentF0 = []
             retryHint = NSLocalizedString("tone_retry_no_voice", comment: "")
+            persistTechnicalRetry(reason: .insufficientVoicedFrames,
+                                  voicedFrameCount: voicedFrames)
             flushPendingReference()
             return
         }
@@ -361,6 +368,45 @@ final class ToneTrainingViewModel: ObservableObject {
     }
 
     // MARK: - 持久化
+
+    /// 把 AudioEngine 的启动错误映射成匿名的失败原因（不含任何录音内容）。
+    private static func failureReason(for error: Error) -> FailureReason {
+        // 权限被拒最常见，且会伪装成 invalidInputFormat，所以先单独判掉。
+        // 部署目标 iOS 17，AVAudioApplication 可直接用。
+        if AVAudioApplication.shared.recordPermission != .granted {
+            return .permissionDenied
+        }
+        guard let engineError = error as? AudioEngine.AudioEngineError else {
+            return .analysisError
+        }
+        switch engineError {
+        case .engineStartFailed:
+            return .recordingInterrupted           // 会话被占用 / 路由切换
+        case .invalidInputFormat, .converterUnavailable:
+            return .lowSignalQuality               // 无可用输入设备 / 格式异常
+        }
+    }
+
+    /// 落一条技术性失败记录：不生成等级、不计入发音成绩，只让失败率可见。
+    private func persistTechnicalRetry(reason: FailureReason, voicedFrameCount: Int) {
+        guard let profile = UserManager.shared.profile,
+              let lexeme = currentLexeme else { return }
+        SessionRepository.shared.saveTechnicalRetry(
+            deviceID: profile.deviceID,
+            classCode: profile.classCode,
+            role: profile.role.rawValue,
+            lexemeID: lexeme.id,
+            // 不自增：没录上不算练过这个词（否则能刷开后测解锁条件）
+            attemptNumber: ToneAttemptStore.attempts(for: lexeme.id),
+            timestamp: Date(),
+            phase: sequencer.phase.rawValue,
+            wordSetID: lexeme.wordSet?.rawValue,
+            assessmentSetVersion: lexeme.wordSet?.isAssessment == true
+                ? AssessmentSet.version : nil,
+            voicedFrameCount: voicedFrameCount,
+            reason: reason
+        )
+    }
 
     private func persist(_ result: FeedbackResult,
                          referenceType: ReferenceType,

@@ -54,6 +54,33 @@ final class SessionRepository {
         return session
     }
 
+    /// 技术性失败记录（升级需求 §6.1）。
+    ///
+    /// 只记"这次录音因技术原因没成"，**不生成发音等级**：`dtwScore` / `grade`
+    /// 写 `RecordSentinel` 的占位值，`resultStatus = technical_retry`。
+    /// 取数时必须按 `resultStatus` 筛掉，不得进入发音成绩统计（CLAUDE.md 禁令 9）。
+    ///
+    /// 不调用 `ToneAttemptStore.increment`：没录上不算"练过这个词"，
+    /// 否则反复启动失败就能把后测解锁条件刷开。
+    @discardableResult
+    func saveTechnicalRetry(deviceID: String, classCode: String?, role: String,
+                            lexemeID: String, attemptNumber: Int, timestamp: Date,
+                            phase: String?, wordSetID: String?,
+                            assessmentSetVersion: String?,
+                            voicedFrameCount: Int,
+                            reason: FailureReason) -> TrainingSession {
+        save(deviceID: deviceID, classCode: classCode, role: role,
+             groupAssignment: "n/a", lexemeID: lexemeID,
+             dtwScore: RecordSentinel.noScore, grade: RecordSentinel.noGrade,
+             attemptNumber: attemptNumber, timestamp: timestamp,
+             voicedFrameCount: voicedFrameCount,
+             phase: phase, wordSetID: wordSetID,
+             assessmentSetVersion: assessmentSetVersion,
+             feedbackMode: nil,
+             resultStatus: .technicalRetry,
+             failureReason: reason)
+    }
+
     func fetchUnsynced() -> [TrainingSession] {
         let req = TrainingSession.fetchRequest()
         req.predicate = NSPredicate(format: "synced == NO")
