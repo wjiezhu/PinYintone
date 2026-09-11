@@ -3,8 +3,11 @@ import Foundation
 /// 语料库加载器：从 Bundle 读取 Resources/Corpus/lexemes.json，按关卡类别顺序循环取词。
 ///
 /// 实验可比性（关卡 2）：
-/// - 关卡 2 走 `toneOrder` 定义的**固定词序**，A/B 两组完全一致，
+/// - 关卡 2 走 `toneOrder` 定义的**固定词序**，所有学习者完全一致，
 ///   避免"练了哪些词"成为混杂变量淹没反馈方式的效应。
+/// - 受试内设计（升级需求 §3.2）后，关卡 2 语料再按 `wordSet` 切成
+///   两个难度相当的训练词集 + 一个不重叠的固定测试词集；条件绑定词集，
+///   排序仍沿用 `toneOrder`，保证同一词集内部对所有被试同序。
 /// - 游标写入 UserDefaults（每台设备每次安装独立），冷启动续接不归零，
 ///   避免每个 session 都从第一个词重新开始导致首词被过度采样。
 final class CorpusLoader {
@@ -71,6 +74,15 @@ final class CorpusLoader {
         return (((cursors[category] ?? 0) % total) + 1, total)
     }
 
+    /// 指定词集的词条，沿用 `toneOrder` 固定序（升级需求 §3.2）。
+    /// 词集内部对所有被试同序，跨被试差异只来自条件与呈现顺序的反平衡。
+    func tonePool(wordSet: WordSet) -> [Lexeme] {
+        orderedPool(category: .tone).filter { $0.wordSet == wordSet }
+    }
+
+    /// 前测 / 后测使用的固定测试词集
+    func assessmentPool() -> [Lexeme] { tonePool(wordSet: .assessment) }
+
     /// 按 id 查找
     func lexeme(id: String) -> Lexeme? {
         lexemes.first { $0.id == id }
@@ -121,7 +133,8 @@ final class CorpusLoader {
             focus: "",
             french: "Bonjour",
             darija: "Salam (سلام)",
-            audioFilename: nil
+            audioFilename: nil,
+            wordSet: category == .tone ? .set1 : nil
         )
     }
 }

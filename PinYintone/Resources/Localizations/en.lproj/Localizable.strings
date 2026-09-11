@@ -96,6 +96,7 @@
 "feedback_retry" = "Try again";
 "feedback_next_word" = "Next word";
 "feedback_skip_hint" = "This one is tricky — you can skip it and come back later.";
+"tone_retry_mic_unavailable" = "Could not start recording. Check that no other app is using the microphone, then try again.";
 "tone_retry_no_voice" = "Didn't catch that. Move closer to the mic and try again.";
 "record_start" = "Start recording";
 "record_stop" = "Stop recording";
@@ -139,3 +140,53 @@
 "help_stage3_body" = "Paste or type Chinese, it splits into words, practice each one. Bookmark words to review later in My words.";
 "help_tip" = "Practice in a quiet place with the mic near your mouth. Your score improves with practice.";
 "help_privacy" = "Your audio is never uploaded — only analysis results (scores), for research.";
+
+// ── Research phases (upgrade spec §3.1) ──────────────
+"phase_pretest" = "Pre-test";
+"phase_training" = "Training";
+"phase_posttest" = "Post-test";
+"phase_goal_pretest" = "This round only records: no score, no colour or curve hints. Just say it the way you say it now.";
+"phase_goal_training" = "Listen → record → read the feedback → try again.";
+"phase_goal_posttest" = "This round only records too: no score, no colour or curve hints.";
+"phase_complete_title" = "Phase complete";
+"phase_complete_pretest" = "Pre-test done. Training starts next.";
+"phase_complete_training" = "Training has no fixed end — keep practising whenever you like.";
+"phase_complete_posttest" = "Post-test done. Thank you for taking part.";
+"phase_start_posttest" = "Start post-test";
+"blind_ready" = "Tap record when you are ready.";
+"blind_recording" = "Recording…";
+"assessment_recorded" = "Recorded";
+"tone_next_word" = "Next word";
+
+// Feedback conditions (within-subject A/B, bound to word sets, not to learners)
+
+// Tone names (were hard-coded Chinese; now follow the interface language)
+"tone_name_1" = "High level";
+"tone_name_2" = "Rising";
+"tone_name_3" = "Dipping";
+"tone_name_4" = "Falling";
+
+// Microphone and data use (upgrade spec §4.1)
+"onboarding_mic_privacy" = "Your recording is analysed for pitch on your phone. The raw audio is never uploaded or stored on a server; only the analysis results (score and pitch curve) are uploaded anonymously for this teaching-research project. You can delete your account and all your data at any time in Settings.";
+"onboarding_mic_denied_title" = "Microphone access is off";
+"onboarding_mic_denied_body" = "Tone practice needs to record you. Open Settings → Pinyintone → Microphone, turn it on, then come back here.";
+"onboarding_open_settings" = "Open Settings";
+"onboarding_mic_recheck" = "I turned it on — check again";
+"onboarding_mic_skip" = "Not now, just look around";
+
+// 反馈显示模式（学习者自选，非实验分组）
+"condition_staticColor" = "Colour blocks";
+"condition_dynamicF0" = "Pitch curve";
+"settings_feedback_style" = "Feedback style";
+"settings_feedback_style_footer" = "How your result is shown during training. Both use the same pass mark, so switching never changes your score. Pre-test and post-test show no feedback either way.";
+"tone_slot_a11y" = "Character %1$d: tone %2$d, %3$@";
+
+// 教练提示卡：一次一条可执行动作（档案 §4.3）
+"coach_title" = "Try this next time";
+"coach_stay_high" = "Keep \"%@\" high all the way — don't let it drop.";
+"coach_rise" = "Start \"%@\" low and slide it upward.";
+"coach_dip_then_rise" = "Dip \"%@\" down first, then bring it back up.";
+"coach_fall" = "Drop \"%@\" sharply from high to low.";
+"coach_neutral" = "Didn't catch \"%@\" clearly. Move closer to the mic and record again.";
+"coach_all_good" = "Both syllables landed. Ready for the next word.";
+"coach_praise" = "\"%@\" is already steady.";

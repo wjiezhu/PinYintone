@@ -10,7 +10,8 @@ final class FreeTextRepository {
     func save(deviceID: String, classCode: String?, role: String,
               originalText: String, tokenizedWord: String, pinyin: String,
               toneSequence: [Int], f0Track: [Float],
-              duration: Double, timestamp: Date) -> FreeTextRecord {
+              duration: Double, timestamp: Date,
+              phase: String? = nil) -> FreeTextRecord {
         let record = FreeTextRecord(context: context)
         record.id = UUID()
         record.deviceID = deviceID
@@ -24,6 +25,9 @@ final class FreeTextRepository {
         record.duration = duration
         record.synced = false
         record.timestamp = timestamp
+        record.phase = phase
+        record.schemaVersion = Int16(RecordSchema.version)
+        record.appVersion = RecordSchema.appVersion
         saveContext()
         return record
     }

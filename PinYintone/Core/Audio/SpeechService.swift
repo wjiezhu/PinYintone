@@ -20,9 +20,11 @@ final class SpeechService {
     private let player = AVSpeechSynthesizer()
     private let f0Extractor = F0Extractor()
 
-    // 离线渲染期间持有 writer，避免提前释放
-    private var renderers: [AVSpeechSynthesizer] = []
-    private let renderersLock = NSLock()
+    // 离线渲染期间持有 writer，避免提前释放。
+    // write 的回调和 6s 超时兜底都在非主线程，故显式声明为 nonisolated：
+    // 这两个成员的线程安全由 renderersLock 保证，不依赖 actor 隔离。
+    nonisolated(unsafe) private var renderers: [AVSpeechSynthesizer] = []
+    nonisolated private let renderersLock = NSLock()
 
     private init() {}
 

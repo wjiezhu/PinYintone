@@ -31,9 +31,6 @@ struct TeacherDashboardView: View {
                     // 班级概览卡片
                     ClassOverviewCards(summary: vm.summary)
 
-                    // A/B 两组对比图表
-                    GroupComparisonChart(data: vm.groupData)
-
                     // 各声调偏误分布
                     ToneTypeBreakdown(data: vm.toneBreakdown)
 

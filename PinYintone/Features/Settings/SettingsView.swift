@@ -16,6 +16,10 @@ struct SettingsView: View {
     @State private var showDeleteConfirm = false
     @State private var isDeleting = false
     @State private var deleteError: String?
+    /// 显示名编辑草稿；进页面时用当前档案填充，提交后写回
+    @State private var nicknameDraft = ""
+    /// 反馈显示模式（学习者自选）。与训练页共用同一个 UserDefaults 键。
+    @AppStorage(FeedbackStyle.storageKey) private var feedbackStyle: FeedbackStyle = .dynamicF0
 
     private var profile: UserProfile? { userManager.profile }
 
@@ -23,6 +27,7 @@ struct SettingsView: View {
         NavigationStack {
             List {
                 accountSection
+                feedbackStyleSection
                 languageSection
                 accountActionsSection
                 deleteAccountSection
@@ -32,6 +37,7 @@ struct SettingsView: View {
             }
             .navigationTitle(NSLocalizedString("settings_title", comment: ""))
             .navigationBarTitleDisplayMode(.inline)
+            .onAppear { nicknameDraft = profile?.nickname ?? "" }
             .toolbar {
                 ToolbarItem(placement: .confirmationAction) {
                     Button(NSLocalizedString("settings_done", comment: "")) { dismiss() }
@@ -107,7 +113,19 @@ struct SettingsView: View {
             if let profile {
                 LabeledContent(NSLocalizedString("settings_role", comment: ""),
                                value: roleLabel(profile.role))
-                if let nick = profile.nickname, !nick.isEmpty {
+                // 显示名可改（升级需求 §4.1）：姓名本就是可选信息，
+                // Apple 首次授权给的名字未必是学习者想被称呼的名字
+                if profile.role == .student {
+                    HStack {
+                        Text(NSLocalizedString("settings_nickname", comment: ""))
+                        Spacer()
+                        TextField(NSLocalizedString("signup_nickname_hint", comment: ""),
+                                  text: $nicknameDraft)
+                            .multilineTextAlignment(.trailing)
+                            .submitLabel(.done)
+                            .onSubmit { commitNickname() }
+                    }
+                } else if let nick = profile.nickname, !nick.isEmpty {
                     LabeledContent(NSLocalizedString("settings_nickname", comment: ""), value: nick)
                 }
                 if let code = profile.classCode {
@@ -116,10 +134,9 @@ struct SettingsView: View {
                 if let email = profile.teacherEmail {
                     LabeledContent(NSLocalizedString("settings_email", comment: ""), value: email)
                 }
-                if profile.experimentGroup != "n/a" {
-                    LabeledContent(NSLocalizedString("settings_group", comment: ""),
-                                   value: profile.experimentGroup)
-                }
+                // 注意：当前研究阶段与 A/B 反平衡排程**不在这里显示**。
+                // 裸测的前提是被试不知道自己处在前测还是训练、拿的是哪个条件；
+                // 把它们摆在学生可见的设置页等于泄露实验结构。仅调试构建可见。
             }
         }
     }
@@ -186,26 +203,40 @@ struct SettingsView: View {
     #if DEBUG
     private var debugSection: some View {
         Section {
-            Picker("A/B 分组", selection: debugGroupBinding) {
-                Text("A · 静态色块").tag(ExperimentGroup.staticColor)
-                Text("B · 动态 F0").tag(ExperimentGroup.dynamicF0)
-            }
+            LabeledContent("当前阶段",
+                           value: NSLocalizedString(
+                               ToneSequencer.shared.phase.localizationKey, comment: ""))
         } header: {
             Text("调试（仅开发构建）")
         } footer: {
-            Text("仅预览模式 A/B 视觉效果；进入「声调训练」即可看到。正式分组由后端注册时均衡随机分配，此开关不改变已存档分组。")
+            Text("研究阶段不在正式构建里显示：裸测的前提是被试不知道自己处在前测还是训练。")
         }
-    }
-
-    private var debugGroupBinding: Binding<ExperimentGroup> {
-        Binding(
-            get: { appState.group },
-            set: { newValue in appState.group = newValue }
-        )
     }
     #endif
 
+    /// 反馈显示模式：学习者自选，随时可换，不影响评分标准。
+    private var feedbackStyleSection: some View {
+        Section {
+            Picker(NSLocalizedString("settings_feedback_style", comment: ""),
+                   selection: $feedbackStyle) {
+                ForEach(FeedbackStyle.allCases, id: \.self) { style in
+                    Text(NSLocalizedString(style.localizationKey, comment: "")).tag(style)
+                }
+            }
+            .pickerStyle(.segmented)
+        } header: {
+            Text(NSLocalizedString("settings_feedback_style", comment: ""))
+        } footer: {
+            Text(NSLocalizedString("settings_feedback_style_footer", comment: ""))
+        }
+    }
+
     // MARK: - Helpers
+
+    /// 提交显示名修改。留空即"不填名字"，与注册时保持一致。
+    private func commitNickname() {
+        Task { await userManager.updateNickname(nicknameDraft) }
+    }
 
     private func roleLabel(_ role: UserRole) -> String {
         switch role {

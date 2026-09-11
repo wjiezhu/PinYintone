@@ -18,4 +18,10 @@ extension AspirationAttempt {
     @NSManaged public var passed: Bool
     @NSManaged public var synced: Bool
     @NSManaged public var timestamp: Date
+    /// 研究阶段（升级需求 §3.1）；旧记录为 nil，分析时按"未知阶段"处理
+    @NSManaged public var phase: String?
+    /// 记录字段版本（RecordSchema.version）
+    @NSManaged public var schemaVersion: Int16
+    /// 产生该记录的 App 版本，形如 "1.2 (9)"
+    @NSManaged public var appVersion: String?
 }

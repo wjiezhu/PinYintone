@@ -129,7 +129,9 @@ final class FreeWordPracticeViewModel: ObservableObject {
             toneSequence: currentTones,
             f0Track: accumulated,          // 原始 Hz 序列（含 0 无声帧）
             duration: Date().timeIntervalSince(recordingStart),
-            timestamp: Date()
+            timestamp: Date(),
+            // 关卡 3 不参与 A/B（无 groupAssignment 字段），只记录阶段供筛选
+            phase: ToneSequencer.shared.phase.rawValue
         )
     }
 }

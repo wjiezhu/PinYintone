@@ -9,7 +9,8 @@ final class AspirationRepository {
     @discardableResult
     func save(deviceID: String, classCode: String?, role: String,
               targetWord: String, triggerRate: Double,
-              passed: Bool, timestamp: Date) -> AspirationAttempt {
+              passed: Bool, timestamp: Date,
+              phase: String? = nil) -> AspirationAttempt {
         let attempt = AspirationAttempt(context: context)
         attempt.id = UUID()
         attempt.deviceID = deviceID
@@ -20,6 +21,9 @@ final class AspirationRepository {
         attempt.passed = passed
         attempt.synced = false
         attempt.timestamp = timestamp
+        attempt.phase = phase
+        attempt.schemaVersion = Int16(RecordSchema.version)
+        attempt.appVersion = RecordSchema.appVersion
         saveContext()
         return attempt
     }

@@ -36,6 +36,15 @@ def sync_session(dto: schemas.TrainingSessionDTO, db: Session = Depends(get_db))
     obj.voiced_frame_count = dto.voicedFrameCount
     obj.quality_flag = dto.qualityFlag
     obj.reference_switched = dto.referenceSwitchedDuringAttempt
+    obj.phase = dto.phase
+    obj.word_set_id = dto.wordSetID
+    obj.presentation_order = dto.presentationOrder
+    obj.assessment_set_version = dto.assessmentSetVersion
+    obj.feedback_mode = dto.feedbackMode
+    obj.result_status = dto.resultStatus
+    obj.failure_reason = dto.failureReason
+    obj.schema_version = dto.schemaVersion
+    obj.app_version = dto.appVersion
     db.commit()
     return {}
 
@@ -53,6 +62,9 @@ def sync_aspiration(dto: schemas.AspirationAttemptDTO, db: Session = Depends(get
     obj.trigger_rate = dto.triggerRate
     obj.passed = dto.passed
     obj.timestamp = _parse_ts(dto.timestamp)
+    obj.phase = dto.phase
+    obj.schema_version = dto.schemaVersion
+    obj.app_version = dto.appVersion
     db.commit()
     return {}
 
@@ -73,5 +85,8 @@ def sync_freetext(dto: schemas.FreeTextRecordDTO, db: Session = Depends(get_db))
     obj.f0_track = dto.f0Track
     obj.duration = dto.duration
     obj.timestamp = _parse_ts(dto.timestamp)
+    obj.phase = dto.phase
+    obj.schema_version = dto.schemaVersion
+    obj.app_version = dto.appVersion
     db.commit()
     return {}

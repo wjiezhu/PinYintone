@@ -96,6 +96,7 @@
 "feedback_retry" = "Réessayer";
 "feedback_next_word" = "Mot suivant";
 "feedback_skip_hint" = "Ce mot est difficile — vous pouvez le passer et y revenir plus tard.";
+"tone_retry_mic_unavailable" = "Impossible de démarrer l'enregistrement. Vérifiez qu'aucune autre app n'utilise le micro, puis réessayez.";
 "tone_retry_no_voice" = "Je n'ai pas bien entendu. Rapprochez-vous du micro et réessayez.";
 "record_start" = "Démarrer l'enregistrement";
 "record_stop" = "Arrêter l'enregistrement";
@@ -139,3 +140,53 @@
 "help_stage3_body" = "Collez ou saisissez du chinois, il se découpe en mots, entraînez chaque mot. Marquez des mots pour les revoir dans Mes mots.";
 "help_tip" = "Pratiquez dans un endroit calme, micro près de la bouche. Le score s'améliore avec la pratique.";
 "help_privacy" = "Aucun enregistrement n'est envoyé — seulement les résultats d'analyse (scores), à des fins de recherche.";
+
+// ── Phases de recherche (spec §3.1) ──────────────────
+"phase_pretest" = "Pré-test";
+"phase_training" = "Entraînement";
+"phase_posttest" = "Post-test";
+"phase_goal_pretest" = "Ce tour enregistre seulement : ni note, ni couleur, ni courbe. Prononcez comme vous le faites aujourd'hui.";
+"phase_goal_training" = "Écoutez → enregistrez → lisez le retour → recommencez.";
+"phase_goal_posttest" = "Ce tour enregistre seulement lui aussi : ni note, ni couleur, ni courbe.";
+"phase_complete_title" = "Phase terminée";
+"phase_complete_pretest" = "Pré-test terminé. L'entraînement commence.";
+"phase_complete_training" = "L'entraînement n'a pas de fin fixe — continuez quand vous voulez.";
+"phase_complete_posttest" = "Post-test terminé. Merci de votre participation.";
+"phase_start_posttest" = "Commencer le post-test";
+"blind_ready" = "Appuyez sur enregistrer quand vous êtes prêt·e.";
+"blind_recording" = "Enregistrement…";
+"assessment_recorded" = "Enregistré";
+"tone_next_word" = "Mot suivant";
+
+// Conditions de retour (A/B intra-sujet, liées aux listes de mots, pas aux apprenants)
+
+// Noms des quatre tons (auparavant codés en dur en chinois)
+"tone_name_1" = "Haut plat";
+"tone_name_2" = "Montant";
+"tone_name_3" = "Descendant-montant";
+"tone_name_4" = "Descendant";
+
+// Microphone et usage des données (spec §4.1)
+"onboarding_mic_privacy" = "Votre enregistrement est analysé sur votre téléphone. L'audio brut n'est jamais envoyé ni conservé sur un serveur ; seuls les résultats (note et courbe de hauteur) sont transmis de façon anonyme pour ce projet de recherche pédagogique. Vous pouvez supprimer votre compte et toutes vos données à tout moment dans les réglages.";
+"onboarding_mic_denied_title" = "Micro non autorisé";
+"onboarding_mic_denied_body" = "L'entraînement aux tons a besoin du micro. Ouvrez Réglages → Pinyintone → Microphone, activez-le, puis revenez ici.";
+"onboarding_open_settings" = "Ouvrir les réglages";
+"onboarding_mic_recheck" = "C'est activé — revérifier";
+"onboarding_mic_skip" = "Plus tard, je regarde d'abord";
+
+// 反馈显示模式（学习者自选，非实验分组）
+"condition_staticColor" = "Blocs de couleur";
+"condition_dynamicF0" = "Courbe de hauteur";
+"settings_feedback_style" = "Type de retour";
+"settings_feedback_style_footer" = "Comment votre résultat s'affiche pendant l'entraînement. Les deux utilisent le même seuil de réussite : changer ne modifie jamais votre score. Ni le pré-test ni le post-test n'affichent de retour.";
+"tone_slot_a11y" = "Caractère %1$d : ton %2$d, %3$@";
+
+// 教练提示卡：一次一条可执行动作（档案 §4.3）
+"coach_title" = "À essayer la prochaine fois";
+"coach_stay_high" = "Gardez « %@ » tout en haut — ne laissez pas la voix descendre.";
+"coach_rise" = "Commencez « %@ » en bas, puis montez.";
+"coach_dip_then_rise" = "Descendez d'abord « %@ », puis remontez.";
+"coach_fall" = "Faites tomber « %@ » nettement, du haut vers le bas.";
+"coach_neutral" = "« %@ » n'a pas été bien capté. Rapprochez-vous du micro et réenregistrez.";
+"coach_all_good" = "Les deux syllabes sont bonnes. Passez au mot suivant.";
+"coach_praise" = "« %@ » est déjà stable.";

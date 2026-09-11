@@ -1,4 +1,3 @@
-import random
 from datetime import datetime, timezone
 
 from fastapi import APIRouter, Depends, HTTPException
@@ -8,6 +7,7 @@ from .. import models, schemas, security
 from ..database import get_db
 
 router = APIRouter(tags=["auth"])
+
 
 
 @router.post("/teacher/register", response_model=schemas.TeacherRegisterResponse)
@@ -46,47 +46,30 @@ def teacher_login(body: schemas.TeacherLoginRequest, db: Session = Depends(get_d
     )
 
 
-@router.post("/student/register")
+@router.post("/student/register", response_model=schemas.StudentRegisterResponse)
 def student_register(body: schemas.StudentRegisterRequest, db: Session = Depends(get_db)):
+    """学生注册（按 deviceID 幂等建档）。
+
+    已取消 A/B 分组：训练阶段唯一呈现方式是动态 F0 可视化，
+    因此这里**不再分配** counterbalance_index / experiment_group。
+    两列在库中保留，只为让升级前写入的历史记录仍可读。
+    """
     user = db.get(models.User, body.deviceID)
     if user is None:
         user = models.User(device_id=body.deviceID, install_date=datetime.now(timezone.utc))
         db.add(user)
-    # 均衡随机分组：仅在该设备尚无有效分组时分配（幂等：重装/重注册不变组）
-    if user.experiment_group not in ("staticColor", "dynamicF0"):
-        # Sign in with Apple 跨设备幂等：同一 Apple ID 在其它设备已有分组 → 直接继承，
-        # 避免同一被试在两台设备被分进不同组污染 A/B 数据
-        prior = None
-        if body.appleUserID:
-            prior = (
-                db.query(models.User)
-                .filter(
-                    models.User.apple_user_id == body.appleUserID,
-                    models.User.experiment_group.in_(["staticColor", "dynamicF0"]),
-                )
-                .first()
-            )
-        if prior is not None:
-            user.experiment_group = prior.experiment_group
-        else:
-            a = db.query(models.User).filter(models.User.experiment_group == "staticColor").count()
-            b = db.query(models.User).filter(models.User.experiment_group == "dynamicF0").count()
-            if a < b:
-                user.experiment_group = "staticColor"
-            elif b < a:
-                user.experiment_group = "dynamicF0"
-            else:
-                user.experiment_group = random.choice(["staticColor", "dynamicF0"])
+
     if body.appleUserID:
         user.apple_user_id = body.appleUserID
     if body.spokenLanguages is not None:
         user.spoken_languages = body.spokenLanguages
     user.nickname = body.nickname
     user.role = "student"
+    # 学生不绑定班级：classCode 恒为 None，数据进入"未绑定班级"池（CLAUDE.md 禁止事项 4）
     user.class_code = None
     user.native_language = body.nativeLanguage
     db.commit()
-    return {"experimentGroup": user.experiment_group}
+    return schemas.StudentRegisterResponse()
 
 
 @router.delete("/student/account")
