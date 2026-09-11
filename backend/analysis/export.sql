@@ -2,6 +2,11 @@
 --
 -- ⚠ 设计变更：**已取消 A/B 分组**。训练阶段有两种反馈呈现方式
 --   （颜色块 / 动态 F0 曲线），由学习者自己在设置里切换，不再有随机分组。
+--   · schema_version >= 4：dtw_score 用**带下限的归一化** max(sd, mean×0.03)。
+--     此前纯 z-score 对平调退化，一声词读得越平分数越差、读成下滑反而通关。
+--     ⚠ **含一声的词不可与 <=3 的记录混合分析**（语料约 55% 含一声）；
+--     不含一声的词除数不变，分数与 v3 逐位一致，可跨版本比较。
+--     跨版本取数时按 schema_version 分层，或加 `AND schema_version >= 4`。
 --   · schema_version >= 3：feedback_mode = 学习者**自己选**的显示模式
 --     （颜色块 / 音高曲线），presentation_order 为空，group_assignment 恒为 'n/a'。
 --     ⚠ 自选不是随机分配：**不要**拿 feedback_mode 做组间比较，会有自选择偏差
@@ -42,7 +47,7 @@ SELECT
     phase,                                   -- pretest / training / posttest
     word_set_id,                             -- set1 / set2（同一训练池）/ assessment
     assessment_set_version,                  -- 仅测试词集有值
-    schema_version,                          -- ≥3：feedback_mode 为自选值（非实验条件）
+    schema_version,                          -- ≥4：归一化带下限（分数语义变更）；≥3：feedback_mode 为自选值
     app_version,
     feedback_mode,                           -- v3：自选显示模式（不可做组间比较）
     presentation_order,                      -- 同上
@@ -90,7 +95,9 @@ WITH assessment AS (
       AND word_set_id = 'assessment'
       AND NOT COALESCE(quality_flag, false)
       -- 必须排除：technical_retry 的 dtw_score = -1，会把均值拉低成假"进步"
-      AND COALESCE(result_status, 'valid_result') <> 'technical_retry' 
+      AND COALESCE(result_status, 'valid_result') <> 'technical_retry'
+      -- ⚠ 前后测若跨归一化版本，含一声的词分数不可比。同版本内比较请解除下行注释：
+      -- AND COALESCE(schema_version, 1) >= 4 
 )
 SELECT
     device_id,

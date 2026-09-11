@@ -115,7 +115,8 @@
 - 含一声词的既有 DTW 分数、等级、通关状态**不能**作为发音正确性的证据。
 - 若修改归一化，`schemaVersion` 必须递增，且修改前后的分数**不可混合分析**。
 - **修复前后的分数不可混合分析**：含一声词的分数语义已改变。
-- **合并顺序依赖**：`schemaVersion` 由 PR #48 引入（当前 `version = 3`）。
-  本改动变更了分数语义，**两者合并后必须把 `RecordSchema.version` 递增到 4**，
-  否则无法从数据里区分改动前后的分数。两个分支都改了 `CLAUDE.md`，合并时需人工解冲突。
+- **版本标记**：本改动已把 `RecordSchema.version` 递增到 **4**。
+  v4 与 v1–v3 的 `dtwScore` / `grade` / `passed` 语义不同：
+  **含一声的词不可跨版本混合分析**；不含一声的词除数不变，分数逐位一致，可比较。
+  取数分层方式见 `backend/analysis/export.sql` 抬头说明。
 - 回归测试见 `PinYintoneTests/Audio/LevelToneScoringProbe.swift`。

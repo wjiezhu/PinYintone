@@ -82,6 +82,8 @@
 
 ## 记录版本与结果状态
 - `schemaVersion` / `appVersion` 随**每条记录**上报；字段增删或语义变更必须递增 `schemaVersion`
+  - `schemaVersion` ≥ 4：归一化带下限（见上方 DTW 评分表）。**含一声的词分数语义与 ≤3 不同，
+    不可跨版本混合分析**（语料约 55% 的词含一声）；不含一声的词逐位一致，可比较
 - `resultStatus`：`valid_result` / `technical_retry` / `quality_flagged`
   - 技术失败**不得**伪装成 `fail`；只提示重录、不生成发音等级
   - 但**要落一条 `technical_retry` 记录**（否则失败率在数据里完全不可见）：
