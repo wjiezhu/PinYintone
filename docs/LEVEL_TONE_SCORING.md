@@ -1,4 +1,8 @@
-# 平调词（一声）评分反向 —— 调查报告
+# 平调词（一声）评分反向 —— 调查报告与修复
+
+> **状态：已修复。** 归一化改为带下限的 z-score
+> （`(x - mean) / max(sd, mean × 0.03)`，见 `F0Extractor.normalize`）。
+> 本文保留完整复现数据，供论文方法学说明与后续验证参照。
 
 排查 `ReferenceShapingTests.testRealTTSReferenceForLevelWordIsNotStronglyFalling`
 在 `main` 上失败时发现的更深层问题。**结论：一声词的 DTW 评分方向是反的。**
@@ -64,9 +68,13 @@
 且 `ToneTrainingViewModel:97` 的 TTS 回退路径用同一个 `ToneContour.ideal`——
 **即使完全不走 TTS，1+1 的目标线照样是斜的。**
 
-## 四、候选修法（已验证，未采纳）
+## 四、采用的修法
 
-带下限的 z-score：`z = (x - mean) / max(sd, floor)`，floor 取 8 Hz。
+带下限的 z-score：`z = (x - mean) / max(sd, mean × 0.03)`。
+
+下限**按均值取比例**而非固定 Hz：固定 8 Hz 在 120 Hz 男声相当于 1.15 个半音、
+在 350 Hz 童声只有 0.39 个半音，会重新引入说话人依赖，
+而 per-utterance 归一化的本意正是消除音域差异。取 3% ≈ 0.5 个半音。
 
 | 词级落差 | 现行 | floor=8 |
 |---|---|---|
@@ -80,12 +88,34 @@
 - 局限：大幅下滑仍能通关，因为理想轮廓自身带下倾且 0.5 通关线偏宽。
   要一并收紧，需同时处理 `ToneContour` 的 T1 锯齿或为平调单设阈值。
 
-⚠ **未实施**：CLAUDE.md 把「归一化方式 = z-score per utterance」与
-「通关线 ≤ 0.5」列为不可变更的核心约束，改动需先决策。
+### 修复后实测
+
+| 1+1 词级落差 | 修复前 | 修复后 |
+|---|---|---|
+| 0 Hz（读对） | 0.501 ❌ | **0.151 ✅ 最优** |
+| +45 Hz（读错） | 0.379 ✅ | 0.337 ✅ |
+| 4+4 全部 | 0.081–0.092 | **逐位一致** |
+
+说话人无关性已验证：同一形状缩放到 ~120 / ~265 / ~350 Hz，分数均为 0.151 / 0.337。
+
+原先失败的 `testRealTTSReferenceForLevelWordIsNotStronglyFalling` **随之通过**——
+病根去掉后症状自然消失（drop/SD 不再除以接近零的 SD）。
+
+### 仍未解决
+
+- **大幅下滑仍能通关**（+45 Hz → 0.337）。理想轮廓 T1 自身带下倾，
+  且 0.5 通关线对低方差词偏宽。要一并收紧需改 `ToneContour` 的 T1 锯齿
+  或为平调单设阈值——属于另一项决策。
+- **归一化后的 `0` 与「无声帧」语义重叠**：`DTWAnalyzer` 按 CLAUDE.md 忽略 0 帧，
+  故逐帧恒定的轨迹会被当作整段无声，返回上限 9.99。真实语音不可能逐帧恒定
+  （浮点上是测度零事件），故仅记录为已知局限。
 
 ## 五、对研究数据的影响
 
 - 含一声词的既有 DTW 分数、等级、通关状态**不能**作为发音正确性的证据。
 - 若修改归一化，`schemaVersion` 必须递增，且修改前后的分数**不可混合分析**。
-- 相关特征测试见 `PinYintoneTests/Audio/LevelToneScoringProbe.swift`
-  （断言的是现状缺陷，修好后需反向改写）。
+- **修复前后的分数不可混合分析**：含一声词的分数语义已改变。
+- **合并顺序依赖**：`schemaVersion` 由 PR #48 引入（当前 `version = 3`）。
+  本改动变更了分数语义，**两者合并后必须把 `RecordSchema.version` 递增到 4**，
+  否则无法从数据里区分改动前后的分数。两个分支都改了 `CLAUDE.md`，合并时需人工解冲突。
+- 回归测试见 `PinYintoneTests/Audio/LevelToneScoringProbe.swift`。
