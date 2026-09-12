@@ -16,6 +16,8 @@ enum DirectionHint: String, Codable {
     case shouldDipThenRise   // T3：先降后升
     case shouldFall          // T4：应该往下唱
     case neutral             // T5 轻声 或 无法判定
+    /// 全平调词整体掉调——走向闸门判定，不归咎于某个字
+    case wordDropping
 
     /// 用于 UI 显示的 SF Symbol 名。
     var symbol: String {
@@ -26,6 +28,7 @@ enum DirectionHint: String, Codable {
         case .shouldDipThenRise:  return "arrow.down.right.and.arrow.up.right"
         case .shouldFall:         return "arrow.down.right"
         case .neutral:            return "questionmark.circle"
+        case .wordDropping:       return "arrow.down.forward"
         }
     }
 
@@ -38,6 +41,7 @@ enum DirectionHint: String, Codable {
         case .shouldDipThenRise:  return "coach_dip_then_rise"
         case .shouldFall:         return "coach_fall"
         case .neutral:            return "coach_neutral"
+        case .wordDropping:       return "coach_keep_level"   // 整词句式，无 %@ 占位符
         }
     }
 
@@ -50,6 +54,7 @@ enum DirectionHint: String, Codable {
         case .shouldDipThenRise:  return "direction_should_dip_then_rise"
         case .shouldFall:         return "direction_should_fall"
         case .neutral:            return "direction_neutral"
+        case .wordDropping:       return "direction_word_dropping"
         }
     }
 }
@@ -81,6 +86,9 @@ struct CoachAdvice {
 
 struct FeedbackResult {
     let dtwScore: Float
+    /// 是否被平调词走向闸门拦下（全一声的词整体掉调）。
+    /// 此时 `grade` 恒为 `.fail`，即便 `dtwScore` 还在通关线内。
+    var levelToneDropped: Bool = false
     let grade: FeedbackGrade
     let attemptNumber: Int
     let segments: [ToneSegmentResult]  // 按字诊断；按音节顺序
@@ -95,6 +103,11 @@ struct FeedbackResult {
     /// 选取规则：在所有"没唱对"的音节里取分段 DTW 最差的那个——
     /// 差得最多的地方改起来收益最大。全部唱对时返回 `.ok`（鼓励文案）。
     var coachAdvice: CoachAdvice {
+        // 闸门触发时逐字 DTW 可能都在通关线内，逐字诊断会得出"全对"，
+        // 与 grade = .fail 直接矛盾。整词掉调是此刻唯一该说的事（§4.3 只给一个方向）。
+        if levelToneDropped {
+            return CoachAdvice(focusChar: nil, hint: .wordDropping, praiseChar: nil)
+        }
         let needsWork = segments.filter { $0.directionHint != .ok }
         guard let worst = needsWork.max(by: { $0.segmentScore < $1.segmentScore }) else {
             return CoachAdvice(focusChar: nil, hint: .ok, praiseChar: nil)
@@ -112,6 +125,13 @@ struct FeedbackResult {
     /// 由归一化 DTW（越低越好）分段线性映射，与四级阈值对齐；60 分 = 通关线（DTW 0.5）。
     /// 优秀 90–100 · 良好 75–90 · 继续练习 60–75 · 再试 <60。
     var score: Int {
+        // 被闸门拦下就是不通关，分数不得高于通关线对应的 60 分，
+        // 否则会出现"85 分但不通关"。
+        if levelToneDropped { return min(59, Self.mapped(dtwScore)) }
+        return Self.mapped(dtwScore)
+    }
+
+    private static func mapped(_ dtwScore: Float) -> Int {
         let d = max(0, dtwScore)
         let p: Float
         switch d {

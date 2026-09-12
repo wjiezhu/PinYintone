@@ -14,6 +14,31 @@ from ..database import get_db
 router = APIRouter(tags=["teacher"])
 
 PASS_THRESHOLD = 0.5  # CLAUDE.md：归一化 DTW ≤ 0.5 通关
+
+
+def _scored(sessions):
+    """只保留**有发音成绩**的记录。
+
+    technical_retry（没录上）的 dtw_score 是哨兵 -1，混进统计会双重出错：
+    -1 会把班级均分拉低（DTW 越低越好 → 录音失败越多班级越"优秀"），
+    且 -1 <= 0.5 会被算成通关。CLAUDE.md 禁令 9：技术失败不得计入发音成绩。
+    """
+    return [s for s in sessions
+            if (s.result_status or "valid_result") != "technical_retry"]
+
+
+def _passed(s) -> bool:
+    """是否通关。**以 grade 为准，不要用 dtw_score 重算。**
+
+    schema_version >= 5 起平调词走向闸门可以在 dtw_score <= 0.5 时仍判 fail，
+    用分数重算会与学习者当时看到的结果不一致（"所见 ≠ 所评"）。
+    更早的记录 grade 本就由分数派生，用 grade 判等价，故可跨版本统一。
+    """
+    if s.grade:
+        return s.grade != "fail"
+    return s.dtw_score <= PASS_THRESHOLD
+
+
 APPLE_EPOCH = datetime(2001, 1, 1, tzinfo=timezone.utc)
 
 
@@ -56,10 +81,10 @@ def class_summary(teacher: models.Teacher = Depends(current_teacher), db: Sessio
     students = (
         db.query(models.User).filter(models.User.class_code == teacher.class_code).count()
     )
-    if sessions:
-        avg = sum(s.dtw_score for s in sessions) / len(sessions)
-        passed = sum(1 for s in sessions if s.dtw_score <= PASS_THRESHOLD)
-        pass_rate = passed / len(sessions)
+    scored = _scored(sessions)
+    if scored:
+        avg = sum(s.dtw_score for s in scored) / len(scored)
+        pass_rate = sum(1 for s in scored if _passed(s)) / len(scored)
     else:
         avg, pass_rate = 0.0, 0.0
     return schemas.ClassSummary(
@@ -71,8 +96,8 @@ def class_summary(teacher: models.Teacher = Depends(current_teacher), db: Sessio
 def tone_breakdown(teacher: models.Teacher = Depends(current_teacher), db: Session = Depends(get_db)):
     total = {1: 0, 2: 0, 3: 0, 4: 0}
     fails = {1: 0, 2: 0, 3: 0, 4: 0}
-    for s in _class_sessions(db, teacher.class_code):
-        failed = s.dtw_score > PASS_THRESHOLD
+    for s in _scored(_class_sessions(db, teacher.class_code)):
+        failed = not _passed(s)
         for tone in tones_for(s.lexeme_id):
             if tone in total:
                 total[tone] += 1
@@ -103,8 +128,8 @@ def students(teacher: models.Teacher = Depends(current_teacher), db: Session = D
     rows: list[schemas.StudentRowData] = []
     for device_id, items in by_device.items():
         items.sort(key=lambda s: s.timestamp)
-        recent = items[-10:]
-        recent_pass = sum(1 for s in recent if s.dtw_score <= PASS_THRESHOLD) / len(recent)
+        recent = _scored(items)[-10:]
+        recent_pass = (sum(1 for s in recent if _passed(s)) / len(recent)) if recent else 0.0
         rows.append(
             schemas.StudentRowData(
                 id=device_id,
@@ -133,10 +158,12 @@ def student_detail(
         .order_by(models.TrainingSession.timestamp)
         .all()
     )
-    fails = Counter(s.lexeme_id for s in items if s.dtw_score > PASS_THRESHOLD)
+    scored = _scored(items)
+    fails = Counter(s.lexeme_id for s in scored if not _passed(s))
     return schemas.StudentDetailData(
         deviceID=device_id,
-        dtwTimeSeries=[s.dtw_score for s in items],
+        # 只画有成绩的点：哨兵 -1 画出来是个"突然满分"的尖峰
+        dtwTimeSeries=[s.dtw_score for s in scored],
         errorWords=[hanzi_for(lex) for lex, _ in fails.most_common(5)],
     )
 

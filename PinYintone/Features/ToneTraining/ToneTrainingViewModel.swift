@@ -256,6 +256,7 @@ final class ToneTrainingViewModel: ObservableObject {
         let segments = buildSegments(student: normalized, reference: reference)
         let result = FeedbackResult(
             dtwScore: score,
+            levelToneDropped: droppedPitch,
             grade: grade,
             attemptNumber: attempt,
             segments: segments
@@ -281,10 +282,9 @@ final class ToneTrainingViewModel: ObservableObject {
         }
 
         consecutiveFailures = (grade == .fail) ? consecutiveFailures + 1 : 0
-        // 闸门拦下时 DTW 可能还在通关线内，光看分数会让人莫名其妙，必须点明原因
-        if droppedPitch {
-            retryHint = NSLocalizedString("tone_hint_keep_level", comment: "")
-        }
+        // 闸门的解释走教练卡（见 FeedbackResult.coachAdvice），**不走 retryHint**——
+        // 那条通道是技术性失败专用（mic.slash 图标），把发音评价混进去
+        // 会让学习者以为是麦克风出了问题，也违反"技术失败与发音评价严格区分"。
         feedbackResult = result
     }
 
