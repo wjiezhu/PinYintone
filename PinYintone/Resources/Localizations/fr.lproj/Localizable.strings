@@ -98,6 +98,8 @@
 "feedback_skip_hint" = "Ce mot est difficile — vous pouvez le passer et y revenir plus tard.";
 "tone_retry_mic_unavailable" = "Impossible de démarrer l'enregistrement. Vérifiez qu'aucune autre app n'utilise le micro, puis réessayez.";
 "tone_retry_no_voice" = "Je n'ai pas bien entendu. Rapprochez-vous du micro et réessayez.";
+"replay_own_recording" = "Réécouter mon enregistrement";
+"replay_failed" = "Impossible de lire votre enregistrement. Veuillez réessayer.";
 "record_start" = "Démarrer l'enregistrement";
 "record_stop" = "Arrêter l'enregistrement";
 "aspiration_prompt" = "Souffle fort dans le micro pour produire l'explosion aspirée";

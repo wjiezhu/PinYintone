@@ -89,6 +89,13 @@ final class ToneTrainingViewModel: ObservableObject {
                 }
             }
         }
+        // 接住整段 PCM 供回听。此前这份数据被直接丢弃——
+        // 录音落地后只走 F0 分析，没有任何地方留下可回放的音频。
+        // 只存内存、只留当前一条（决定 17），原始录音不上传。
+        audioEngine.onFinish = { [weak self] pcm in
+            guard let self else { return }
+            LearnerRecordingStore.shared.store(pcm: pcm, lexemeID: self.currentLexeme?.id)
+        }
         audioEngine.onChunk = { [weak self] pcm in
             self?.framer.feed(pcm)
         }
@@ -97,6 +104,8 @@ final class ToneTrainingViewModel: ObservableObject {
     // MARK: - 词条
 
     func loadLexeme(_ lexeme: Lexeme) {
+        // 换词即清上一条录音，否则回听会放出上一个词的声音
+        LearnerRecordingStore.shared.clearIfLexemeChanged(to: lexeme.id)
         currentLexeme = lexeme
         // 即时占位：几何理想轮廓；随后异步升级为真人录音 / TTS 参照
         referenceF0 = f0Extractor.normalize(Self.idealContour(for: lexeme.tones))
@@ -374,6 +383,30 @@ final class ToneTrainingViewModel: ObservableObject {
         case 4: return aEnd < aStart - SLOPE ? .ok : .shouldFall         // 没降下来
         case 5: return .neutral                                          // 轻声不指点
         default: return .neutral
+        }
+    }
+
+    // MARK: - 回听
+
+    /// 是否有可回听的录音（驱动按钮可用态）
+    var canReplay: Bool { LearnerRecordingStore.shared.hasRecording }
+
+    /// 回听本次录音。
+    ///
+    /// 返回**是否真的开始播放**：字典 §8 要求 `learner_audio_started` 只在
+    /// 实际开始播放时记，「只点击播放但播放失败不记 audio_started」，
+    /// 所以埋点必须看这个返回值，而不是看用户点了按钮。
+    @discardableResult
+    func replayOwnRecording() -> Bool {
+        let store = LearnerRecordingStore.shared
+        guard store.hasRecording else { return false }
+        do {
+            return try LearnerAudioPlayer.shared.play(pcm: store.pcm,
+                                                      sampleRate: store.sampleRate)
+        } catch {
+            // 播放失败要让人看得见，不静默吞掉（同 §4.2 对录音失败的要求）
+            retryHint = NSLocalizedString("replay_failed", comment: "")
+            return false
         }
     }
 

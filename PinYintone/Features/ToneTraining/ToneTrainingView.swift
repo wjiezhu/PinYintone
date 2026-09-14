@@ -115,6 +115,7 @@ struct ToneTrainingView: View {
                 if let result = vm.feedbackResult, !vm.isRecording {
                     VStack(spacing: 10) {
                         CoachCardView(advice: result.coachAdvice)
+                        replayButton
                         modeView(lexeme)
                             .frame(maxHeight: .infinity)
                     }
@@ -162,6 +163,26 @@ struct ToneTrainingView: View {
                 .font(.footnote)
                 .foregroundStyle(.orange)
                 .multilineTextAlignment(.center)
+        }
+    }
+
+    /// 回听本次录音。
+    ///
+    /// **不放进底部操作栏**：那三格是钉死的（听样例 · 录音 · 下一题），
+    /// 录音键恒在正中，加第四格会破坏该不变量（档案 §4.2）。
+    /// 放在结果区，与"刚录完这一条"的语境相连。
+    @ViewBuilder
+    private var replayButton: some View {
+        if vm.canReplay {
+            Button {
+                vm.replayOwnRecording()
+            } label: {
+                Label(NSLocalizedString("replay_own_recording", comment: ""),
+                      systemImage: "arrow.counterclockwise.circle")
+                    .font(.footnote)
+            }
+            .buttonStyle(.bordered)
+            .disabled(vm.isRecording)
         }
     }
 

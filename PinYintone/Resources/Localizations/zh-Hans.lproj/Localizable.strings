@@ -98,6 +98,8 @@
 "feedback_skip_hint" = "这个词有点难，可以先跳过，稍后再练。";
 "tone_retry_mic_unavailable" = "没能开始录音。请确认没有其他 App 正在占用麦克风，然后再试一次。";
 "tone_retry_no_voice" = "没听清，请靠近麦克风重录。";
+"replay_own_recording" = "回听我的录音";
+"replay_failed" = "没能播放刚才的录音，请再试一次。";
 "record_start" = "开始录音";
 "record_stop" = "停止录音";
 "aspiration_prompt" = "对着麦克风用力送气，发出爆破声";
