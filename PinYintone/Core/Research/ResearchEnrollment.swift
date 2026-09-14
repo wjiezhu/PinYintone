@@ -7,11 +7,10 @@ import Foundation
 @MainActor
 enum ResearchEnrollment {
 
-    /// 当前配置编号。上线前由研究者冻结并下发；未配置则不纳入，
-    /// 不猜一个默认值——manifest 决定评分/词库/问卷版本，猜错会把数据归错配置。
-    static var manifestID: String? {
-        UserDefaults.standard.string(forKey: "pt_research_manifest_config_id")
-    }
+    /// 当前配置编号，由服务端下发并缓存在 `ResearchConfig`。
+    /// 未配置则不纳入，不猜默认值——manifest 决定评分/词库/问卷版本，
+    /// 猜错会把数据归到错误的配置下。
+    static var manifestID: String? { ResearchConfig.shared.manifestID }
 
     enum EnrollError: Error {
         case noManifestConfigured

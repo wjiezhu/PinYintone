@@ -214,3 +214,13 @@ class SurveyUploadRequest(BaseModel):
     participantID: str
     manifestID: str
     outcome: SurveyOutcomeDTO
+
+
+class ActiveManifestResponse(BaseModel):
+    manifestID: str
+    studyID: str
+    collectionStartAt: datetime
+    collectionEndAt: datetime
+    postTriggerCount: int
+    consentVersion: str
+    surveyVersion: str

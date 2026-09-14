@@ -275,3 +275,33 @@ def upload_survey(body: schemas.SurveyUploadRequest, db: Session = Depends(get_d
         ))
     db.commit()
     return {"surveyInstanceID": instance_id, "alreadySubmitted": False}
+
+
+@router.get("/research/manifest/active", response_model=schemas.ActiveManifestResponse)
+def active_manifest(db: Session = Depends(get_db)):
+    """返回当前生效的研究配置。
+
+    客户端**不硬编码** manifest_id：配置由研究者冻结后下发，
+    硬编码会在换配置时把数据归到旧配置下。
+    没有处在窗口内的配置时返回 404——此时客户端不应纳入任何人，
+    也不应猜一个配置（字典 §3：不同配置不能直接混算分数）。
+    """
+    now = datetime.now(timezone.utc)
+    m = (
+        db.query(research_models.ResearchManifest)
+        .filter(research_models.ResearchManifest.collection_start_at <= now,
+                research_models.ResearchManifest.collection_end_at > now)
+        .order_by(research_models.ResearchManifest.frozen_at.desc())
+        .first()
+    )
+    if m is None:
+        raise HTTPException(404, "当前无生效的研究配置")
+    return schemas.ActiveManifestResponse(
+        manifestID=m.manifest_id,
+        studyID=m.study_id,
+        collectionStartAt=m.collection_start_at,
+        collectionEndAt=m.collection_end_at,
+        postTriggerCount=m.post_trigger_count,
+        consentVersion=m.consent_version,
+        surveyVersion=m.survey_version,
+    )

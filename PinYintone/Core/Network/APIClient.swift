@@ -121,6 +121,22 @@ final class APIClient {
                                                   occurredAt: occurredAt))
     }
 
+    struct ActiveManifest: Decodable {
+        let manifestID: String
+        let studyID: String
+        let collectionStartAt: Date
+        let collectionEndAt: Date
+        let postTriggerCount: Int
+        let consentVersion: String
+        let surveyVersion: String
+    }
+
+    /// 取当前生效的研究配置。404 表示暂无生效配置——
+    /// 此时不得纳入任何人，也不得猜一个配置。
+    func fetchActiveManifest() async throws -> ActiveManifest {
+        try await request("research/manifest/active")
+    }
+
     /// 上报一份问卷（实例 + 逐题答案）。
     func uploadSurvey(participantID: String, manifestID: String,
                       outcome: SurveyOutcome) async throws {

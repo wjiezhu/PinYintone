@@ -308,3 +308,38 @@ def test_declined_survey_stores_no_fabricated_answers():
     inst = db.query(models.ResearchSurveyInstance).one()
     assert inst.status == "declined"
     db.close()
+
+
+# ---------------- 配置下发 ----------------
+
+def test_active_manifest_returned_within_window():
+    _manifest_only()
+    r = client.get("/research/manifest/active")
+    assert r.status_code == 200
+    assert r.json()["manifestID"] == "m1"
+    assert r.json()["postTriggerCount"] == 5
+
+
+def test_no_active_manifest_outside_window():
+    """窗口外不返回配置——客户端此时不得纳入任何人，也不得猜一个配置。"""
+    db = TestingSession()
+    db.add(models.ResearchManifest(
+        manifest_id="old", study_id="s1", app_version="1.0", build_number="1",
+        lexicon_version="lex", scoring_version="sc", scoring_spec={},
+        feedback_version="f", advice_policy_version="a", survey_version="sv",
+        consent_version="c", eligibility_version="e", eligibility_spec={},
+        post_trigger_count=5, post_trigger_scope="fixed_word_result_displayed",
+        collection_start_at=NOW - timedelta(days=40),
+        collection_end_at=NOW - timedelta(days=26), frozen_at=NOW))
+    db.commit()
+    db.close()
+    assert client.get("/research/manifest/active").status_code == 404
+
+
+def test_window_is_fourteen_days_half_open():
+    """统一 14 天窗口，左闭右开（字典 §3）。"""
+    _manifest_only()
+    body = client.get("/research/manifest/active").json()
+    start = datetime.fromisoformat(body["collectionStartAt"])
+    end = datetime.fromisoformat(body["collectionEndAt"])
+    assert (end - start) == timedelta(days=14)
