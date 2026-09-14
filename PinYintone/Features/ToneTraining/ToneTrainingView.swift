@@ -98,6 +98,11 @@ struct ToneTrainingView: View {
         }
         .pickerStyle(.segmented)
         .labelsHidden()
+        .onChange(of: feedbackStyle) { old, new in
+            // 字典 §8：feedback_mode_changed 记**用户主动切换**，需带 from/to。
+            // 颜色与曲线自选切换是使用行为，不得编码成随机分组（字典 §8 末注）。
+            vm.logFeedbackModeChanged(from: old, to: new)
+        }
         // 录音中换模式会让"看到的线 ≠ 评分的线"，直接禁掉
         .disabled(vm.isRecording)
     }

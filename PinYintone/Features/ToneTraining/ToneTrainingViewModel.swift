@@ -162,8 +162,34 @@ final class ToneTrainingViewModel: ObservableObject {
         isReferenceReady = true
     }
 
+    /// 记录反馈模式切换。from/to 用字典命名（static_color / pitch_curve）。
+    ///
+    /// ⚠ **已知缺口**：字典 §8 规定本事件 `attempt_id` 必填，但模式切换器在
+    /// 训练阶段全程可见——用户完全可能**在首次录音之前**就切换。此时没有 attempt，
+    /// 按字典只能不记。后果是切换日志**系统性漏掉「录音前的切换」**，
+    /// 而需求 §4 要求「记录实际显示模式和切换事件」。
+    ///
+    /// 这里选择遵守已冻结的字典而不是偷偷放宽校验。若研究上需要完整的切换序列，
+    /// 需由研究者决定：放宽本事件的 attempt_id 为可选（须递增字典版本），
+    /// 或把切换器改为仅在出分后可用。**不要**在这里静默传 nil 绕过校验。
+    func logFeedbackModeChanged(from old: FeedbackStyle, to new: FeedbackStyle) {
+        guard old != new else { return }
+        guard currentAttemptID != nil else { return }
+        ResearchEventLog.shared.log(
+            .feedbackModeChanged,
+            attemptID: currentAttemptID,
+            lexemeVersionID: currentLexeme?.id,
+            payload: ["from_mode": ResearchFeedbackMode(old).rawValue,
+                      "to_mode": ResearchFeedbackMode(new).rawValue])
+    }
+
     /// 本次尝试的研究编号。录音开始时生成，供事件与练习记录共用。
     private(set) var currentAttemptID: UUID?
+
+    #if DEBUG
+    /// 仅供测试：模拟「已开始过一次尝试」
+    func beginAttemptForTesting() { currentAttemptID = UUID() }
+    #endif
 
     /// 朗读样例读音
     func playSample() {
