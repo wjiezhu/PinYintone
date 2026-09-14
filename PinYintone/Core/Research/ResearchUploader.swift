@@ -26,6 +26,16 @@ final class ResearchUploader {
         let events: [ResearchEvent]
     }
 
+    /// 用本机研究身份上报。未纳入研究则什么也不做——
+    /// 事件本就不该产生（`ResearchEventLog` 的门禁在写入前），
+    /// 这里再挡一次是为了万一队列里有残留也不会误发。
+    @discardableResult
+    func flush() async -> Int {
+        let id = ResearchIdentity.shared
+        guard let pid = id.participantID, let mid = id.manifestID else { return 0 }
+        return await flush(participantID: pid, manifestID: mid)
+    }
+
     /// 尝试上报待传事件。返回成功上报的条数。
     @discardableResult
     func flush(participantID: String, manifestID: String) async -> Int {

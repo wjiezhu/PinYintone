@@ -27,7 +27,12 @@ struct PinyintoneApp: App {
                 // 会话编号：后台超过 30 分钟即轮换（字典 §7 的操作定义，非真实课次）
                 ResearchSession.shared.willEnterForeground()
                 ResearchCrashReporter.shared.start()
-                Task { await SyncService.shared.syncAll() }
+                Task {
+                    await SyncService.shared.syncAll()
+                    // 研究事件与业务记录分开上报：研究链路有独立的同意校验，
+                    // 一方失败不应拖住另一方
+                    await ResearchUploader.shared.flush()
+                }
             } else if phase == .background {
                 ResearchSession.shared.didEnterBackground()
             }

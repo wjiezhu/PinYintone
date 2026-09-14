@@ -163,3 +163,29 @@ class ResearchEventBatch(BaseModel):
     participantID: str
     manifestID: str
     events: list[ResearchEventDTO]
+
+
+class ResearchEnrollRequest(BaseModel):
+    """纳入研究。internalUserID 是业务账号键，**不是** Apple 标识。"""
+    internalUserID: str
+    manifestID: str
+    consentVersion: str
+    consentLanguage: str
+    consentOccurredAt: datetime
+    recruitmentSource: str = "unknown"
+    priorUseStatus: str = "unknown"
+    priorUseEvidence: str = "insufficient"
+    isTest: bool = False
+
+
+class ResearchEnrollResponse(BaseModel):
+    participantID: str
+    studyID: str
+    alreadyEnrolled: bool
+
+
+class ResearchWithdrawRequest(BaseModel):
+    participantID: str
+    consentVersion: str
+    consentLanguage: str
+    occurredAt: datetime
