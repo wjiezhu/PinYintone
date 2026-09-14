@@ -1,0 +1,125 @@
+{
+  "translation_version": "research-survey-i18n-1.0-draft",
+  "strings": {
+    "previous": {
+      "zh": "上一题",
+      "en": "Previous question",
+      "fr": "Question précédente",
+      "ar": "السؤال السابق"
+    },
+    "next": {
+      "zh": "下一题",
+      "en": "Next question",
+      "fr": "Question suivante",
+      "ar": "السؤال التالي"
+    },
+    "skip_question": {
+      "zh": "跳过本题",
+      "en": "Skip this question",
+      "fr": "Passer cette question",
+      "ar": "تخطي هذا السؤال"
+    },
+    "later": {
+      "zh": "稍后填写",
+      "en": "Answer later",
+      "fr": "Répondre plus tard",
+      "ar": "الإجابة لاحقًا"
+    },
+    "submit": {
+      "zh": "提交",
+      "en": "Submit",
+      "fr": "Envoyer",
+      "ar": "إرسال"
+    },
+    "decline_survey": {
+      "zh": "不填写，继续使用",
+      "en": "Continue without answering",
+      "fr": "Continuer sans répondre",
+      "ar": "المتابعة دون إجابة"
+    },
+    "select_one": {
+      "zh": "请选择一项",
+      "en": "Select one answer",
+      "fr": "Sélectionnez une réponse",
+      "ar": "اختر إجابة واحدة"
+    },
+    "select_multiple": {
+      "zh": "可多选",
+      "en": "Select all that apply",
+      "fr": "Plusieurs réponses possibles",
+      "ar": "يمكنك اختيار أكثر من إجابة"
+    },
+    "select_max_two": {
+      "zh": "最多选两项",
+      "en": "Select up to two answers",
+      "fr": "Sélectionnez deux réponses au maximum",
+      "ar": "اختر إجابتين كحد أقصى"
+    },
+    "other_optional": {
+      "zh": "其他（可选填说明）",
+      "en": "Other (optional details)",
+      "fr": "Autre (précisions facultatives)",
+      "ar": "غير ذلك (توضيح اختياري)"
+    },
+    "optional": {
+      "zh": "选填",
+      "en": "Optional",
+      "fr": "Facultatif",
+      "ar": "اختياري"
+    },
+    "privacy_hint": {
+      "zh": "请不要填写姓名、联系方式或其他可识别个人身份的信息。",
+      "en": "Please do not enter names, contact details, or other information that could identify someone.",
+      "fr": "Veuillez ne pas indiquer de noms, de coordonnées ou d’autres informations permettant d’identifier une personne.",
+      "ar": "يرجى عدم إدخال أسماء أو معلومات اتصال أو أي معلومات أخرى قد تكشف هوية شخص."
+    },
+    "limit_200": {
+      "zh": "最多200字符",
+      "en": "Up to 200 characters",
+      "fr": "200 caractères maximum",
+      "ar": "200 حرف كحد أقصى"
+    },
+    "limit_500": {
+      "zh": "最多500字符",
+      "en": "Up to 500 characters",
+      "fr": "500 caractères maximum",
+      "ar": "500 حرف كحد أقصى"
+    },
+    "max_two_error": {
+      "zh": "最多选择两项。",
+      "en": "Select no more than two answers.",
+      "fr": "Sélectionnez deux réponses au maximum.",
+      "ar": "يرجى اختيار إجابتين كحد أقصى."
+    },
+    "exclusive_error": {
+      "zh": "该选项不能与其他选项同时选择。",
+      "en": "This answer cannot be selected with other answers.",
+      "fr": "Cette réponse ne peut pas être sélectionnée avec d’autres réponses.",
+      "ar": "لا يمكن اختيار هذه الإجابة مع إجابات أخرى."
+    },
+    "submitted": {
+      "zh": "已提交，感谢你的反馈。",
+      "en": "Submitted. Thank you for your feedback.",
+      "fr": "Réponses envoyées. Merci pour votre retour.",
+      "ar": "تم الإرسال. شكرًا لملاحظاتك."
+    },
+    "submit_failed": {
+      "zh": "暂未提交成功，请重试。",
+      "en": "Submission failed. Please try again.",
+      "fr": "L’envoi a échoué. Veuillez réessayer.",
+      "ar": "تعذر الإرسال. يرجى المحاولة مرة أخرى."
+    },
+    "search_country": {
+      "zh": "搜索国家",
+      "en": "Search countries",
+      "fr": "Rechercher un pays",
+      "ar": "البحث عن بلد"
+    },
+    "report_issue": {
+      "zh": "报告问题",
+      "en": "Report a problem",
+      "fr": "Signaler un problème",
+      "ar": "الإبلاغ عن مشكلة"
+    }
+  }
+}

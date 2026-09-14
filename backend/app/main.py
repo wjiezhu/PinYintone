@@ -3,6 +3,9 @@ from fastapi.middleware.cors import CORSMiddleware
 from sqlalchemy import text
 
 from .database import Base, engine
+# 新版研究表：import 即注册到 Base.metadata，由下面的 create_all 自动建表。
+# 与旧表物理分离，旧表冻结只读。
+from . import research_models  # noqa: F401
 from .routers import auth, sync, teacher
 
 # 开发期自动建表（生产建议改用 Alembic 迁移）
