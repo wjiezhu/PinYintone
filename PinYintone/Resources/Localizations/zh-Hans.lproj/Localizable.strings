@@ -194,3 +194,20 @@
 "coach_praise" = "「%@」已经很稳了。";
 "coach_keep_level" = "整个词都在往下掉。一声要从头平到尾，把音高稳住再来一次。";
 "direction_word_dropping" = "整体在下滑";
+
+/* 研究授权（需求 §2）。译稿待核校，不得标记为正式施测版本。 */
+"consent_title" = "参与研究（可选）";
+"consent_purpose_title" = "研究目的";
+"consent_purpose_body" = "了解初级汉语学习者如何使用声调练习工具，用于一篇硕士学位论文的设计与可用性研究。";
+"consent_data_title" = "采集内容";
+"consent_data_body" = "你的练习操作记录（开始练习、播放示范、录音、查看反馈等）、评分结果，以及你自愿填写的问卷答案。\n\n不会上传录音本身，也不会上传你的姓名、邮箱或 Apple 账号信息。";
+"consent_use_title" = "用途";
+"consent_use_body" = "仅用于该论文的统计分析与撰写。分析结果以群体统计呈现，不针对个人。";
+"consent_withdraw_title" = "如何退出";
+"consent_withdraw_body" = "你可以随时在「设置」中退出研究。退出后立即停止采集新数据。退出前已收集资料的处理方式，请通过下方联系方式咨询。";
+"consent_contact" = "研究咨询、退出或删除资料：joyouo409@gmail.com，或通过 App 内反馈。";
+"consent_checkbox" = "我已阅读以上说明，自愿参与本研究";
+"consent_agree" = "同意并参与";
+"consent_decline" = "暂不参与";
+"consent_decline_hint" = "不参与研究不影响使用任何功能。";
+"consent_enroll_failed" = "暂时无法完成，请检查网络后重试。";

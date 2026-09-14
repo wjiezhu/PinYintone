@@ -79,6 +79,48 @@ final class APIClient {
     }
 
     /// 删除账号：清除服务端该用户及其全部训练数据。
+    struct EnrollResearchResponse: Decodable {
+        let participantID: String
+        let studyID: String
+        let alreadyEnrolled: Bool
+    }
+
+    /// 纳入研究。返回的 participantID 由**服务端**随机生成，
+    /// 客户端不得自行构造或从账号键派生（字典 §4）。
+    func enrollResearch(internalUserID: String, manifestID: String,
+                        consentVersion: String, consentLanguage: String,
+                        consentOccurredAt: Date, isTest: Bool) async throws -> EnrollResearchResponse {
+        struct Body: Encodable {
+            let internalUserID: String, manifestID: String
+            let consentVersion: String, consentLanguage: String
+            let consentOccurredAt: Date
+            let isTest: Bool
+        }
+        return try await request("research/enroll", method: "POST",
+                                 body: Body(internalUserID: internalUserID,
+                                            manifestID: manifestID,
+                                            consentVersion: consentVersion,
+                                            consentLanguage: consentLanguage,
+                                            consentOccurredAt: consentOccurredAt,
+                                            isTest: isTest))
+    }
+
+    /// 撤回研究同意。服务端**追加**一条 withdrawn，不改写历史。
+    func withdrawResearch(participantID: String, consentVersion: String,
+                          consentLanguage: String, occurredAt: Date) async throws {
+        struct Body: Encodable {
+            let participantID: String, consentVersion: String
+            let consentLanguage: String
+            let occurredAt: Date
+        }
+        struct Ack: Decodable { let status: String }
+        let _: Ack = try await request("research/withdraw", method: "POST",
+                                       body: Body(participantID: participantID,
+                                                  consentVersion: consentVersion,
+                                                  consentLanguage: consentLanguage,
+                                                  occurredAt: occurredAt))
+    }
+
     /// 上报研究操作事件。失败抛错由调用方保留队列重试——
     /// **不得**在这里吞掉错误，否则离线期间的事件会静默丢失。
     func uploadResearchEvents(_ batch: any Encodable) async throws {

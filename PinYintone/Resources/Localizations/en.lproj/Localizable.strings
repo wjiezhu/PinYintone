@@ -194,3 +194,20 @@
 "coach_praise" = "\"%@\" is already steady.";
 "coach_keep_level" = "The whole word slides down. First tone stays high and level throughout — hold the pitch steady.";
 "direction_word_dropping" = "Sliding down";
+
+/* Research consent. Draft translation, pending review. */
+"consent_title" = "Join the study (optional)";
+"consent_purpose_title" = "Purpose";
+"consent_purpose_body" = "To understand how beginning learners of Chinese use a tone-practice tool, for a master's thesis on design and usability.";
+"consent_data_title" = "What is collected";
+"consent_data_body" = "Your practice activity (starting a task, playing the model, recording, viewing feedback), scoring results, and any questionnaire answers you choose to give.\n\nRecordings themselves are not uploaded, and neither is your name, email, or Apple account information.";
+"consent_use_title" = "How it is used";
+"consent_use_body" = "Only for analysis and writing in that thesis. Results are reported as group statistics, not about individuals.";
+"consent_withdraw_title" = "How to leave";
+"consent_withdraw_body" = "You can leave the study at any time in Settings. Collection of new data stops immediately. For how data collected before you leave is handled, please use the contact below.";
+"consent_contact" = "Questions, withdrawal, or data deletion: joyouo409@gmail.com, or via in-app feedback.";
+"consent_checkbox" = "I have read the information above and agree to take part";
+"consent_agree" = "Agree and take part";
+"consent_decline" = "Not now";
+"consent_decline_hint" = "Declining does not affect any app feature.";
+"consent_enroll_failed" = "Could not complete right now. Check your connection and try again.";

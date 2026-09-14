@@ -194,3 +194,20 @@
 "coach_praise" = "« %@ » est déjà stable.";
 "coach_keep_level" = "Le mot entier descend. Le premier ton reste haut et plat du début à la fin — maintenez la hauteur.";
 "direction_word_dropping" = "Descend";
+
+/* Consentement à l'étude. Traduction provisoire, en attente de relecture. */
+"consent_title" = "Participer à l'étude (facultatif)";
+"consent_purpose_title" = "Objectif";
+"consent_purpose_body" = "Comprendre comment les débutants en chinois utilisent un outil d'entraînement aux tons, dans le cadre d'un mémoire de master sur la conception et l'utilisabilité.";
+"consent_data_title" = "Données collectées";
+"consent_data_body" = "Vos actions d'entraînement (début d'un exercice, lecture du modèle, enregistrement, consultation des retours), les résultats d'évaluation et les réponses aux questionnaires que vous choisissez de donner.\n\nLes enregistrements eux-mêmes ne sont pas transmis, ni votre nom, votre e-mail ou vos informations de compte Apple.";
+"consent_use_title" = "Utilisation";
+"consent_use_body" = "Uniquement pour l'analyse et la rédaction de ce mémoire. Les résultats sont présentés sous forme de statistiques de groupe, pas individuelles.";
+"consent_withdraw_title" = "Comment se retirer";
+"consent_withdraw_body" = "Vous pouvez quitter l'étude à tout moment dans les Réglages. La collecte de nouvelles données cesse immédiatement. Pour le traitement des données déjà collectées, utilisez le contact ci-dessous.";
+"consent_contact" = "Questions, retrait ou suppression des données : joyouo409@gmail.com, ou via le retour dans l'application.";
+"consent_checkbox" = "J'ai lu les informations ci-dessus et j'accepte de participer";
+"consent_agree" = "Accepter et participer";
+"consent_decline" = "Pas maintenant";
+"consent_decline_hint" = "Refuser n'affecte aucune fonctionnalité.";
+"consent_enroll_failed" = "Impossible pour le moment. Vérifiez votre connexion et réessayez.";
