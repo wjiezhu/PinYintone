@@ -25,6 +25,7 @@ final class APIClient {
     // MARK: - Private helpers
 
     private struct ErrorResponse: Codable { let detail: String }
+    private struct ResearchEventAck: Decodable { let received: Int; let inserted: Int }
 
     private func request<T: Decodable>(
         _ path: String,
@@ -78,6 +79,13 @@ final class APIClient {
     }
 
     /// 删除账号：清除服务端该用户及其全部训练数据。
+    /// 上报研究操作事件。失败抛错由调用方保留队列重试——
+    /// **不得**在这里吞掉错误，否则离线期间的事件会静默丢失。
+    func uploadResearchEvents(_ batch: any Encodable) async throws {
+        let _: ResearchEventAck = try await request("research/events",
+                                                    method: "POST", body: batch)
+    }
+
     /// App Store 审核指南 5.1.1(v) 强制要求；亦作为研究伦理的「撤回同意」通道。
     func deleteAccount(deviceID: String, appleUserID: String?) async throws {
         var comps = URLComponents(

@@ -1,3 +1,4 @@
+from datetime import datetime
 """Pydantic 模型。字段名严格对齐 iOS 端 JSON（camelCase / 特定大小写），
 确保与 Swift Codable 直接互通，不做别名转换。"""
 from typing import Optional
@@ -141,3 +142,24 @@ class StudentDetailData(BaseModel):
     deviceID: str
     dtwTimeSeries: list[float] = []
     errorWords: list[str] = []
+
+
+# ---------------- 新版研究上报（字段字典 research-data-1.0） ----------------
+
+class ResearchEventDTO(BaseModel):
+    """单条操作事件。字段名与客户端 Codable 对齐（camelCase）。"""
+    eventID: str
+    sessionID: str
+    attemptID: str | None = None
+    lexemeVersionID: str | None = None
+    eventName: str
+    occurredAt: datetime
+    sessionElapsedMs: int | None = None
+    uiLanguage: str
+    payload: dict[str, str] = {}
+
+
+class ResearchEventBatch(BaseModel):
+    participantID: str
+    manifestID: str
+    events: list[ResearchEventDTO]
