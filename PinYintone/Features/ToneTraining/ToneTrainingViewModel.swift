@@ -104,6 +104,9 @@ final class ToneTrainingViewModel: ObservableObject {
     // MARK: - 词条
 
     func loadLexeme(_ lexeme: Lexeme) {
+        ResearchEventLog.shared.log(.taskOpened,
+                                    lexemeVersionID: lexeme.id,
+                                    payload: ["task_type": "fixed_word"])
         // 换词即清上一条录音，否则回听会放出上一个词的声音
         LearnerRecordingStore.shared.clearIfLexemeChanged(to: lexeme.id)
         currentLexeme = lexeme
@@ -159,10 +162,20 @@ final class ToneTrainingViewModel: ObservableObject {
         isReferenceReady = true
     }
 
+    /// 本次尝试的研究编号。录音开始时生成，供事件与练习记录共用。
+    private(set) var currentAttemptID: UUID?
+
     /// 朗读样例读音
     func playSample() {
         guard let hanzi = currentLexeme?.hanzi else { return }
         SpeechService.shared.speak(hanzi)
+        // 字典 §8：model_audio_started 记的是**实际开始播放**，不是点击。
+        // AVSpeechSynthesizer 无同步的「已开始」返回值，故以 isSpeaking 为准；
+        // 合成失败时它为 false，不会误记一次播放。
+        if SpeechService.shared.isSpeaking {
+            ResearchEventLog.shared.log(.modelAudioStarted,
+                                        lexemeVersionID: currentLexeme?.id)
+        }
     }
 
     /// 载入当前阶段的当前题（进入页面 / 阶段切换后调用）
@@ -210,6 +223,8 @@ final class ToneTrainingViewModel: ObservableObject {
         // 锁定参照：本次录音的显示与评分都用它
         lockedReference = referenceF0
         lockedReferenceType = referenceType
+        // 一次尝试 = 一次开始录音（字典 §7）。重录生成新编号，上传重试不算新尝试。
+        currentAttemptID = UUID()
         isRecording = true
         // start 失败（无输入设备 / 权限被拒 / 会话被占用 / 路由切换）时回滚，
         // 并且**必须给出可执行提示**：否则学习者看到的是一个按了没反应的按钮
@@ -295,6 +310,10 @@ final class ToneTrainingViewModel: ObservableObject {
         // 那条通道是技术性失败专用（mic.slash 图标），把发音评价混进去
         // 会让学习者以为是麦克风出了问题，也违反"技术失败与发音评价严格区分"。
         feedbackResult = result
+        ResearchEventLog.shared.log(.feedbackDisplayed,
+                                    attemptID: currentAttemptID,
+                                    lexemeVersionID: currentLexeme?.id,
+                                    payload: ["mode": ResearchFeedbackMode(FeedbackStyle.current).rawValue])
     }
 
     /// 测试阶段自动进入下一题。留出一拍让"已记录"提示可见，避免像是没录上。
@@ -401,11 +420,21 @@ final class ToneTrainingViewModel: ObservableObject {
         let store = LearnerRecordingStore.shared
         guard store.hasRecording else { return false }
         do {
-            return try LearnerAudioPlayer.shared.play(pcm: store.pcm,
-                                                      sampleRate: store.sampleRate)
+            let started = try LearnerAudioPlayer.shared.play(pcm: store.pcm,
+                                                            sampleRate: store.sampleRate)
+            if started {
+                ResearchEventLog.shared.log(.learnerAudioStarted,
+                                            attemptID: currentAttemptID,
+                                            lexemeVersionID: currentLexeme?.id)
+            }
+            return started
         } catch {
             // 播放失败要让人看得见，不静默吞掉（同 §4.2 对录音失败的要求）
             retryHint = NSLocalizedString("replay_failed", comment: "")
+            ResearchEventLog.shared.log(.operationError,
+                                        attemptID: currentAttemptID,
+                                        payload: ["stage": ResearchErrorStage.playback.rawValue,
+                                                  "error_code": ResearchErrorCode.playbackError.rawValue])
             return false
         }
     }

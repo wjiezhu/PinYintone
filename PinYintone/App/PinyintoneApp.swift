@@ -24,7 +24,11 @@ struct PinyintoneApp: App {
         .onChange(of: scenePhase) { _, phase in
             // 进入前台时同步未上传的本地记录（离线安全，失败下次重试）
             if phase == .active {
+                // 会话编号：后台超过 30 分钟即轮换（字典 §7 的操作定义，非真实课次）
+                ResearchSession.shared.willEnterForeground()
                 Task { await SyncService.shared.syncAll() }
+            } else if phase == .background {
+                ResearchSession.shared.didEnterBackground()
             }
         }
     }
