@@ -211,3 +211,12 @@
 "consent_decline" = "暂不参与";
 "consent_decline_hint" = "不参与研究不影响使用任何功能。";
 "consent_enroll_failed" = "暂时无法完成，请检查网络后重试。";
+
+/* 问卷公共界面（四语文案 v1）。译稿待核校。 */
+"survey_previous" = "上一题";
+"survey_next" = "下一题";
+"survey_skip" = "跳过本题";
+"survey_submit" = "提交";
+"survey_max_selections" = "最多选择 %d 项。";
+"survey_other_hint" = "其他（可选填说明）";
+"survey_privacy_hint" = "请不要填写姓名、联系方式或其他可识别个人身份的信息。";

@@ -121,6 +121,20 @@ final class APIClient {
                                                   occurredAt: occurredAt))
     }
 
+    /// 上报一份问卷（实例 + 逐题答案）。
+    func uploadSurvey(participantID: String, manifestID: String,
+                      outcome: SurveyOutcome) async throws {
+        struct Body: Encodable {
+            let participantID: String, manifestID: String
+            let outcome: SurveyOutcome
+        }
+        struct Ack: Decodable { let surveyInstanceID: String }
+        let _: Ack = try await request("research/surveys", method: "POST",
+                                       body: Body(participantID: participantID,
+                                                  manifestID: manifestID,
+                                                  outcome: outcome))
+    }
+
     /// 上报研究操作事件。失败抛错由调用方保留队列重试——
     /// **不得**在这里吞掉错误，否则离线期间的事件会静默丢失。
     func uploadResearchEvents(_ batch: any Encodable) async throws {

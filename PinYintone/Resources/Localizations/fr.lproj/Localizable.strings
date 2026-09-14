@@ -211,3 +211,12 @@
 "consent_decline" = "Pas maintenant";
 "consent_decline_hint" = "Refuser n'affecte aucune fonctionnalité.";
 "consent_enroll_failed" = "Impossible pour le moment. Vérifiez votre connexion et réessayez.";
+
+/* 问卷公共界面（四语文案 v1）。译稿待核校。 */
+"survey_previous" = "Question précédente";
+"survey_next" = "Question suivante";
+"survey_skip" = "Passer cette question";
+"survey_submit" = "Envoyer";
+"survey_max_selections" = "Sélectionnez au maximum %d réponses.";
+"survey_other_hint" = "Autre (précisions facultatives)";
+"survey_privacy_hint" = "Veuillez ne pas indiquer de noms, de coordonnées ou d'autres informations permettant d'identifier une personne.";

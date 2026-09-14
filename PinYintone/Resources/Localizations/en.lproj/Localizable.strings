@@ -211,3 +211,12 @@
 "consent_decline" = "Not now";
 "consent_decline_hint" = "Declining does not affect any app feature.";
 "consent_enroll_failed" = "Could not complete right now. Check your connection and try again.";
+
+/* 问卷公共界面（四语文案 v1）。译稿待核校。 */
+"survey_previous" = "Previous question";
+"survey_next" = "Next question";
+"survey_skip" = "Skip this question";
+"survey_submit" = "Submit";
+"survey_max_selections" = "Select no more than %d answers.";
+"survey_other_hint" = "Other (optional details)";
+"survey_privacy_hint" = "Please do not enter names, contact details, or other information that could identify someone.";

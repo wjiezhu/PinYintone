@@ -189,3 +189,28 @@ class ResearchWithdrawRequest(BaseModel):
     consentVersion: str
     consentLanguage: str
     occurredAt: datetime
+
+
+class SurveyAnswerDTO(BaseModel):
+    questionID: str
+    state: str                     # answered / skipped / not_answered
+    optionCodes: list[str] | None = None
+    textValue: str | None = None
+    answeredAt: datetime | None = None
+
+
+class SurveyOutcomeDTO(BaseModel):
+    formKey: str
+    formVersion: str
+    translationVersion: str
+    language: str
+    answers: list[SurveyAnswerDTO]
+    status: str                    # declined / partial / complete
+    startedAt: datetime | None = None
+    submittedAt: datetime | None = None
+
+
+class SurveyUploadRequest(BaseModel):
+    participantID: str
+    manifestID: str
+    outcome: SurveyOutcomeDTO

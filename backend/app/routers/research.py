@@ -208,3 +208,70 @@ def withdraw(body: schemas.ResearchWithdrawRequest, db: Session = Depends(get_db
     ))
     db.commit()
     return {"status": "withdrawn"}
+
+
+FORM_KEYS = {"background_v1", "tone_needs_v1", "usability_short_v1"}
+ANSWER_STATES = {"answered", "skipped", "not_answered"}
+SURVEY_STATUSES = {"invited", "in_progress", "deferred", "declined", "partial", "complete"}
+
+
+@router.post("/research/surveys")
+def upload_survey(body: schemas.SurveyUploadRequest, db: Session = Depends(get_db)):
+    """上报一份问卷（实例 + 逐题答案）。
+
+    - **(participant, form_key, form_version) 唯一**（字典 §10）：
+      「稍后填写」恢复原实例，不产生第二份；重复提交返回原实例编号。
+    - `answer_state` 三态分别保存：跳过 ≠ 「没有困难」≠ 尚未作答（字典 §11）。
+    - **不接受未定义的表单或状态**——服务端按冻结版本校验。
+    """
+    _participant_or_404(db, body.participantID)
+    o = body.outcome
+    if o.formKey not in FORM_KEYS:
+        raise HTTPException(400, f"未知表单：{o.formKey}")
+    if o.status not in SURVEY_STATUSES:
+        raise HTTPException(400, f"未知状态：{o.status}")
+    for a in o.answers:
+        if a.state not in ANSWER_STATES:
+            raise HTTPException(400, f"未知作答状态：{a.state}")
+        if a.state != "answered" and a.optionCodes:
+            raise HTTPException(400, "未回答的题不得带选项码")
+
+    existing = (
+        db.query(research_models.ResearchSurveyInstance)
+        .filter(research_models.ResearchSurveyInstance.participant_id == body.participantID,
+                research_models.ResearchSurveyInstance.form_key == o.formKey,
+                research_models.ResearchSurveyInstance.form_version == o.formVersion)
+        .first()
+    )
+    if existing is not None:
+        return {"surveyInstanceID": existing.survey_instance_id, "alreadySubmitted": True}
+
+    now = datetime.now(timezone.utc)
+    instance_id = str(uuid.uuid4())
+    db.add(research_models.ResearchSurveyInstance(
+        survey_instance_id=instance_id,
+        participant_id=body.participantID,
+        manifest_id=body.manifestID,
+        form_key=o.formKey,
+        form_version=o.formVersion,
+        language=o.language,
+        translation_version=o.translationVersion,
+        invited_at=o.startedAt or now,
+        started_at=o.startedAt,
+        submitted_at=o.submittedAt,
+        status=o.status,
+        timing_class="background" if o.formKey == "background_v1" else "after_practice",
+        qualifying_attempts_at_invite=0,
+    ))
+    for a in o.answers:
+        db.add(research_models.ResearchSurveyAnswer(
+            answer_id=str(uuid.uuid4()),
+            survey_instance_id=instance_id,
+            question_id=a.questionID,
+            answer_state=a.state,
+            option_codes=a.optionCodes,
+            text_value=a.textValue,
+            answered_at=a.answeredAt,
+        ))
+    db.commit()
+    return {"surveyInstanceID": instance_id, "alreadySubmitted": False}

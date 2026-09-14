@@ -228,3 +228,83 @@ def test_events_rejected_after_withdrawal():
 
 def test_enroll_unknown_manifest_rejected():
     assert _enroll().status_code == 404
+
+
+# ---------------- 问卷 ----------------
+
+def _survey(form="background_v1", version="background-1.0", status="complete",
+            answers=None):
+    return {
+        "participantID": PID_HOLDER["pid"], "manifestID": "m1",
+        "outcome": {
+            "formKey": form, "formVersion": version,
+            "translationVersion": "i18n-1.0", "language": "zh",
+            "answers": answers if answers is not None else [
+                {"questionID": "B01", "state": "answered",
+                 "optionCodes": ["adult"], "answeredAt": NOW.isoformat()},
+                {"questionID": "B02", "state": "answered",
+                 "optionCodes": ["MA"], "answeredAt": NOW.isoformat()},
+                {"questionID": "B03", "state": "skipped"},
+            ],
+            "status": status,
+            "startedAt": NOW.isoformat(), "submittedAt": NOW.isoformat()}}
+
+
+PID_HOLDER = {"pid": ""}
+
+
+def _enrolled():
+    _manifest_only()
+    PID_HOLDER["pid"] = _enroll().json()["participantID"]
+    return PID_HOLDER["pid"]
+
+
+def test_survey_stores_three_answer_states_distinctly():
+    """跳过 ≠ 没有困难 ≠ 尚未作答（字典 §11）。"""
+    _enrolled()
+    r = client.post("/research/surveys", json=_survey())
+    assert r.status_code == 200
+    db = TestingSession()
+    states = {a.question_id: a.answer_state
+              for a in db.query(models.ResearchSurveyAnswer).all()}
+    assert states == {"B01": "answered", "B02": "answered", "B03": "skipped"}
+    db.close()
+
+
+def test_survey_is_idempotent_per_form_version():
+    """「稍后填写」恢复原实例，不产生第二份（字典 §10 唯一约束）。"""
+    _enrolled()
+    first = client.post("/research/surveys", json=_survey()).json()
+    second = client.post("/research/surveys", json=_survey()).json()
+    assert second["surveyInstanceID"] == first["surveyInstanceID"]
+    assert second["alreadySubmitted"] is True
+    db = TestingSession()
+    assert db.query(models.ResearchSurveyInstance).count() == 1
+    db.close()
+
+
+def test_survey_rejects_unknown_form():
+    _enrolled()
+    assert client.post("/research/surveys",
+                       json=_survey(form="made_up_v9")).status_code == 400
+
+
+def test_survey_rejects_codes_on_unanswered_question():
+    """未回答的题带选项码是自相矛盾的数据，必须拒绝。"""
+    _enrolled()
+    bad = _survey(answers=[{"questionID": "B01", "state": "skipped",
+                            "optionCodes": ["adult"]}])
+    assert client.post("/research/surveys", json=bad).status_code == 400
+
+
+def test_declined_survey_stores_no_fabricated_answers():
+    """完全不填记 declined，不生成虚构答案（问卷 §5）。"""
+    _enrolled()
+    r = client.post("/research/surveys",
+                    json=_survey(status="declined", answers=[]))
+    assert r.status_code == 200
+    db = TestingSession()
+    assert db.query(models.ResearchSurveyAnswer).count() == 0
+    inst = db.query(models.ResearchSurveyInstance).one()
+    assert inst.status == "declined"
+    db.close()

@@ -13,7 +13,7 @@ struct ResearchConsentView: View {
 
     @State private var hasReadAndAgreed = false
     @State private var isEnrolling = false
-    @State private var enrollFailed = false
+    @State private var enrollFailed = false   // 保留：联调阶段用于显示纳入失败
 
     var body: some View {
         ScrollView {
@@ -89,24 +89,16 @@ struct ResearchConsentView: View {
         }
     }
 
+    /// 同意**只记本地状态，不立刻纳入**。
+    ///
+    /// 纳入要等背景表答完：字典 §4 要求参与者首次写入必须 `eligible`，
+    /// 而资格由 B01–B05 的答案在**端侧**判定（字典 §10：
+    /// 「背景筛选先在本地完成，符合条件后才上传背景实例」）。
+    /// 此刻就 enroll 会写出一个资格未知的参与者。
     private func agree() async {
-        isEnrolling = true
-        enrollFailed = false
-        defer { isEnrolling = false }
-
         let language = Locale.current.identifier
-        // 先在端侧记同意，再联网纳入：字典 §5 要求首次同意**需联网确认后**
-        // 才开启研究上传。纳入失败必须回滚本地同意状态，否则会出现
-        // 「本地以为已同意、服务端没有参与者」的悬空状态，事件会攒在队列里发不出去。
         ResearchConsent.shared.grant(textVersion: ResearchConsent.textVersion,
                                      language: language)
-        do {
-            try await ResearchEnrollment.enrollCurrentUser(consentLanguage: language)
-            onFinish(true)
-        } catch {
-            ResearchConsent.shared.withdraw()
-            ResearchIdentity.shared.clearOnWithdrawal()
-            enrollFailed = true
-        }
+        onFinish(true)
     }
 }
