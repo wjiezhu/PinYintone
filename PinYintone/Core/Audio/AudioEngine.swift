@@ -75,15 +75,13 @@ final class AudioEngine {
     func start(duration: TimeInterval? = nil) throws {
         guard !isRecording else { return }
 
-        // 0) 防御性清理：即便逻辑上没在录音，也可能残留 tap / 引擎仍在跑
-        // （前次录音被电话/Siri/后台切换打断、teardown 未跑完等情形）。
-        // 在已装 tap 的 AVAudioNode 上再装 tap 会抛 NSException → 直接闪退。
-        // 必须无条件先 removeTap + stop engine 一次。
-        let input = engine.inputNode
-        input.removeTap(onBus: 0)
-        if engine.isRunning { engine.stop() }
-
-        // 1) 配置音频会话：measurement 模式关闭额外处理，保证电平/基频分析准确。
+        // 0) 先配置音频会话，**再**碰 inputNode。顺序不能反：
+        // 访问 `engine.inputNode` 会按**当时**的会话类别实例化 IO unit 并缓存其格式。
+        // 若此刻会话还停在 .playback（刚听完 TTS 示范或回听就是这种状态），
+        // 拿到的是 0 Hz 的无效格式且会被缓存，后面的格式校验必然失败，
+        // 表现为「听完示范再录音就起不来」。
+        //
+        // measurement 模式关闭额外处理，保证电平/基频分析准确。
         //
         // 这里**不设** setPreferredSampleRate(16000)：CLAUDE.md 锁定的 16 kHz 是
         // 分析链路（targetFormat → YIN/DTW）的采样率，不是麦克风采集率。
@@ -93,6 +91,14 @@ final class AudioEngine {
         let session = AVAudioSession.sharedInstance()
         try session.setCategory(.record, mode: .measurement, options: [])
         try session.setActive(true, options: .notifyOthersOnDeactivation)
+
+        // 1) 防御性清理：即便逻辑上没在录音，也可能残留 tap / 引擎仍在跑
+        // （前次录音被电话/Siri/后台切换打断、teardown 未跑完等情形）。
+        // 在已装 tap 的 AVAudioNode 上再装 tap 会抛 NSException → 直接闪退。
+        // 必须无条件先 removeTap + stop engine 一次。
+        let input = engine.inputNode
+        input.removeTap(onBus: 0)
+        if engine.isRunning { engine.stop() }
 
         // 2) 校验输入格式是否可用（converter 改为按 tap 实际交付的格式懒建，见 convert）
         let hwFormat = input.outputFormat(forBus: 0)
