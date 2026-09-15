@@ -224,3 +224,29 @@ class ActiveManifestResponse(BaseModel):
     postTriggerCount: int
     consentVersion: str
     surveyVersion: str
+
+
+class ResearchAttemptDTO(BaseModel):
+    attemptID: str
+    sessionID: str
+    taskType: str
+    lexemeVersionID: str | None = None
+    retryOfAttemptID: str | None = None
+    priorPracticeCount: int | None = None
+    startedAt: datetime
+    status: str
+    finishedAt: datetime | None = None
+    recordingDurationMs: int | None = None
+    analysisDurationMs: int | None = None
+    signalStatus: str
+    metricValue: float | None = None
+    passed: bool | None = None
+    errorCode: str | None = None
+    resultDisplayedAt: datetime | None = None
+    timeQuality: str
+
+
+class ResearchAttemptBatch(BaseModel):
+    participantID: str
+    manifestID: str
+    attempts: list[ResearchAttemptDTO]

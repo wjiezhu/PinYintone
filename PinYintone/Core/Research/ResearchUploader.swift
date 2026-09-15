@@ -26,6 +26,12 @@ final class ResearchUploader {
         let events: [ResearchEvent]
     }
 
+    struct AttemptBatch: Encodable {
+        let participantID: String
+        let manifestID: String
+        let attempts: [ResearchAttemptRecord]
+    }
+
     /// 用本机研究身份上报。未纳入研究则什么也不做——
     /// 事件本就不该产生（`ResearchEventLog` 的门禁在写入前），
     /// 这里再挡一次是为了万一队列里有残留也不会误发。
@@ -44,6 +50,21 @@ final class ResearchUploader {
         defer { isUploading = false }
 
         var uploaded = 0
+        // 先传尝试再传事件：事件带 attempt_id 外键，顺序反了会因外键缺失被拒。
+        while true {
+            let batch = Array(ResearchAttemptLog.shared.pending.prefix(Self.batchSize))
+            guard !batch.isEmpty else { break }
+            do {
+                try await APIClient.shared.uploadResearchAttempts(
+                    AttemptBatch(participantID: participantID,
+                                 manifestID: manifestID,
+                                 attempts: batch))
+                ResearchAttemptLog.shared.remove(Set(batch.map(\.attemptID)))
+                uploaded += batch.count
+            } catch {
+                break
+            }
+        }
         while true {
             let batch = Array(ResearchEventLog.shared.pending.prefix(Self.batchSize))
             guard !batch.isEmpty else { break }

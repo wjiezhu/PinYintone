@@ -250,7 +250,15 @@ final class ToneTrainingViewModel: ObservableObject {
         lockedReference = referenceF0
         lockedReferenceType = referenceType
         // 一次尝试 = 一次开始录音（字典 §7）。重录生成新编号，上传重试不算新尝试。
-        currentAttemptID = UUID()
+        let attemptID = UUID()
+        currentAttemptID = attemptID
+        ResearchAttemptLog.shared.begin(
+            attemptID: attemptID,
+            taskType: sequencer.phase.isAssessment ? .selfTest : .fixedWord,
+            lexemeVersionID: currentLexeme?.id,
+            // 自测时记该词此前练过几次：词集允许重叠，改为如实记录
+            priorPracticeCount: sequencer.phase.isAssessment
+                ? ToneAttemptStore.attempts(for: currentLexeme?.id ?? "") : nil)
         isRecording = true
         // start 失败（无输入设备 / 权限被拒 / 会话被占用 / 路由切换）时回滚，
         // 并且**必须给出可执行提示**：否则学习者看到的是一个按了没反应的按钮
@@ -264,6 +272,11 @@ final class ToneTrainingViewModel: ObservableObject {
             // 否则导出时"没给麦克风权限"和"设备/会话异常"混成一类，没法归因。
             persistTechnicalRetry(reason: Self.failureReason(for: error),
                                   voicedFrameCount: 0)
+            if let id = currentAttemptID {
+                ResearchAttemptLog.shared.markFailed(
+                    id, status: .recordingFailed,
+                    error: Self.researchErrorCode(for: error))
+            }
         }
     }
 
@@ -281,6 +294,12 @@ final class ToneTrainingViewModel: ObservableObject {
             retryHint = NSLocalizedString("tone_retry_no_voice", comment: "")
             persistTechnicalRetry(reason: .insufficientVoicedFrames,
                                   voicedFrameCount: voicedFrames)
+            // 新表**不写哨兵分**：metric/passed 保持 nil（需求 §7 不填零分替代）
+            if let id = currentAttemptID {
+                ResearchAttemptLog.shared.markAnalyzing(id)
+                ResearchAttemptLog.shared.markFailed(id, status: .analysisFailed,
+                                                     error: .noSignal)
+            }
             flushPendingReference()
             return
         }
@@ -302,6 +321,12 @@ final class ToneTrainingViewModel: ObservableObject {
         // 按词累计尝试数（换词不归零）
         let lexemeID = currentLexeme?.id ?? "unknown"
         let attempt = ToneAttemptStore.increment(lexemeID)
+
+        if let id = currentAttemptID {
+            ResearchAttemptLog.shared.markAnalyzing(id)
+            ResearchAttemptLog.shared.markSucceeded(
+                id, metric: Double(score), passed: grade != .fail)
+        }
 
         let segments = buildSegments(student: normalized, reference: reference)
         let result = FeedbackResult(
@@ -326,6 +351,11 @@ final class ToneTrainingViewModel: ObservableObject {
         // 也不累计"连续失败"（那是训练阶段的行动提示逻辑）；录完自动进下一题。
         guard phase.showsFeedback else {
             studentF0 = []
+            // 裸测不呈现结果，故不填 resultDisplayedAt——
+            // 后置问卷的合格次数只认「结果已实际显示」者（字典 §7 末）
+            if let id = currentAttemptID {
+                ResearchAttemptLog.shared.finishWithoutDisplay(id)
+            }
             assessmentNotice = NSLocalizedString("assessment_recorded", comment: "")
             scheduleAssessmentAdvance()
             return
@@ -336,6 +366,9 @@ final class ToneTrainingViewModel: ObservableObject {
         // 那条通道是技术性失败专用（mic.slash 图标），把发音评价混进去
         // 会让学习者以为是麦克风出了问题，也违反"技术失败与发音评价严格区分"。
         feedbackResult = result
+        if let id = currentAttemptID {
+            ResearchAttemptLog.shared.markResultDisplayed(id)
+        }
         ResearchEventLog.shared.log(.feedbackDisplayed,
                                     attemptID: currentAttemptID,
                                     lexemeVersionID: currentLexeme?.id,
@@ -466,6 +499,17 @@ final class ToneTrainingViewModel: ObservableObject {
     }
 
     // MARK: - 持久化
+
+    /// 映射到字典 §8 的固定错误码。与 `failureReason` 并存是因为两者受众不同：
+    /// 前者是旧表的匿名原因，后者是研究库的固定枚举，服务端会按白名单校验。
+    private static func researchErrorCode(for error: Error) -> ResearchErrorCode {
+        if AVAudioApplication.shared.recordPermission != .granted { return .permissionDenied }
+        guard let e = error as? AudioEngine.AudioEngineError else { return .unknown }
+        switch e {
+        case .engineStartFailed: return .analysisEngineError
+        case .invalidInputFormat, .converterUnavailable: return .signalUnusable
+        }
+    }
 
     /// 把 AudioEngine 的启动错误映射成匿名的失败原因（不含任何录音内容）。
     private static func failureReason(for error: Error) -> FailureReason {

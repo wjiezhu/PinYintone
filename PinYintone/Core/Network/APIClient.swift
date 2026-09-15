@@ -137,6 +137,12 @@ final class APIClient {
         try await request("research/manifest/active")
     }
 
+    /// 上报练习尝试。失败抛错由调用方保留队列重试。
+    func uploadResearchAttempts(_ batch: any Encodable) async throws {
+        let _: ResearchEventAck = try await request("research/attempts",
+                                                    method: "POST", body: batch)
+    }
+
     /// 上报一份问卷（实例 + 逐题答案）。
     func uploadSurvey(participantID: String, manifestID: String,
                       outcome: SurveyOutcome) async throws {

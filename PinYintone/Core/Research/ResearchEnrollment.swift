@@ -48,6 +48,7 @@ enum ResearchEnrollment {
         // 「撤回在端侧立即停止研究采集并清除待上传研究队列」
         ResearchConsent.shared.withdraw()
         ResearchEventLog.shared.clearPendingOnWithdrawal()
+        ResearchAttemptLog.shared.clearPendingOnWithdrawal()
         id.clearOnWithdrawal()
     }
 }

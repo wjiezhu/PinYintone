@@ -66,6 +66,22 @@ def _validate_event(e: schemas.ResearchEventDTO) -> None:
         raise HTTPException(400, "sessionElapsedMs 不得为负")
 
 
+def _require_active_consent(db: Session, participant_id: str) -> None:
+    """同意状态以**服务端**最新一条同意事件为准。
+
+    不信任客户端上报时的状态快照：撤回后离线队列重传也必须被拒
+    （字典 §15「离线重传也不能绕过同意状态校验」）。
+    """
+    latest = (
+        db.query(research_models.ResearchConsentEvent)
+        .filter(research_models.ResearchConsentEvent.participant_id == participant_id)
+        .order_by(research_models.ResearchConsentEvent.occurred_at.desc())
+        .first()
+    )
+    if latest is None or latest.action != "granted":
+        raise HTTPException(403, "该参与者当前无有效同意，拒绝接收研究数据")
+
+
 def _participant_or_404(db: Session, participant_id: str) -> research_models.ResearchParticipant:
     p = db.get(research_models.ResearchParticipant, participant_id)
     if p is None:
@@ -81,17 +97,8 @@ def upload_events(body: schemas.ResearchEventBatch, db: Session = Depends(get_db
     「离线重传也不能绕过同意状态校验」）——故每批都重新核对同意状态，
     不信任客户端上报时的状态快照。
     """
-    participant = _participant_or_404(db, body.participantID)
-
-    # 同意状态以**服务端**的最新一条同意事件为准
-    latest = (
-        db.query(research_models.ResearchConsentEvent)
-        .filter(research_models.ResearchConsentEvent.participant_id == body.participantID)
-        .order_by(research_models.ResearchConsentEvent.occurred_at.desc())
-        .first()
-    )
-    if latest is None or latest.action != "granted":
-        raise HTTPException(403, "该参与者当前无有效同意，拒绝接收研究事件")
+    _participant_or_404(db, body.participantID)
+    _require_active_consent(db, body.participantID)
 
     manifest = db.get(research_models.ResearchManifest, body.manifestID)
     if manifest is None:
@@ -305,3 +312,88 @@ def active_manifest(db: Session = Depends(get_db)):
         consentVersion=m.consent_version,
         surveyVersion=m.survey_version,
     )
+
+
+ATTEMPT_STATUSES = {"recording", "cancelled", "recording_failed", "analyzing",
+                    "analysis_failed", "succeeded", "interrupted_unknown"}
+TASK_TYPES = {"fixed_word", "free_text", "self_test"}
+SIGNAL_STATUSES = {"unknown", "usable", "unusable"}
+TIME_QUALITIES = {"valid", "suspect", "unknown"}
+# 这些状态下必须有 finished_at（字典 §7）
+STATUSES_REQUIRING_FINISH = {"cancelled", "recording_failed", "analysis_failed", "succeeded"}
+
+
+def _validate_attempt(a: schemas.ResearchAttemptDTO) -> None:
+    if a.status not in ATTEMPT_STATUSES:
+        raise HTTPException(400, f"未知状态：{a.status}")
+    if a.taskType not in TASK_TYPES:
+        raise HTTPException(400, f"未知任务类型：{a.taskType}")
+    if a.signalStatus not in SIGNAL_STATUSES:
+        raise HTTPException(400, f"未知信号状态：{a.signalStatus}")
+    if a.timeQuality not in TIME_QUALITIES:
+        raise HTTPException(400, f"未知时间质量：{a.timeQuality}")
+    if a.status in STATUSES_REQUIRING_FINISH and a.finishedAt is None:
+        raise HTTPException(400, f"{a.status} 必须有 finishedAt")
+    if a.taskType == "fixed_word" and not a.lexemeVersionID:
+        raise HTTPException(400, "fixed_word 必须带 lexemeVersionID")
+    if a.taskType == "free_text" and a.lexemeVersionID:
+        raise HTTPException(400, "free_text 不得带词条编号")
+    # 失败不得填分：字典 §7「失败或无有效指标为 NULL」、
+    # 需求 §7「失败记录保留错误类型，不填零分替代」
+    if a.status in {"analysis_failed", "recording_failed", "cancelled"}:
+        if a.metricValue is not None or a.passed is not None:
+            raise HTTPException(400, f"{a.status} 不得带 metricValue/passed")
+        if a.errorCode is None:
+            raise HTTPException(400, f"{a.status} 必须带 errorCode")
+        if a.errorCode not in ERROR_CODES:
+            raise HTTPException(400, f"未定义的错误码：{a.errorCode}")
+    if a.errorCode is not None and a.errorCode not in ERROR_CODES:
+        raise HTTPException(400, f"未定义的错误码：{a.errorCode}")
+    for ms in (a.recordingDurationMs, a.analysisDurationMs):
+        if ms is not None and ms < 0:
+            raise HTTPException(400, "时长不得为负")
+
+
+@router.post("/research/attempts")
+def upload_attempts(body: schemas.ResearchAttemptBatch, db: Session = Depends(get_db)):
+    """批量上报练习尝试。
+
+    幂等键是 attempt_id：**上传重试不是新尝试**（字典 §7）。
+    已存在的行不覆盖——重复上传只是网络重传，不应改写已入库的结果。
+    """
+    _participant_or_404(db, body.participantID)
+    _require_active_consent(db, body.participantID)
+    if db.get(research_models.ResearchManifest, body.manifestID) is None:
+        raise HTTPException(404, "配置不存在")
+
+    now = datetime.now(timezone.utc)
+    inserted = 0
+    for a in body.attempts:
+        _validate_attempt(a)
+        if db.get(research_models.ResearchAttempt, a.attemptID) is not None:
+            continue
+        db.add(research_models.ResearchAttempt(
+            attempt_id=a.attemptID,
+            participant_id=body.participantID,
+            manifest_id=body.manifestID,
+            session_id=a.sessionID,
+            task_type=a.taskType,
+            lexeme_version_id=a.lexemeVersionID,
+            retry_of_attempt_id=a.retryOfAttemptID,
+            prior_practice_count=a.priorPracticeCount,
+            started_at=a.startedAt,
+            received_at=now,
+            status=a.status,
+            finished_at=a.finishedAt,
+            recording_duration_ms=a.recordingDurationMs,
+            analysis_duration_ms=a.analysisDurationMs,
+            signal_status=a.signalStatus,
+            metric_value=a.metricValue,
+            passed=a.passed,
+            error_code=a.errorCode,
+            result_displayed_at=a.resultDisplayedAt,
+            time_quality=a.timeQuality,
+        ))
+        inserted += 1
+    db.commit()
+    return {"received": len(body.attempts), "inserted": inserted}

@@ -343,3 +343,91 @@ def test_window_is_fourteen_days_half_open():
     start = datetime.fromisoformat(body["collectionStartAt"])
     end = datetime.fromisoformat(body["collectionEndAt"])
     assert (end - start) == timedelta(days=14)
+
+
+# ---------------- 练习尝试 ----------------
+
+def _attempt(aid="a1", status="succeeded", task="fixed_word", **kw):
+    a = {"attemptID": aid, "sessionID": "sess1", "taskType": task,
+         "lexemeVersionID": "lex-canjia" if task == "fixed_word" else None,
+         "startedAt": NOW.isoformat(), "status": status,
+         "finishedAt": NOW.isoformat(), "signalStatus": "usable",
+         "metricValue": 0.21, "passed": True,
+         "resultDisplayedAt": NOW.isoformat(), "timeQuality": "valid"}
+    a.update(kw)
+    return a
+
+
+def _post_attempts(attempts):
+    return client.post("/research/attempts",
+                       json={"participantID": PID_HOLDER["pid"],
+                             "manifestID": "m1", "attempts": attempts})
+
+
+def test_attempt_stored_and_idempotent():
+    """上传重试不是新尝试（字典 §7）。"""
+    _enrolled()
+    assert _post_attempts([_attempt()]).json()["inserted"] == 1
+    assert _post_attempts([_attempt()]).json()["inserted"] == 0
+    db = TestingSession()
+    assert db.query(models.ResearchAttempt).count() == 1
+    db.close()
+
+
+def test_failed_attempt_must_not_carry_score():
+    """失败记录保留错误类型，**不填零分替代**（需求 §7、字典 §7）。"""
+    _enrolled()
+    bad = _attempt(aid="a2", status="analysis_failed",
+                   metricValue=0.0, passed=False, errorCode="no_signal")
+    assert _post_attempts([bad]).status_code == 400
+
+    ok = _attempt(aid="a3", status="analysis_failed",
+                  metricValue=None, passed=None, errorCode="no_signal",
+                  resultDisplayedAt=None)
+    assert _post_attempts([ok]).status_code == 200
+    db = TestingSession()
+    row = db.query(models.ResearchAttempt).filter_by(attempt_id="a3").one()
+    assert row.metric_value is None and row.passed is None
+    assert row.error_code == "no_signal"
+    db.close()
+
+
+def test_failed_attempt_requires_error_code():
+    _enrolled()
+    bad = _attempt(aid="a4", status="recording_failed",
+                   metricValue=None, passed=None, errorCode=None,
+                   resultDisplayedAt=None)
+    assert _post_attempts([bad]).status_code == 400
+
+
+def test_free_text_must_not_carry_lexeme():
+    """free_text 不存词条编号，也不存用户原文（字典 §7）。"""
+    _enrolled()
+    bad = _attempt(aid="a5", task="free_text", lexemeVersionID="lex-x")
+    assert _post_attempts([bad]).status_code == 400
+
+
+def test_self_test_records_prior_practice_count():
+    """自测记该词此前练过几次（决定 5：接受词集重叠，改为如实记录）。"""
+    _enrolled()
+    a = _attempt(aid="a6", task="self_test", lexemeVersionID="lex-canjia",
+                 priorPracticeCount=7, resultDisplayedAt=None)
+    assert _post_attempts([a]).status_code == 200
+    db = TestingSession()
+    assert db.query(models.ResearchAttempt).filter_by(attempt_id="a6").one()\
+        .prior_practice_count == 7
+    db.close()
+
+
+def test_finished_status_requires_finished_at():
+    _enrolled()
+    bad = _attempt(aid="a7", finishedAt=None)
+    assert _post_attempts([bad]).status_code == 400
+
+
+def test_attempts_rejected_after_withdrawal():
+    _enrolled()
+    client.post("/research/withdraw", json={
+        "participantID": PID_HOLDER["pid"], "consentVersion": "c1",
+        "consentLanguage": "zh", "occurredAt": (NOW + timedelta(seconds=1)).isoformat()})
+    assert _post_attempts([_attempt(aid="a8")]).status_code == 403
