@@ -98,6 +98,8 @@
 "feedback_skip_hint" = "This one is tricky — you can skip it and come back later.";
 "tone_retry_mic_unavailable" = "Could not start recording. Check that no other app is using the microphone, then try again.";
 "tone_retry_no_voice" = "Didn't catch that. Move closer to the mic and try again.";
+"replay_own_recording" = "Play my recording";
+"replay_failed" = "Could not play your recording. Please try again.";
 "record_start" = "Start recording";
 "record_stop" = "Stop recording";
 "aspiration_prompt" = "Blow hard into the mic to make the aspirated burst";
@@ -192,3 +194,29 @@
 "coach_praise" = "\"%@\" is already steady.";
 "coach_keep_level" = "The whole word slides down. First tone stays high and level throughout — hold the pitch steady.";
 "direction_word_dropping" = "Sliding down";
+
+/* Research consent. Draft translation, pending review. */
+"consent_title" = "Join the study (optional)";
+"consent_purpose_title" = "Purpose";
+"consent_purpose_body" = "To understand how beginning learners of Chinese use a tone-practice tool, for a master's thesis on design and usability.";
+"consent_data_title" = "What is collected";
+"consent_data_body" = "Your practice activity (starting a task, playing the model, recording, viewing feedback), scoring results, and any questionnaire answers you choose to give.\n\nRecordings themselves are not uploaded, and neither is your name, email, or Apple account information.";
+"consent_use_title" = "How it is used";
+"consent_use_body" = "Only for analysis and writing in that thesis. Results are reported as group statistics, not about individuals.";
+"consent_withdraw_title" = "How to leave";
+"consent_withdraw_body" = "You can leave the study at any time in Settings. Collection of new data stops immediately. For how data collected before you leave is handled, please use the contact below.";
+"consent_contact" = "Questions, withdrawal, or data deletion: joyouo409@gmail.com, or via in-app feedback.";
+"consent_checkbox" = "I have read the information above and agree to take part";
+"consent_agree" = "Agree and take part";
+"consent_decline" = "Not now";
+"consent_decline_hint" = "Declining does not affect any app feature.";
+"consent_enroll_failed" = "Could not complete right now. Check your connection and try again.";
+
+/* 问卷公共界面（四语文案 v1）。译稿待核校。 */
+"survey_previous" = "Previous question";
+"survey_next" = "Next question";
+"survey_skip" = "Skip this question";
+"survey_submit" = "Submit";
+"survey_max_selections" = "Select no more than %d answers.";
+"survey_other_hint" = "Other (optional details)";
+"survey_privacy_hint" = "Please do not enter names, contact details, or other information that could identify someone.";

@@ -25,6 +25,7 @@ final class APIClient {
     // MARK: - Private helpers
 
     private struct ErrorResponse: Codable { let detail: String }
+    private struct ResearchEventAck: Decodable { let received: Int; let inserted: Int }
 
     private func request<T: Decodable>(
         _ path: String,
@@ -78,6 +79,96 @@ final class APIClient {
     }
 
     /// 删除账号：清除服务端该用户及其全部训练数据。
+    struct EnrollResearchResponse: Decodable {
+        let participantID: String
+        let studyID: String
+        let alreadyEnrolled: Bool
+    }
+
+    /// 纳入研究。返回的 participantID 由**服务端**随机生成，
+    /// 客户端不得自行构造或从账号键派生（字典 §4）。
+    func enrollResearch(internalUserID: String, manifestID: String,
+                        consentVersion: String, consentLanguage: String,
+                        consentOccurredAt: Date, isTest: Bool) async throws -> EnrollResearchResponse {
+        struct Body: Encodable {
+            let internalUserID: String, manifestID: String
+            let consentVersion: String, consentLanguage: String
+            let consentOccurredAt: Date
+            let isTest: Bool
+        }
+        return try await request("research/enroll", method: "POST",
+                                 body: Body(internalUserID: internalUserID,
+                                            manifestID: manifestID,
+                                            consentVersion: consentVersion,
+                                            consentLanguage: consentLanguage,
+                                            consentOccurredAt: consentOccurredAt,
+                                            isTest: isTest))
+    }
+
+    /// 撤回研究同意。服务端**追加**一条 withdrawn，不改写历史。
+    func withdrawResearch(participantID: String, consentVersion: String,
+                          consentLanguage: String, occurredAt: Date) async throws {
+        struct Body: Encodable {
+            let participantID: String, consentVersion: String
+            let consentLanguage: String
+            let occurredAt: Date
+        }
+        struct Ack: Decodable { let status: String }
+        let _: Ack = try await request("research/withdraw", method: "POST",
+                                       body: Body(participantID: participantID,
+                                                  consentVersion: consentVersion,
+                                                  consentLanguage: consentLanguage,
+                                                  occurredAt: occurredAt))
+    }
+
+    struct ActiveManifest: Decodable {
+        let manifestID: String
+        let studyID: String
+        let collectionStartAt: Date
+        let collectionEndAt: Date
+        let postTriggerCount: Int
+        let consentVersion: String
+        let surveyVersion: String
+    }
+
+    /// 取当前生效的研究配置。404 表示暂无生效配置——
+    /// 此时不得纳入任何人，也不得猜一个配置。
+    func fetchActiveManifest() async throws -> ActiveManifest {
+        try await request("research/manifest/active")
+    }
+
+    /// 上报练习尝试。失败抛错由调用方保留队列重试。
+    func uploadResearchAttempts(_ batch: any Encodable) async throws {
+        let _: ResearchEventAck = try await request("research/attempts",
+                                                    method: "POST", body: batch)
+    }
+
+    /// 上报一份问卷（实例 + 逐题答案）。
+    func uploadSurvey(participantID: String, manifestID: String,
+                      outcome: SurveyOutcome, timingClass: String,
+                      qualifyingAttemptsAtInvite: Int) async throws {
+        struct Body: Encodable {
+            let participantID: String, manifestID: String
+            let outcome: SurveyOutcome
+            let timingClass: String
+            let qualifyingAttemptsAtInvite: Int
+        }
+        struct Ack: Decodable { let surveyInstanceID: String }
+        let _: Ack = try await request("research/surveys", method: "POST",
+                                       body: Body(participantID: participantID,
+                                                  manifestID: manifestID,
+                                                  outcome: outcome,
+                                                  timingClass: timingClass,
+                                                  qualifyingAttemptsAtInvite: qualifyingAttemptsAtInvite))
+    }
+
+    /// 上报研究操作事件。失败抛错由调用方保留队列重试——
+    /// **不得**在这里吞掉错误，否则离线期间的事件会静默丢失。
+    func uploadResearchEvents(_ batch: any Encodable) async throws {
+        let _: ResearchEventAck = try await request("research/events",
+                                                    method: "POST", body: batch)
+    }
+
     /// App Store 审核指南 5.1.1(v) 强制要求；亦作为研究伦理的「撤回同意」通道。
     func deleteAccount(deviceID: String, appleUserID: String?) async throws {
         var comps = URLComponents(

@@ -11,9 +11,23 @@ struct OnboardingFlowView: View {
     @ObservedObject private var localization = LocalizationManager.shared
     @Environment(\.scenePhase) private var scenePhase
     @AppStorage("pt_language_chosen") private var languageChosen = false
+    /// 研究邀请是否已展示过。**只邀请一次**——谢绝后不再打扰（需求 §2）。
+    @AppStorage("pt_research_invited") private var researchInvited = false
     @State private var micGranted: Bool? = nil
     /// 学习者选择了"暂不开启"，跳过被拒页继续浏览
     @State private var micSkipped = false
+
+    /// 是否展示研究邀请。
+    ///
+    /// 三个条件缺一不可：
+    /// - 还没邀请过（谢绝或完成后都不再展示）
+    /// - 服务端有生效的采集配置——没有就不邀请，也**不猜**一个配置
+    /// - 当前不在已同意状态（重装后本地状态已清，由服务端幂等返回原编号）
+    private var shouldInviteToResearch: Bool {
+        !researchInvited
+            && ResearchConfig.shared.manifestID != nil
+            && ResearchConsent.shared.state == .notAsked
+    }
 
     private var languages: [(code: String, flag: String, label: String)] {
         LocalizationManager.supported
@@ -27,6 +41,10 @@ struct OnboardingFlowView: View {
                 micDeniedPage
             } else if !languageChosen {
                 languageSelectionPage
+            } else if shouldInviteToResearch {
+                // 研究邀请在语言选好之后：知情说明必须以用户看得懂的语言呈现。
+                // 放在首次练习之前（需求 §3：前置问卷保持首次练习前的时间定位）。
+                ResearchOnboardingFlow { researchInvited = true }
             } else {
                 RoleSelectView()
             }

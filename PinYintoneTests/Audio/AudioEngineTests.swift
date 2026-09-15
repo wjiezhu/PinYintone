@@ -3,16 +3,25 @@ import XCTest
 
 final class AudioEngineTests: XCTestCase {
 
+    /// 全类共用一个实例，**刻意不在测试期间释放**。
+    ///
+    /// AVAudioEngine 析构时要跟音频守护进程做 RPC 拆除 AURemoteIO，
+    /// 模拟器上该 RPC 会超时并让 AudioToolbox abort 整个进程
+    /// （_ReportRPCTimeout → SIGABRT，崩溃不计入断言失败，
+    /// xcodebuild 会报 "0 failures" 却 TEST FAILED）。
+    /// 每个用例各 new 一个就会反复触发；共用一个即可在整轮测试中只析构一次。
+    private static let shared = AudioEngine()
+
     // MARK: - 固定参数（CLAUDE.md）
 
     func testFixedParameters() {
-        let engine = AudioEngine()
+        let engine = Self.shared
         XCTAssertEqual(engine.sampleRate, 16_000, "采样率固定 16 kHz")
         XCTAssertEqual(engine.chunkSize, 1600, "每次回调 1600 采样 = 0.1s")
     }
 
     func testInitialState() {
-        let engine = AudioEngine()
+        let engine = Self.shared
         XCTAssertFalse(engine.isRecording, "初始未录音")
         XCTAssertEqual(engine.currentTime, 0, "初始时长为 0")
     }
@@ -31,18 +40,7 @@ final class AudioEngineTests: XCTestCase {
     // MARK: - 异步：stop() 触发 onFinish（expectation）
 
     func testStopFiresOnFinishAsync() throws {
-        // 模拟器上这两个测试不可靠：当宿主音频恰好返回有效输入格式时，引擎会真的启动，
-        // 而 AVAudioEngine 析构时要跟音频守护进程做 RPC 拆除 AURemoteIO，
-        // 模拟器里该 RPC 会超时，AudioToolbox 直接 abort() 整个进程
-        // （_ReportRPCTimeout → SIGABRT）。崩溃不计入断言失败，xcodebuild 会报
-        // "0 failures" 却 TEST FAILED，把**真正的**失败一起盖掉。
-        // 格式无效时则正常 skip，于是同一套代码时好时坏。
-        // 真机上 RPC 正常，故只在模拟器跳过，设备上照跑。
-        #if targetEnvironment(simulator)
-        throw XCTSkip("模拟器音频拆除会 RPC 超时并 abort 进程，改在真机验证")
-        #endif
-
-        let engine = AudioEngine()
+        let engine = Self.shared
         do {
             try engine.start()
         } catch {
@@ -63,18 +61,7 @@ final class AudioEngineTests: XCTestCase {
     // MARK: - 异步：定时录音返回正确长度的 PCM（expectation）
 
     func testTimedRecordingProducesExpectedSampleCount() throws {
-        // 模拟器上这两个测试不可靠：当宿主音频恰好返回有效输入格式时，引擎会真的启动，
-        // 而 AVAudioEngine 析构时要跟音频守护进程做 RPC 拆除 AURemoteIO，
-        // 模拟器里该 RPC 会超时，AudioToolbox 直接 abort() 整个进程
-        // （_ReportRPCTimeout → SIGABRT）。崩溃不计入断言失败，xcodebuild 会报
-        // "0 failures" 却 TEST FAILED，把**真正的**失败一起盖掉。
-        // 格式无效时则正常 skip，于是同一套代码时好时坏。
-        // 真机上 RPC 正常，故只在模拟器跳过，设备上照跑。
-        #if targetEnvironment(simulator)
-        throw XCTSkip("模拟器音频拆除会 RPC 超时并 abort 进程，改在真机验证")
-        #endif
-
-        let engine = AudioEngine()
+        let engine = Self.shared
         let duration: TimeInterval = 0.4
         let finished = expectation(description: "定时录音结束")
         var produced: [Int16] = []

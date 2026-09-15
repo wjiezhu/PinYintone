@@ -21,9 +21,30 @@ struct ToneTrainingView: View {
     /// 反馈区固定高度。反馈出没都在这块里发生，外面的东西一律不位移。
     private let feedbackSlotHeight: CGFloat = 200
 
+    /// 前置问卷是否该挡在练习之前。
+    /// 已开始过练习就不再当作「前置」——错过该时点不补录（问卷 §3）。
+    private var shouldShowPreSurvey: Bool {
+        ResearchEventLog.shared.isCollecting
+            && ResearchSurveyTrigger.shared.shouldInvitePre
+    }
+
+    @State private var preSurveyDone = false
+
     var body: some View {
         Group {
-            if let lexeme = vm.currentLexeme {
+            // 前置问卷挡在首次练习之前（需求 §3）。允许跳过与整份谢绝，
+            // 答完或谢绝后直接进练习，不重复打扰。
+            if shouldShowPreSurvey && !preSurveyDone {
+                SurveyFormView(formKey: "tone_needs_v1") { outcome in
+                    ResearchSurveyTrigger.shared.markPreInvited()
+                    Task {
+                        await SurveyUploader.shared.upload(
+                            outcome,
+                            timingClass: ResearchSurveyTrigger.shared.preTimingClass)
+                        preSurveyDone = true
+                    }
+                }
+            } else if let lexeme = vm.currentLexeme {
                 trainingBody(lexeme)
             } else if vm.isPhaseComplete {
                 PhaseCompleteView(phase: vm.phase)
@@ -37,6 +58,17 @@ struct ToneTrainingView: View {
         .navigationBarTitleDisplayMode(.inline)
         .animation(.spring(duration: 0.3), value: vm.feedbackResult?.attemptNumber)
         .onAppear { vm.loadCurrent() }
+        // 使用后问卷在**本次结果页操作结束后**才弹，不遮挡尚未查看的反馈或回听。
+        // 用 sheet 而非整页替换：用户可以下拉关掉、稍后再填。
+        .sheet(isPresented: $vm.shouldShowPostSurvey) {
+            SurveyFormView(formKey: "usability_short_v1") { outcome in
+                ResearchSurveyTrigger.shared.markPostInvited()
+                Task {
+                    await SurveyUploader.shared.upload(outcome, timingClass: "after_practice")
+                    vm.shouldShowPostSurvey = false
+                }
+            }
+        }
     }
 
     // MARK: - 主体
@@ -98,6 +130,11 @@ struct ToneTrainingView: View {
         }
         .pickerStyle(.segmented)
         .labelsHidden()
+        .onChange(of: feedbackStyle) { old, new in
+            // 字典 §8：feedback_mode_changed 记**用户主动切换**，需带 from/to。
+            // 颜色与曲线自选切换是使用行为，不得编码成随机分组（字典 §8 末注）。
+            vm.logFeedbackModeChanged(from: old, to: new)
+        }
         // 录音中换模式会让"看到的线 ≠ 评分的线"，直接禁掉
         .disabled(vm.isRecording)
     }
@@ -115,6 +152,7 @@ struct ToneTrainingView: View {
                 if let result = vm.feedbackResult, !vm.isRecording {
                     VStack(spacing: 10) {
                         CoachCardView(advice: result.coachAdvice)
+                        replayButton
                         modeView(lexeme)
                             .frame(maxHeight: .infinity)
                     }
@@ -162,6 +200,26 @@ struct ToneTrainingView: View {
                 .font(.footnote)
                 .foregroundStyle(.orange)
                 .multilineTextAlignment(.center)
+        }
+    }
+
+    /// 回听本次录音。
+    ///
+    /// **不放进底部操作栏**：那三格是钉死的（听样例 · 录音 · 下一题），
+    /// 录音键恒在正中，加第四格会破坏该不变量（档案 §4.2）。
+    /// 放在结果区，与"刚录完这一条"的语境相连。
+    @ViewBuilder
+    private var replayButton: some View {
+        if vm.canReplay {
+            Button {
+                vm.replayOwnRecording()
+            } label: {
+                Label(NSLocalizedString("replay_own_recording", comment: ""),
+                      systemImage: "arrow.counterclockwise.circle")
+                    .font(.footnote)
+            }
+            .buttonStyle(.bordered)
+            .disabled(vm.isRecording)
         }
     }
 

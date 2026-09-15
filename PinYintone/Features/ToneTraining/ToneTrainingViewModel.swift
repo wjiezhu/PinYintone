@@ -89,6 +89,13 @@ final class ToneTrainingViewModel: ObservableObject {
                 }
             }
         }
+        // 接住整段 PCM 供回听。此前这份数据被直接丢弃——
+        // 录音落地后只走 F0 分析，没有任何地方留下可回放的音频。
+        // 只存内存、只留当前一条（决定 17），原始录音不上传。
+        audioEngine.onFinish = { [weak self] pcm in
+            guard let self else { return }
+            LearnerRecordingStore.shared.store(pcm: pcm, lexemeID: self.currentLexeme?.id)
+        }
         audioEngine.onChunk = { [weak self] pcm in
             self?.framer.feed(pcm)
         }
@@ -97,6 +104,11 @@ final class ToneTrainingViewModel: ObservableObject {
     // MARK: - 词条
 
     func loadLexeme(_ lexeme: Lexeme) {
+        ResearchEventLog.shared.log(.taskOpened,
+                                    lexemeVersionID: lexeme.id,
+                                    payload: ["task_type": "fixed_word"])
+        // 换词即清上一条录音，否则回听会放出上一个词的声音
+        LearnerRecordingStore.shared.clearIfLexemeChanged(to: lexeme.id)
         currentLexeme = lexeme
         // 即时占位：几何理想轮廓；随后异步升级为真人录音 / TTS 参照
         referenceF0 = f0Extractor.normalize(Self.idealContour(for: lexeme.tones))
@@ -150,10 +162,50 @@ final class ToneTrainingViewModel: ObservableObject {
         isReferenceReady = true
     }
 
+    /// 记录反馈模式切换。from/to 用字典命名（static_color / pitch_curve）。
+    ///
+    /// ⚠ **已知缺口**：字典 §8 规定本事件 `attempt_id` 必填，但模式切换器在
+    /// 训练阶段全程可见——用户完全可能**在首次录音之前**就切换。此时没有 attempt，
+    /// 按字典只能不记。后果是切换日志**系统性漏掉「录音前的切换」**，
+    /// 而需求 §4 要求「记录实际显示模式和切换事件」。
+    ///
+    /// 这里选择遵守已冻结的字典而不是偷偷放宽校验。若研究上需要完整的切换序列，
+    /// 需由研究者决定：放宽本事件的 attempt_id 为可选（须递增字典版本），
+    /// 或把切换器改为仅在出分后可用。**不要**在这里静默传 nil 绕过校验。
+    func logFeedbackModeChanged(from old: FeedbackStyle, to new: FeedbackStyle) {
+        guard old != new else { return }
+        guard currentAttemptID != nil else { return }
+        ResearchEventLog.shared.log(
+            .feedbackModeChanged,
+            attemptID: currentAttemptID,
+            lexemeVersionID: currentLexeme?.id,
+            payload: ["from_mode": ResearchFeedbackMode(old).rawValue,
+                      "to_mode": ResearchFeedbackMode(new).rawValue])
+    }
+
+    /// 达到阈值后请求展示使用后问卷。视图在**本次结果页操作结束后**再弹，
+    /// 不遮挡尚未查看的反馈或回听（问卷 §4 触发设置）。
+    @Published var shouldShowPostSurvey = false
+
+    /// 本次尝试的研究编号。录音开始时生成，供事件与练习记录共用。
+    private(set) var currentAttemptID: UUID?
+
+    #if DEBUG
+    /// 仅供测试：模拟「已开始过一次尝试」
+    func beginAttemptForTesting() { currentAttemptID = UUID() }
+    #endif
+
     /// 朗读样例读音
     func playSample() {
         guard let hanzi = currentLexeme?.hanzi else { return }
         SpeechService.shared.speak(hanzi)
+        // 字典 §8：model_audio_started 记的是**实际开始播放**，不是点击。
+        // AVSpeechSynthesizer 无同步的「已开始」返回值，故以 isSpeaking 为准；
+        // 合成失败时它为 false，不会误记一次播放。
+        if SpeechService.shared.isSpeaking {
+            ResearchEventLog.shared.log(.modelAudioStarted,
+                                        lexemeVersionID: currentLexeme?.id)
+        }
     }
 
     /// 载入当前阶段的当前题（进入页面 / 阶段切换后调用）
@@ -201,6 +253,18 @@ final class ToneTrainingViewModel: ObservableObject {
         // 锁定参照：本次录音的显示与评分都用它
         lockedReference = referenceF0
         lockedReferenceType = referenceType
+        // 一次尝试 = 一次开始录音（字典 §7）。重录生成新编号，上传重试不算新尝试。
+        let attemptID = UUID()
+        currentAttemptID = attemptID
+        // 一旦开始练习，之后再提交的前置问卷只能标 late_pre（字典 §10）
+        ResearchSurveyTrigger.shared.markFirstAttemptStarted()
+        ResearchAttemptLog.shared.begin(
+            attemptID: attemptID,
+            taskType: sequencer.phase.isAssessment ? .selfTest : .fixedWord,
+            lexemeVersionID: currentLexeme?.id,
+            // 自测时记该词此前练过几次：词集允许重叠，改为如实记录
+            priorPracticeCount: sequencer.phase.isAssessment
+                ? ToneAttemptStore.attempts(for: currentLexeme?.id ?? "") : nil)
         isRecording = true
         // start 失败（无输入设备 / 权限被拒 / 会话被占用 / 路由切换）时回滚，
         // 并且**必须给出可执行提示**：否则学习者看到的是一个按了没反应的按钮
@@ -214,6 +278,11 @@ final class ToneTrainingViewModel: ObservableObject {
             // 否则导出时"没给麦克风权限"和"设备/会话异常"混成一类，没法归因。
             persistTechnicalRetry(reason: Self.failureReason(for: error),
                                   voicedFrameCount: 0)
+            if let id = currentAttemptID {
+                ResearchAttemptLog.shared.markFailed(
+                    id, status: .recordingFailed,
+                    error: Self.researchErrorCode(for: error))
+            }
         }
     }
 
@@ -231,6 +300,12 @@ final class ToneTrainingViewModel: ObservableObject {
             retryHint = NSLocalizedString("tone_retry_no_voice", comment: "")
             persistTechnicalRetry(reason: .insufficientVoicedFrames,
                                   voicedFrameCount: voicedFrames)
+            // 新表**不写哨兵分**：metric/passed 保持 nil（需求 §7 不填零分替代）
+            if let id = currentAttemptID {
+                ResearchAttemptLog.shared.markAnalyzing(id)
+                ResearchAttemptLog.shared.markFailed(id, status: .analysisFailed,
+                                                     error: .noSignal)
+            }
             flushPendingReference()
             return
         }
@@ -252,6 +327,12 @@ final class ToneTrainingViewModel: ObservableObject {
         // 按词累计尝试数（换词不归零）
         let lexemeID = currentLexeme?.id ?? "unknown"
         let attempt = ToneAttemptStore.increment(lexemeID)
+
+        if let id = currentAttemptID {
+            ResearchAttemptLog.shared.markAnalyzing(id)
+            ResearchAttemptLog.shared.markSucceeded(
+                id, metric: Double(score), passed: grade != .fail)
+        }
 
         let segments = buildSegments(student: normalized, reference: reference)
         let result = FeedbackResult(
@@ -276,6 +357,11 @@ final class ToneTrainingViewModel: ObservableObject {
         // 也不累计"连续失败"（那是训练阶段的行动提示逻辑）；录完自动进下一题。
         guard phase.showsFeedback else {
             studentF0 = []
+            // 裸测不呈现结果，故不填 resultDisplayedAt——
+            // 后置问卷的合格次数只认「结果已实际显示」者（字典 §7 末）
+            if let id = currentAttemptID {
+                ResearchAttemptLog.shared.finishWithoutDisplay(id)
+            }
             assessmentNotice = NSLocalizedString("assessment_recorded", comment: "")
             scheduleAssessmentAdvance()
             return
@@ -286,6 +372,17 @@ final class ToneTrainingViewModel: ObservableObject {
         // 那条通道是技术性失败专用（mic.slash 图标），把发音评价混进去
         // 会让学习者以为是麦克风出了问题，也违反"技术失败与发音评价严格区分"。
         feedbackResult = result
+        if let id = currentAttemptID {
+            ResearchAttemptLog.shared.markResultDisplayed(id)
+            // 只有结果**实际渲染**后才计次；自由文本与裸测都不计入
+            let reached = ResearchSurveyTrigger.shared.recordQualifyingAttempt(
+                id, taskType: .fixedWord, resultDisplayed: true)
+            if reached { shouldShowPostSurvey = true }
+        }
+        ResearchEventLog.shared.log(.feedbackDisplayed,
+                                    attemptID: currentAttemptID,
+                                    lexemeVersionID: currentLexeme?.id,
+                                    payload: ["mode": ResearchFeedbackMode(FeedbackStyle.current).rawValue])
     }
 
     /// 测试阶段自动进入下一题。留出一拍让"已记录"提示可见，避免像是没录上。
@@ -377,7 +474,52 @@ final class ToneTrainingViewModel: ObservableObject {
         }
     }
 
+    // MARK: - 回听
+
+    /// 是否有可回听的录音（驱动按钮可用态）
+    var canReplay: Bool { LearnerRecordingStore.shared.hasRecording }
+
+    /// 回听本次录音。
+    ///
+    /// 返回**是否真的开始播放**：字典 §8 要求 `learner_audio_started` 只在
+    /// 实际开始播放时记，「只点击播放但播放失败不记 audio_started」，
+    /// 所以埋点必须看这个返回值，而不是看用户点了按钮。
+    @discardableResult
+    func replayOwnRecording() -> Bool {
+        let store = LearnerRecordingStore.shared
+        guard store.hasRecording else { return false }
+        do {
+            let started = try LearnerAudioPlayer.shared.play(pcm: store.pcm,
+                                                            sampleRate: store.sampleRate)
+            if started {
+                ResearchEventLog.shared.log(.learnerAudioStarted,
+                                            attemptID: currentAttemptID,
+                                            lexemeVersionID: currentLexeme?.id)
+            }
+            return started
+        } catch {
+            // 播放失败要让人看得见，不静默吞掉（同 §4.2 对录音失败的要求）
+            retryHint = NSLocalizedString("replay_failed", comment: "")
+            ResearchEventLog.shared.log(.operationError,
+                                        attemptID: currentAttemptID,
+                                        payload: ["stage": ResearchErrorStage.playback.rawValue,
+                                                  "error_code": ResearchErrorCode.playbackError.rawValue])
+            return false
+        }
+    }
+
     // MARK: - 持久化
+
+    /// 映射到字典 §8 的固定错误码。与 `failureReason` 并存是因为两者受众不同：
+    /// 前者是旧表的匿名原因，后者是研究库的固定枚举，服务端会按白名单校验。
+    private static func researchErrorCode(for error: Error) -> ResearchErrorCode {
+        if AVAudioApplication.shared.recordPermission != .granted { return .permissionDenied }
+        guard let e = error as? AudioEngine.AudioEngineError else { return .unknown }
+        switch e {
+        case .engineStartFailed: return .analysisEngineError
+        case .invalidInputFormat, .converterUnavailable: return .signalUnusable
+        }
+    }
 
     /// 把 AudioEngine 的启动错误映射成匿名的失败原因（不含任何录音内容）。
     private static func failureReason(for error: Error) -> FailureReason {
