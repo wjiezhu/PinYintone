@@ -236,6 +236,7 @@ def _survey(form="background_v1", version="background-1.0", status="complete",
             answers=None):
     return {
         "participantID": PID_HOLDER["pid"], "manifestID": "m1",
+        "timingClass": "background", "qualifyingAttemptsAtInvite": 0,
         "outcome": {
             "formKey": form, "formVersion": version,
             "translationVersion": "i18n-1.0", "language": "zh",
@@ -431,3 +432,39 @@ def test_attempts_rejected_after_withdrawal():
         "participantID": PID_HOLDER["pid"], "consentVersion": "c1",
         "consentLanguage": "zh", "occurredAt": (NOW + timedelta(seconds=1)).isoformat()})
     assert _post_attempts([_attempt(aid="a8")]).status_code == 403
+
+
+# ---------------- 问卷时间定位 ----------------
+
+def _survey_timed(timing, form="tone_needs_v1", n=0, aid=None):
+    body = _survey(form=form, version="pre-1.0")
+    body["timingClass"] = timing
+    body["qualifyingAttemptsAtInvite"] = n
+    return body
+
+
+def test_late_pre_accepted_and_stored():
+    """已开始练习后才提交的前置问卷标 late_pre（字典 §10、问卷 §3）。"""
+    _enrolled()
+    r = client.post("/research/surveys", json=_survey_timed("late_pre", n=3))
+    assert r.status_code == 200
+    db = TestingSession()
+    inst = db.query(models.ResearchSurveyInstance).one()
+    assert inst.timing_class == "late_pre"
+    assert inst.qualifying_attempts_at_invite == 3
+    db.close()
+
+
+def test_unknown_timing_class_rejected():
+    _enrolled()
+    assert client.post("/research/surveys",
+                       json=_survey_timed("whenever")).status_code == 400
+
+
+def test_pre_survey_before_practice_must_have_zero_count():
+    """前置问卷邀请时合格次数为 0，不得事后用新增次数覆盖（字典 §10）。"""
+    _enrolled()
+    bad = _survey_timed("before_first_attempt", n=5)
+    assert client.post("/research/surveys", json=bad).status_code == 400
+    ok = _survey_timed("before_first_attempt", n=0)
+    assert client.post("/research/surveys", json=ok).status_code == 200

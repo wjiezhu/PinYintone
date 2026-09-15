@@ -214,6 +214,8 @@ class SurveyUploadRequest(BaseModel):
     participantID: str
     manifestID: str
     outcome: SurveyOutcomeDTO
+    timingClass: str
+    qualifyingAttemptsAtInvite: int = 0
 
 
 class ActiveManifestResponse(BaseModel):

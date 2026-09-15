@@ -220,6 +220,8 @@ def withdraw(body: schemas.ResearchWithdrawRequest, db: Session = Depends(get_db
 FORM_KEYS = {"background_v1", "tone_needs_v1", "usability_short_v1"}
 ANSWER_STATES = {"answered", "skipped", "not_answered"}
 SURVEY_STATUSES = {"invited", "in_progress", "deferred", "declined", "partial", "complete"}
+# 字典 §10。late_pre = 前置问卷在已开始练习之后才提交，**不算练习前调查**
+TIMING_CLASSES = {"background", "before_first_attempt", "after_practice", "late_pre"}
 
 
 @router.post("/research/surveys")
@@ -237,6 +239,13 @@ def upload_survey(body: schemas.SurveyUploadRequest, db: Session = Depends(get_d
         raise HTTPException(400, f"未知表单：{o.formKey}")
     if o.status not in SURVEY_STATUSES:
         raise HTTPException(400, f"未知状态：{o.status}")
+    if body.timingClass not in TIMING_CLASSES:
+        raise HTTPException(400, f"未知 timing_class：{body.timingClass}")
+    # 背景与前置问卷邀请时合格次数应为 0，不得事后用新增次数覆盖（字典 §10）
+    if o.formKey in {"background_v1", "tone_needs_v1"} \
+            and body.timingClass == "before_first_attempt" \
+            and body.qualifyingAttemptsAtInvite != 0:
+        raise HTTPException(400, "练习前提交的问卷不得带非零合格次数")
     for a in o.answers:
         if a.state not in ANSWER_STATES:
             raise HTTPException(400, f"未知作答状态：{a.state}")
@@ -267,8 +276,8 @@ def upload_survey(body: schemas.SurveyUploadRequest, db: Session = Depends(get_d
         started_at=o.startedAt,
         submitted_at=o.submittedAt,
         status=o.status,
-        timing_class="background" if o.formKey == "background_v1" else "after_practice",
-        qualifying_attempts_at_invite=0,
+        timing_class=body.timingClass,
+        qualifying_attempts_at_invite=body.qualifyingAttemptsAtInvite,
     ))
     for a in o.answers:
         db.add(research_models.ResearchSurveyAnswer(

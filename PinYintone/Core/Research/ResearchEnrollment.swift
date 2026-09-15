@@ -49,6 +49,7 @@ enum ResearchEnrollment {
         ResearchConsent.shared.withdraw()
         ResearchEventLog.shared.clearPendingOnWithdrawal()
         ResearchAttemptLog.shared.clearPendingOnWithdrawal()
+        ResearchSurveyTrigger.shared.reset()
         id.clearOnWithdrawal()
     }
 }

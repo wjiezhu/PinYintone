@@ -183,6 +183,10 @@ final class ToneTrainingViewModel: ObservableObject {
                       "to_mode": ResearchFeedbackMode(new).rawValue])
     }
 
+    /// 达到阈值后请求展示使用后问卷。视图在**本次结果页操作结束后**再弹，
+    /// 不遮挡尚未查看的反馈或回听（问卷 §4 触发设置）。
+    @Published var shouldShowPostSurvey = false
+
     /// 本次尝试的研究编号。录音开始时生成，供事件与练习记录共用。
     private(set) var currentAttemptID: UUID?
 
@@ -252,6 +256,8 @@ final class ToneTrainingViewModel: ObservableObject {
         // 一次尝试 = 一次开始录音（字典 §7）。重录生成新编号，上传重试不算新尝试。
         let attemptID = UUID()
         currentAttemptID = attemptID
+        // 一旦开始练习，之后再提交的前置问卷只能标 late_pre（字典 §10）
+        ResearchSurveyTrigger.shared.markFirstAttemptStarted()
         ResearchAttemptLog.shared.begin(
             attemptID: attemptID,
             taskType: sequencer.phase.isAssessment ? .selfTest : .fixedWord,
@@ -368,6 +374,10 @@ final class ToneTrainingViewModel: ObservableObject {
         feedbackResult = result
         if let id = currentAttemptID {
             ResearchAttemptLog.shared.markResultDisplayed(id)
+            // 只有结果**实际渲染**后才计次；自由文本与裸测都不计入
+            let reached = ResearchSurveyTrigger.shared.recordQualifyingAttempt(
+                id, taskType: .fixedWord, resultDisplayed: true)
+            if reached { shouldShowPostSurvey = true }
         }
         ResearchEventLog.shared.log(.feedbackDisplayed,
                                     attemptID: currentAttemptID,

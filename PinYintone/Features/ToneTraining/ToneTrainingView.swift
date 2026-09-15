@@ -21,9 +21,30 @@ struct ToneTrainingView: View {
     /// 反馈区固定高度。反馈出没都在这块里发生，外面的东西一律不位移。
     private let feedbackSlotHeight: CGFloat = 200
 
+    /// 前置问卷是否该挡在练习之前。
+    /// 已开始过练习就不再当作「前置」——错过该时点不补录（问卷 §3）。
+    private var shouldShowPreSurvey: Bool {
+        ResearchEventLog.shared.isCollecting
+            && ResearchSurveyTrigger.shared.shouldInvitePre
+    }
+
+    @State private var preSurveyDone = false
+
     var body: some View {
         Group {
-            if let lexeme = vm.currentLexeme {
+            // 前置问卷挡在首次练习之前（需求 §3）。允许跳过与整份谢绝，
+            // 答完或谢绝后直接进练习，不重复打扰。
+            if shouldShowPreSurvey && !preSurveyDone {
+                SurveyFormView(formKey: "tone_needs_v1") { outcome in
+                    ResearchSurveyTrigger.shared.markPreInvited()
+                    Task {
+                        await SurveyUploader.shared.upload(
+                            outcome,
+                            timingClass: ResearchSurveyTrigger.shared.preTimingClass)
+                        preSurveyDone = true
+                    }
+                }
+            } else if let lexeme = vm.currentLexeme {
                 trainingBody(lexeme)
             } else if vm.isPhaseComplete {
                 PhaseCompleteView(phase: vm.phase)
@@ -37,6 +58,17 @@ struct ToneTrainingView: View {
         .navigationBarTitleDisplayMode(.inline)
         .animation(.spring(duration: 0.3), value: vm.feedbackResult?.attemptNumber)
         .onAppear { vm.loadCurrent() }
+        // 使用后问卷在**本次结果页操作结束后**才弹，不遮挡尚未查看的反馈或回听。
+        // 用 sheet 而非整页替换：用户可以下拉关掉、稍后再填。
+        .sheet(isPresented: $vm.shouldShowPostSurvey) {
+            SurveyFormView(formKey: "usability_short_v1") { outcome in
+                ResearchSurveyTrigger.shared.markPostInvited()
+                Task {
+                    await SurveyUploader.shared.upload(outcome, timingClass: "after_practice")
+                    vm.shouldShowPostSurvey = false
+                }
+            }
+        }
     }
 
     // MARK: - 主体

@@ -11,11 +11,14 @@ final class SurveyUploader {
 
     /// 上传一份问卷。失败不重试也不抛错——问卷不应阻断使用流程，
     /// 由下次进前台的 flush 或用户再次提交处理。
-    func upload(_ outcome: SurveyOutcome) async {
+    /// - Parameter timingClass: 字典 §10。前置问卷若在开始练习之后才提交，
+    ///   必须标 `late_pre`——**不能算作练习前调查**。
+    func upload(_ outcome: SurveyOutcome, timingClass: String) async {
         let id = ResearchIdentity.shared
         guard let pid = id.participantID, let mid = id.manifestID else { return }
-        try? await APIClient.shared.uploadSurvey(participantID: pid,
-                                                 manifestID: mid,
-                                                 outcome: outcome)
+        try? await APIClient.shared.uploadSurvey(
+            participantID: pid, manifestID: mid, outcome: outcome,
+            timingClass: timingClass,
+            qualifyingAttemptsAtInvite: ResearchSurveyTrigger.shared.qualifyingCount)
     }
 }

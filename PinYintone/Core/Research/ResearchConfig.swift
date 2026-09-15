@@ -38,6 +38,7 @@ final class ResearchConfig {
         d.set(m.collectionEndAt, forKey: Key.end)
         ResearchEventLog.shared.window = .init(start: m.collectionStartAt,
                                                end: m.collectionEndAt)
+        ResearchSurveyTrigger.shared.configure(threshold: m.postTriggerCount)
     }
 
     /// 应用已缓存的窗口到事件门禁（启动时调用，不等网络）

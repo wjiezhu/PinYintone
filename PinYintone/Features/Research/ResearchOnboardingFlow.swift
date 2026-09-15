@@ -68,7 +68,7 @@ struct ResearchOnboardingFlow: View {
             try await ResearchEnrollment.enrollCurrentUser(
                 consentLanguage: Locale.current.identifier)
             // 纳入成功后才上传背景答案（字典 §10：符合条件后才上传背景实例）
-            await SurveyUploader.shared.upload(outcome)
+            await SurveyUploader.shared.upload(outcome, timingClass: "background")
             step = .done
             onFinish()
         } catch {

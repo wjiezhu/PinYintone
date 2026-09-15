@@ -145,16 +145,21 @@ final class APIClient {
 
     /// 上报一份问卷（实例 + 逐题答案）。
     func uploadSurvey(participantID: String, manifestID: String,
-                      outcome: SurveyOutcome) async throws {
+                      outcome: SurveyOutcome, timingClass: String,
+                      qualifyingAttemptsAtInvite: Int) async throws {
         struct Body: Encodable {
             let participantID: String, manifestID: String
             let outcome: SurveyOutcome
+            let timingClass: String
+            let qualifyingAttemptsAtInvite: Int
         }
         struct Ack: Decodable { let surveyInstanceID: String }
         let _: Ack = try await request("research/surveys", method: "POST",
                                        body: Body(participantID: participantID,
                                                   manifestID: manifestID,
-                                                  outcome: outcome))
+                                                  outcome: outcome,
+                                                  timingClass: timingClass,
+                                                  qualifyingAttemptsAtInvite: qualifyingAttemptsAtInvite))
     }
 
     /// 上报研究操作事件。失败抛错由调用方保留队列重试——
