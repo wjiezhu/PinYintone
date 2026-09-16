@@ -54,6 +54,15 @@ struct FreeWordPracticeView: View {
                 .frame(height: 200)
                 .animation(.easeInOut(duration: 0.1), value: vm.studentF0.count)
 
+            // 技术性失败提示（录音起不来 / 没录上）。与发音评价严格区分：
+            // 用 mic.slash 图标，不走教练卡（CLAUDE.md 禁令 11 的落点）。
+            if let hint = vm.retryHint {
+                Label(hint, systemImage: "mic.slash")
+                    .font(.footnote)
+                    .foregroundStyle(.orange)
+                    .multilineTextAlignment(.center)
+            }
+
             // 百分制评分（录音结束后）
             if let result = vm.feedbackResult {
                 DTWScoreView(result: result)
