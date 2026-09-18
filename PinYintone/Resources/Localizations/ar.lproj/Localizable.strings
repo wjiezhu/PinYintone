@@ -222,3 +222,17 @@
 "survey_max_selections" = "اختر %d إجابات كحد أقصى.";
 "survey_other_hint" = "غير ذلك (توضيح اختياري)";
 "survey_privacy_hint" = "يرجى عدم إدخال أسماء أو معلومات اتصال أو أي معلومات أخرى قد تكشف هوية شخص.";
+
+/* الإبلاغ عن مشكلة. مسودة ترجمة. */
+"issue_title" = "الإبلاغ عن مشكلة";
+"issue_category_title" = "ما المشكلة التي واجهتها؟";
+"issue_detail_title" = "تفاصيل (اختياري)";
+"issue_cat_cannot_find_action" = "لم أجد المكان الذي يمكنني منه تنفيذ الإجراء المطلوب";
+"issue_cat_recording_failed" = "لم أتمكن من إتمام التسجيل";
+"issue_cat_analysis_failed" = "لم أحصل على نتيجة التحليل بعد التسجيل";
+"issue_cat_app_crashed" = "أُغلق التطبيق فجأة أو تعطّل";
+"issue_cat_unclear_feedback" = "لم أفهم الملاحظات";
+"issue_cat_other" = "مشكلات أخرى";
+"issue_sent" = "تم الإرسال. شكرًا لملاحظاتك.";
+"issue_failed" = "تعذر الإرسال. يرجى المحاولة مرة أخرى.";
+"common_close" = "إغلاق";

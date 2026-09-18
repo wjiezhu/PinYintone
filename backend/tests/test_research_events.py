@@ -468,3 +468,53 @@ def test_pre_survey_before_practice_must_have_zero_count():
     assert client.post("/research/surveys", json=bad).status_code == 400
     ok = _survey_timed("before_first_attempt", n=0)
     assert client.post("/research/surveys", json=ok).status_code == 200
+
+
+# ---------------- 报告问题 ----------------
+
+def _issue(rid="r1", category="recording_failed", detail="按了录音没反应"):
+    return {"reportID": rid, "participantID": PID_HOLDER["pid"], "manifestID": "m1",
+            "submittedAt": NOW.isoformat(), "category": category, "detail": detail}
+
+
+def test_issue_report_stored_and_idempotent():
+    _enrolled()
+    r1 = client.post("/research/issues", json=_issue())
+    assert r1.status_code == 200 and r1.json()["alreadyReceived"] is False
+    r2 = client.post("/research/issues", json=_issue())
+    assert r2.json()["alreadyReceived"] is True, "网络重传不得产生重复报告"
+    db = TestingSession()
+    assert db.query(models.ResearchIssueReport).count() == 1
+    db.close()
+
+
+def test_issue_unknown_category_rejected():
+    _enrolled()
+    assert client.post("/research/issues",
+                       json=_issue(category="made_up")).status_code == 400
+
+
+def test_issue_detail_limit_counts_characters_not_bytes():
+    """500 按 Unicode 字符计，不按字节——阿拉伯文按字节会被误判超长（字典 §2）。"""
+    _enrolled()
+    arabic_500 = "ب" * 500          # 500 字符，UTF-8 下 1000 字节
+    assert client.post("/research/issues",
+                       json=_issue(rid="r2", detail=arabic_500)).status_code == 200
+    assert client.post("/research/issues",
+                       json=_issue(rid="r3", detail="ب" * 501)).status_code == 400
+
+
+def test_blank_detail_stored_as_null():
+    _enrolled()
+    client.post("/research/issues", json=_issue(rid="r4", detail="   "))
+    db = TestingSession()
+    assert db.query(models.ResearchIssueReport).filter_by(report_id="r4").one().detail is None
+    db.close()
+
+
+def test_issue_rejected_after_withdrawal():
+    _enrolled()
+    client.post("/research/withdraw", json={
+        "participantID": PID_HOLDER["pid"], "consentVersion": "c1",
+        "consentLanguage": "zh", "occurredAt": (NOW + timedelta(seconds=1)).isoformat()})
+    assert client.post("/research/issues", json=_issue(rid="r5")).status_code == 403

@@ -220,3 +220,17 @@
 "survey_max_selections" = "Sélectionnez au maximum %d réponses.";
 "survey_other_hint" = "Autre (précisions facultatives)";
 "survey_privacy_hint" = "Veuillez ne pas indiquer de noms, de coordonnées ou d'autres informations permettant d'identifier une personne.";
+
+/* Signaler un problème. Traduction provisoire. */
+"issue_title" = "Signaler un problème";
+"issue_category_title" = "Quel problème avez-vous rencontré ?";
+"issue_detail_title" = "Précisions (facultatif)";
+"issue_cat_cannot_find_action" = "Je n'ai pas trouvé où effectuer l'action souhaitée";
+"issue_cat_recording_failed" = "Je n'ai pas pu terminer un enregistrement";
+"issue_cat_analysis_failed" = "Je n'ai pas obtenu de résultat d'analyse après l'enregistrement";
+"issue_cat_app_crashed" = "L'application s'est fermée de façon inattendue ou a planté";
+"issue_cat_unclear_feedback" = "Je n'ai pas compris les retours";
+"issue_cat_other" = "Autres problèmes";
+"issue_sent" = "Réponses envoyées. Merci pour votre retour.";
+"issue_failed" = "L'envoi a échoué. Veuillez réessayer.";
+"common_close" = "Fermer";

@@ -220,3 +220,17 @@
 "survey_max_selections" = "最多选择 %d 项。";
 "survey_other_hint" = "其他（可选填说明）";
 "survey_privacy_hint" = "请不要填写姓名、联系方式或其他可识别个人身份的信息。";
+
+/* 报告问题（字典 §12）。译稿待核校。 */
+"issue_title" = "报告问题";
+"issue_category_title" = "遇到了什么问题？";
+"issue_detail_title" = "补充说明（选填）";
+"issue_cat_cannot_find_action" = "找不到需要的操作入口";
+"issue_cat_recording_failed" = "无法完成录音";
+"issue_cat_analysis_failed" = "录音后未能得到分析结果";
+"issue_cat_app_crashed" = "应用突然关闭或闪退";
+"issue_cat_unclear_feedback" = "看不懂反馈内容";
+"issue_cat_other" = "其他问题";
+"issue_sent" = "已提交，感谢你的反馈。";
+"issue_failed" = "暂未提交成功，请重试。";
+"common_close" = "关闭";

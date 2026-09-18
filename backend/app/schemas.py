@@ -252,3 +252,14 @@ class ResearchAttemptBatch(BaseModel):
     participantID: str
     manifestID: str
     attempts: list[ResearchAttemptDTO]
+
+
+class IssueReportRequest(BaseModel):
+    reportID: str
+    participantID: str
+    manifestID: str
+    attemptID: str | None = None
+    submittedAt: datetime
+    category: str
+    detail: str | None = None
+    relatedEventID: str | None = None

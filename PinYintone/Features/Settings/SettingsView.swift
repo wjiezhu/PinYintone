@@ -12,6 +12,7 @@ struct SettingsView: View {
     #endif
 
     @State private var showLogoutConfirm = false
+    @State private var showIssueReport = false
     @State private var showSwitchConfirm = false
     @State private var showDeleteConfirm = false
     @State private var isDeleting = false
@@ -29,6 +30,7 @@ struct SettingsView: View {
                 accountSection
                 feedbackStyleSection
                 languageSection
+                supportSection
                 accountActionsSection
                 deleteAccountSection
                 #if DEBUG
@@ -142,6 +144,20 @@ struct SettingsView: View {
     }
 
     // MARK: - 语言选择
+
+    /// 报告问题入口：**始终可用**，不要求先完成任何练习（字典 §12）。
+    /// 放在设置页而不是只在练习页：录音起不来的用户根本进不了练习结果页。
+    private var supportSection: some View {
+        Section {
+            Button {
+                showIssueReport = true
+            } label: {
+                Label(NSLocalizedString("issue_title", comment: ""),
+                      systemImage: "exclamationmark.bubble")
+            }
+            .sheet(isPresented: $showIssueReport) { IssueReportView() }
+        }
+    }
 
     private var languageSection: some View {
         Section(NSLocalizedString("settings_language", comment: "")) {

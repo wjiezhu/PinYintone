@@ -220,3 +220,17 @@
 "survey_max_selections" = "Select no more than %d answers.";
 "survey_other_hint" = "Other (optional details)";
 "survey_privacy_hint" = "Please do not enter names, contact details, or other information that could identify someone.";
+
+/* Report a problem. Draft translation, pending review. */
+"issue_title" = "Report a problem";
+"issue_category_title" = "What went wrong?";
+"issue_detail_title" = "Details (optional)";
+"issue_cat_cannot_find_action" = "I could not find where to perform the action I needed";
+"issue_cat_recording_failed" = "I could not complete a recording";
+"issue_cat_analysis_failed" = "I did not receive an analysis result after recording";
+"issue_cat_app_crashed" = "The app closed unexpectedly or crashed";
+"issue_cat_unclear_feedback" = "I could not understand the feedback";
+"issue_cat_other" = "Other problems";
+"issue_sent" = "Submitted. Thank you for your feedback.";
+"issue_failed" = "Submission failed. Please try again.";
+"common_close" = "Close";

@@ -143,6 +143,22 @@ final class APIClient {
                                                     method: "POST", body: batch)
     }
 
+    /// 报告问题。report_id 为幂等键，网络重传不产生重复报告。
+    func reportIssue(reportID: String, participantID: String, manifestID: String,
+                     submittedAt: Date, category: String, detail: String?) async throws {
+        struct Body: Encodable {
+            let reportID: String, participantID: String, manifestID: String
+            let submittedAt: Date, category: String, detail: String?
+        }
+        struct Ack: Decodable { let reportID: String }
+        let _: Ack = try await request("research/issues", method: "POST",
+                                       body: Body(reportID: reportID,
+                                                  participantID: participantID,
+                                                  manifestID: manifestID,
+                                                  submittedAt: submittedAt,
+                                                  category: category, detail: detail))
+    }
+
     /// 上报一份问卷（实例 + 逐题答案）。
     func uploadSurvey(participantID: String, manifestID: String,
                       outcome: SurveyOutcome, timingClass: String,

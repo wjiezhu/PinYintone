@@ -406,3 +406,45 @@ def upload_attempts(body: schemas.ResearchAttemptBatch, db: Session = Depends(ge
         inserted += 1
     db.commit()
     return {"received": len(body.attempts), "inserted": inserted}
+
+
+ISSUE_CATEGORIES = {"cannot_find_action", "recording_failed", "analysis_failed",
+                    "app_crashed", "unclear_feedback", "other"}
+ISSUE_DETAIL_MAX = 500
+
+
+@router.post("/research/issues")
+def report_issue(body: schemas.IssueReportRequest, db: Session = Depends(get_db)):
+    """随时报告问题（字典 §12）。
+
+    - 入口**始终可用**，不要求先完成 5 次练习：未达到使用后问卷阈值就流失的
+      用户，只能靠这里留下问题。
+    - 用户报告与系统捕获的错误**分别统计**，不自动认定一一对应（问卷 §4 POST04）。
+    - 幂等键 report_id：网络重传不产生重复报告。
+    - detail 按 Unicode 字符数计上限 500，**不按字节**（字典 §2）——阿拉伯文
+      按字节计会把合法长度的文本误判超长。
+    """
+    _participant_or_404(db, body.participantID)
+    _require_active_consent(db, body.participantID)
+    if body.category not in ISSUE_CATEGORIES:
+        raise HTTPException(400, f"未知问题类别：{body.category}")
+    detail = (body.detail or "").strip() or None
+    if detail is not None and len(detail) > ISSUE_DETAIL_MAX:
+        raise HTTPException(400, f"说明最多 {ISSUE_DETAIL_MAX} 字符")
+
+    if db.get(research_models.ResearchIssueReport, body.reportID) is not None:
+        return {"reportID": body.reportID, "alreadyReceived": True}
+
+    db.add(research_models.ResearchIssueReport(
+        report_id=body.reportID,
+        participant_id=body.participantID,
+        manifest_id=body.manifestID,
+        attempt_id=body.attemptID,
+        submitted_at=body.submittedAt,
+        received_at=datetime.now(timezone.utc),
+        category=body.category,
+        detail=detail,
+        related_event_id=body.relatedEventID,
+    ))
+    db.commit()
+    return {"reportID": body.reportID, "alreadyReceived": False}
