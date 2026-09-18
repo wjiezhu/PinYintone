@@ -105,7 +105,7 @@ final class ToneTrainingViewModel: ObservableObject {
 
     func loadLexeme(_ lexeme: Lexeme) {
         ResearchEventLog.shared.log(.taskOpened,
-                                    lexemeVersionID: lexeme.id,
+                                    lexemeVersionID: ResearchLexicon.versionID(for: lexeme.id),
                                     payload: ["task_type": "fixed_word"])
         // 换词即清上一条录音，否则回听会放出上一个词的声音
         LearnerRecordingStore.shared.clearIfLexemeChanged(to: lexeme.id)
@@ -178,7 +178,7 @@ final class ToneTrainingViewModel: ObservableObject {
         ResearchEventLog.shared.log(
             .feedbackModeChanged,
             attemptID: currentAttemptID,
-            lexemeVersionID: currentLexeme?.id,
+            lexemeVersionID: ResearchLexicon.versionID(for: currentLexeme?.id),
             payload: ["from_mode": ResearchFeedbackMode(old).rawValue,
                       "to_mode": ResearchFeedbackMode(new).rawValue])
     }
@@ -204,7 +204,7 @@ final class ToneTrainingViewModel: ObservableObject {
         // 合成失败时它为 false，不会误记一次播放。
         if SpeechService.shared.isSpeaking {
             ResearchEventLog.shared.log(.modelAudioStarted,
-                                        lexemeVersionID: currentLexeme?.id)
+                                        lexemeVersionID: ResearchLexicon.versionID(for: currentLexeme?.id))
         }
     }
 
@@ -261,7 +261,7 @@ final class ToneTrainingViewModel: ObservableObject {
         ResearchAttemptLog.shared.begin(
             attemptID: attemptID,
             taskType: sequencer.phase.isAssessment ? .selfTest : .fixedWord,
-            lexemeVersionID: currentLexeme?.id,
+            lexemeVersionID: ResearchLexicon.versionID(for: currentLexeme?.id),
             // 自测时记该词此前练过几次：词集允许重叠，改为如实记录
             priorPracticeCount: sequencer.phase.isAssessment
                 ? ToneAttemptStore.attempts(for: currentLexeme?.id ?? "") : nil)
@@ -381,7 +381,7 @@ final class ToneTrainingViewModel: ObservableObject {
         }
         ResearchEventLog.shared.log(.feedbackDisplayed,
                                     attemptID: currentAttemptID,
-                                    lexemeVersionID: currentLexeme?.id,
+                                    lexemeVersionID: ResearchLexicon.versionID(for: currentLexeme?.id),
                                     payload: ["mode": ResearchFeedbackMode(FeedbackStyle.current).rawValue])
     }
 
@@ -494,7 +494,7 @@ final class ToneTrainingViewModel: ObservableObject {
             if started {
                 ResearchEventLog.shared.log(.learnerAudioStarted,
                                             attemptID: currentAttemptID,
-                                            lexemeVersionID: currentLexeme?.id)
+                                            lexemeVersionID: ResearchLexicon.versionID(for: currentLexeme?.id))
             }
             return started
         } catch {

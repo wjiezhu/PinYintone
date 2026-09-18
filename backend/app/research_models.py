@@ -139,10 +139,16 @@ class ResearchLexeme(Base):
     # ⚠ 现有 Swift 代码与 lexemes.json 用 5 表示轻声，写入本表前必须换算。
     citation_tones = Column(JSON, nullable=False)
     # 本词训练实际采用的声调与变调处理说明，**不以字典调机械替代语流读法**
-    target_realization = Column(String, nullable=False)
+    #
+    # ⚠ 偏离字典：本列与 source_detail、reference_audio_version 在字典 §6 中为必填，
+    # 这里放宽为**可空**。理由：词条在教师核对前确实没有这些信息，
+    # 用「待核实」之类的字符串填充会**看起来像数据**，混过 IS NOT NULL 筛选，
+    # 被当成已核实的出处。NULL 才是「不知道」的诚实编码。
+    # 约束改为：review_status = approved 时三列必须齐全（种子脚本强制）。
+    target_realization = Column(String, nullable=True)
     source_type = Column(String(32), nullable=False)     # textbook|classroom_observation|literature|other
-    source_detail = Column(String, nullable=False)       # 可核验出处；未核实页码不得编造
-    reference_audio_version = Column(String(64), nullable=False)
+    source_detail = Column(String, nullable=True)        # 可核验出处；未核实页码不得编造
+    reference_audio_version = Column(String(64), nullable=True)
     reference_source = Column(String(16), nullable=False)     # tts|human
     reference_generator = Column(String(128), nullable=True)  # 不知道就留空，不猜测
     teacher_hint_version = Column(String(64), nullable=True)
