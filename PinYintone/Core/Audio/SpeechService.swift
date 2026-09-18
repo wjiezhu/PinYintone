@@ -34,6 +34,10 @@ final class SpeechService {
 
     // MARK: - 样例朗读
 
+    /// 是否正在朗读。埋点用：字典 §8 要求 `model_audio_started` 只在
+    /// **实际开始播放**时记录，点击但合成失败不算一次播放。
+    var isSpeaking: Bool { player.isSpeaking }
+
     /// 朗读文本（默认放慢语速便于模仿）。
     func speak(_ text: String, rate: Float = 0.4) {
         guard !text.isEmpty else { return }

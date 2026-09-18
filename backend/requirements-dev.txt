@@ -1,0 +1,8 @@
+# 测试依赖。不进 requirements.txt——生产镜像不需要，装了只会变大。
+#
+# 用法：
+#   python3 -m venv .venv
+#   .venv/bin/pip install -r requirements.txt -r requirements-dev.txt
+#   .venv/bin/pytest tests/ -q
+pytest
+httpx

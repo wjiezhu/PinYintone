@@ -1,3 +1,4 @@
+from datetime import datetime
 """Pydantic 模型。字段名严格对齐 iOS 端 JSON（camelCase / 特定大小写），
 确保与 Swift Codable 直接互通，不做别名转换。"""
 from typing import Optional
@@ -141,3 +142,124 @@ class StudentDetailData(BaseModel):
     deviceID: str
     dtwTimeSeries: list[float] = []
     errorWords: list[str] = []
+
+
+# ---------------- 新版研究上报（字段字典 research-data-1.0） ----------------
+
+class ResearchEventDTO(BaseModel):
+    """单条操作事件。字段名与客户端 Codable 对齐（camelCase）。"""
+    eventID: str
+    sessionID: str
+    attemptID: str | None = None
+    lexemeVersionID: str | None = None
+    eventName: str
+    occurredAt: datetime
+    sessionElapsedMs: int | None = None
+    uiLanguage: str
+    payload: dict[str, str] = {}
+
+
+class ResearchEventBatch(BaseModel):
+    participantID: str
+    manifestID: str
+    events: list[ResearchEventDTO]
+
+
+class ResearchEnrollRequest(BaseModel):
+    """纳入研究。internalUserID 是业务账号键，**不是** Apple 标识。"""
+    internalUserID: str
+    manifestID: str
+    consentVersion: str
+    consentLanguage: str
+    consentOccurredAt: datetime
+    recruitmentSource: str = "unknown"
+    priorUseStatus: str = "unknown"
+    priorUseEvidence: str = "insufficient"
+    isTest: bool = False
+
+
+class ResearchEnrollResponse(BaseModel):
+    participantID: str
+    studyID: str
+    alreadyEnrolled: bool
+
+
+class ResearchWithdrawRequest(BaseModel):
+    participantID: str
+    consentVersion: str
+    consentLanguage: str
+    occurredAt: datetime
+
+
+class SurveyAnswerDTO(BaseModel):
+    questionID: str
+    state: str                     # answered / skipped / not_answered
+    optionCodes: list[str] | None = None
+    textValue: str | None = None
+    answeredAt: datetime | None = None
+
+
+class SurveyOutcomeDTO(BaseModel):
+    formKey: str
+    formVersion: str
+    translationVersion: str
+    language: str
+    answers: list[SurveyAnswerDTO]
+    status: str                    # declined / partial / complete
+    startedAt: datetime | None = None
+    submittedAt: datetime | None = None
+
+
+class SurveyUploadRequest(BaseModel):
+    participantID: str
+    manifestID: str
+    outcome: SurveyOutcomeDTO
+    timingClass: str
+    qualifyingAttemptsAtInvite: int = 0
+
+
+class ActiveManifestResponse(BaseModel):
+    manifestID: str
+    studyID: str
+    collectionStartAt: datetime
+    collectionEndAt: datetime
+    postTriggerCount: int
+    consentVersion: str
+    surveyVersion: str
+
+
+class ResearchAttemptDTO(BaseModel):
+    attemptID: str
+    sessionID: str
+    taskType: str
+    lexemeVersionID: str | None = None
+    retryOfAttemptID: str | None = None
+    priorPracticeCount: int | None = None
+    startedAt: datetime
+    status: str
+    finishedAt: datetime | None = None
+    recordingDurationMs: int | None = None
+    analysisDurationMs: int | None = None
+    signalStatus: str
+    metricValue: float | None = None
+    passed: bool | None = None
+    errorCode: str | None = None
+    resultDisplayedAt: datetime | None = None
+    timeQuality: str
+
+
+class ResearchAttemptBatch(BaseModel):
+    participantID: str
+    manifestID: str
+    attempts: list[ResearchAttemptDTO]
+
+
+class IssueReportRequest(BaseModel):
+    reportID: str
+    participantID: str
+    manifestID: str
+    attemptID: str | None = None
+    submittedAt: datetime
+    category: str
+    detail: str | None = None
+    relatedEventID: str | None = None

@@ -1,0 +1,331 @@
+{
+  "form_key": "background_v1",
+  "form_version": "background_v1-1.0-draft",
+  "translation_version": "research-survey-i18n-1.0-draft",
+  "title": {
+    "zh": "学习背景",
+    "en": "Learning background",
+    "fr": "Parcours d’apprentissage",
+    "ar": "خلفية التعلّم"
+  },
+  "questions": [
+    {
+      "question_id": "B01",
+      "type": "single",
+      "question": {
+        "zh": "你是否已满18周岁？",
+        "en": "Are you 18 years old or older?",
+        "fr": "Avez-vous 18 ans ou plus ?",
+        "ar": "هل تبلغ من العمر 18 عامًا أو أكثر؟"
+      },
+      "options": [
+        {
+          "code": "adult",
+          "label": {
+            "zh": "是，我已满18周岁",
+            "en": "Yes, I am 18 or older",
+            "fr": "Oui, j’ai 18 ans ou plus",
+            "ar": "نعم، أبلغ من العمر 18 عامًا أو أكثر"
+          }
+        },
+        {
+          "code": "minor",
+          "label": {
+            "zh": "否，我未满18周岁",
+            "en": "No, I am under 18",
+            "fr": "Non, j’ai moins de 18 ans",
+            "ar": "لا، عمري أقل من 18 عامًا"
+          }
+        },
+        {
+          "code": "prefer_not",
+          "label": {
+            "zh": "不愿回答",
+            "en": "Prefer not to answer",
+            "fr": "Je préfère ne pas répondre",
+            "ar": "أفضل عدم الإجابة"
+          },
+          "exclusive": true
+        }
+      ]
+    },
+    {
+      "question_id": "B02",
+      "type": "multi",
+      "question": {
+        "zh": "你的国籍是什么？如有多个国籍，可以选择多个。",
+        "en": "What is your nationality? If you have more than one nationality, you can select more than one.",
+        "fr": "Quelle est votre nationalité ? Si vous avez plusieurs nationalités, vous pouvez en sélectionner plusieurs.",
+        "ar": "ما جنسيتك؟ إذا كنت تحمل أكثر من جنسية، يمكنك اختيار أكثر من واحدة."
+      },
+      "options": [
+        {
+          "code": "MA",
+          "label": {
+            "zh": "摩洛哥",
+            "en": "Morocco",
+            "fr": "Maroc",
+            "ar": "المغرب"
+          }
+        },
+        {
+          "code": "prefer_not",
+          "label": {
+            "zh": "不愿回答",
+            "en": "Prefer not to answer",
+            "fr": "Je préfère ne pas répondre",
+            "ar": "أفضل عدم الإجابة"
+          },
+          "exclusive": true
+        }
+      ],
+      "option_source": "iso3166_alpha2_platform_localized",
+      "note": "MA 仅为已展开的目标国家示例；完整列表用平台本地化名称，按 ISO 代码保存。不得以地区/界面语言/IP 代填。"
+    },
+    {
+      "question_id": "B03",
+      "type": "single",
+      "question": {
+        "zh": "你目前主要在学习哪个阶段的汉语课程？这里指正在学习的课程，不是已经通过的考试。",
+        "en": "What level of Chinese course are you mainly studying now? This refers to your current course, not an exam you have passed.",
+        "fr": "Quel niveau de cours de chinois suivez-vous principalement en ce moment ? Il s’agit du cours actuel, et non d’un examen que vous avez réussi.",
+        "ar": "ما مستوى دورة اللغة الصينية التي تدرسها أساسًا حاليًا؟ المقصود هو الدورة التي تدرسها الآن، وليس اختبارًا اجتزته."
+      },
+      "options": [
+        {
+          "code": "hsk1",
+          "label": {
+            "zh": "HSK1课程",
+            "en": "HSK1 course",
+            "fr": "Cours HSK1",
+            "ar": "دورة HSK1"
+          }
+        },
+        {
+          "code": "hsk2",
+          "label": {
+            "zh": "HSK2课程",
+            "en": "HSK2 course",
+            "fr": "Cours HSK2",
+            "ar": "دورة HSK2"
+          }
+        },
+        {
+          "code": "hsk3",
+          "label": {
+            "zh": "HSK3课程",
+            "en": "HSK3 course",
+            "fr": "Cours HSK3",
+            "ar": "دورة HSK3"
+          }
+        },
+        {
+          "code": "hsk4_plus",
+          "label": {
+            "zh": "HSK4或更高阶段课程",
+            "en": "HSK4 or a higher-level course",
+            "fr": "Cours HSK4 ou de niveau supérieur",
+            "ar": "دورة HSK4 أو مستوى أعلى"
+          }
+        },
+        {
+          "code": "other",
+          "label": {
+            "zh": "其他",
+            "en": "Other",
+            "fr": "Autre",
+            "ar": "غير ذلك"
+          },
+          "text_input": {
+            "max_chars": 200,
+            "hint": {
+              "zh": "课程或教材名称（选填）",
+              "en": "Course or textbook name (optional)",
+              "fr": "Nom du cours ou du manuel (facultatif)",
+              "ar": "اسم الدورة أو الكتاب الدراسي (اختياري)"
+            }
+          }
+        },
+        {
+          "code": "unsure",
+          "label": {
+            "zh": "不清楚",
+            "en": "Not sure",
+            "fr": "Je ne sais pas",
+            "ar": "لست متأكدًا"
+          }
+        }
+      ]
+    },
+    {
+      "question_id": "B04",
+      "type": "multi",
+      "question": {
+        "zh": "你从小在家中主要使用哪些语言？可多选。",
+        "en": "Which languages did you mainly use at home while growing up? Select all that apply.",
+        "fr": "Quelles langues utilisiez-vous principalement à la maison pendant votre enfance ? Plusieurs réponses possibles.",
+        "ar": "ما اللغات التي كنت تستخدمها أساسًا في المنزل أثناء طفولتك؟ يمكنك اختيار أكثر من إجابة."
+      },
+      "options": [
+        {
+          "code": "darija",
+          "label": {
+            "zh": "达里贾语（摩洛哥阿拉伯方言）",
+            "en": "Darija (Moroccan Arabic)",
+            "fr": "Darija (arabe marocain)",
+            "ar": "الدارجة المغربية"
+          }
+        },
+        {
+          "code": "amazigh",
+          "label": {
+            "zh": "阿马齐格语",
+            "en": "Amazigh",
+            "fr": "Amazighe",
+            "ar": "الأمازيغية"
+          }
+        },
+        {
+          "code": "msa",
+          "label": {
+            "zh": "标准阿拉伯语",
+            "en": "Standard Arabic",
+            "fr": "Arabe standard",
+            "ar": "العربية الفصحى"
+          }
+        },
+        {
+          "code": "french",
+          "label": {
+            "zh": "法语",
+            "en": "French",
+            "fr": "Français",
+            "ar": "الفرنسية"
+          }
+        },
+        {
+          "code": "other",
+          "label": {
+            "zh": "其他",
+            "en": "Other",
+            "fr": "Autre",
+            "ar": "غير ذلك"
+          },
+          "text_input": {
+            "max_chars": 200,
+            "hint": {
+              "zh": "语言名称（选填）",
+              "en": "Language name (optional)",
+              "fr": "Nom de la langue (facultatif)",
+              "ar": "اسم اللغة (اختياري)"
+            }
+          }
+        },
+        {
+          "code": "prefer_not",
+          "label": {
+            "zh": "不愿回答",
+            "en": "Prefer not to answer",
+            "fr": "Je préfère ne pas répondre",
+            "ar": "أفضل عدم الإجابة"
+          },
+          "exclusive": true
+        }
+      ]
+    },
+    {
+      "question_id": "B05",
+      "type": "multi",
+      "question": {
+        "zh": "你目前在日常生活中经常使用哪些语言？可多选。",
+        "en": "Which languages do you often use in your daily life now? Select all that apply.",
+        "fr": "Quelles langues utilisez-vous souvent dans votre vie quotidienne actuellement ? Plusieurs réponses possibles.",
+        "ar": "ما اللغات التي تستخدمها كثيرًا في حياتك اليومية حاليًا؟ يمكنك اختيار أكثر من إجابة."
+      },
+      "options": [
+        {
+          "code": "darija",
+          "label": {
+            "zh": "达里贾语（摩洛哥阿拉伯方言）",
+            "en": "Darija (Moroccan Arabic)",
+            "fr": "Darija (arabe marocain)",
+            "ar": "الدارجة المغربية"
+          }
+        },
+        {
+          "code": "amazigh",
+          "label": {
+            "zh": "阿马齐格语",
+            "en": "Amazigh",
+            "fr": "Amazighe",
+            "ar": "الأمازيغية"
+          }
+        },
+        {
+          "code": "msa",
+          "label": {
+            "zh": "标准阿拉伯语",
+            "en": "Standard Arabic",
+            "fr": "Arabe standard",
+            "ar": "العربية الفصحى"
+          }
+        },
+        {
+          "code": "french",
+          "label": {
+            "zh": "法语",
+            "en": "French",
+            "fr": "Français",
+            "ar": "الفرنسية"
+          }
+        },
+        {
+          "code": "english",
+          "label": {
+            "zh": "英语",
+            "en": "English",
+            "fr": "Anglais",
+            "ar": "الإنجليزية"
+          }
+        },
+        {
+          "code": "chinese",
+          "label": {
+            "zh": "汉语",
+            "en": "Chinese",
+            "fr": "Chinois",
+            "ar": "الصينية"
+          }
+        },
+        {
+          "code": "other",
+          "label": {
+            "zh": "其他",
+            "en": "Other",
+            "fr": "Autre",
+            "ar": "غير ذلك"
+          },
+          "text_input": {
+            "max_chars": 200,
+            "hint": {
+              "zh": "语言名称（选填）",
+              "en": "Language name (optional)",
+              "fr": "Nom de la langue (facultatif)",
+              "ar": "اسم اللغة (اختياري)"
+            }
+          }
+        },
+        {
+          "code": "prefer_not",
+          "label": {
+            "zh": "不愿回答",
+            "en": "Prefer not to answer",
+            "fr": "Je préfère ne pas répondre",
+            "ar": "أفضل عدم الإجابة"
+          },
+          "exclusive": true
+        }
+      ]
+    }
+  ]
+}

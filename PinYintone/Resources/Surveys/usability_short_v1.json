@@ -1,0 +1,354 @@
+{
+  "form_key": "usability_short_v1",
+  "form_version": "usability_short_v1-1.0-draft",
+  "translation_version": "research-survey-i18n-1.0-draft",
+  "title": {
+    "zh": "使用体验",
+    "en": "Your experience with the app",
+    "fr": "Votre expérience de l’application",
+    "ar": "تجربتك مع التطبيق"
+  },
+  "intro": {
+    "zh": "请根据刚才使用Pinyintone的实际经历回答。没有对错，你的回答不会影响积分或继续练习。没有使用过或无法判断的内容，可以选择相应选项。",
+    "en": "Please answer based on your recent experience using Pinyintone. There are no right or wrong answers. Your answers will not affect your points or your ability to keep practicing. For anything you have not used or cannot judge, you can select the corresponding answer.",
+    "fr": "Répondez selon votre expérience récente de Pinyintone. Il n’y a pas de bonnes ou de mauvaises réponses. Vos réponses n’auront aucun effet sur vos points ni sur la possibilité de poursuivre les exercices. Pour les éléments que vous n’avez pas utilisés ou que vous ne pouvez pas évaluer, vous pouvez choisir la réponse correspondante.",
+    "ar": "يرجى الإجابة بناءً على تجربتك الفعلية الأخيرة مع Pinyintone. لا توجد إجابات صحيحة أو خاطئة، ولن تؤثر إجاباتك في نقاطك أو في إمكانية متابعة التدريب. بالنسبة إلى ما لم تستخدمه أو لا تستطيع تقييمه، يمكنك اختيار الإجابة المناسبة."
+  },
+  "scoring_note": "POST01—03 的 1–5 由选项 value 派生；cannot_judge 不计分且不得存为 0。逐题描述，不合成 SUS 或声调能力分。",
+  "questions": [
+    {
+      "question_id": "POST01",
+      "type": "single",
+      "question": {
+        "zh": "我能顺利完成一次声调练习的操作。",
+        "en": "I can complete the steps of a tone-practice exercise without difficulty.",
+        "fr": "Je peux effectuer les étapes d’un exercice sur les tons sans difficulté.",
+        "ar": "أستطيع إتمام خطوات تمرين على النغمات دون صعوبة."
+      },
+      "options": [
+        {
+          "code": "strongly_disagree",
+          "label": {
+            "zh": "非常不同意",
+            "en": "Strongly disagree",
+            "fr": "Pas du tout d’accord",
+            "ar": "لا أوافق إطلاقًا"
+          },
+          "value": 1
+        },
+        {
+          "code": "disagree",
+          "label": {
+            "zh": "不同意",
+            "en": "Disagree",
+            "fr": "Pas d’accord",
+            "ar": "لا أوافق"
+          },
+          "value": 2
+        },
+        {
+          "code": "neutral",
+          "label": {
+            "zh": "既不同意也不赞同",
+            "en": "Neither agree nor disagree",
+            "fr": "Ni d’accord ni pas d’accord",
+            "ar": "لا أوافق ولا أعارض"
+          },
+          "value": 3
+        },
+        {
+          "code": "agree",
+          "label": {
+            "zh": "同意",
+            "en": "Agree",
+            "fr": "D’accord",
+            "ar": "أوافق"
+          },
+          "value": 4
+        },
+        {
+          "code": "strongly_agree",
+          "label": {
+            "zh": "非常同意",
+            "en": "Strongly agree",
+            "fr": "Tout à fait d’accord",
+            "ar": "أوافق بشدة"
+          },
+          "value": 5
+        },
+        {
+          "code": "cannot_judge",
+          "label": {
+            "zh": "无法判断",
+            "en": "Unable to judge",
+            "fr": "Je ne peux pas me prononcer",
+            "ar": "لا أستطيع الحكم"
+          }
+        }
+      ],
+      "note": "「顺利」指操作体验，不指发音通过"
+    },
+    {
+      "question_id": "POST02",
+      "type": "single",
+      "question": {
+        "zh": "我能理解刚才实际看到的声调反馈。",
+        "en": "I can understand the tone feedback I actually saw during my recent use of the app.",
+        "fr": "Je comprends les retours sur les tons que j’ai effectivement vus lors de ma récente utilisation de l’application.",
+        "ar": "أستطيع فهم الملاحظات حول النغمات التي رأيتها بالفعل أثناء استخدامي الأخير للتطبيق."
+      },
+      "hint": {
+        "zh": "请只评价你已经看过的内容，不需要评价未使用的反馈形式。",
+        "en": "Please rate only what you have already seen. You do not need to rate feedback formats you have not used.",
+        "fr": "Évaluez uniquement ce que vous avez déjà vu. Vous n’avez pas à évaluer les formes de retour que vous n’avez pas utilisées.",
+        "ar": "يرجى تقييم ما رأيته بالفعل فقط. لا تحتاج إلى تقييم أشكال الملاحظات التي لم تستخدمها."
+      },
+      "options": [
+        {
+          "code": "strongly_disagree",
+          "label": {
+            "zh": "非常不同意",
+            "en": "Strongly disagree",
+            "fr": "Pas du tout d’accord",
+            "ar": "لا أوافق إطلاقًا"
+          },
+          "value": 1
+        },
+        {
+          "code": "disagree",
+          "label": {
+            "zh": "不同意",
+            "en": "Disagree",
+            "fr": "Pas d’accord",
+            "ar": "لا أوافق"
+          },
+          "value": 2
+        },
+        {
+          "code": "neutral",
+          "label": {
+            "zh": "既不同意也不赞同",
+            "en": "Neither agree nor disagree",
+            "fr": "Ni d’accord ni pas d’accord",
+            "ar": "لا أوافق ولا أعارض"
+          },
+          "value": 3
+        },
+        {
+          "code": "agree",
+          "label": {
+            "zh": "同意",
+            "en": "Agree",
+            "fr": "D’accord",
+            "ar": "أوافق"
+          },
+          "value": 4
+        },
+        {
+          "code": "strongly_agree",
+          "label": {
+            "zh": "非常同意",
+            "en": "Strongly agree",
+            "fr": "Tout à fait d’accord",
+            "ar": "أوافق بشدة"
+          },
+          "value": 5
+        },
+        {
+          "code": "cannot_judge",
+          "label": {
+            "zh": "无法判断",
+            "en": "Unable to judge",
+            "fr": "Je ne peux pas me prononcer",
+            "ar": "لا أستطيع الحكم"
+          }
+        }
+      ],
+      "note": "评价整体可理解性，不分别产出颜色/曲线/AI 三项评分"
+    },
+    {
+      "question_id": "POST03",
+      "type": "single",
+      "question": {
+        "zh": "看过反馈后，我知道下一次可以怎样调整发音。",
+        "en": "After looking at the feedback, I know how I can adjust my pronunciation next time.",
+        "fr": "Après avoir consulté les retours, je sais comment ajuster ma prononciation la prochaine fois.",
+        "ar": "بعد الاطّلاع على الملاحظات، أعرف كيف يمكنني تعديل نطقي في المحاولة التالية."
+      },
+      "options": [
+        {
+          "code": "strongly_disagree",
+          "label": {
+            "zh": "非常不同意",
+            "en": "Strongly disagree",
+            "fr": "Pas du tout d’accord",
+            "ar": "لا أوافق إطلاقًا"
+          },
+          "value": 1
+        },
+        {
+          "code": "disagree",
+          "label": {
+            "zh": "不同意",
+            "en": "Disagree",
+            "fr": "Pas d’accord",
+            "ar": "لا أوافق"
+          },
+          "value": 2
+        },
+        {
+          "code": "neutral",
+          "label": {
+            "zh": "既不同意也不赞同",
+            "en": "Neither agree nor disagree",
+            "fr": "Ni d’accord ni pas d’accord",
+            "ar": "لا أوافق ولا أعارض"
+          },
+          "value": 3
+        },
+        {
+          "code": "agree",
+          "label": {
+            "zh": "同意",
+            "en": "Agree",
+            "fr": "D’accord",
+            "ar": "أوافق"
+          },
+          "value": 4
+        },
+        {
+          "code": "strongly_agree",
+          "label": {
+            "zh": "非常同意",
+            "en": "Strongly agree",
+            "fr": "Tout à fait d’accord",
+            "ar": "أوافق بشدة"
+          },
+          "value": 5
+        },
+        {
+          "code": "cannot_judge",
+          "label": {
+            "zh": "无法判断",
+            "en": "Unable to judge",
+            "fr": "Je ne peux pas me prononcer",
+            "ar": "لا أستطيع الحكم"
+          }
+        }
+      ],
+      "note": "不是 AI 建议专属评价；不能仅凭本题宣称 AI 建议有效"
+    },
+    {
+      "question_id": "POST04",
+      "type": "multi",
+      "question": {
+        "zh": "到目前为止，使用Pinyintone时，你遇到过哪些问题？可多选。",
+        "en": "So far, what problems have you experienced while using Pinyintone? Select all that apply.",
+        "fr": "Jusqu’à présent, quels problèmes avez-vous rencontrés en utilisant Pinyintone ? Plusieurs réponses possibles.",
+        "ar": "حتى الآن، ما المشكلات التي واجهتها أثناء استخدام Pinyintone؟ يمكنك اختيار أكثر من إجابة."
+      },
+      "options": [
+        {
+          "code": "cannot_find_action",
+          "label": {
+            "zh": "找不到需要的操作入口",
+            "en": "I could not find where to perform the action I needed",
+            "fr": "Je n’ai pas trouvé où effectuer l’action souhaitée",
+            "ar": "لم أجد المكان الذي يمكنني منه تنفيذ الإجراء المطلوب"
+          }
+        },
+        {
+          "code": "recording_failed",
+          "label": {
+            "zh": "无法完成录音",
+            "en": "I could not complete a recording",
+            "fr": "Je n’ai pas pu terminer un enregistrement",
+            "ar": "لم أتمكن من إتمام التسجيل"
+          }
+        },
+        {
+          "code": "analysis_failed",
+          "label": {
+            "zh": "录音后未能得到分析结果",
+            "en": "I did not receive an analysis result after recording",
+            "fr": "Je n’ai pas obtenu de résultat d’analyse après l’enregistrement",
+            "ar": "لم أحصل على نتيجة التحليل بعد التسجيل"
+          }
+        },
+        {
+          "code": "app_crashed",
+          "label": {
+            "zh": "应用突然关闭或闪退",
+            "en": "The app closed unexpectedly or crashed",
+            "fr": "L’application s’est fermée de façon inattendue ou a planté",
+            "ar": "أُغلق التطبيق فجأة أو تعطّل"
+          }
+        },
+        {
+          "code": "unclear_feedback",
+          "label": {
+            "zh": "看不懂反馈内容",
+            "en": "I could not understand the feedback",
+            "fr": "Je n’ai pas compris les retours",
+            "ar": "لم أفهم الملاحظات"
+          }
+        },
+        {
+          "code": "other",
+          "label": {
+            "zh": "其他问题",
+            "en": "Other problems",
+            "fr": "Autres problèmes",
+            "ar": "مشكلات أخرى"
+          },
+          "text_input": {
+            "max_chars": 200
+          }
+        },
+        {
+          "code": "none",
+          "label": {
+            "zh": "没有遇到问题",
+            "en": "I have not experienced any problems",
+            "fr": "Je n’ai rencontré aucun problème",
+            "ar": "لم أواجه أي مشكلات"
+          },
+          "exclusive": true
+        },
+        {
+          "code": "cannot_recall",
+          "label": {
+            "zh": "记不清",
+            "en": "I cannot remember",
+            "fr": "Je ne me souviens pas",
+            "ar": "لا أتذكر"
+          },
+          "exclusive": true
+        }
+      ],
+      "note": "用户报告与系统错误日志分别统计，不自动认定一一对应"
+    },
+    {
+      "question_id": "POST05",
+      "type": "text",
+      "options": [],
+      "question": {
+        "zh": "你最希望Pinyintone改进什么？",
+        "en": "What would you most like Pinyintone to improve?",
+        "fr": "Qu’aimeriez-vous surtout améliorer dans Pinyintone ?",
+        "ar": "ما أكثر ما ترغب في تحسينه في Pinyintone؟"
+      },
+      "hint": {
+        "zh": "可以谈操作、反馈、练习内容或其他方面。请不要填写姓名、联系方式或其他可识别个人身份的信息。",
+        "en": "You can comment on the controls, feedback, practice content, or anything else. Please do not enter names, contact details, or other information that could identify someone.",
+        "fr": "Vous pouvez parler des manipulations, des retours, du contenu des exercices ou d’autres aspects. Veuillez ne pas indiquer de noms, de coordonnées ou d’autres informations permettant d’identifier une personne.",
+        "ar": "يمكنك الحديث عن خطوات الاستخدام أو الملاحظات أو محتوى التدريبات أو جوانب أخرى. يرجى عدم إدخال أسماء أو معلومات اتصال أو أي معلومات أخرى قد تكشف هوية شخص."
+      },
+      "text_input": {
+        "max_chars": 500,
+        "optional": true
+      },
+      "note": "留空不影响 complete；不预填示例答案"
+    }
+  ]
+}

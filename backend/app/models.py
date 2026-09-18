@@ -1,6 +1,6 @@
 from datetime import datetime, timezone
 
-from sqlalchemy import Boolean, Column, DateTime, Float, Integer, JSON, String
+from sqlalchemy import ForeignKey, BigInteger, Boolean, Column, DateTime, Float, Integer, JSON, String
 
 from .database import Base
 
