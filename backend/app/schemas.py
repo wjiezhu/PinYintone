@@ -1,9 +1,9 @@
-from datetime import datetime
+from datetime import datetime, timezone
 """Pydantic 模型。字段名严格对齐 iOS 端 JSON（camelCase / 特定大小写），
 确保与 Swift Codable 直接互通，不做别名转换。"""
-from typing import Optional
+from typing import Annotated, Optional
 
-from pydantic import BaseModel
+from pydantic import AfterValidator, BaseModel, BeforeValidator, PlainSerializer
 
 
 # ───────────── Auth ─────────────
@@ -145,6 +145,38 @@ class StudentDetailData(BaseModel):
 
 
 # ---------------- 新版研究上报（字段字典 research-data-1.0） ----------------
+#
+# 时间字段的契约（**研究接口专用，旧接口不受影响**）：
+# - 入参必须是**带时区**的 ISO8601 字符串。**拒收数字**。
+#   iOS 默认 JSONEncoder 把日期编码成自 2001-01-01 起的秒数，而 pydantic 会把数字
+#   当自 1970-01-01 起的秒数解读——差 31 年。实测曾返回 200 并把 2026-09-19 存成
+#   1995-09-19，导出因全部落在窗口外而为空，且无任何报错。拒收让它大声失败。
+# - 拒收不带时区的串：按服务器本地时区猜会让采集窗口边界漂移。
+# - 出参一律输出带时区的 UTC：SQLite 读回会丢 tzinfo，客户端的 ISO8601 解码器
+#   要求时区，不补上就会解码失败、研究配置静默拿不到。
+
+def _reject_numeric_time(v):
+    if isinstance(v, (int, float)) and not isinstance(v, bool):
+        raise ValueError(
+            "研究接口要求 ISO8601 字符串时间，收到数字。"
+            "很可能是 iOS 默认的 2001 基准秒数——按 1970 解读会错 31 年")
+    return v
+
+
+def _require_tz(v: datetime) -> datetime:
+    if v.tzinfo is None:
+        raise ValueError("研究接口要求带时区的时间（如 2026-09-19T01:00:00Z）")
+    return v
+
+
+def _as_utc_iso(v: datetime) -> str:
+    return (v if v.tzinfo else v.replace(tzinfo=timezone.utc)).isoformat()
+
+
+IsoDatetime = Annotated[datetime, BeforeValidator(_reject_numeric_time),
+                        AfterValidator(_require_tz)]
+OutDatetime = Annotated[datetime, PlainSerializer(_as_utc_iso, return_type=str)]
+
 
 class ResearchEventDTO(BaseModel):
     """单条操作事件。字段名与客户端 Codable 对齐（camelCase）。"""
@@ -153,7 +185,7 @@ class ResearchEventDTO(BaseModel):
     attemptID: str | None = None
     lexemeVersionID: str | None = None
     eventName: str
-    occurredAt: datetime
+    occurredAt: IsoDatetime
     sessionElapsedMs: int | None = None
     uiLanguage: str
     payload: dict[str, str] = {}
@@ -171,7 +203,7 @@ class ResearchEnrollRequest(BaseModel):
     manifestID: str
     consentVersion: str
     consentLanguage: str
-    consentOccurredAt: datetime
+    consentOccurredAt: IsoDatetime
     recruitmentSource: str = "unknown"
     priorUseStatus: str = "unknown"
     priorUseEvidence: str = "insufficient"
@@ -188,7 +220,7 @@ class ResearchWithdrawRequest(BaseModel):
     participantID: str
     consentVersion: str
     consentLanguage: str
-    occurredAt: datetime
+    occurredAt: IsoDatetime
 
 
 class SurveyAnswerDTO(BaseModel):
@@ -196,7 +228,7 @@ class SurveyAnswerDTO(BaseModel):
     state: str                     # answered / skipped / not_answered
     optionCodes: list[str] | None = None
     textValue: str | None = None
-    answeredAt: datetime | None = None
+    answeredAt: IsoDatetime | None = None
 
 
 class SurveyOutcomeDTO(BaseModel):
@@ -206,8 +238,8 @@ class SurveyOutcomeDTO(BaseModel):
     language: str
     answers: list[SurveyAnswerDTO]
     status: str                    # declined / partial / complete
-    startedAt: datetime | None = None
-    submittedAt: datetime | None = None
+    startedAt: IsoDatetime | None = None
+    submittedAt: IsoDatetime | None = None
 
 
 class SurveyUploadRequest(BaseModel):
@@ -221,8 +253,8 @@ class SurveyUploadRequest(BaseModel):
 class ActiveManifestResponse(BaseModel):
     manifestID: str
     studyID: str
-    collectionStartAt: datetime
-    collectionEndAt: datetime
+    collectionStartAt: OutDatetime
+    collectionEndAt: OutDatetime
     postTriggerCount: int
     consentVersion: str
     surveyVersion: str
@@ -235,16 +267,16 @@ class ResearchAttemptDTO(BaseModel):
     lexemeVersionID: str | None = None
     retryOfAttemptID: str | None = None
     priorPracticeCount: int | None = None
-    startedAt: datetime
+    startedAt: IsoDatetime
     status: str
-    finishedAt: datetime | None = None
+    finishedAt: IsoDatetime | None = None
     recordingDurationMs: int | None = None
     analysisDurationMs: int | None = None
     signalStatus: str
     metricValue: float | None = None
     passed: bool | None = None
     errorCode: str | None = None
-    resultDisplayedAt: datetime | None = None
+    resultDisplayedAt: IsoDatetime | None = None
     timeQuality: str
 
 
@@ -259,7 +291,7 @@ class IssueReportRequest(BaseModel):
     participantID: str
     manifestID: str
     attemptID: str | None = None
-    submittedAt: datetime
+    submittedAt: IsoDatetime
     category: str
     detail: str | None = None
     relatedEventID: str | None = None
