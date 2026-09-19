@@ -31,14 +31,16 @@ final class APIClient {
         _ path: String,
         method: String = "GET",
         body: (any Encodable)? = nil,
-        token: String? = nil
+        token: String? = nil,
+        encoder: JSONEncoder = JSONEncoder(),
+        decoder: JSONDecoder = JSONDecoder()
     ) async throws -> T {
         let url = baseURL.appendingPathComponent(path)
         var req = URLRequest(url: url)
         req.httpMethod = method
         req.setValue("application/json", forHTTPHeaderField: "Content-Type")
         if let token { req.setValue("Bearer \(token)", forHTTPHeaderField: "Authorization") }
-        if let body { req.httpBody = try JSONEncoder().encode(body) }
+        if let body { req.httpBody = try encoder.encode(body) }
 
         let (data, response) = try await URLSession.shared.data(for: req)
         guard let http = response as? HTTPURLResponse else {
@@ -53,7 +55,16 @@ final class APIClient {
         guard (200..<300).contains(http.statusCode) else {
             throw RegisterError.networkError(URLError(.badServerResponse))
         }
-        return try JSONDecoder().decode(T.self, from: data)
+        return try decoder.decode(T.self, from: data)
+    }
+
+    /// 研究接口专用：日期一律 ISO8601。**所有 research/ 路径必须走这里**——
+    /// 见 `ResearchJSON` 的说明，默认编码会让时间错 31 年且全程静默。
+    private func researchRequest<T: Decodable>(
+        _ path: String, method: String = "GET", body: (any Encodable)? = nil
+    ) async throws -> T {
+        try await request(path, method: method, body: body,
+                          encoder: ResearchJSON.encoder, decoder: ResearchJSON.decoder)
     }
 
     // MARK: - Auth
@@ -96,7 +107,7 @@ final class APIClient {
             let consentOccurredAt: Date
             let isTest: Bool
         }
-        return try await request("research/enroll", method: "POST",
+        return try await researchRequest("research/enroll", method: "POST",
                                  body: Body(internalUserID: internalUserID,
                                             manifestID: manifestID,
                                             consentVersion: consentVersion,
@@ -114,7 +125,7 @@ final class APIClient {
             let occurredAt: Date
         }
         struct Ack: Decodable { let status: String }
-        let _: Ack = try await request("research/withdraw", method: "POST",
+        let _: Ack = try await researchRequest("research/withdraw", method: "POST",
                                        body: Body(participantID: participantID,
                                                   consentVersion: consentVersion,
                                                   consentLanguage: consentLanguage,
@@ -134,12 +145,12 @@ final class APIClient {
     /// 取当前生效的研究配置。404 表示暂无生效配置——
     /// 此时不得纳入任何人，也不得猜一个配置。
     func fetchActiveManifest() async throws -> ActiveManifest {
-        try await request("research/manifest/active")
+        try await researchRequest("research/manifest/active")
     }
 
     /// 上报练习尝试。失败抛错由调用方保留队列重试。
     func uploadResearchAttempts(_ batch: any Encodable) async throws {
-        let _: ResearchEventAck = try await request("research/attempts",
+        let _: ResearchEventAck = try await researchRequest("research/attempts",
                                                     method: "POST", body: batch)
     }
 
@@ -151,7 +162,7 @@ final class APIClient {
             let submittedAt: Date, category: String, detail: String?
         }
         struct Ack: Decodable { let reportID: String }
-        let _: Ack = try await request("research/issues", method: "POST",
+        let _: Ack = try await researchRequest("research/issues", method: "POST",
                                        body: Body(reportID: reportID,
                                                   participantID: participantID,
                                                   manifestID: manifestID,
@@ -170,7 +181,7 @@ final class APIClient {
             let qualifyingAttemptsAtInvite: Int
         }
         struct Ack: Decodable { let surveyInstanceID: String }
-        let _: Ack = try await request("research/surveys", method: "POST",
+        let _: Ack = try await researchRequest("research/surveys", method: "POST",
                                        body: Body(participantID: participantID,
                                                   manifestID: manifestID,
                                                   outcome: outcome,
@@ -181,7 +192,7 @@ final class APIClient {
     /// 上报研究操作事件。失败抛错由调用方保留队列重试——
     /// **不得**在这里吞掉错误，否则离线期间的事件会静默丢失。
     func uploadResearchEvents(_ batch: any Encodable) async throws {
-        let _: ResearchEventAck = try await request("research/events",
+        let _: ResearchEventAck = try await researchRequest("research/events",
                                                     method: "POST", body: batch)
     }
 
