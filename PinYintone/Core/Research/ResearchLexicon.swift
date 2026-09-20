@@ -14,6 +14,8 @@ nonisolated enum ResearchLexicon {
         let lexemeID: String
         let lexemeVersionID: String
         let reviewStatus: String
+        let teacherHintText: String?
+        let teacherHintVersion: String?
     }
 
     struct File: Decodable {
@@ -38,6 +40,15 @@ nonisolated enum ResearchLexicon {
     static func versionID(for lexemeID: String?) -> String? {
         guard let lexemeID else { return nil }
         return byLexemeID[lexemeID]?.lexemeVersionID
+    }
+
+    /// 该词**经教师核对**的目标词提示。未核对或没有提示时返回 nil——
+    /// 字典 §9：「词条无已核对提示时不得套用别词提示」。
+    static func approvedHint(for lexemeID: String) -> (text: String, version: String)? {
+        guard let e = byLexemeID[lexemeID], e.reviewStatus == "approved",
+              let text = e.teacherHintText, !text.isEmpty,
+              let version = e.teacherHintVersion else { return nil }
+        return (text, version)
     }
 
     /// 是否已通过教师核对。未核对的词条不得用于正式采集（字典 §6）。
