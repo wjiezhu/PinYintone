@@ -353,6 +353,11 @@ final class ToneTrainingViewModel: ObservableObject {
             ResearchAttemptLog.shared.markAnalyzing(id)
             ResearchAttemptLog.shared.markSucceeded(
                 id, metric: Double(score), passed: grade != .fail)
+            // 积分：只有有效评分通过才发，且每词首次通过才发（字典 §13）。
+            // 功能由 manifest.reward_rule_version 开关，未配置则整体关闭。
+            RewardLedger.shared.settle(attemptID: id,
+                                       lexemeID: currentLexeme?.id ?? "",
+                                       passed: grade != .fail)
         }
 
         let segments = buildSegments(student: normalized, reference: reference)
