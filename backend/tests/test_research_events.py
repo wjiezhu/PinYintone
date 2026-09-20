@@ -518,3 +518,46 @@ def test_issue_rejected_after_withdrawal():
         "participantID": PID_HOLDER["pid"], "consentVersion": "c1",
         "consentLanguage": "zh", "occurredAt": (NOW + timedelta(seconds=1)).isoformat()})
     assert client.post("/research/issues", json=_issue(rid="r5")).status_code == 403
+
+
+# ---------------- 时间契约 ----------------
+# 历史缺陷：iOS 默认编码把日期发成自 2001 年起的秒数，pydantic 按 1970 解读，
+# 差 31 年；返回 200、导出为空、无报错。以下测试确保它以后**大声失败**。
+
+def test_numeric_timestamp_rejected():
+    _manifest_only()
+    r = client.post("/research/enroll", json={
+        "internalUserID": "u-num", "manifestID": "m1", "consentVersion": "c1",
+        "consentLanguage": "zh", "consentOccurredAt": 811472400, "isTest": True})
+    assert r.status_code == 422, "数字时间戳必须被拒，否则会被存成 1995 年"
+
+
+def test_timezone_less_timestamp_rejected():
+    _manifest_only()
+    r = client.post("/research/enroll", json={
+        "internalUserID": "u-naive", "manifestID": "m1", "consentVersion": "c1",
+        "consentLanguage": "zh", "consentOccurredAt": "2026-09-19T08:30:00", "isTest": True})
+    assert r.status_code == 422
+
+
+def test_exact_ios_format_stored_correctly():
+    """iOS ResearchJSON 实际发出的格式：带三位小数秒与 Z。"""
+    _manifest_only()
+    r = client.post("/research/enroll", json={
+        "internalUserID": "u-ios", "manifestID": "m1", "consentVersion": "c1",
+        "consentLanguage": "zh", "consentOccurredAt": "2026-09-19T08:30:00.000Z",
+        "isTest": True})
+    assert r.status_code == 200
+    db = TestingSession()
+    e = db.query(models.ResearchConsentEvent).one()
+    assert e.occurred_at.year == 2026, f"存成了 {e.occurred_at}"
+    assert (e.occurred_at.hour, e.occurred_at.minute) == (8, 30)
+    db.close()
+
+
+def test_manifest_output_always_has_timezone():
+    """客户端解码器要求时区；SQLite 读回会丢 tzinfo，出参必须补上。"""
+    _manifest_only()
+    body = client.get("/research/manifest/active").json()
+    for k in ("collectionStartAt", "collectionEndAt"):
+        assert body[k].endswith("+00:00") or body[k].endswith("Z"), f"{k} 缺时区：{body[k]}"
