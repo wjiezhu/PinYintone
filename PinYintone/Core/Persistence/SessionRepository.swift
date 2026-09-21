@@ -81,6 +81,28 @@ final class SessionRepository {
              failureReason: reason)
     }
 
+    /// 学习记录页用：按时间倒序取本机记录。
+    ///
+    /// **排除技术失败**（`resultStatus = technical_retry`）：那些记录的
+    /// `dtwScore` 是 -1 哨兵、`grade` 是 "n/a"，本就不是发音成绩，
+    /// 显示出来会被读成「拿了个负分」。失败次数另行统计，不混进成绩列表。
+    func fetchHistory(limit: Int = 200) -> [TrainingSession] {
+        let req: NSFetchRequest<TrainingSession> = TrainingSession.fetchRequest()
+        req.predicate = NSPredicate(format: "resultStatus != %@ OR resultStatus == nil",
+                                    ResultStatus.technicalRetry.rawValue)
+        req.sortDescriptors = [NSSortDescriptor(key: "timestamp", ascending: false)]
+        req.fetchLimit = limit
+        return (try? context.fetch(req)) ?? []
+    }
+
+    /// 技术失败的次数。单独呈现——它反映的是录音是否顺利，不是发音水平。
+    func technicalRetryCount() -> Int {
+        let req: NSFetchRequest<TrainingSession> = TrainingSession.fetchRequest()
+        req.predicate = NSPredicate(format: "resultStatus == %@",
+                                    ResultStatus.technicalRetry.rawValue)
+        return (try? context.count(for: req)) ?? 0
+    }
+
     func fetchUnsynced() -> [TrainingSession] {
         let req = TrainingSession.fetchRequest()
         req.predicate = NSPredicate(format: "synced == NO")

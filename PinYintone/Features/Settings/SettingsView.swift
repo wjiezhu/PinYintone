@@ -149,6 +149,12 @@ struct SettingsView: View {
     /// 放在设置页而不是只在练习页：录音起不来的用户根本进不了练习结果页。
     private var supportSection: some View {
         Section {
+            NavigationLink {
+                LearningHistoryView()
+            } label: {
+                Label(NSLocalizedString("history_title", comment: ""),
+                      systemImage: "list.bullet.rectangle")
+            }
             Button {
                 showIssueReport = true
             } label: {
