@@ -250,3 +250,14 @@
 "advice_try_again_whole_word" = "Overall there is still a gap from the model. Practise this word once more.";
 "result_passed" = "Passed";
 "result_not_passed" = "Not passed";
+
+/* 学习记录（需求 §4）。译稿待核校。**不得表述为进步或水平评定。** */
+"history_title" = "Practice log";
+"history_summary" = "Overview";
+"history_total_practices" = "Practices";
+"history_words_practiced" = "Words practised";
+"history_retry_count" = "Recordings that did not go through";
+"history_recent" = "Recent practices";
+"history_empty" = "No practice records yet.";
+"history_attempt_n" = "Attempt %d";
+"history_footer_note" = "A log of what you practised and how much. It is not a test score.";

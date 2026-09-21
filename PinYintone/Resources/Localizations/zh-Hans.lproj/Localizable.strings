@@ -250,3 +250,14 @@
 "advice_try_again_whole_word" = "整体和示范还有差距，再练一次这个词。";
 "result_passed" = "通过";
 "result_not_passed" = "没通过";
+
+/* 学习记录（需求 §4）。译稿待核校。**不得表述为进步或水平评定。** */
+"history_title" = "学习记录";
+"history_summary" = "概览";
+"history_total_practices" = "练习次数";
+"history_words_practiced" = "练过的词";
+"history_retry_count" = "录音未成功次数";
+"history_recent" = "最近的练习";
+"history_empty" = "还没有练习记录。";
+"history_attempt_n" = "第 %d 次";
+"history_footer_note" = "这里是你的练习日志，记录练过什么、练了多少。它不是考试成绩。";

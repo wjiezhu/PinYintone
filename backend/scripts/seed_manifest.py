@@ -45,7 +45,9 @@ def main() -> int:
     p.add_argument("--post-trigger-count", type=int, default=5,
                    help="研究者已确认为 5")
     p.add_argument("--reward-rule-version", default=None,
-                   help="积分未上线则留空")
+                   help="积分规则版本；留空则积分功能整体关闭。"
+                        "已确定的规则见 docs/V2_DECISIONS.md 第 12 条："
+                        "每词首次说对 +1 分，无其它得分方式，版本号 reward-1.0")
     args = p.parse_args()
 
     start = datetime.fromisoformat(args.collection_start)

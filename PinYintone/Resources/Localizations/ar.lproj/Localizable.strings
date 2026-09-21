@@ -252,3 +252,14 @@
 "advice_try_again_whole_word" = "ما زال هناك فرق عن النموذج. تدرّب على هذه الكلمة مرة أخرى.";
 "result_passed" = "ناجح";
 "result_not_passed" = "غير ناجح";
+
+/* 学习记录（需求 §4）。译稿待核校。**不得表述为进步或水平评定。** */
+"history_title" = "سجل التدريب";
+"history_summary" = "نظرة عامة";
+"history_total_practices" = "عدد التدريبات";
+"history_words_practiced" = "الكلمات التي تدربت عليها";
+"history_retry_count" = "تسجيلات لم تكتمل";
+"history_recent" = "التدريبات الأخيرة";
+"history_empty" = "لا توجد سجلات تدريب بعد.";
+"history_attempt_n" = "المحاولة %d";
+"history_footer_note" = "سجل لما تدربت عليه ومقداره. ليس درجة اختبار.";

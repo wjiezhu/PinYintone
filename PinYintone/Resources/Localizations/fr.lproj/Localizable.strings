@@ -250,3 +250,14 @@
 "advice_try_again_whole_word" = "Il reste un écart avec le modèle. Reprenez ce mot une fois de plus.";
 "result_passed" = "Réussi";
 "result_not_passed" = "Non réussi";
+
+/* 学习记录（需求 §4）。译稿待核校。**不得表述为进步或水平评定。** */
+"history_title" = "Journal d'entraînement";
+"history_summary" = "Aperçu";
+"history_total_practices" = "Exercices";
+"history_words_practiced" = "Mots travaillés";
+"history_retry_count" = "Enregistrements non aboutis";
+"history_recent" = "Exercices récents";
+"history_empty" = "Aucun exercice enregistré pour l'instant.";
+"history_attempt_n" = "Essai %d";
+"history_footer_note" = "Un journal de ce que vous avez travaillé. Ce n'est pas une note d'examen.";
