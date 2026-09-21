@@ -28,6 +28,12 @@ final class AspirationRepository {
         return attempt
     }
 
+    /// 本机全部送气记录（测试与本地统计用）
+    func fetchAll() -> [AspirationAttempt] {
+        let req: NSFetchRequest<AspirationAttempt> = AspirationAttempt.fetchRequest()
+        return (try? context.fetch(req)) ?? []
+    }
+
     func fetchUnsynced() -> [AspirationAttempt] {
         let req = AspirationAttempt.fetchRequest()
         req.predicate = NSPredicate(format: "synced == NO")
