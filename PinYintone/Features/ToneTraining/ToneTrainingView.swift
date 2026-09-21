@@ -119,6 +119,31 @@ struct ToneTrainingView: View {
         }
     }
 
+    /// 结果状态 + 建议入口。状态只说通关与否，**不做任何音节级判断**。
+    @ViewBuilder
+    private func adviceEntry(_ result: FeedbackResult) -> some View {
+        HStack(spacing: 10) {
+            Label(NSLocalizedString(result.grade == .fail ? "result_not_passed" : "result_passed",
+                                    comment: ""),
+                  systemImage: result.grade == .fail ? "arrow.counterclockwise.circle" : "checkmark.circle")
+                .font(.subheadline.weight(.medium))
+                .foregroundStyle(result.grade == .fail ? .orange : .green)
+            Spacer()
+            Button(NSLocalizedString("advice_open", comment: "")) {
+                vm.openAdvice()
+            }
+            .buttonStyle(.borderedProminent)
+            .controlSize(.small)
+        }
+        .padding(.horizontal, 2)
+        .sheet(isPresented: $vm.showAdvice) {
+            PracticeAdviceView(advice: vm.currentAdvice,
+                               onPlaySample: { vm.playSample() },
+                               onReplayOwn: { vm.replayOwnRecording() },
+                               onPracticeAgain: { vm.clearFeedbackForRetry() })
+        }
+    }
+
     // MARK: - 模式切换
 
     private var modeSwitcher: some View {
@@ -151,7 +176,10 @@ struct ToneTrainingView: View {
             if vm.phase.showsFeedback {
                 if let result = vm.feedbackResult, !vm.isRecording {
                     VStack(spacing: 10) {
-                        CoachCardView(advice: result.coachAdvice)
+                        // 需求 §5：建议**点击后查看，不强制弹出**。
+                        // 这里只保留一行非诊断性的状态——否则学习者看到「不通关」
+                        // 却完全没有下一步线索；具体建议全部在面板里。
+                        adviceEntry(result)
                         replayButton
                         modeView(lexeme)
                             .frame(maxHeight: .infinity)

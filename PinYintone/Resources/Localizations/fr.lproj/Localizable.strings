@@ -234,3 +234,19 @@
 "issue_sent" = "Réponses envoyées. Merci pour votre retour.";
 "issue_failed" = "L'envoi a échoué. Veuillez réessayer.";
 "common_close" = "Fermer";
+
+/* 练习建议（需求 §5）。译稿待核校。 */
+"advice_title" = "Conseil";
+"advice_open" = "Conseil";
+"advice_target_title" = "Comment se lit ce mot";
+"advice_this_time_title" = "Cet essai";
+"advice_action_listen" = "Réécouter le modèle";
+"advice_action_replay" = "Réécouter mon enregistrement";
+"advice_action_again" = "Recommencer";
+"advice_retry_no_signal" = "L'enregistrement n'est pas clair. Rapprochez-vous du micro et réessayez.";
+"advice_keep_level" = "Le mot entier descend. Le premier ton reste haut et plat du début à la fin — maintenez la hauteur.";
+"advice_close_to_model" = "Dans l'ensemble, c'est déjà proche du modèle.";
+"advice_listen_and_compare" = "Écoutez le modèle, puis réécoutez votre enregistrement pour comparer.";
+"advice_try_again_whole_word" = "Il reste un écart avec le modèle. Reprenez ce mot une fois de plus.";
+"result_passed" = "Réussi";
+"result_not_passed" = "Non réussi";

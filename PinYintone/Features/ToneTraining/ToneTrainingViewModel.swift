@@ -183,6 +183,27 @@ final class ToneTrainingViewModel: ObservableObject {
                       "to_mode": ResearchFeedbackMode(new).rawValue])
     }
 
+    /// 建议面板是否展开。**只由用户点击触发**，任何代码路径都不得自动置 true
+    /// （需求 §5：不强制弹出）。
+    @Published var showAdvice = false
+    private(set) var currentAdvice: PracticeAdvice = .make(result: nil, lexemeID: nil)
+
+    /// 用户点击「练习建议」。**未点击不自动生成、也不计作已使用**（字典 §9）。
+    func openAdvice() {
+        currentAdvice = .make(result: feedbackResult, lexemeID: currentLexeme?.id)
+        showAdvice = true
+        AdviceRequestLog.shared.record(advice: currentAdvice,
+                                       attemptID: currentAttemptID,
+                                       lexemeVersionID: ResearchLexicon.versionID(for: currentLexeme?.id))
+    }
+
+    /// 「再练一次」：清掉上次结果回到可录音状态
+    func clearFeedbackForRetry() {
+        feedbackResult = nil
+        studentF0 = []
+        retryHint = nil
+    }
+
     /// 达到阈值后请求展示使用后问卷。视图在**本次结果页操作结束后**再弹，
     /// 不遮挡尚未查看的反馈或回听（问卷 §4 触发设置）。
     @Published var shouldShowPostSurvey = false
@@ -332,6 +353,11 @@ final class ToneTrainingViewModel: ObservableObject {
             ResearchAttemptLog.shared.markAnalyzing(id)
             ResearchAttemptLog.shared.markSucceeded(
                 id, metric: Double(score), passed: grade != .fail)
+            // 积分：只有有效评分通过才发，且每词首次通过才发（字典 §13）。
+            // 功能由 manifest.reward_rule_version 开关，未配置则整体关闭。
+            RewardLedger.shared.settle(attemptID: id,
+                                       lexemeID: currentLexeme?.id ?? "",
+                                       passed: grade != .fail)
         }
 
         let segments = buildSegments(student: normalized, reference: reference)

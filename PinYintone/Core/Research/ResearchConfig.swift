@@ -15,11 +15,16 @@ final class ResearchConfig {
         static let manifest = "pt_research_manifest_config_id"
         static let start = "pt_research_window_start"
         static let end = "pt_research_window_end"
+        static let rewardRule = "pt_research_reward_rule_version"
     }
 
     private init() {}
 
     var manifestID: String? { UserDefaults.standard.string(forKey: Key.manifest) }
+
+    /// 积分规则版本。**为空表示积分功能未上线**（字典 §13：功能上线才启用）。
+    /// 不给默认值——规则未确认前不应有人拿到分。
+    var rewardRuleVersion: String? { UserDefaults.standard.string(forKey: Key.rewardRule) }
 
     /// 采集窗口。统一 14 天、左闭右开，**不是每位用户各 14 天**。
     var window: ResearchGate.CollectionWindow? {
@@ -36,6 +41,11 @@ final class ResearchConfig {
         d.set(m.manifestID, forKey: Key.manifest)
         d.set(m.collectionStartAt, forKey: Key.start)
         d.set(m.collectionEndAt, forKey: Key.end)
+        if let rule = m.rewardRuleVersion {
+            d.set(rule, forKey: Key.rewardRule)
+        } else {
+            d.removeObject(forKey: Key.rewardRule)   // 配置撤下规则即关闭功能
+        }
         ResearchEventLog.shared.window = .init(start: m.collectionStartAt,
                                                end: m.collectionEndAt)
         ResearchSurveyTrigger.shared.configure(threshold: m.postTriggerCount)

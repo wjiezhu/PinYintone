@@ -258,6 +258,7 @@ class ActiveManifestResponse(BaseModel):
     postTriggerCount: int
     consentVersion: str
     surveyVersion: str
+    rewardRuleVersion: str | None = None
 
 
 class ResearchAttemptDTO(BaseModel):

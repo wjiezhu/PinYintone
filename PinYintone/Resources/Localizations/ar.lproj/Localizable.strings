@@ -236,3 +236,19 @@
 "issue_sent" = "تم الإرسال. شكرًا لملاحظاتك.";
 "issue_failed" = "تعذر الإرسال. يرجى المحاولة مرة أخرى.";
 "common_close" = "إغلاق";
+
+/* 练习建议（需求 §5）。译稿待核校。 */
+"advice_title" = "نصيحة للتدريب";
+"advice_open" = "نصيحة للتدريب";
+"advice_target_title" = "كيف تُقرأ هذه الكلمة";
+"advice_this_time_title" = "هذه المحاولة";
+"advice_action_listen" = "تشغيل النموذج مرة أخرى";
+"advice_action_replay" = "الاستماع إلى تسجيلي";
+"advice_action_again" = "التدرّب مرة أخرى";
+"advice_retry_no_signal" = "لم يكن التسجيل واضحًا. اقترب من الميكروفون وحاول مجددًا.";
+"advice_keep_level" = "الكلمة كلها تنخفض. النبرة الأولى تبقى عالية ومستوية — ثبّت طبقة صوتك.";
+"advice_close_to_model" = "بشكل عام، هذا قريب من النموذج.";
+"advice_listen_and_compare" = "استمع إلى النموذج ثم أعد الاستماع إلى تسجيلك للمقارنة.";
+"advice_try_again_whole_word" = "ما زال هناك فرق عن النموذج. تدرّب على هذه الكلمة مرة أخرى.";
+"result_passed" = "ناجح";
+"result_not_passed" = "غير ناجح";

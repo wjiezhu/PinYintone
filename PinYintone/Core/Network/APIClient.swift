@@ -140,6 +140,8 @@ final class APIClient {
         let postTriggerCount: Int
         let consentVersion: String
         let surveyVersion: String
+        /// 为空表示积分功能未上线
+        let rewardRuleVersion: String?
     }
 
     /// 取当前生效的研究配置。404 表示暂无生效配置——

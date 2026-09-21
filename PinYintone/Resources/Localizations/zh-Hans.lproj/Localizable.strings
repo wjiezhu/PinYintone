@@ -234,3 +234,19 @@
 "issue_sent" = "已提交，感谢你的反馈。";
 "issue_failed" = "暂未提交成功，请重试。";
 "common_close" = "关闭";
+
+/* 练习建议（需求 §5）。译稿待核校。 */
+"advice_title" = "练习建议";
+"advice_open" = "练习建议";
+"advice_target_title" = "这个词该怎么读";
+"advice_this_time_title" = "这次的情况";
+"advice_action_listen" = "再听一次示范";
+"advice_action_replay" = "回听我的录音";
+"advice_action_again" = "再练一次";
+"advice_retry_no_signal" = "没录清楚，请靠近麦克风再录一次。";
+"advice_keep_level" = "整个词都在往下掉。一声要从头平到尾，把音高稳住再来一次。";
+"advice_close_to_model" = "整体已经很接近示范了。";
+"advice_listen_and_compare" = "先听一次示范，再对照自己的录音听一遍。";
+"advice_try_again_whole_word" = "整体和示范还有差距，再练一次这个词。";
+"result_passed" = "通过";
+"result_not_passed" = "没通过";

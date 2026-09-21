@@ -234,3 +234,19 @@
 "issue_sent" = "Submitted. Thank you for your feedback.";
 "issue_failed" = "Submission failed. Please try again.";
 "common_close" = "Close";
+
+/* 练习建议（需求 §5）。译稿待核校。 */
+"advice_title" = "Practice tip";
+"advice_open" = "Practice tip";
+"advice_target_title" = "How this word is read";
+"advice_this_time_title" = "This attempt";
+"advice_action_listen" = "Play the model again";
+"advice_action_replay" = "Listen to my recording";
+"advice_action_again" = "Practice again";
+"advice_retry_no_signal" = "That did not record clearly. Move closer to the microphone and try again.";
+"advice_keep_level" = "The whole word slides down. First tone stays high and level throughout — hold the pitch steady.";
+"advice_close_to_model" = "Overall this is already close to the model.";
+"advice_listen_and_compare" = "Play the model, then listen back to your own recording and compare.";
+"advice_try_again_whole_word" = "Overall there is still a gap from the model. Practise this word once more.";
+"result_passed" = "Passed";
+"result_not_passed" = "Not passed";

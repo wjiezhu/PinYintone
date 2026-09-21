@@ -320,6 +320,7 @@ def active_manifest(db: Session = Depends(get_db)):
         postTriggerCount=m.post_trigger_count,
         consentVersion=m.consent_version,
         surveyVersion=m.survey_version,
+        rewardRuleVersion=m.reward_rule_version,
     )
 
 

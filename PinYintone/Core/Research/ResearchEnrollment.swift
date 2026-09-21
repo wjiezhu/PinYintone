@@ -49,6 +49,9 @@ enum ResearchEnrollment {
         ResearchConsent.shared.withdraw()
         ResearchEventLog.shared.clearPendingOnWithdrawal()
         ResearchAttemptLog.shared.clearPendingOnWithdrawal()
+        AdviceRequestLog.shared.clearPendingOnWithdrawal()
+        // 撤回只停止**研究采集**：业务积分不清零，学习者照常保有已得分数
+        RewardEventLog.shared.clearPendingOnWithdrawal()
         ResearchSurveyTrigger.shared.reset()
         id.clearOnWithdrawal()
     }
