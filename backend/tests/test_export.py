@@ -75,8 +75,8 @@ def _seed(db):
     _manifest(db)
     _person(db, "ok")                              # 合格
     _person(db, "test", is_test=True)              # 测试账户
-    _person(db, "old", prior="returning")          # 旧用户
-    _person(db, "unknown_prior", prior="unknown")  # 新旧不明——不推定为 new
+    _person(db, "old", prior="returning")          # 旧用户——本轮同样纳入
+    _person(db, "unknown_prior", prior="unknown")  # 新旧不明——本轮同样纳入
     _person(db, "withdrew", consent="withdrawn")   # 已撤回
     _person(db, "minor", adult="minor")
     _person(db, "fr", nat="FR")
@@ -98,11 +98,13 @@ def _rows(path):
 def test_only_eligible_participant_exported(db, tmp_path):
     _seed(db)
     meta = export(db, ["m1"], str(tmp_path))
-    assert meta["participants_included"] == 1
-    assert [r["participant_id"] for r in _rows(tmp_path / "participants.csv")] == ["ok"]
+    # 本轮不以新旧用户作为纳入条件：ok / old / unknown_prior 三人都纳入
+    assert meta["participants_included"] == 3
+    assert set(r["participant_id"] for r in _rows(tmp_path / "participants.csv")) == \
+        {"ok", "old", "unknown_prior"}
     ex = meta["participants_excluded_by_reason"]
     assert ex["is_test"] == 1
-    assert ex["prior_use_not_new"] == 2, "returning 与 unknown 都不得推定为新用户"
+    assert "prior_use_not_new" not in ex, "本轮不再按新旧用户排除"
     assert ex["consent_not_active"] == 1
     assert ex["age"] == 2, "未成年与跳过年龄都不纳入——缺失不推定满足"
     assert ex["nationality"] == 1
@@ -117,6 +119,25 @@ def test_identity_map_never_exported(db, tmp_path):
     assert not any("identity" in f for f in files)
     for f in tmp_path.glob("*.csv"):
         assert "acct-" not in f.read_text(encoding="utf-8"), f"{f.name} 泄露了业务账号键"
+
+
+def test_prior_use_recorded_honestly_not_rewritten(db, tmp_path):
+    """不纳入条件 ≠ 改写数据：prior_use_status 必须保持原值，**不得统一写成 new**。"""
+    _seed(db)
+    export(db, ["m1"], str(tmp_path))
+    by_id = {r["participant_id"]: r for r in _rows(tmp_path / "participants.csv")}
+    assert by_id["old"]["prior_use_status"] == "returning"
+    assert by_id["unknown_prior"]["prior_use_status"] == "unknown"
+    assert by_id["ok"]["prior_use_status"] == "new"
+
+
+def test_meta_states_prior_use_policy(db, tmp_path):
+    """导出说明里必须写明本轮未区分新旧用户，避免被读成「新用户样本」。"""
+    _seed(db)
+    meta = export(db, ["m1"], str(tmp_path))
+    assert "prior_use_policy" in meta
+    assert "不以新旧用户作为纳入条件" in meta["prior_use_policy"]
+    assert "prior_use_status=new" not in meta["inclusion_rule"]
 
 
 def test_out_of_window_and_test_attempts_excluded(db, tmp_path):
