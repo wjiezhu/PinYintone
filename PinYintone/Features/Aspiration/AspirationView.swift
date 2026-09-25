@@ -35,7 +35,17 @@ struct AspirationView: View {
 
                 Text(statusText)
                     .font(.headline)
-                    .foregroundStyle(vm.triggered ? .green : .primary)
+                    .foregroundStyle(vm.triggered ? Color.green : Color.primary)
+
+                // 技术性失败提示（麦克风起不来 / 没录上）。用 mic.slash 图标，
+                // 与送气是否达标严格区分——后者才是发音评价。
+                if let hint = vm.retryHint {
+                    Label(hint, systemImage: "mic.slash")
+                        .font(.footnote)
+                        .foregroundStyle(.orange)
+                        .multilineTextAlignment(.center)
+                        .padding(.horizontal)
+                }
 
                 Spacer()
             }
