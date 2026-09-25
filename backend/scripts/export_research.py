@@ -113,9 +113,13 @@ def export(db, manifest_ids, out_dir, include_test=False):
         reason = None
         if p.is_test and not include_test:
             reason = "is_test"
-        elif p.prior_use_status != "new":
-            reason = "prior_use_not_new"      # 旧用户不纳入本轮；unknown 也不推定为 new
         else:
+            # 本轮**不以新旧用户作为纳入条件**（研究者已确认，见 docs/V2_DECISIONS.md 第 15 条）。
+            # 字典 §4/§14 原写「仅 new 可纳入」，该条已被此决定取代。
+            #
+            # prior_use_status 仍如实记录（未实现识别路径时为 unknown），
+            # **不把所有人改写成 new**——那是往数据里写一个未核实、且对部分用户为假的断言。
+            # 论文的样本描述应写「未区分新旧用户」，不得写成「新用户样本」。
             latest = _latest_consent(db, p.participant_id)
             # 撤回后资料的保留策略**尚未获准执行**（字典 §5：正式策略冻结前，
             # 不自动将退出者资料加入新研究导出）。故一律排除，待策略冻结后再改。
@@ -182,8 +186,12 @@ def export(db, manifest_ids, out_dir, include_test=False):
         "manifest_ids": sorted(windows),
         "windows": {k: [v[0].isoformat(), v[1].isoformat()] for k, v in windows.items()},
         "include_test": include_test,
-        "inclusion_rule": ("同意有效、成年、国籍含 MA、课程阶段 hsk1–3、prior_use_status=new、"
-                           "is_test=false、记录位于研究窗口、配置在指定清单内。缺失或未知不推定满足。"),
+        "inclusion_rule": ("同意有效、成年、国籍含 MA、课程阶段 hsk1–3、is_test=false、"
+                           "记录位于研究窗口、配置在指定清单内。缺失或未知不推定满足。"),
+        "prior_use_policy": ("本轮**不以新旧用户作为纳入条件**（研究者已确认）。"
+                             "prior_use_status 如实记录，未实现识别路径时为 unknown，"
+                             "**未改写为 new**。样本描述应写「未区分新旧用户」，"
+                             "不得写成「新用户样本」。"),
         "withdrawal_policy": ("撤回者资料一律排除：保留退出前资料的意向尚待学校要求核对，"
                               "未获准执行前不自动纳入（字典 §5）。"),
         "csv_conventions": "UTF-8；数组为 JSON；布尔 true/false；NULL 为空单元格（≠ 0 ≠ 空字符串）",
