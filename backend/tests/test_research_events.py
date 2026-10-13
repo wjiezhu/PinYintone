@@ -662,6 +662,90 @@ def test_different_accounts_are_different_participants():
     assert a != b
 
 
+def test_second_account_on_the_same_device_is_a_different_participant():
+    """同一台设备先后登录两个 Apple 账号：是两位参与者。
+
+    `users` 表一台设备一行，换账号登录是同一行被改写。内部编号若只记在设备行上，
+    后来的人会沿用前一个人的编号，被并进同一个研究身份——连对方已填的问卷状态都拿得到。
+    """
+    _manifest_only()
+    first = _enroll("device-A", apple="apple-1").json()["participantID"]
+    second = _enroll("device-A", apple="apple-2")
+    assert second.status_code == 200
+    assert second.json()["participantID"] != first
+    assert second.json()["alreadyEnrolled"] is False
+    db = TestingSession()
+    assert db.query(models.ResearchParticipant).count() == 2
+    keys = {r.internal_user_id for r in db.query(models.ResearchIdentityMap).all()}
+    assert len(keys) == 2 and "device-A" not in keys
+    db.close()
+
+
+def test_first_account_returning_to_a_shared_device_keeps_its_participant():
+    """前一个人再登录回来，还是他原来那位参与者，不会变成第三位。"""
+    _manifest_only()
+    first = _enroll("device-A", apple="apple-1").json()["participantID"]
+    second = _enroll("device-A", apple="apple-2").json()["participantID"]
+    again = _enroll("device-A", apple="apple-1")
+    assert again.json()["participantID"] == first
+    assert again.json()["alreadyEnrolled"] is True
+    # 他换到另一台设备也一样
+    elsewhere = _enroll("device-B", apple="apple-1")
+    assert elsewhere.json()["participantID"] == first
+    db = TestingSession()
+    assert db.query(models.ResearchParticipant).count() == 2
+    assert {first, second} == {p.participant_id for p in db.query(models.ResearchParticipant)}
+    db.close()
+
+
+def test_survey_state_does_not_leak_to_the_next_account_on_the_device():
+    """后来的账号上传一份新邀请的问卷，拿到的不是前一个人已提交的那份。"""
+    _manifest_only()
+    first = _enroll("device-A", apple="apple-1").json()["participantID"]
+    done = client.post("/research/surveys", json={
+        "participantID": first, "manifestID": "m1", "surveyInstanceID": "inst-first",
+        "timingClass": "before_first_attempt", "qualifyingAttemptsAtInvite": 0,
+        "invitedAt": NOW.isoformat(),
+        "outcome": {"formKey": "tone_needs_v1", "formVersion": "pre-1.0",
+                    "translationVersion": "i18n-1.0", "language": "zh",
+                    "answers": [{"questionID": "PRE01", "optionCodes": ["often"],
+                                 "state": "answered"}],
+                    "status": "partial", "startedAt": NOW.isoformat(),
+                    "submittedAt": NOW.isoformat()}})
+    assert done.status_code == 200, done.text
+
+    second = _enroll("device-A", apple="apple-2").json()["participantID"]
+    invited = client.post("/research/surveys", json={
+        "participantID": second, "manifestID": "m1", "surveyInstanceID": "inst-second",
+        "timingClass": "before_first_attempt", "qualifyingAttemptsAtInvite": 0,
+        "invitedAt": NOW.isoformat(),
+        "outcome": {"formKey": "tone_needs_v1", "formVersion": "pre-1.0",
+                    "translationVersion": "i18n-1.0", "language": "zh",
+                    "answers": [], "status": "invited",
+                    "startedAt": None, "submittedAt": None}})
+    assert invited.status_code == 200, invited.text
+    assert invited.json()["status"] == "invited"
+    db = TestingSession()
+    rows = {r.participant_id: r.status for r in db.query(models.ResearchSurveyInstance)}
+    assert rows == {first: "partial", second: "invited"}
+    db.close()
+
+
+def test_account_deletion_forgets_the_apple_link():
+    from app import models as business
+    _manifest_only()
+    _enroll("device-A", apple="apple-1")
+    db = TestingSession()
+    assert db.query(business.AccountLink).count() == 1
+    db.close()
+    r = client.delete("/student/account",
+                      params={"deviceID": "device-A", "appleUserID": "apple-1"})
+    assert r.status_code == 200
+    db = TestingSession()
+    assert db.query(business.AccountLink).count() == 0
+    db.close()
+
+
 def test_retried_enroll_does_not_duplicate_consent_or_participant():
     """纳入请求超时后重试：不新增参与者，也不追加第二条同意（A06）。"""
     _manifest_only()

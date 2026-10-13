@@ -62,6 +62,9 @@ def student_register(body: schemas.StudentRegisterRequest, db: Session = Depends
         db.add(user)
 
     if body.appleUserID:
+        # 这台设备换了一个 Apple 账号登录：先清掉上一个人的内部编号，
+        # 否则新账号会被当成同一位研究参与者
+        accounts.forget_previous_owner(user, body.appleUserID)
         user.apple_user_id = body.appleUserID
     if body.spokenLanguages is not None:
         user.spoken_languages = body.spokenLanguages
@@ -100,6 +103,10 @@ def student_delete_account(deviceID: str, appleUserID: str | None = None,
     # 另一台设备上的离线队列还能继续往研究库里写。
     account_ids = {r[0] for r in db.query(models.User.account_id)
                    .filter(models.User.device_id.in_(ids)).all() if r[0]}
+    apple_ids = {r[0] for r in db.query(models.User.apple_user_id)
+                 .filter(models.User.device_id.in_(ids)).all() if r[0]}
+    if appleUserID:
+        apple_ids.add(appleUserID)
     now = datetime.now(timezone.utc)
     withdrawn = 0
     for im in (db.query(research_models.ResearchIdentityMap)
@@ -127,6 +134,10 @@ def student_delete_account(deviceID: str, appleUserID: str | None = None,
     ):
         deleted[key] = db.query(model).filter(
             model.device_id.in_(ids)).delete(synchronize_session=False)
+    # 账号没了，Apple 标识与内部编号的对应关系也一并删除
+    if apple_ids:
+        db.query(models.AccountLink).filter(
+            models.AccountLink.apple_user_id.in_(apple_ids)).delete(synchronize_session=False)
     db.commit()
     return {"deleted": deleted, "deviceIDs": ids, "researchWithdrawn": withdrawn}
 

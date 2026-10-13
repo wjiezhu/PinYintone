@@ -41,6 +41,24 @@ class User(Base):
     install_date = Column(DateTime, default=_utcnow)
 
 
+class AccountLink(Base):
+    """Apple 账号 → 业务账号的稳定内部编号。
+
+    `users` 表一台设备一行，设备换一个 Apple 账号登录时那一行会被改写——
+    所以「这个 Apple 账号是谁」不能只记在设备行上：
+    - 记在设备行上，新登录的人会**继承上一个人的编号**，在研究里被当成同一位参与者；
+    - 上一个人再登录回来时，他原来的编号已经找不到了，会变成第二位参与者。
+
+    这张表把对应关系单独存一份，不随设备行的改写而丢失。
+    它是业务表（Apple 标识本来就在 `users` 里），**不进研究导出**；
+    研究侧的 research_identity_map 只存这里的 `account_id`，不存 Apple 标识。
+    """
+    __tablename__ = "account_links"
+    apple_user_id = Column(String, primary_key=True)
+    account_id = Column(String, nullable=False, unique=True, index=True)
+    created_at = Column(DateTime, default=_utcnow)
+
+
 class TrainingSession(Base):
     """声调训练记录。
 

@@ -193,15 +193,16 @@ def upload_events(body: schemas.ResearchEventBatch, db: Session = Depends(get_db
     return _batch_result(len(body.events), inserted, duplicates, rejected)
 
 
-def _identity_for_account(db: Session, user: models.User, account_id: str, study_id: str):
-    """按业务账号找既有的研究身份。
+def _identity_for_account(db: Session, account_id: str, study_id: str):
+    """按业务账号找既有的研究身份。**只认账号编号，不认设备号。**
 
-    兼容旧行：本次修复之前 internal_user_id 存的是 device_id，
-    所以同账号任一设备号命中也算同一个人。
+    设备号不能当身份用：一台设备可以先后登录两个 Apple 账号，
+    按设备号匹配会把后来的人并进前一个人的研究身份里。
+    （更早的研究配置下 internal_user_id 存过 device_id；新研究一律用新的 study_id，
+    不会与那些旧行相遇。）
     """
-    keys = {account_id} | {s.device_id for s in accounts.sibling_users(db, user)}
     return (db.query(research_models.ResearchIdentityMap)
-            .filter(research_models.ResearchIdentityMap.internal_user_id.in_(keys),
+            .filter(research_models.ResearchIdentityMap.internal_user_id == account_id,
                     research_models.ResearchIdentityMap.study_id == study_id)
             .order_by(research_models.ResearchIdentityMap.created_at.asc())
             .first())
@@ -230,7 +231,7 @@ def enroll(body: schemas.ResearchEnrollRequest, db: Session = Depends(get_db)):
         raise HTTPException(409, "account_required：须先注册学生账号再纳入研究")
     account_id = accounts.ensure_account_id(db, user)
 
-    existing = _identity_for_account(db, user, account_id, manifest.study_id)
+    existing = _identity_for_account(db, account_id, manifest.study_id)
     if existing is not None:
         if not has_active_consent(db, existing.participant_id):
             raise HTTPException(409, "withdrawn：已退出本研究，本轮不再重新纳入")
