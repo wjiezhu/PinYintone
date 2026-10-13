@@ -228,6 +228,8 @@ final class ResearchAttemptLog {
         startUptime.removeValue(forKey: id)
         pending.append(r)
         persist()
+        // 这次尝试已有定论：安排上传，不等下次打开 App
+        ResearchUploader.shared.scheduleFlushSoon()
     }
 
     private func persist() {

@@ -13,6 +13,9 @@ import Foundation
 /// - **退出优先**：有待同步的退出指令时，先发它；发出去之前和之后
 ///   都不再上传任何研究内容（需求 R08：离线退出不能把旧队列传上去）。
 /// - **不看采集窗口**：这里传的是已经合法产生的数据。窗口关闭后照样补传。
+/// - **产生即上报**：练习记录、事件、建议一入队就安排上传（稍等片刻合成一批），
+///   App 退到后台时再补一次。不能指望「下次打开 App」——
+///   最后一次练完就把手机放下的人，可能在采集结束前都不再打开。
 @MainActor
 final class ResearchUploader {
 
@@ -50,6 +53,22 @@ final class ResearchUploader {
     /// 有新内容入队时调用。不等结果，失败留给下一次。
     func scheduleFlush() {
         Task { await flush() }
+    }
+
+    /// 练习记录与事件入队后多久发起上传。同一次练习前后脚会产生好几条
+    /// （尝试、反馈已显示、回听），等一小会儿合成一批，不为每一条各发一次请求。
+    /// 设为 nil 即关闭自动上传（单元测试用：由测试自己决定何时上传）。
+    var autoFlushDelay: TimeInterval? = 1.5
+    private var autoFlushTask: Task<Void, Never>?
+
+    /// 练习记录、事件、建议入队时调用。已有一次在等就不再排第二次。
+    func scheduleFlushSoon() {
+        guard let delay = autoFlushDelay, autoFlushTask == nil else { return }
+        autoFlushTask = Task { [weak self] in
+            try? await Task.sleep(nanoseconds: UInt64(delay * 1_000_000_000))
+            self?.autoFlushTask = nil
+            await self?.flush()
+        }
     }
 
     /// 尝试上报全部待传内容。返回本次服务端确认的记录条数。

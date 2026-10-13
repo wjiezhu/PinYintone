@@ -64,6 +64,7 @@ final class ResearchEventLog {
         }
         pending.append(event)
         persist()
+        ResearchUploader.shared.scheduleFlushSoon()
         return true
     }
 

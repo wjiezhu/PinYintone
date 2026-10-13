@@ -1,5 +1,6 @@
 import Network
 import SwiftUI
+import UIKit
 
 @main
 struct PinyintoneApp: App {
@@ -35,6 +36,7 @@ struct PinyintoneApp: App {
                 AppSync.run()
             } else if phase == .background {
                 ResearchSession.shared.didEnterBackground()
+                AppSync.flushBeforeSuspend()
             }
         }
     }
@@ -43,6 +45,20 @@ struct PinyintoneApp: App {
 /// 回到前台、恢复联网时做的同步。
 @MainActor
 enum AppSync {
+    /// 退到后台时把还没传的研究记录再传一次。向系统要一小段后台时间，
+    /// 传完或时间到就交还——练完直接锁屏的人，记录不该留在手机里等下次打开。
+    static func flushBeforeSuspend() {
+        let app = UIApplication.shared
+        var token: UIBackgroundTaskIdentifier = .invalid
+        token = app.beginBackgroundTask(withName: "research-flush") {
+            if token != .invalid { app.endBackgroundTask(token); token = .invalid }
+        }
+        Task {
+            await ResearchUploader.shared.flush()
+            if token != .invalid { app.endBackgroundTask(token); token = .invalid }
+        }
+    }
+
     static func run() {
         Task {
             // 研究配置：决定「现在能不能参加研究」。取不到或不匹配时研究入口关闭，

@@ -47,6 +47,47 @@ final class ResearchUploaderTests: XCTestCase {
         StubURLProtocol.requests.map { String($0.path.split(separator: "/").suffix(2).joined(separator: "/")) }
     }
 
+    // MARK: - 产生即上报
+
+    /// 练完就传：尝试一有定论就自己安排上传，不靠问卷操作或「下次打开 App」来带。
+    ///
+    /// 界面全流程测试实测发现过：只练习、不碰问卷时，记录一直留在本机没有发出。
+    func testFinishedAttemptIsUploadedWithoutAnyOtherTrigger() async throws {
+        ResearchTestSupport.enrolledAccount()
+        acceptEverything()
+        uploader.autoFlushDelay = 0.05
+        defer { uploader.autoFlushDelay = nil }
+
+        let attempt = queueAttempt(cancelled: false)
+        ResearchEventLog.shared.log(.feedbackDisplayed, attemptID: attempt, lexemeVersionID: "lv",
+                                    payload: ["mode": "pitch_curve"])
+        XCTAssertEqual(ResearchAttemptLog.shared.pending.count, 1)
+
+        // 这里**没有**调用 flush()
+        for _ in 0..<60 where !ResearchAttemptLog.shared.pending.isEmpty
+            || !ResearchEventLog.shared.pending.isEmpty {
+            try await Task.sleep(nanoseconds: 50_000_000)
+        }
+        XCTAssertTrue(ResearchAttemptLog.shared.pending.isEmpty, "尝试应已自动上传")
+        XCTAssertTrue(ResearchEventLog.shared.pending.isEmpty, "关联事件应随后上传")
+        let paths = researchPaths()
+        XCTAssertEqual(paths.filter { $0 == "research/attempts" }.count, 1, "合成一批，只发一次")
+        XCTAssertLessThan(paths.firstIndex(of: "research/attempts") ?? .max,
+                          paths.firstIndex(of: "research/events") ?? .min,
+                          "先尝试，后事件")
+    }
+
+    /// 没参加研究的人，自动上传什么也不发
+    func testAutoUploadSendsNothingWhenNotEnrolled() async throws {
+        ResearchTestSupport.freshAccount()
+        acceptEverything()
+        uploader.autoFlushDelay = 0.05
+        defer { uploader.autoFlushDelay = nil }
+        uploader.scheduleFlushSoon()
+        try await Task.sleep(nanoseconds: 300_000_000)
+        XCTAssertTrue(StubURLProtocol.requests.isEmpty)
+    }
+
     // MARK: - 顺序与外键依赖
 
     /// 身份与背景表确认 → 尝试 → 关联事件 → 建议

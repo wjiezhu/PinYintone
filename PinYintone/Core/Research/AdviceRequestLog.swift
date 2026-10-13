@@ -43,7 +43,10 @@ final class AdviceRequestLog {
         // 不造一个假的编号。
         guard attemptID != nil else { return }
         let now = Date()
-        defer { persist() }
+        defer {
+            persist()
+            ResearchUploader.shared.scheduleFlushSoon()
+        }
         pending.append(Record(
             requestID: UUID(),
             attemptID: attemptID,

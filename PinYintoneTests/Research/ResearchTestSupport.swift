@@ -16,6 +16,9 @@ enum ResearchTestSupport {
     static func freshAccount() -> String {
         let key = "test-\(UUID().uuidString)"
         ResearchStore.shared.activate(accountKey: key)
+        // 单元测试里由测试自己决定何时上传：自动上传是延时触发的，
+        // 不关掉的话会落到后面别的用例里，把那边的请求计数搅乱
+        ResearchUploader.shared.autoFlushDelay = nil
         return key
     }
 
