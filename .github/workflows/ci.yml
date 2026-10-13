@@ -4,7 +4,8 @@
 # 在 iOS 18.5 / 26.2 上必现、在 26.4 上不出现，只跑最新系统测不出来。
 #
 # 旧系统的版本号是写死的，不是「取镜像里最旧的」：GitHub 的 runner 镜像哪天
-# 不再带这个版本，对应那一路会直接报错并列出可用机型，到时改下面 matrix 即可。
+# 不再带这个版本，对应那一路会直接报错并列出可用机型（scripts/ci-pick-simulator.sh），
+# 到时改下面 matrix 即可。
 # 这比覆盖范围悄悄缩水、而 CI 仍然全绿要好。
 name: CI
 
@@ -64,6 +65,14 @@ jobs:
           sudo xcode-select -s "/Applications/Xcode_${{ matrix.xcode }}.app"
           xcodebuild -version
 
+      # 先唤醒模拟器服务、找到设备并启动，再交给 xcodebuild。
+      # 不这样做的话，刚切完 Xcode 时 xcodebuild 可能等 60 秒找不到任何模拟器就报错
+      # （时好时坏，main 上第一次运行的 iOS 18.5 那一路就是这么失败的）。
+      - name: 启动模拟器（iOS ${{ matrix.os }} / ${{ matrix.device }}）
+        run: |
+          UDID=$(scripts/ci-pick-simulator.sh "${{ matrix.os }}" "${{ matrix.device }}")
+          echo "SIM_UDID=$UDID" >> "$GITHUB_ENV"
+
       # 只跑单元测试（PinYintoneTests），不跑 UI 测试。
       # 关掉并行：并行会克隆多个模拟器，崩溃时日志互相穿插，很难看出是哪个用例。
       - name: 单元测试
@@ -72,7 +81,7 @@ jobs:
           xcodebuild test \
             -project PinYintone.xcodeproj \
             -scheme PinYintone \
-            -destination "platform=iOS Simulator,OS=${{ matrix.os }},name=${{ matrix.device }}" \
+            -destination "platform=iOS Simulator,id=$SIM_UDID" \
             -only-testing:PinYintoneTests \
             -parallel-testing-enabled NO \
             -derivedDataPath build/dd \
