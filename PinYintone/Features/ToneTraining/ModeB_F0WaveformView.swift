@@ -1,6 +1,6 @@
 import SwiftUI
 
-/// 曲线模式：参考曲线（青绿虚线）与学习者曲线（玫红实线）叠加。
+/// 曲线模式：参考曲线（深松绿实线）与学习者曲线（陶红虚线）叠加。
 /// 输入为已归一化（z-score）的轨迹。
 ///
 /// **显示与评分必须同源**：两条曲线采用与 `DTWAnalyzer` 完全相同的预处理——
@@ -8,7 +8,9 @@ import SwiftUI
 /// 各自按画布宽度拉伸铺满的话，学习者会把自己的线「目测对齐」到参考线却仍不通过
 /// （真实节奏对不上）。现在时长差异如实呈现：说得快，线就短。
 ///
-/// 两条线同时用**颜色和线型**区分（虚线 / 实线），不单靠颜色。
+/// 两条线同时用**颜色和线型**区分（实线 / 虚线），并有文字图例，不单靠颜色。
+/// 横轴只是时间，**不按音节分段、不标声调**：这里没有经过验证的音节对齐，
+/// 画出分段等于暗示有。
 /// 时间方向固定从左到右：阿拉伯语界面下也不镜像，否则升调会被画成降调。
 /// 没有有效基频时显示中性的空状态，**不画假曲线**。
 struct ModeB_F0WaveformView: View {
@@ -26,10 +28,7 @@ struct ModeB_F0WaveformView: View {
     private var student: [Float] { studentF0.filter { $0 != 0 && $0.isFinite } }
 
     var body: some View {
-        VStack(spacing: 0) {
-            legend
-                .padding(.horizontal, Theme.Space.m)
-                .padding(.vertical, Theme.Space.s)
+        VStack(spacing: Theme.Space.s) {
             ZStack {
                 Canvas { ctx, size in
                     drawGuides(ctx: &ctx, size: size)
@@ -39,14 +38,14 @@ struct ModeB_F0WaveformView: View {
                     let denom = max(max(ref.count, stu.count) - 1, 1)
                     if ref.count > 1 {
                         ctx.stroke(path(from: ref, denom: denom, in: size),
-                                   with: .color(Theme.accent),
+                                   with: .color(Theme.primary),
                                    style: StrokeStyle(lineWidth: Theme.Curve.referenceWidth,
-                                                      lineCap: .round,
+                                                      lineCap: .round, lineJoin: .round,
                                                       dash: Theme.Curve.referenceDash))
                     }
                     if stu.count > 1 {
                         ctx.stroke(path(from: stu, denom: denom, in: size),
-                                   with: .color(Theme.learner),
+                                   with: .color(Theme.learnerAccent),
                                    style: StrokeStyle(lineWidth: Theme.Curve.learnerWidth,
                                                       lineCap: .round, lineJoin: .round,
                                                       dash: Theme.Curve.learnerDash))
@@ -56,9 +55,9 @@ struct ModeB_F0WaveformView: View {
                     emptyState
                 }
             }
-            .padding(.horizontal, Theme.Space.m)
-            .padding(.bottom, Theme.Space.m)
+            legend
         }
+        .padding(.top, Theme.Space.s)
         .environment(\.layoutDirection, .leftToRight)
         .accessibilityElement(children: .ignore)
         .accessibilityLabel(Text(accessibilitySummary))
@@ -90,44 +89,59 @@ struct ModeB_F0WaveformView: View {
         return p
     }
 
+    /// 几条水平辅助线（虚线）和一条底线。只是参照，不是刻度。
     private func drawGuides(ctx: inout GraphicsContext, size: CGSize) {
-        for frac in stride(from: 0.25, through: 0.75, by: 0.25) {
+        for frac in stride(from: 0.0, through: 0.75, by: 0.25) {
             var line = Path()
-            let y = size.height * frac
+            let y = max(0.5, size.height * frac)
             line.move(to: CGPoint(x: 0, y: y))
             line.addLine(to: CGPoint(x: size.width, y: y))
-            ctx.stroke(line, with: .color(Theme.divider), style: StrokeStyle(lineWidth: 1))
+            ctx.stroke(line, with: .color(Theme.border),
+                       style: StrokeStyle(lineWidth: 1, dash: [3, 4]))
         }
+        var base = Path()
+        base.move(to: CGPoint(x: 0, y: size.height - 0.5))
+        base.addLine(to: CGPoint(x: size.width, y: size.height - 0.5))
+        ctx.stroke(base, with: .color(Theme.border), style: StrokeStyle(lineWidth: 1))
     }
 
     private var legend: some View {
-        HStack(spacing: Theme.Space.l) {
-            legendItem(color: Theme.accent, dashed: true,
-                       text: NSLocalizedString("legend_native", comment: ""))
-            legendItem(color: Theme.learner, dashed: false,
-                       text: NSLocalizedString("legend_you", comment: ""))
-            Spacer(minLength: 0)
+        HStack(spacing: Theme.Space.xl) {
+            CurveLegendItem(color: Theme.primary, dash: Theme.Curve.referenceDash,
+                            text: NSLocalizedString("legend_native", comment: ""))
+            CurveLegendItem(color: Theme.learnerAccent, dash: Theme.Curve.learnerDash,
+                            text: NSLocalizedString("legend_you", comment: ""))
         }
         .font(.footnote)
-    }
-
-    private func legendItem(color: Color, dashed: Bool, text: String) -> some View {
-        HStack(spacing: Theme.Space.xs) {
-            Canvas { ctx, size in
-                var p = Path()
-                p.move(to: CGPoint(x: 0, y: size.height / 2))
-                p.addLine(to: CGPoint(x: size.width, y: size.height / 2))
-                ctx.stroke(p, with: .color(color),
-                           style: StrokeStyle(lineWidth: 2.5, lineCap: .round,
-                                              dash: dashed ? [5, 4] : []))
-            }
-            .frame(width: 26, height: 10)
-            Text(text).foregroundStyle(Theme.textSecondary)
-        }
+        .frame(maxWidth: .infinity)
     }
 
     private var accessibilitySummary: String {
         NSLocalizedString(student.count > 1 ? "chart_a11y_with_yours" : "chart_a11y_reference_only",
                           comment: "")
+    }
+}
+
+/// 图例的一项：一小段按真实线型画的线 + 文字。两种曲线图共用。
+struct CurveLegendItem: View {
+    let color: Color
+    let dash: [CGFloat]
+    let text: String
+
+    var body: some View {
+        HStack(spacing: Theme.Space.s) {
+            Canvas { ctx, size in
+                var p = Path()
+                p.move(to: CGPoint(x: 1, y: size.height / 2))
+                p.addLine(to: CGPoint(x: size.width - 1, y: size.height / 2))
+                ctx.stroke(p, with: .color(color),
+                           style: StrokeStyle(lineWidth: 2.5, lineCap: .round,
+                                              dash: dash.isEmpty ? [] : [5, 5]))
+            }
+            .frame(width: 30, height: 10)
+            Text(text)
+                .foregroundStyle(Theme.textSecondary)
+                .fixedSize(horizontal: false, vertical: true)
+        }
     }
 }

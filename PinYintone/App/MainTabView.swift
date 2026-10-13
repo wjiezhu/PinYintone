@@ -15,7 +15,7 @@ struct MainTabView: View {
         TabView(selection: $selection) {
             PracticeHomeView()
                 .tabItem {
-                    Label(NSLocalizedString("tab_practice", comment: ""), systemImage: "mic")
+                    Label(NSLocalizedString("tab_practice", comment: ""), systemImage: "house")
                 }
                 .tag(Tab.practice)
 
@@ -24,7 +24,7 @@ struct MainTabView: View {
             }
             .tabItem {
                 Label(NSLocalizedString("tab_history", comment: ""),
-                      systemImage: "list.bullet.rectangle")
+                      systemImage: "chart.bar")
             }
             .tag(Tab.history)
 
@@ -45,6 +45,6 @@ struct MainTabView: View {
             }
             .tag(Tab.settings)
         }
-        .tint(Theme.accent)
+        .tint(Theme.primary)
     }
 }

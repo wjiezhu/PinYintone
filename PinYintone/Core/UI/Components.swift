@@ -3,14 +3,15 @@ import SwiftUI
 // 界面的公共构件（需求 U01）。各页面只拼这些东西，不各自发明样式。
 
 extension Theme {
-    /// 四声各自的颜色（浅 / 深）。只用于声调标记与颜色模式；
-    /// 每个声调同时有**形状**（见 `ToneGlyph`）和数字，不单靠颜色区分。
+    /// 四声各自的颜色：深松绿、雾蓝、赭、陶红——都取自同一套 token，不另起糖果色。
+    /// 只用于声调标记与颜色模式；每个声调同时有**形状**（见 `ToneGlyph`）和数字，
+    /// 不单靠颜色区分。
     static func toneColor(_ tone: Int) -> Color {
         switch tone {
-        case 1: return Color(light: 0x1B7F3B, dark: 0x6FD08C)
-        case 2: return Color(light: 0x1F5FBF, dark: 0x7FB0F5)
-        case 3: return Color(light: 0x8A5300, dark: 0xF2B655)
-        case 4: return Color(light: 0xB3261E, dark: 0xF2857D)
+        case 1: return Theme.primary
+        case 2: return Theme.blueAccent
+        case 3: return Theme.ochre
+        case 4: return Theme.learnerAccent
         default: return Theme.textSecondary
         }
     }
@@ -85,8 +86,8 @@ extension View {
             .frame(maxWidth: .infinity)
             .padding(.horizontal, Theme.pageMargin)
             .padding(.vertical, Theme.Space.m)
-            .background(alignment: .top) { Theme.divider.frame(height: 1) }
-            .background(Theme.surface.ignoresSafeArea(edges: .bottom))
+            .background(alignment: .top) { Theme.border.frame(height: 1) }
+            .background(Theme.background.ignoresSafeArea(edges: .bottom))
     }
 
     /// 内容面：白底、8pt 圆角、一条细边。不用阴影，不嵌套。
@@ -97,9 +98,118 @@ extension View {
             .clipShape(RoundedRectangle(cornerRadius: Theme.radius))
             .overlay(
                 RoundedRectangle(cornerRadius: Theme.radius)
-                    .strokeBorder(highlighted ? Theme.accent : Theme.divider,
+                    .strokeBorder(highlighted ? Theme.primary : Theme.border,
                                   lineWidth: highlighted ? 1.5 : 1)
             )
+    }
+}
+
+/// 按压反馈（需求 U01）：只作用于自身，约 120ms 的轻微变暗与内收，
+/// 不改变周围布局、不用厚阴影。开了「减弱动态效果」时只变暗、不位移。
+struct PressableStyle: ButtonStyle {
+    @Environment(\.accessibilityReduceMotion) private var reduceMotion
+
+    func makeBody(configuration: Configuration) -> some View {
+        configuration.label
+            .opacity(configuration.isPressed ? 0.78 : 1)
+            .scaleEffect(configuration.isPressed && !reduceMotion ? 0.985 : 1)
+            .animation(.easeOut(duration: 0.12), value: configuration.isPressed)
+    }
+}
+
+/// 首页的功能格（需求 U02）：名称 + 一张线描，**整格可点**。
+///
+/// 声调格用浅灰绿底加一条深松绿细线，表示它是首要入口；送气格雾蓝浅底；
+/// 其余白底描边。不放功能解释或宣传句——名称本身就是说明。
+struct ModuleTile: View {
+    enum Tone { case primary, blue, plain }
+
+    let title: String
+    let kind: ModuleIllustration.Kind
+    var tone: Tone = .plain
+    /// 一列排布（窄屏、放大文字）时：名称在前、图在后，横着排
+    var wide = false
+
+    private var fill: Color {
+        switch tone {
+        case .primary: return Theme.sageSurface
+        case .blue: return Theme.blueSurface
+        case .plain: return Theme.background
+        }
+    }
+
+    var body: some View {
+        Group {
+            if wide {
+                HStack(alignment: .center, spacing: Theme.Space.l) {
+                    name
+                    Spacer(minLength: 0)
+                    ModuleIllustration(kind: kind, backdrop: fill)
+                        .frame(width: 112)
+                }
+            } else {
+                VStack(alignment: .leading, spacing: Theme.Space.m) {
+                    name
+                    ModuleIllustration(kind: kind, backdrop: fill)
+                        .frame(maxWidth: .infinity)
+                }
+            }
+        }
+        .padding(Theme.Space.l)
+        .frame(maxWidth: .infinity, maxHeight: .infinity, alignment: .topLeading)
+        .background(fill)
+        .overlay(alignment: .bottom) {
+            if tone == .primary { Theme.primary.frame(height: 3) }
+        }
+        .clipShape(RoundedRectangle(cornerRadius: Theme.radius))
+        .overlay {
+            if tone == .plain {
+                RoundedRectangle(cornerRadius: Theme.radius).strokeBorder(Theme.border)
+            }
+        }
+        .contentShape(Rectangle())
+    }
+
+    private var name: some View {
+        Text(title)
+            .font(.title3.weight(.bold))
+            .foregroundStyle(Theme.textPrimary)
+            .multilineTextAlignment(.leading)
+            .fixedSize(horizontal: false, vertical: true)
+    }
+}
+
+/// 短分段切换（曲线 / 颜色）：选中项深松绿加粗并有下划线——不单靠颜色。
+struct UnderlineTabs<Value: Hashable>: View {
+    let options: [(value: Value, title: String, id: String)]
+    @Binding var selection: Value
+
+    var body: some View {
+        HStack(spacing: 0) {
+            ForEach(options, id: \.value) { option in
+                let selected = option.value == selection
+                Button {
+                    selection = option.value
+                } label: {
+                    VStack(spacing: Theme.Space.s) {
+                        Text(option.title)
+                            .font(.body.weight(selected ? .semibold : .regular))
+                            .foregroundStyle(selected ? Theme.primary : Theme.textSecondary)
+                            .multilineTextAlignment(.center)
+                            .fixedSize(horizontal: false, vertical: true)
+                        Capsule()
+                            .fill(selected ? Theme.primary : Color.clear)
+                            .frame(width: 64, height: 3)
+                    }
+                    .frame(maxWidth: .infinity, minHeight: Theme.minTap, alignment: .bottom)
+                    .contentShape(Rectangle())
+                }
+                .buttonStyle(.plain)
+                .accessibilityAddTraits(selected ? .isSelected : [])
+                .accessibilityIdentifier(option.id)
+            }
+        }
+        .overlay(alignment: .bottom) { Theme.border.frame(height: 1) }
     }
 }
 
@@ -111,9 +221,9 @@ struct IconTile: View {
     var body: some View {
         Image(systemName: systemName)
             .font(.system(size: size * 0.45, weight: .medium))
-            .foregroundStyle(Theme.accent)
+            .foregroundStyle(Theme.primary)
             .frame(width: size, height: size)
-            .background(Theme.accent.opacity(0.12))
+            .background(Theme.primary.opacity(0.12))
             .clipShape(RoundedRectangle(cornerRadius: Theme.radius))
             .accessibilityHidden(true)
     }
@@ -129,12 +239,13 @@ struct PrimaryButtonStyle: ButtonStyle {
         configuration.label
             .font(.body.weight(.semibold))
             .multilineTextAlignment(.center)
-            .foregroundStyle(Theme.onAccent)
+            .foregroundStyle(Theme.onPrimary)
             .padding(.vertical, Theme.Space.s)
             .frame(maxWidth: .infinity, minHeight: 50, maxHeight: fillsHeight ? .infinity : nil)
             .padding(.horizontal, Theme.Space.m)
-            .background(Theme.accent.opacity(isEnabled ? (configuration.isPressed ? 0.8 : 1) : 0.4))
+            .background(Theme.primary.opacity(isEnabled ? (configuration.isPressed ? 0.82 : 1) : 0.38))
             .clipShape(RoundedRectangle(cornerRadius: Theme.radius))
+            .animation(.easeOut(duration: 0.12), value: configuration.isPressed)
     }
 }
 
@@ -147,47 +258,22 @@ struct SecondaryButtonStyle: ButtonStyle {
         configuration.label
             .font(.body.weight(.medium))
             .multilineTextAlignment(.center)
-            .foregroundStyle(Theme.accent.opacity(isEnabled ? 1 : 0.4))
+            .foregroundStyle(Theme.primary.opacity(isEnabled ? 1 : 0.4))
             .padding(.vertical, Theme.Space.s)
             .frame(maxWidth: .infinity, minHeight: 50, maxHeight: fillsHeight ? .infinity : nil)
             .padding(.horizontal, Theme.Space.m)
-            .background(Theme.surface.opacity(configuration.isPressed ? 0.6 : 1))
+            .background(configuration.isPressed ? Theme.secondaryBackground : Theme.surface)
             .clipShape(RoundedRectangle(cornerRadius: Theme.radius))
-            .overlay(RoundedRectangle(cornerRadius: Theme.radius).strokeBorder(Theme.divider))
+            .overlay(RoundedRectangle(cornerRadius: Theme.radius).strokeBorder(Theme.border))
+            .animation(.easeOut(duration: 0.12), value: configuration.isPressed)
     }
 }
 
-/// 应用标记：登录前几页顶部的小图形与名称
+/// 登录前几页的顶部：应用名称与声纹
 struct BrandHeader: View {
-    var subtitle: String?
-
     var body: some View {
-        VStack(alignment: .leading, spacing: Theme.Space.m) {
-            HStack(spacing: 6) {
-                ForEach([1, 2, 3, 4], id: \.self) { tone in
-                    ToneGlyph(tone: tone, lineWidth: 3)
-                        .frame(width: 26, height: 18)
-                }
-            }
-            .environment(\.layoutDirection, .leftToRight)
-            .padding(.horizontal, Theme.Space.m)
-            .frame(height: 44)
-            .background(Theme.surface)
-            .clipShape(RoundedRectangle(cornerRadius: Theme.radius))
-            .overlay(RoundedRectangle(cornerRadius: Theme.radius).strokeBorder(Theme.divider))
-
-            Text("Pinyintone")
-                .font(.largeTitle.weight(.bold))
-                .foregroundStyle(Theme.textPrimary)
-            if let subtitle {
-                Text(subtitle)
-                    .font(.body)
-                    .foregroundStyle(Theme.textSecondary)
-                    .fixedSize(horizontal: false, vertical: true)
-            }
-        }
-        .frame(maxWidth: .infinity, alignment: .leading)
-        .accessibilityElement(children: .combine)
+        BrandWordmark()
+            .frame(maxWidth: .infinity, alignment: .leading)
     }
 }
 
@@ -246,8 +332,8 @@ struct PracticeActionBar<Leading: View, Center: View, Trailing: View>: View {
         .padding(.top, Theme.Space.s)
         .padding(.bottom, Theme.Space.xs)
         .frame(maxWidth: .infinity)
-        .background(alignment: .top) { Theme.divider.frame(height: 1) }
-        .background(Theme.surface.ignoresSafeArea(edges: .bottom))
+        .background(alignment: .top) { Theme.border.frame(height: 1) }
+        .background(Theme.background.ignoresSafeArea(edges: .bottom))
         .environment(\.layoutDirection, .leftToRight)
         .dynamicTypeSize(...DynamicTypeSize.accessibility1)
     }
@@ -267,21 +353,24 @@ struct BarButton: View {
 
     var body: some View {
         Button(action: action) {
-            VStack(spacing: 2) {
+            VStack(spacing: Theme.Space.xs) {
                 Image(systemName: icon)
-                    .font(.title2.weight(.medium))
+                    .font(.title2)
+                    .foregroundStyle(Theme.textPrimary)
                     .frame(height: 30)
                     .accessibilityHidden(true)
                 Text(caption)
-                    .font(.caption.weight(.medium))
+                    .font(.footnote)
+                    .foregroundStyle(Theme.textSecondary)
                     .multilineTextAlignment(.center)
                     .fixedSize(horizontal: false, vertical: true)
             }
-            .foregroundStyle(isEnabled ? Theme.accent : Theme.textSecondary.opacity(0.45))
+            // 不可用时整体变淡：位置不动，只是看得出现在点不了
+            .opacity(isEnabled ? 1 : 0.32)
             .frame(maxWidth: .infinity, minHeight: Theme.minTap + 8)
             .contentShape(Rectangle())
         }
-        .buttonStyle(.plain)
+        .buttonStyle(PressableStyle())
         .accessibilityLabel(label)
         .accessibilityIdentifier(id)
     }
@@ -294,7 +383,7 @@ struct BarPlaceholder: View {
     }
 }
 
-/// 词条小卡：汉字、声调形状、拼音、释义。首页词表用。
+/// 词条小卡：汉字、声调形状、拼音、释义。选词面板用。
 struct WordTile: View {
     let lexeme: Lexeme
     let language: String
@@ -308,7 +397,13 @@ struct WordTile: View {
                     .foregroundStyle(Theme.textPrimary)
                     .environment(\.layoutDirection, .leftToRight)
                 Spacer(minLength: 0)
-                ToneGlyphRow(tones: lexeme.tones)
+                if isCurrent {
+                    Image(systemName: "checkmark.circle.fill")
+                        .foregroundStyle(Theme.primary)
+                        .accessibilityLabel(NSLocalizedString("word_current", comment: ""))
+                } else {
+                    ToneGlyphRow(tones: lexeme.tones)
+                }
             }
             Text(lexeme.pinyin)
                 .font(.subheadline)
@@ -340,12 +435,12 @@ struct GroupedCard<Content: View>: View {
             .padding(.horizontal, Theme.Space.l)
             .background(Theme.surface)
             .clipShape(RoundedRectangle(cornerRadius: Theme.radius))
-            .overlay(RoundedRectangle(cornerRadius: Theme.radius).strokeBorder(Theme.divider))
+            .overlay(RoundedRectangle(cornerRadius: Theme.radius).strokeBorder(Theme.border))
     }
 }
 
 struct RowDivider: View {
     var body: some View {
-        Theme.divider.frame(height: 1)
+        Theme.border.frame(height: 1)
     }
 }

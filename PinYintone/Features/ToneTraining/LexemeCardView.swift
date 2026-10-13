@@ -15,7 +15,7 @@ struct LexemeCardView: View {
         let gloss = lexeme.glosses(for: localization.language)
         VStack(spacing: Theme.Space.xs) {
             Text(lexeme.hanzi)
-                .font(.system(size: hanziSize, weight: .semibold))
+                .font(.system(size: hanziSize, weight: .bold))
                 .foregroundStyle(Theme.textPrimary)
                 .environment(\.layoutDirection, .leftToRight)
                 .accessibilityIdentifier("practice.hanzi")

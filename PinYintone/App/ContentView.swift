@@ -21,7 +21,7 @@ struct ContentView: View {
         .animation(reduceMotion ? nil : .easeInOut(duration: 0.2),
                    value: userManager.profile == nil)
         .environmentObject(userManager)
-        .tint(Theme.accent)
+        .tint(Theme.primary)
         // 同步教师状态到 AppState
         .onAppear { appState.sync(with: userManager.profile) }
         .onChange(of: userManager.profile?.role) { _, _ in

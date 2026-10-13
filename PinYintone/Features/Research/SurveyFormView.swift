@@ -92,7 +92,7 @@ struct SurveyFormView: View {
                         } label: {
                             Label(ui("search_country"), systemImage: "magnifyingglass")
                                 .font(.body.weight(.medium))
-                                .foregroundStyle(Theme.accent)
+                                .foregroundStyle(Theme.primary)
                                 .frame(maxWidth: .infinity, minHeight: Theme.minTap, alignment: .leading)
                                 .contentShape(Rectangle())
                         }
@@ -164,7 +164,7 @@ struct SurveyFormView: View {
                 .accessibilityLabel(String(format: NSLocalizedString("survey_progress_a11y", comment: ""),
                                            draft.index + 1, form.questions.count))
             ProgressView(value: Double(draft.index + 1), total: Double(form.questions.count))
-                .tint(Theme.accent)
+                .tint(Theme.primary)
                 .accessibilityHidden(true)
         }
     }
@@ -241,7 +241,7 @@ struct SurveyFormView: View {
                   ? (single ? "largecircle.fill.circle" : "checkmark.square.fill")
                   : (single ? "circle" : "square"))
                 .font(.title3)
-                .foregroundStyle(chosen ? Theme.accent : Theme.textSecondary)
+                .foregroundStyle(chosen ? Theme.primary : Theme.textSecondary)
                 .accessibilityHidden(true)
             Text(text)
                 .font(.body.weight(chosen ? .medium : .regular))
@@ -252,10 +252,10 @@ struct SurveyFormView: View {
         }
         .frame(maxWidth: .infinity, minHeight: 28, alignment: .leading)
         .padding(Theme.Space.m)
-        .background(chosen ? Theme.accent.opacity(0.08) : Theme.surface)
+        .background(chosen ? Theme.primary.opacity(0.08) : Theme.surface)
         .clipShape(RoundedRectangle(cornerRadius: Theme.radius))
         .overlay(RoundedRectangle(cornerRadius: Theme.radius)
-            .strokeBorder(chosen ? Theme.accent : Theme.divider, lineWidth: chosen ? 1.5 : 1))
+            .strokeBorder(chosen ? Theme.primary : Theme.border, lineWidth: chosen ? 1.5 : 1))
         .contentShape(Rectangle())
     }
 
@@ -267,7 +267,7 @@ struct SurveyFormView: View {
                 .padding(Theme.Space.s)
                 .background(Theme.surface)
                 .clipShape(RoundedRectangle(cornerRadius: Theme.radius))
-                .overlay(RoundedRectangle(cornerRadius: Theme.radius).stroke(Theme.divider))
+                .overlay(RoundedRectangle(cornerRadius: Theme.radius).stroke(Theme.border))
                 .focused($textFocused)
                 .accessibilityIdentifier("survey.text")
             Text(ui((question.textInput?.maxChars ?? 500) <= 200 ? "limit_200" : "limit_500"))
@@ -490,7 +490,7 @@ struct CountryPickerSheet: View {
                         Spacer()
                         if chosen.contains(row.code) {
                             Image(systemName: "checkmark")
-                                .foregroundStyle(Theme.accent)
+                                .foregroundStyle(Theme.primary)
                                 .accessibilityHidden(true)
                         }
                     }

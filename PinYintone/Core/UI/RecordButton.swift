@@ -3,6 +3,8 @@ import SwiftUI
 /// 录音键。声调练习、自测、自由文本共用。
 ///
 /// 全 App 统一「**点一下开始，再点一下停止**」，不混用长按（需求 U03）。
+/// 待录是深松绿底、白色麦克风与「录音」；录音中换成陶红底、停止图标与「停止」——
+/// **图标和文字都变，不只是变色**。
 /// 外框尺寸固定：待录、录音中、不可用三种状态下按钮不变大变小，
 /// 所以它在底部操作栏里的位置一毫米都不动。
 struct RecordButton: View {
@@ -14,23 +16,25 @@ struct RecordButton: View {
     var body: some View {
         Button(action: action) {
             ZStack {
-                // 外圈：一圈同色的淡晕，让它从操作栏里站出来；尺寸恒定
                 Circle()
-                    .fill((isRecording ? Theme.recording : Theme.accent).opacity(0.16))
-                Circle()
-                    .fill(isRecording ? Theme.recording : Theme.accent)
-                    .frame(width: Theme.recordButton, height: Theme.recordButton)
-                Image(systemName: isRecording ? "stop.fill" : "mic.fill")
-                    .font(.system(size: 26, weight: .semibold))
-                    .foregroundStyle(isRecording ? Color.white : Theme.onAccent)
-                    .accessibilityHidden(true)
+                    .fill(isRecording ? Theme.learnerAccent : Theme.primary)
+                VStack(spacing: 2) {
+                    Image(systemName: isRecording ? "stop.fill" : "mic.fill")
+                        .font(.system(size: 22, weight: .semibold))
+                        .frame(height: 26)
+                    // 圆里只容得下一个短词，字号固定；完整说明由无障碍标签给出
+                    Text(NSLocalizedString(isRecording ? "bar_stop" : "record_short", comment: ""))
+                        .font(.system(size: 11, weight: .semibold))
+                        .lineLimit(1)
+                }
+                .foregroundStyle(isRecording ? Theme.onLearnerAccent : Theme.onPrimary)
+                .accessibilityHidden(true)
             }
-            // 热区略大于可见圆，且恒定
-            .frame(width: Theme.recordButton + 12, height: Theme.recordButton + 12)
+            .frame(width: Theme.recordButton, height: Theme.recordButton)
             .contentShape(Circle())
             .opacity(isEnabled ? 1 : 0.35)
         }
-        .buttonStyle(.plain)
+        .buttonStyle(PressableStyle())
         .disabled(!isEnabled)
         .accessibilityLabel(NSLocalizedString(isRecording ? "record_stop" : "record_start",
                                               comment: ""))

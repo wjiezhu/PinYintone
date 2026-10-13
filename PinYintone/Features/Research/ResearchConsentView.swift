@@ -46,7 +46,7 @@ struct ResearchConsentView: View {
                         .foregroundStyle(Theme.textPrimary)
                         .fixedSize(horizontal: false, vertical: true)
                 }
-                .tint(Theme.accent)
+                .tint(Theme.primary)
                 .accessibilityIdentifier("consent.toggle")
 
                 Text(NSLocalizedString("consent_decline_hint", comment: ""))

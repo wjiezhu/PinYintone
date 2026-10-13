@@ -31,7 +31,7 @@ struct ResearchJoinFlowView: View {
                     }
                 }
         }
-        .tint(Theme.accent)
+        .tint(Theme.primary)
         .interactiveDismissDisabled(isEnrolling)
     }
 
@@ -444,7 +444,7 @@ struct ResearchSurveySheet: View {
         NavigationStack {
             ResearchSurveyContent(formKey: formKey) { dismiss() }
         }
-        .tint(Theme.accent)
+        .tint(Theme.primary)
     }
 }
 
@@ -487,6 +487,6 @@ struct PostSurveyInvitationSheet: View {
         .accessibilityIdentifier("surveyInvite.post")
             }
         }
-        .tint(Theme.accent)
+        .tint(Theme.primary)
     }
 }

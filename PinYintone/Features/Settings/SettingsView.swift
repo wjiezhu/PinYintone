@@ -46,7 +46,7 @@ struct SettingsView: View {
             .padding(.bottom, Theme.Space.xl)
         }
         .scrollDismissesKeyboard(.interactively)
-        .background(Theme.background)
+        .background(Theme.secondaryBackground)
         .navigationTitle(NSLocalizedString("settings_title", comment: ""))
         .navigationBarTitleDisplayMode(.large)
         .onAppear { nicknameDraft = profile?.nickname ?? "" }
@@ -161,12 +161,12 @@ struct SettingsView: View {
                 HStack(spacing: Theme.Space.m) {
                     Image(systemName: icon)
                         .font(.body.weight(.medium))
-                        .foregroundStyle(destructive ? Theme.recording : Theme.accent)
+                        .foregroundStyle(destructive ? Theme.learnerAccent : Theme.primary)
                         .frame(width: 28)
                         .accessibilityHidden(true)
                     Text(NSLocalizedString(titleKey, comment: ""))
                         .font(.body)
-                        .foregroundStyle(destructive ? Theme.recording : Theme.textPrimary)
+                        .foregroundStyle(destructive ? Theme.learnerAccent : Theme.textPrimary)
                         .multilineTextAlignment(.leading)
                         .fixedSize(horizontal: false, vertical: true)
                     Spacer(minLength: 0)
@@ -235,7 +235,7 @@ struct SettingsView: View {
                         if current {
                             Image(systemName: "checkmark")
                                 .font(.body.weight(.semibold))
-                                .foregroundStyle(Theme.accent)
+                                .foregroundStyle(Theme.primary)
                                 .accessibilityHidden(true)
                         }
                     }

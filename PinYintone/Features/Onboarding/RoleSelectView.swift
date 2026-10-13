@@ -36,7 +36,7 @@ struct RoleSelectView: View {
                 } label: {
                     Label(NSLocalizedString("settings_language", comment: ""), systemImage: "globe")
                         .font(.body.weight(.medium))
-                        .foregroundStyle(Theme.accent)
+                        .foregroundStyle(Theme.primary)
                         .frame(minHeight: Theme.minTap)
                         .contentShape(Rectangle())
                 }

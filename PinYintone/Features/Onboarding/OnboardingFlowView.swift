@@ -21,7 +21,7 @@ struct OnboardingFlowView: View {
                 RoleSelectView()
             }
         }
-        .tint(Theme.accent)
+        .tint(Theme.primary)
     }
 
     private var languageSelectionPage: some View {
@@ -66,7 +66,7 @@ struct LanguageChoiceList: View {
                               ? "checkmark" : "chevron.forward")
                             .font(.footnote.weight(.semibold))
                             .foregroundStyle(marksCurrent && localization.language == lang.code
-                                             ? Theme.accent : Theme.textSecondary)
+                                             ? Theme.primary : Theme.textSecondary)
                             .accessibilityHidden(true)
                     }
                     .frame(minHeight: Theme.minTap)

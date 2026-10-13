@@ -24,7 +24,7 @@ struct HelpView: View {
                 .padding(.horizontal, Theme.pageMargin)
                 .padding(.vertical, Theme.Space.l)
             }
-            .background(Theme.background)
+            .background(Theme.secondaryBackground)
             .navigationTitle(NSLocalizedString("help_title", comment: ""))
             .navigationBarTitleDisplayMode(.inline)
             .toolbar {
@@ -33,7 +33,7 @@ struct HelpView: View {
                 }
             }
         }
-        .tint(Theme.accent)
+        .tint(Theme.primary)
     }
 
     private func topic(icon: String, title: String, body: String) -> some View {
@@ -56,7 +56,7 @@ struct HelpView: View {
     private func note(icon: String, text: String) -> some View {
         HStack(alignment: .firstTextBaseline, spacing: Theme.Space.m) {
             Image(systemName: icon)
-                .foregroundStyle(Theme.accent)
+                .foregroundStyle(Theme.primary)
                 .frame(width: 24)
                 .accessibilityHidden(true)
             Text(NSLocalizedString(text, comment: ""))

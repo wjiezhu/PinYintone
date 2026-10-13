@@ -6,7 +6,7 @@
 "role_teacher" = "I am a Teacher";
 "stage1_title" = "Aspiration practice";
 "stage2_title" = "Tone practice";
-"stage3_title" = "Text practice";
+"stage3_title" = "Free text";
 // Onboarding
 "onboarding_mic_body" = "Pinyintone needs microphone access to analyze your pronunciation.";
 "onboarding_mic_allow" = "Continue";
@@ -137,7 +137,7 @@
 // Help / instructions
 "help_title" = "How to use";
 "help_stage1_body" = "Blow hard into the mic to scatter the dandelion — practices aspirated sounds (p / t / k).";
-"help_stage2_body" = "Tap Model to hear the reference, then record yourself. Each recording gets a result out of 100 (60 or more passes).";
+"help_stage2_body" = "Tap Listen to hear the model, then record yourself. Each recording gets a result out of 100 (60 or more passes).";
 "help_stage3_body" = "Paste or type Chinese, it splits into words, practice each one. Bookmark words to review later in My words.";
 "help_tip" = "Practice in a quiet place with the mic near your mouth.";
 "help_privacy" = "Your audio is never uploaded — only analysis results (scores), for research.";
@@ -355,7 +355,7 @@
 "issue_mail_opened" = "Your mail app has been opened. Your feedback is sent by email and is not added to the study data.";
 
 /* 界面改版：操作栏与结果区的短标签 */
-"bar_listen" = "Model";
+"bar_listen" = "Listen";
 "bar_stop" = "Stop";
 "bar_next" = "Next";
 "bar_prev" = "Previous";
@@ -364,3 +364,8 @@
 "tone_name_5" = "Neutral";
 "tone_slot_neutral_a11y" = "Character %1$d: %2$@";
 "common_delete" = "Delete";
+
+/* 2.3 版界面：模块首页与练习页 */
+"home_start" = "Start practising";
+"record_short" = "Record";
+"word_picker_short" = "Words";

@@ -58,7 +58,7 @@ struct IssueReportView: View {
                 if state == .sent {
                     Label(NSLocalizedString("issue_sent", comment: ""),
                           systemImage: "checkmark.circle")
-                        .foregroundStyle(Theme.accent)
+                        .foregroundStyle(Theme.primary)
                 } else if state == .mailed {
                     // 走的是邮件，如实说明，不显示成「已提交」
                     Label(NSLocalizedString("issue_mail_opened", comment: ""),

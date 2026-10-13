@@ -90,7 +90,7 @@ struct TeacherSignupView: View {
             VStack(spacing: 8) {
                 Text(code)
                     .font(.system(size: 52, weight: .bold, design: .monospaced))
-                    .foregroundStyle(Theme.accent)
+                    .foregroundStyle(Theme.primary)
                 Text(NSLocalizedString("teacher_classcode_body", comment: ""))
                     .font(.callout)
                     .foregroundStyle(Theme.textSecondary)

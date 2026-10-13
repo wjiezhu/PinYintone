@@ -48,9 +48,6 @@ struct ToneTrainingView: View {
         // 自测中不能用系统返回直接离开：先明确退出自测，回到普通练习
         .navigationBarBackButtonHidden(vm.mode == .selfTest)
         .toolbar { toolbar }
-        // 练习页底部只留一条操作栏：主导航在这一页收起，返回首页后恢复。
-        // 两条栏叠在一起时，录音键离拇指更远，也分不清哪条是哪条。
-        .toolbar(.hidden, for: .tabBar)
         .onAppear {
             if !didApplyInitialWord, let initialLexemeID {
                 didApplyInitialWord = true
@@ -98,10 +95,8 @@ struct ToneTrainingView: View {
             }
         } else {
             ToolbarItemGroup(placement: .topBarTrailing) {
-                Button {
+                Button(NSLocalizedString("word_picker_short", comment: "")) {
                     showWordPicker = true
-                } label: {
-                    Image(systemName: "list.bullet")
                 }
                 .accessibilityLabel(NSLocalizedString("word_picker_title", comment: ""))
                 .accessibilityIdentifier("practice.wordPicker")
@@ -117,7 +112,7 @@ struct ToneTrainingView: View {
                               systemImage: "checklist")
                     }
                 } label: {
-                    Image(systemName: "ellipsis.circle")
+                    Image(systemName: "ellipsis")
                 }
                 .accessibilityLabel(NSLocalizedString("common_more", comment: ""))
                 .accessibilityIdentifier("practice.more")
@@ -129,8 +124,9 @@ struct ToneTrainingView: View {
     // MARK: - 普通练习
 
     private func practiceContent(_ lexeme: Lexeme) -> some View {
+        ScrollViewReader { proxy in
         ScrollView {
-            VStack(spacing: Theme.Space.l) {
+            VStack(spacing: Theme.Space.m) {
                 if typeSize.isAccessibilitySize {
                     Text(pageTitle)
                         .font(.headline)
@@ -140,40 +136,59 @@ struct ToneTrainingView: View {
                         .accessibilityAddTraits(.isHeader)
                 }
                 LexemeCardView(lexeme: lexeme)
-                    .padding(.top, Theme.Space.m)
-                    .padding(.bottom, Theme.Space.xs)
+                    .padding(.top, Theme.Space.s)
 
                 modeSwitcher
 
                 chart(lexeme)
 
                 statusArea
+                    .id(Self.statusAnchor)
             }
             .padding(.horizontal, Theme.pageMargin)
-            .padding(.bottom, Theme.Space.xl)
+            .padding(.bottom, Theme.Space.l)
         }
         .scrollBounceBehavior(.basedOnSize)
-    }
-
-    private var modeSwitcher: some View {
-        Picker(NSLocalizedString("settings_feedback_style", comment: ""),
-               selection: $feedbackStyle) {
-            // 顺序固定为「颜色 · 曲线」
-            ForEach([FeedbackStyle.staticColor, .dynamicF0], id: \.self) { style in
-                Text(NSLocalizedString(style.localizationKey, comment: "")).tag(style)
+        // 结果或失败说明出现时，把它滚进视野：小屏或放大文字时它可能在操作栏下面，
+        // 不该让人自己去找。只滚正文，底部操作栏不动。
+        .onChange(of: vm.stage) { _, stage in
+            switch stage {
+            case .feedback, .failed:
+                withAnimation(reduceMotion ? nil : .easeOut(duration: 0.2)) {
+                    proxy.scrollTo(Self.statusAnchor, anchor: .bottom)
+                }
+            default:
+                break
             }
         }
-        .pickerStyle(.segmented)
+        }
+    }
+
+    private static let statusAnchor = "practice.status"
+
+    /// 曲线 / 颜色。顺序固定，曲线（默认）在前。
+    private var modeSwitcher: some View {
+        UnderlineTabs(options: [
+            (FeedbackStyle.dynamicF0,
+             NSLocalizedString(FeedbackStyle.dynamicF0.localizationKey, comment: ""),
+             "practice.mode.curve"),
+            (FeedbackStyle.staticColor,
+             NSLocalizedString(FeedbackStyle.staticColor.localizationKey, comment: ""),
+             "practice.mode.colour"),
+        ], selection: $feedbackStyle)
         .onChange(of: feedbackStyle) { old, new in
             // 只在用户实际切换时记一次，视图重绘不记
             vm.logFeedbackModeChanged(from: old, to: new)
         }
         // 录音、分析中换模式会让「看到的线 ≠ 评分的线」，直接禁掉
         .disabled(vm.isBusy)
+        .opacity(vm.isBusy ? 0.5 : 1)
+        .accessibilityElement(children: .contain)
         .accessibilityIdentifier("practice.modeSwitcher")
     }
 
     /// 反馈图。高度固定，内容随模式与状态替换，外部布局不受影响。
+    /// 直接画在页面上，不套卡片——它和上面的词是这一页的主内容。
     private func chart(_ lexeme: Lexeme) -> some View {
         Group {
             switch feedbackStyle {
@@ -187,7 +202,6 @@ struct ToneTrainingView: View {
         }
         .frame(height: Theme.chartHeight)
         .frame(maxWidth: .infinity)
-        .surfaceCard(padding: 0)
         .accessibilityIdentifier("practice.chart")
     }
 
@@ -203,8 +217,8 @@ struct ToneTrainingView: View {
         case .ready:
             statusLine("tone_stage_ready", icon: "mic")
         case .recording:
-            statusLine("tone_stage_recording", icon: "record.circle.fill",
-                       iconColor: Theme.recording, textColor: Theme.textPrimary)
+            statusLine("tone_stage_recording", icon: "record.circle",
+                       iconColor: Theme.learnerAccent, textColor: Theme.textPrimary)
         case .analyzing:
             statusLine("tone_stage_analyzing", spinning: true)
         case .feedback:
@@ -239,10 +253,18 @@ struct ToneTrainingView: View {
     }
 
     /// 本次结果。只说这一次录音的情况，不称「能力评分」，也不做音节级判断。
+    /// 给一项明确的下一步（再试一次）；回听就在旁边；建议点了才展开。
     private func resultBlock(_ result: FeedbackResult) -> some View {
         VStack(alignment: .leading, spacing: 0) {
+            Text(NSLocalizedString("result_title", comment: ""))
+                .font(.headline)
+                .foregroundStyle(Theme.textPrimary)
+                .frame(maxWidth: .infinity, alignment: .leading)
+                .padding(.bottom, Theme.Space.s)
+                .accessibilityAddTraits(.isHeader)
+            RowDivider()
+
             VStack(alignment: .leading, spacing: Theme.Space.s) {
-                SectionTitle(key: "result_title")
                 // 一行放得下就左右排；文字放大后放不下，改成上下排（不缩字、不断词）
                 ViewThatFits(in: .horizontal) {
                     HStack(alignment: .center, spacing: Theme.Space.m) {
@@ -263,39 +285,43 @@ struct ToneTrainingView: View {
                         .fixedSize(horizontal: false, vertical: true)
                 }
             }
-            .padding(Theme.Space.l)
+            .padding(.vertical, Theme.Space.m)
             .frame(maxWidth: .infinity, alignment: .leading)
 
             RowDivider()
 
-            // 三个后续动作等宽排开，位置固定；没有可回听的录音时回听一格不出现
-            HStack(spacing: 0) {
+            // 三个后续动作等宽排开，位置固定；没有可回听的录音时回听一格不出现。
+            // 放大文字时一行挤不下三个词，改成一行一个（不缩字、不把词拦腰折断）。
+            let stacked = typeSize.isAccessibilitySize
+            let layout = stacked ? AnyLayout(VStackLayout(spacing: 0))
+                                 : AnyLayout(HStackLayout(spacing: 0))
+            layout {
                 resultAction(icon: "arrow.counterclockwise", caption: "result_try_again",
-                             label: "result_try_again", id: "practice.tryAgain") {
+                             label: "result_try_again", id: "practice.tryAgain",
+                             inline: stacked) {
                     vm.clearFeedbackForRetry()
                 }
                 if recordings.hasRecording {
-                    columnDivider
-                    resultAction(icon: vm.playing == .ownRecording ? "stop.fill" : "play.fill",
+                    actionDivider(stacked)
+                    resultAction(icon: vm.playing == .ownRecording ? "stop.circle" : "play.circle",
                                  caption: vm.playing == .ownRecording ? "bar_stop" : "replay_short",
                                  label: vm.playing == .ownRecording
                                      ? "replay_stop" : "replay_own_recording",
-                                 id: "practice.replay") {
+                                 id: "practice.replay", inline: stacked) {
                         vm.replayOwnRecording()
                     }
                 }
-                columnDivider
+                actionDivider(stacked)
                 // 建议：点了才打开，不自动弹出
                 resultAction(icon: "lightbulb", caption: "advice_short",
-                             label: "advice_open", id: "practice.advice") {
+                             label: "advice_open", id: "practice.advice", inline: stacked) {
                     vm.openAdvice()
                 }
             }
             .fixedSize(horizontal: false, vertical: true)
+
+            RowDivider()
         }
-        .background(Theme.surface)
-        .clipShape(RoundedRectangle(cornerRadius: Theme.radius))
-        .overlay(RoundedRectangle(cornerRadius: Theme.radius).strokeBorder(Theme.divider))
         // 结果**真正出现在屏幕上**才算「已显示」：研究记录的结果显示时间、
         // feedback_displayed 事件、合格练习计次都从这里触发，按尝试编号去重。
         .onAppear { vm.feedbackDidAppear() }
@@ -327,31 +353,38 @@ struct ToneTrainingView: View {
                                    result.score))
     }
 
-    private var columnDivider: some View {
-        Theme.divider.frame(width: 1)
+    /// 并排时是竖线，上下排时是横线
+    @ViewBuilder
+    private func actionDivider(_ stacked: Bool) -> some View {
+        if stacked { RowDivider() } else { Theme.border.frame(width: 1) }
     }
 
-    /// 结果区的一个动作：图标在上、一个短词在下。完整说明给 VoiceOver。
+    /// 结果区的一个动作：图标 + 一个短词。并排时图标在上，上下排时图标在前。
+    /// 完整说明给 VoiceOver。
     private func resultAction(icon: String, caption: String, label: String, id: String,
-                              action: @escaping () -> Void) -> some View {
-        Button(action: action) {
-            VStack(spacing: Theme.Space.xs) {
+                              inline: Bool, action: @escaping () -> Void) -> some View {
+        let layout = inline ? AnyLayout(HStackLayout(spacing: Theme.Space.m))
+                            : AnyLayout(VStackLayout(spacing: Theme.Space.xs))
+        return Button(action: action) {
+            layout {
                 Image(systemName: icon)
-                    .font(.body.weight(.semibold))
-                    .frame(height: 22)
+                    .font(.title3)
+                    .foregroundStyle(Theme.primary)
+                    .frame(minHeight: 26)
                     .accessibilityHidden(true)
                 Text(NSLocalizedString(caption, comment: ""))
-                    .font(.footnote.weight(.medium))
-                    .multilineTextAlignment(.center)
+                    .font(.subheadline)
+                    .foregroundStyle(Theme.textPrimary)
+                    .multilineTextAlignment(inline ? .leading : .center)
                     .fixedSize(horizontal: false, vertical: true)
             }
-            .foregroundStyle(Theme.accent)
             .padding(.vertical, Theme.Space.m)
             .padding(.horizontal, Theme.Space.xs)
-            .frame(maxWidth: .infinity, minHeight: 60, maxHeight: .infinity)
+            .frame(maxWidth: .infinity, minHeight: inline ? Theme.minTap : 64,
+                   maxHeight: .infinity, alignment: inline ? .leading : .center)
             .contentShape(Rectangle())
         }
-        .buttonStyle(.plain)
+        .buttonStyle(PressableStyle())
         .accessibilityLabel(NSLocalizedString(label, comment: ""))
         .accessibilityIdentifier(id)
     }
@@ -373,10 +406,10 @@ struct ToneTrainingView: View {
         }
         .frame(maxWidth: .infinity, alignment: .leading)
         .padding(Theme.Space.l)
-        .background(Theme.warning.opacity(0.08))
+        .background(Theme.secondaryBackground)
         .clipShape(RoundedRectangle(cornerRadius: Theme.radius))
         .overlay(RoundedRectangle(cornerRadius: Theme.radius)
-            .strokeBorder(Theme.warning.opacity(0.4)))
+            .strokeBorder(Theme.warning.opacity(0.55)))
         .accessibilityElement(children: .contain)
         .accessibilityIdentifier("practice.failure")
     }
@@ -388,7 +421,7 @@ struct ToneTrainingView: View {
     private var actionBar: some View {
         PracticeActionBar {
             if vm.mode == .practice {
-                BarButton(icon: vm.playing == .sample ? "stop.fill" : "speaker.wave.2.fill",
+                BarButton(icon: vm.playing == .sample ? "stop.circle" : "speaker.wave.2",
                           caption: NSLocalizedString(vm.playing == .sample ? "bar_stop" : "bar_listen",
                                                      comment: ""),
                           label: NSLocalizedString(vm.playing == .sample
@@ -407,7 +440,7 @@ struct ToneTrainingView: View {
             .accessibilityValue(stageDescription)
         } trailing: {
             if vm.mode == .practice {
-                BarButton(icon: "forward.end.fill",
+                BarButton(icon: "forward.end",
                           caption: NSLocalizedString("bar_next", comment: ""),
                           label: NSLocalizedString("tone_next_word", comment: ""),
                           id: "practice.next") { vm.loadNext() }
@@ -479,7 +512,7 @@ struct ToneTrainingView: View {
                 }
             }
         }
-        .tint(Theme.accent)
+        .tint(Theme.primary)
         .presentationDetents([.medium, .large])
     }
 
@@ -549,7 +582,7 @@ struct SelfTestContent: View {
             HStack(spacing: Theme.Space.xs) {
                 ForEach(0..<max(session.total, 1), id: \.self) { index in
                     Capsule()
-                        .fill(index < session.position ? Theme.textSecondary : Theme.divider)
+                        .fill(index < session.position ? Theme.textSecondary : Theme.border)
                         .frame(height: 4)
                 }
             }
@@ -589,7 +622,9 @@ struct SelfTestContent: View {
             }
         }
         .frame(maxWidth: .infinity, minHeight: 132)
-        .surfaceCard()
+        .padding(Theme.Space.l)
+        .background(Theme.secondaryBackground)
+        .clipShape(RoundedRectangle(cornerRadius: Theme.radius))
         .accessibilityElement(children: .contain)
         .accessibilityIdentifier("selfTest.status")
     }

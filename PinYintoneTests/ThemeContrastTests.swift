@@ -1,7 +1,8 @@
 import XCTest
 @testable import PinYintone
 
-/// 界面色值的对比度实测（需求 U01：须实测对比度，不以色值列表代替可读性检查）。
+/// 界面色值的对比度实测（需求 2.3 版 U01：普通文字至少 4.5:1；
+/// 浅色模块底、深色模式都要另测，不能套用纯白底上的数值）。
 ///
 /// 按 WCAG 2.x 的相对亮度公式计算。门槛：
 /// - 正文与次要文字对其所在底色 ≥ 4.5:1
@@ -36,59 +37,71 @@ final class ThemeContrastTests: XCTestCase {
         }
     }
 
-    func testTextIsReadableOnBothSurfaces() {
+    /// 文字可能落在的每一种底色
+    private var surfaces: [(String, Pair)] {
         let h = Theme.Hex.self
-        for (bgName, bg) in [("页面背景", h.background), ("内容面", h.surface)] {
+        return [("主背景", h.background), ("次级背景", h.secondaryBackground),
+                ("内容面", h.surface), ("声调模块浅底", h.sageSurface),
+                ("送气模块浅底", h.blueSurface)]
+    }
+
+    func testTextIsReadableOnEverySurface() {
+        let h = Theme.Hex.self
+        for (bgName, bg) in surfaces {
             check("主文字", h.textPrimary, on: bgName, bg, atLeast: 4.5)
             check("次要文字", h.textSecondary, on: bgName, bg, atLeast: 4.5)
-            check("技术失败文字", h.warning, on: bgName, bg, atLeast: 4.5)
-            check("强调色文字（通过状态、链接）", h.accent, on: bgName, bg, atLeast: 4.5)
+            check("深松绿文字（通过状态、选中项、链接）", h.primary, on: bgName, bg, atLeast: 4.5)
         }
     }
 
-    func testTextOnAccentButtonIsReadable() {
-        check("主按钮上的文字", Theme.Hex.onAccent, on: "主操作色", Theme.Hex.accent, atLeast: 4.5)
+    func testLabelsOnFilledButtonsAreReadable() {
+        let h = Theme.Hex.self
+        check("主按钮上的文字", h.onPrimary, on: "深松绿", h.primary, atLeast: 4.5)
+        check("停止键上的文字", h.onLearnerAccent, on: "陶红", h.learnerAccent, atLeast: 4.5)
     }
 
-    func testCurvesAndControlsStandOutFromTheChartSurface() {
+    /// 陶红、雾蓝、赭只用于图形（曲线、图标、插图点缀、声调标记），门槛是 3:1。
+    /// 它们在浅灰底上不到 4.5:1，所以**不用来写正文**——出错提示的文字用主文字色。
+    func testGraphicColoursStandOutFromEverySurface() {
         let h = Theme.Hex.self
-        check("参考曲线", h.accent, on: "内容面", h.surface, atLeast: 3)
-        check("学习者曲线", h.learner, on: "内容面", h.surface, atLeast: 3)
-        check("停止键", h.recording, on: "页面背景", h.background, atLeast: 3)
+        for (bgName, bg) in surfaces {
+            check("参考曲线", h.primary, on: bgName, bg, atLeast: 3)
+            check("学习者曲线 / 出错图标", h.learnerAccent, on: bgName, bg, atLeast: 3)
+            check("雾蓝点缀", h.blueAccent, on: bgName, bg, atLeast: 3)
+            check("赭（三声标记）", h.ochre, on: bgName, bg, atLeast: 3)
+        }
     }
 
-    /// 两条曲线彼此的区分**不能只靠颜色**。
-    ///
-    /// 规范指定的青绿与玫红明度几乎相同，互相之间的对比度远低于 3:1——
-    /// 色觉障碍或灰度显示下单靠颜色分不开。所以参考必须是虚线、学习者必须是实线。
-    func testTheTwoCurvesDifferByLineStyleBecauseColourAloneIsNotEnough() {
+    /// 规范给的三个实测值（纯白底）：改了基准色这里会报出来
+    func testBaselineRatiosMatchTheSpecification() {
         let h = Theme.Hex.self
-        XCTAssertNotEqual(h.accent.light, h.learner.light)
-        XCTAssertNotEqual(h.accent.dark, h.learner.dark)
-        let between = ratio(h.accent.light, h.learner.light)
-        XCTAssertLessThan(between, 3, "若两色明度已拉开到 3:1 以上，这条说明可以更新")
-        XCTAssertFalse(Theme.Curve.referenceDash.isEmpty, "参考曲线必须是虚线")
-        XCTAssertTrue(Theme.Curve.learnerDash.isEmpty, "学习者曲线必须是实线")
-        XCTAssertNotEqual(Theme.Curve.referenceDash, Theme.Curve.learnerDash)
+        XCTAssertEqual(ratio(h.primary.light, 0xFFFFFF), 8.34, accuracy: 0.06)
+        XCTAssertEqual(ratio(h.learnerAccent.light, 0xFFFFFF), 4.65, accuracy: 0.06)
+        XCTAssertEqual(ratio(h.blueAccent.light, 0xFFFFFF), 4.66, accuracy: 0.06)
+    }
+
+    /// 两条曲线彼此的区分**不能只靠颜色**：参考是实线，学习者是虚线。
+    func testTheTwoCurvesDifferByLineStyleNotOnlyColour() {
+        let h = Theme.Hex.self
+        XCTAssertNotEqual(h.primary.light, h.learnerAccent.light)
+        XCTAssertNotEqual(h.primary.dark, h.learnerAccent.dark)
+        XCTAssertTrue(Theme.Curve.referenceDash.isEmpty, "参考曲线是实线")
+        XCTAssertFalse(Theme.Curve.learnerDash.isEmpty, "学习者曲线是虚线")
     }
 
     /// 实测值留档：改色值后这里的输出会变，报告里引用的数字要跟着更新
     func testPrintMeasuredContrastRatios() {
         let h = Theme.Hex.self
-        let rows: [(String, (light: UInt32, dark: UInt32), (light: UInt32, dark: UInt32))] = [
-            ("主文字 / 页面背景", h.textPrimary, h.background),
-            ("主文字 / 内容面", h.textPrimary, h.surface),
-            ("次要文字 / 页面背景", h.textSecondary, h.background),
-            ("次要文字 / 内容面", h.textSecondary, h.surface),
-            ("强调色 / 内容面", h.accent, h.surface),
-            ("强调色 / 页面背景", h.accent, h.background),
-            ("主按钮文字 / 强调色", h.onAccent, h.accent),
-            ("学习者曲线 / 内容面", h.learner, h.surface),
-            ("技术失败 / 内容面", h.warning, h.surface),
-            ("技术失败 / 页面背景", h.warning, h.background),
-            ("停止键 / 页面背景", h.recording, h.background),
-            ("参考曲线 / 学习者曲线", h.accent, h.learner),
-        ]
+        var rows: [(String, Pair, Pair)] = []
+        for (bgName, bg) in surfaces {
+            rows.append(("主文字 / \(bgName)", h.textPrimary, bg))
+            rows.append(("次要文字 / \(bgName)", h.textSecondary, bg))
+            rows.append(("深松绿 / \(bgName)", h.primary, bg))
+            rows.append(("陶红 / \(bgName)", h.learnerAccent, bg))
+            rows.append(("雾蓝 / \(bgName)", h.blueAccent, bg))
+        }
+        rows.append(("主按钮文字 / 深松绿", h.onPrimary, h.primary))
+        rows.append(("停止键文字 / 陶红", h.onLearnerAccent, h.learnerAccent))
         for (name, fg, bg) in rows {
             print(String(format: "CONTRAST %@ 浅色 %.2f:1 深色 %.2f:1", name,
                          ratio(fg.light, bg.light), ratio(fg.dark, bg.dark)))

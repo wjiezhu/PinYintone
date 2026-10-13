@@ -6,7 +6,7 @@
 "role_teacher" = "我是教师";
 "stage1_title" = "送气练习";
 "stage2_title" = "声调练习";
-"stage3_title" = "文本练习";
+"stage3_title" = "自由文本";
 // 引导页
 "onboarding_mic_body" = "Pinyintone 需要麦克风权限来分析您的发音。";
 "onboarding_mic_allow" = "继续";
@@ -137,7 +137,7 @@
 // 使用说明
 "help_title" = "使用说明";
 "help_stage1_body" = "对着麦克风用力送气吹散蒲公英 —— 练习送气音（p / t / k）。";
-"help_stage2_body" = "点「示范」听参考读音，再录音念出来。每次录音得到一个 0–100 的本次结果（60 及以上为通过）。";
+"help_stage2_body" = "点「听示范」听参考读音，再录音念出来。每次录音得到一个 0–100 的本次结果（60 及以上为通过）。";
 "help_stage3_body" = "粘贴或输入中文，自动分词，逐词练习。点书签收藏词条，之后在「我的词条」复习。";
 "help_tip" = "在安静环境练习，麦克风对准嘴。";
 "help_privacy" = "不上传录音，只上传分析结果（分数），用于研究。";
@@ -355,7 +355,7 @@
 "issue_mail_opened" = "已打开邮件。你的反馈将通过邮件发送，不会进入研究数据。";
 
 /* 界面改版：操作栏与结果区的短标签 */
-"bar_listen" = "示范";
+"bar_listen" = "听示范";
 "bar_stop" = "停止";
 "bar_next" = "下一词";
 "bar_prev" = "上一词";
@@ -364,3 +364,8 @@
 "tone_name_5" = "轻声";
 "tone_slot_neutral_a11y" = "第 %1$d 个字：%2$@";
 "common_delete" = "删除";
+
+/* 2.3 版界面：模块首页与练习页 */
+"home_start" = "开始练习";
+"record_short" = "录音";
+"word_picker_short" = "选词";

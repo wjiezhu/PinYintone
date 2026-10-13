@@ -1,25 +1,29 @@
 import SwiftUI
 
-/// 「练习」首页（需求 U02）。
+/// 「练习」首页（需求 2.3 版 U02）。
 ///
-/// 一个连续的内容区，自上而下：
-/// 1. 需要处理的事（继续填写问卷、参加研究）——各一条紧凑、可关闭的行，不挡练习
-/// 2. 声调练习：当前词与「继续练习」入口，打开首页就看得见
-/// 3. 词条：直接展示真实词库，点哪个练哪个
-/// 4. 更多练习：自由文本、收藏、送气——次级入口，不与声调争视觉层级
+/// 自上而下：应用名称与声纹 → 页名 → 需要处理的事（紧凑、可关闭）→
+/// **2×2 功能格**（声调、自由文本、送气、我的词条，整格可点）→ 继续练习。
 ///
-/// **不展示**能力等级、平均分趋势、连续打卡或任何「学习提升」的说法。
-/// 没有练习记录时就只有词库，不编示例数据。
+/// 声调格排第一并用浅灰绿底，表示它是首要入口。自测不在四格里——
+/// 它是声调页里的次级入口。
+///
+/// 「继续练习」只在**真有练习记录**时出现，显示的是最近实际练过的那个词；
+/// 没有记录就只给一个普通的开始入口，不编一条「上次练到」。
+/// 点它是打开练习页，**不直接启动麦克风**。
+///
+/// **不展示**能力等级、平均分趋势、连续打卡、积分或任何「学习提升」的说法。
 struct PracticeHomeView: View {
     @ObservedObject private var store = ResearchStore.shared
     @ObservedObject private var config = ResearchConfig.shared
-    @ObservedObject private var sequencer = ToneSequencer.shared
     @ObservedObject private var localization = LocalizationManager.shared
     @Environment(\.dynamicTypeSize) private var typeSize
+    @Environment(\.horizontalSizeClass) private var sizeClass
 
     @State private var path: [Route] = []
     @State private var surveyToOpen: SurveyTarget?
     @State private var showResearchFlow = false
+    @State private var lastPracticed: (lexeme: Lexeme, at: Date)?
     @AppStorage("pt_research_home_row_dismissed") private var researchRowDismissed = false
 
     enum Route: Hashable {
@@ -36,18 +40,24 @@ struct PracticeHomeView: View {
         NavigationStack(path: $path) {
             ScrollView {
                 VStack(alignment: .leading, spacing: Theme.Space.xl) {
+                    VStack(alignment: .leading, spacing: Theme.Space.l) {
+                        BrandWordmark()
+                        Text(NSLocalizedString("tab_practice", comment: ""))
+                            .font(.largeTitle.weight(.bold))
+                            .foregroundStyle(Theme.textPrimary)
+                            .accessibilityAddTraits(.isHeader)
+                    }
                     notices
-                    toneSection
-                    wordsSection
-                    moreSection
+                    modules
+                    continueSection
                 }
                 .padding(.horizontal, Theme.pageMargin)
-                .padding(.top, Theme.Space.s)
+                .padding(.top, Theme.Space.m)
                 .padding(.bottom, Theme.Space.xl)
             }
             .background(Theme.background)
-            .navigationTitle("Pinyintone")
-            .navigationBarTitleDisplayMode(.large)
+            .toolbar(.hidden, for: .navigationBar)
+            .onAppear { reloadLastPracticed() }
             .navigationDestination(for: Route.self) { route in
                 switch route {
                 case .tone(let id): ToneTrainingView(initialLexemeID: id)
@@ -59,6 +69,17 @@ struct PracticeHomeView: View {
         }
         .sheet(item: $surveyToOpen) { ResearchSurveySheet(formKey: $0.formKey) }
         .sheet(isPresented: $showResearchFlow) { ResearchJoinFlowView() }
+    }
+
+    /// 从本机记录里取最近实际练过的词。只读本机，不向服务器要任何人的记录。
+    private func reloadLastPracticed() {
+        guard let last = SessionRepository.shared.lastPracticedWord(),
+              let lexeme = CorpusLoader.shared.orderedPool(category: .tone)
+                .first(where: { $0.id == last.lexemeID }) else {
+            lastPracticed = nil
+            return
+        }
+        lastPracticed = (lexeme, last.at)
     }
 
     // MARK: - 需要处理的事
@@ -112,7 +133,7 @@ struct PracticeHomeView: View {
                 HStack(spacing: Theme.Space.m) {
                     Image(systemName: icon)
                         .font(.body.weight(.medium))
-                        .foregroundStyle(Theme.accent)
+                        .foregroundStyle(Theme.primary)
                         .frame(width: 28)
                         .accessibilityHidden(true)
                     Text(title)
@@ -134,7 +155,7 @@ struct PracticeHomeView: View {
                 .frame(minHeight: Theme.minTap + 4)
                 .contentShape(Rectangle())
             }
-            .buttonStyle(.plain)
+            .buttonStyle(PressableStyle())
             .accessibilityIdentifier(id)
 
             if let onDismiss {
@@ -150,132 +171,112 @@ struct PracticeHomeView: View {
                 .accessibilityIdentifier("\(id).dismiss")
             }
         }
-        .background(Theme.accent.opacity(0.08))
+        .background(Theme.secondaryBackground)
         .clipShape(RoundedRectangle(cornerRadius: Theme.radius))
-        .overlay(RoundedRectangle(cornerRadius: Theme.radius)
-            .strokeBorder(Theme.accent.opacity(0.35)))
+        .overlay(RoundedRectangle(cornerRadius: Theme.radius).strokeBorder(Theme.border))
     }
 
-    // MARK: - 声调练习
+    // MARK: - 功能格
 
-    /// 当前词 + 「继续练习」。整块可点。
-    private var toneSection: some View {
-        VStack(alignment: .leading, spacing: Theme.Space.s) {
-            SectionTitle(key: "stage2_title")
+    private struct Module: Identifiable {
+        let route: Route
+        let title: String
+        let kind: ModuleIllustration.Kind
+        let tone: ModuleTile.Tone
+        let id: String
+    }
+
+    private var moduleList: [Module] {
+        [
+            Module(route: .tone(lexemeID: nil), title: "stage2_title", kind: .tone,
+                   tone: .primary, id: "home.tone"),
+            Module(route: .freeText, title: "stage3_title", kind: .freeText,
+                   tone: .plain, id: "home.freeText"),
+            Module(route: .aspiration, title: "stage1_title", kind: .aspiration,
+                   tone: .blue, id: "home.aspiration"),
+            Module(route: .saved, title: "saved_words_title", kind: .savedWords,
+                   tone: .plain, id: "home.saved"),
+        ]
+    }
+
+    /// 2×2；放大文字时改成一列（图不压缩成小图标，文字不缩）。
+    private var modules: some View {
+        let singleColumn = typeSize.isAccessibilitySize
+        let columns = singleColumn ? 1 : 2
+        let all = moduleList
+        let rows = stride(from: 0, to: all.count, by: columns).map {
+            Array(all[$0..<min($0 + columns, all.count)])
+        }
+        return VStack(spacing: Theme.Space.m) {
+            ForEach(Array(rows.enumerated()), id: \.offset) { _, row in
+                // 同一行两格等高
+                HStack(alignment: .top, spacing: Theme.Space.m) {
+                    ForEach(row) { module in
+                        Button {
+                            path.append(module.route)
+                        } label: {
+                            ModuleTile(title: NSLocalizedString(module.title, comment: ""),
+                                       kind: module.kind, tone: module.tone, wide: singleColumn)
+                        }
+                        .buttonStyle(PressableStyle())
+                        .accessibilityIdentifier(module.id)
+                    }
+                }
+                .fixedSize(horizontal: false, vertical: true)
+            }
+        }
+    }
+
+    // MARK: - 继续练习
+
+    @ViewBuilder
+    private var continueSection: some View {
+        if let last = lastPracticed {
+            VStack(alignment: .leading, spacing: Theme.Space.m) {
+                HStack(alignment: .firstTextBaseline, spacing: Theme.Space.s) {
+                    Text(NSLocalizedString("home_continue", comment: ""))
+                        .font(.headline)
+                        .foregroundStyle(Theme.textPrimary)
+                        .accessibilityAddTraits(.isHeader)
+                    Spacer(minLength: Theme.Space.s)
+                    // 真实的上次练习时间，取自本机记录
+                    Text(last.at, format: .dateTime.month().day().hour().minute())
+                        .font(.footnote)
+                        .foregroundStyle(Theme.textSecondary)
+                }
+                VStack(alignment: .leading, spacing: 2) {
+                    HStack(alignment: .center, spacing: Theme.Space.m) {
+                        Text(last.lexeme.hanzi)
+                            .font(.title.weight(.bold))
+                            .foregroundStyle(Theme.textPrimary)
+                        ToneGlyphRow(tones: last.lexeme.tones,
+                                     glyphSize: CGSize(width: 24, height: 16), lineWidth: 2.5)
+                    }
+                    Text(last.lexeme.pinyin)
+                        .font(.body)
+                        .foregroundStyle(Theme.textSecondary)
+                }
+                .environment(\.layoutDirection, .leftToRight)
+                .frame(maxWidth: .infinity, alignment: .leading)
+                .accessibilityElement(children: .combine)
+
+                Button {
+                    path.append(.tone(lexemeID: last.lexeme.id))
+                } label: {
+                    Text(NSLocalizedString("home_continue", comment: ""))
+                }
+                .buttonStyle(PrimaryButtonStyle())
+                .accessibilityIdentifier("home.continueTone")
+            }
+        } else {
+            // 没有练习记录：只给普通入口，不显示任何「上次」
             Button {
                 path.append(.tone(lexemeID: nil))
             } label: {
-                VStack(alignment: .leading, spacing: Theme.Space.l) {
-                    if let lexeme = sequencer.currentLexeme {
-                        currentWord(lexeme)
-                    }
-                    Label(NSLocalizedString("home_continue", comment: ""), systemImage: "mic.fill")
-                        .font(.body.weight(.semibold))
-                        .multilineTextAlignment(.center)
-                        .foregroundStyle(Theme.onAccent)
-                        .frame(maxWidth: .infinity, minHeight: 50)
-                        .padding(.horizontal, Theme.Space.l)
-                        .background(Theme.accent)
-                        .clipShape(RoundedRectangle(cornerRadius: Theme.radius))
-                }
-                .frame(maxWidth: .infinity, alignment: .leading)
-                .surfaceCard()
-                .contentShape(Rectangle())
+                Text(NSLocalizedString("home_start", comment: ""))
             }
-            .buttonStyle(.plain)
+            .buttonStyle(PrimaryButtonStyle())
             .accessibilityIdentifier("home.continueTone")
         }
-    }
-
-    private func currentWord(_ lexeme: Lexeme) -> some View {
-        let gloss = lexeme.glosses(for: localization.language).primary
-        return HStack(alignment: .top, spacing: Theme.Space.m) {
-            VStack(alignment: .leading, spacing: Theme.Space.xs) {
-                Text(lexeme.hanzi)
-                    .font(.largeTitle.weight(.semibold))
-                    .foregroundStyle(Theme.textPrimary)
-                    .environment(\.layoutDirection, .leftToRight)
-                Text(lexeme.pinyin)
-                    .font(.title3)
-                    .foregroundStyle(Theme.textSecondary)
-                    .environment(\.layoutDirection, .leftToRight)
-                if !gloss.isEmpty {
-                    Text(gloss)
-                        .font(.subheadline)
-                        .foregroundStyle(Theme.textSecondary)
-                        .multilineTextAlignment(.leading)
-                        .fixedSize(horizontal: false, vertical: true)
-                }
-            }
-            Spacer(minLength: 0)
-            ToneGlyphRow(tones: lexeme.tones,
-                         glyphSize: CGSize(width: 34, height: 24), lineWidth: 3.5)
-                .padding(.top, Theme.Space.s)
-        }
-    }
-
-    // MARK: - 词条
-
-    private var wordsSection: some View {
-        let words = CorpusLoader.shared.orderedPool(category: .tone)
-        // 放大文字时一行放不下两张，改成单列（不靠缩字解决）
-        let columns = typeSize.isAccessibilitySize ? 1 : 2
-        let rows = stride(from: 0, to: words.count, by: columns).map {
-            Array(words[$0..<min($0 + columns, words.count)])
-        }
-        return VStack(alignment: .leading, spacing: Theme.Space.s) {
-            SectionTitle(key: "home_words")
-            VStack(spacing: Theme.Space.s) {
-                ForEach(Array(rows.enumerated()), id: \.offset) { _, row in
-                    // 同一行的两张卡等高：按较高的那张取齐
-                    HStack(alignment: .top, spacing: Theme.Space.s) {
-                        ForEach(row) { lexeme in
-                            Button {
-                                path.append(.tone(lexemeID: lexeme.id))
-                            } label: {
-                                WordTile(lexeme: lexeme, language: localization.language,
-                                         isCurrent: lexeme.id == sequencer.currentLexeme?.id)
-                            }
-                            .buttonStyle(.plain)
-                            .accessibilityIdentifier("home.word.\(lexeme.id)")
-                        }
-                        if row.count < columns {
-                            Color.clear.frame(maxWidth: .infinity)
-                        }
-                    }
-                    .fixedSize(horizontal: false, vertical: true)
-                }
-            }
-        }
-    }
-
-    // MARK: - 更多练习
-
-    private var moreSection: some View {
-        VStack(alignment: .leading, spacing: Theme.Space.s) {
-            SectionTitle(key: "home_more")
-            GroupedCard {
-                moreRow(.freeText, icon: "text.cursor", title: "stage3_title",
-                        subtitle: "stage3_subtitle", id: "home.freeText")
-                RowDivider()
-                moreRow(.saved, icon: "bookmark", title: "saved_words_title",
-                        subtitle: nil, id: "home.saved")
-                RowDivider()
-                moreRow(.aspiration, icon: "wind", title: "stage1_title",
-                        subtitle: "stage1_subtitle", id: "home.aspiration")
-            }
-        }
-    }
-
-    private func moreRow(_ route: Route, icon: String, title: String,
-                         subtitle: String?, id: String) -> some View {
-        NavigationLink(value: route) {
-            EntryRow(icon: icon,
-                     title: NSLocalizedString(title, comment: ""),
-                     subtitle: subtitle.map { NSLocalizedString($0, comment: "") })
-                .padding(.vertical, Theme.Space.m)
-        }
-        .buttonStyle(.plain)
-        .accessibilityIdentifier(id)
     }
 }

@@ -42,7 +42,7 @@ struct PracticeAdviceView: View {
                 .padding(.horizontal, Theme.pageMargin)
                 .padding(.vertical, Theme.Space.l)
             }
-            .background(Theme.background)
+            .background(Theme.secondaryBackground)
             .navigationTitle(NSLocalizedString("advice_title", comment: ""))
             .navigationBarTitleDisplayMode(.inline)
             .toolbar {
@@ -51,7 +51,7 @@ struct PracticeAdviceView: View {
                 }
             }
         }
-        .tint(Theme.accent)
+        .tint(Theme.primary)
     }
 
     private func section(title: String, body: String) -> some View {

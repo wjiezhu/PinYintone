@@ -89,13 +89,13 @@ struct StudentSignupView: View {
                 Text(NSLocalizedString(lang.localizationKey, comment: ""))
                     .font(.subheadline.weight(selected ? .semibold : .regular))
             }
-            .foregroundStyle(selected ? Theme.accent : Theme.textPrimary)
+            .foregroundStyle(selected ? Theme.primary : Theme.textPrimary)
             .padding(.horizontal, Theme.Space.m)
             .frame(minHeight: Theme.minTap)
-            .background(selected ? Theme.accent.opacity(0.10) : Theme.surface)
+            .background(selected ? Theme.primary.opacity(0.10) : Theme.surface)
             .clipShape(RoundedRectangle(cornerRadius: Theme.radius))
             .overlay(RoundedRectangle(cornerRadius: Theme.radius)
-                .strokeBorder(selected ? Theme.accent : Theme.divider,
+                .strokeBorder(selected ? Theme.primary : Theme.border,
                               lineWidth: selected ? 1.5 : 1))
         }
         .buttonStyle(.plain)

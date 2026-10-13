@@ -69,7 +69,7 @@ struct LearningHistoryView: View {
             .padding(.top, Theme.Space.s)
             .padding(.bottom, Theme.Space.xl)
         }
-        .background(Theme.background)
+        .background(Theme.secondaryBackground)
         .navigationTitle(NSLocalizedString("history_title", comment: ""))
         .navigationBarTitleDisplayMode(.large)
         .onAppear {
@@ -132,7 +132,7 @@ struct LearningHistoryView: View {
         }
         .font(.subheadline.weight(.medium))
         .foregroundStyle(status == .technicalFailure ? Theme.warning
-                         : (status == .passed ? Theme.accent : Theme.textSecondary))
+                         : (status == .passed ? Theme.primary : Theme.textSecondary))
         .multilineTextAlignment(.trailing)
     }
 }

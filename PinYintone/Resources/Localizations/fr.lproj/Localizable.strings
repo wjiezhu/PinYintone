@@ -6,7 +6,7 @@
 "role_teacher" = "Je suis enseignant(e)";
 "stage1_title" = "Entraînement à l'aspiration";
 "stage2_title" = "Entraînement des tons";
-"stage3_title" = "Pratique de texte";
+"stage3_title" = "Texte libre";
 // Onboarding
 "onboarding_mic_body" = "Pinyintone a besoin du microphone pour analyser votre prononciation.";
 "onboarding_mic_allow" = "Continuer";
@@ -137,7 +137,7 @@
 // Aide / instructions
 "help_title" = "Comment utiliser";
 "help_stage1_body" = "Soufflez fort dans le micro pour disperser le pissenlit — entraîne les sons aspirés (p / t / k).";
-"help_stage2_body" = "Touchez Modèle pour écouter la référence, puis enregistrez-vous. Chaque enregistrement reçoit un résultat sur 100 (≥ 60 = réussi).";
+"help_stage2_body" = "Touchez Écouter pour entendre le modèle, puis enregistrez-vous. Chaque enregistrement reçoit un résultat sur 100 (≥ 60 = réussi).";
 "help_stage3_body" = "Collez ou saisissez du chinois, il se découpe en mots, entraînez chaque mot. Marquez des mots pour les revoir dans Mes mots.";
 "help_tip" = "Pratiquez dans un endroit calme, micro près de la bouche.";
 "help_privacy" = "Aucun enregistrement n'est envoyé — seulement les résultats d'analyse (scores), à des fins de recherche.";
@@ -355,7 +355,7 @@
 "issue_mail_opened" = "Votre application de messagerie s’est ouverte. Votre message est envoyé par e-mail et n’est pas ajouté aux données de l’étude.";
 
 /* 界面改版：操作栏与结果区的短标签 */
-"bar_listen" = "Modèle";
+"bar_listen" = "Écouter";
 "bar_stop" = "Arrêter";
 "bar_next" = "Suivant";
 "bar_prev" = "Précédent";
@@ -364,3 +364,8 @@
 "tone_name_5" = "Neutre";
 "tone_slot_neutral_a11y" = "Caractère %1$d : %2$@";
 "common_delete" = "Supprimer";
+
+/* 2.3 版界面：模块首页与练习页 */
+"home_start" = "Commencer";
+"record_short" = "Démarrer";
+"word_picker_short" = "Mots";

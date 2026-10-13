@@ -31,7 +31,7 @@ struct TokenChipView: View {
         .padding(.vertical, Theme.Space.xs)
         .background(Theme.surface)
         .clipShape(RoundedRectangle(cornerRadius: Theme.radius))
-        .overlay(RoundedRectangle(cornerRadius: Theme.radius).strokeBorder(Theme.divider))
+        .overlay(RoundedRectangle(cornerRadius: Theme.radius).strokeBorder(Theme.border))
         .contentShape(RoundedRectangle(cornerRadius: Theme.radius))
         .environment(\.layoutDirection, .leftToRight)
         .onTapGesture(perform: onTap)

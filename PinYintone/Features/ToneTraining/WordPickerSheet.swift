@@ -1,14 +1,16 @@
 import SwiftUI
 
-/// 选词（需求 U04）：固定词库的列表，可按汉字或拼音搜索。
+/// 选词（需求 U04）：固定词库的**词卡网格**，可按汉字或拼音搜索。
 ///
-/// 只是把词库列出来——没有推荐、没有排序算法、不显示练过几次或得了多少分。
-/// 选中即返回练习页，反馈模式保持不变。
+/// 只是把词库摆出来——没有推荐、没有排序算法、不显示练过几次或得了多少分。
+/// 当前词有描边和对勾；选中即返回练习页，反馈模式保持不变。
+/// 放大文字时改成一列，长译文照常换行。
 struct WordPickerSheet: View {
     let currentID: String?
     let onSelect: (String) -> Void
 
     @Environment(\.dismiss) private var dismiss
+    @Environment(\.dynamicTypeSize) private var typeSize
     @ObservedObject private var localization = LocalizationManager.shared
     @State private var query = ""
 
@@ -32,29 +34,22 @@ struct WordPickerSheet: View {
 
     var body: some View {
         NavigationStack {
-            List {
+            ScrollView {
                 if words.isEmpty {
                     Text(NSLocalizedString("word_picker_empty", comment: ""))
+                        .font(.body)
                         .foregroundStyle(Theme.textSecondary)
-                        .listRowBackground(Theme.surface)
+                        .frame(maxWidth: .infinity, alignment: .leading)
+                        .padding(Theme.pageMargin)
                 } else {
-                    ForEach(words) { lexeme in
-                        Button {
-                            onSelect(lexeme.id)
-                            dismiss()
-                        } label: {
-                            WordRow(lexeme: lexeme, language: localization.language,
-                                    isCurrent: lexeme.id == currentID)
-                        }
-                        .accessibilityIdentifier("word.\(lexeme.id)")
-                        .listRowBackground(Theme.surface)
-                    }
+                    grid
+                        .padding(.horizontal, Theme.pageMargin)
+                        .padding(.vertical, Theme.Space.l)
                 }
             }
-            .listStyle(.plain)
-            .scrollContentBackground(.hidden)
-            .background(Theme.surface)
+            .background(Theme.background)
             .searchable(text: $query,
+                        placement: .navigationBarDrawer(displayMode: .always),
                         prompt: NSLocalizedString("word_picker_search", comment: ""))
             .navigationTitle(NSLocalizedString("word_picker_title", comment: ""))
             .navigationBarTitleDisplayMode(.inline)
@@ -64,7 +59,38 @@ struct WordPickerSheet: View {
                 }
             }
         }
-        .tint(Theme.accent)
+        .tint(Theme.primary)
+    }
+
+    private var grid: some View {
+        let columns = typeSize.isAccessibilitySize ? 1 : 2
+        let all = words
+        let rows = stride(from: 0, to: all.count, by: columns).map {
+            Array(all[$0..<min($0 + columns, all.count)])
+        }
+        return VStack(spacing: Theme.Space.m) {
+            ForEach(Array(rows.enumerated()), id: \.offset) { _, row in
+                // 同一行两张卡等高
+                HStack(alignment: .top, spacing: Theme.Space.m) {
+                    ForEach(row) { lexeme in
+                        Button {
+                            onSelect(lexeme.id)
+                            dismiss()
+                        } label: {
+                            WordTile(lexeme: lexeme, language: localization.language,
+                                     isCurrent: lexeme.id == currentID)
+                        }
+                        .buttonStyle(PressableStyle())
+                        .accessibilityAddTraits(lexeme.id == currentID ? .isSelected : [])
+                        .accessibilityIdentifier("word.\(lexeme.id)")
+                    }
+                    if row.count < columns {
+                        Color.clear.frame(maxWidth: .infinity)
+                    }
+                }
+                .fixedSize(horizontal: false, vertical: true)
+            }
+        }
     }
 }
 
@@ -97,7 +123,7 @@ struct WordRow: View {
                 .fixedSize(horizontal: false, vertical: true)
             if isCurrent {
                 Image(systemName: "checkmark")
-                    .foregroundStyle(Theme.accent)
+                    .foregroundStyle(Theme.primary)
                     .accessibilityLabel(NSLocalizedString("word_current", comment: ""))
             }
         }

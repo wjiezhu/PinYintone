@@ -1,66 +1,83 @@
 import SwiftUI
 import UIKit
 
-/// 界面的视觉规范（需求 U01，方案 A：简洁专业、浅色、清晰曲线）。
+/// 界面的视觉规范（需求 2.3 版 U01：现代中式，白与墨为主体，深松绿主操作）。
 ///
-/// 颜色全部是**语义色**，浅色与深色各一套，由系统外观自动切换——
-/// 不写死白底或白字，深色模式下不会出现看不清的文字。
-/// 对比度由 `ThemeContrastTests` 实测并守住。
+/// 颜色全部是**语义 token**，只在这里定义一次，浅色与深色各一套，由系统外观自动切换。
+/// 页面里不写色值。对比度由 `ThemeContrastTests` 实测并守住。
 ///
-/// 功能色只有三种，且**不单靠颜色传达信息**：
-/// - 青绿：主要操作、参考曲线
-/// - 玫红：学习者自己的曲线
-/// - 琥珀：技术失败（配图标与文字）
+/// 功能色很少，且**不单靠颜色传达信息**：
+/// - 深松绿：主按钮、选中状态、品牌声纹、参考曲线（实线）
+/// - 陶红：学习者曲线（虚线）、录音中的停止键、少量插图点缀、出错提示的图标
+/// - 雾蓝：次级插图点缀
 enum Theme {
 
     // MARK: 颜色
 
-    /// 色值表（浅色 / 深色）。颜色只在这里定义一次；
-    /// `ThemeContrastTests` 直接读这张表实测对比度，改色值时测试会跟着重算。
+    /// 色值表（浅色 / 深色）。浅色一列是规范给定的基准值；深色一列是对应的语义适配，
+    /// 不是把浅色值照搬过去。`ThemeContrastTests` 直接读这张表实测对比度。
     enum Hex {
-        static let background: (light: UInt32, dark: UInt32) = (0xF5F7F8, 0x0F1316)
-        static let surface: (light: UInt32, dark: UInt32) = (0xFFFFFF, 0x1A2026)
-        static let textPrimary: (light: UInt32, dark: UInt32) = (0x20262D, 0xECEFF2)
-        static let textSecondary: (light: UInt32, dark: UInt32) = (0x59636E, 0xA9B3BD)
-        static let accent: (light: UInt32, dark: UInt32) = (0x007F78, 0x3CC2B8)
-        static let onAccent: (light: UInt32, dark: UInt32) = (0xFFFFFF, 0x06201E)
-        static let learner: (light: UInt32, dark: UInt32) = (0xC94461, 0xF08AA2)
-        static let warning: (light: UInt32, dark: UInt32) = (0x8A5300, 0xF2B655)
-        static let recording: (light: UInt32, dark: UInt32) = (0xB3261E, 0xF2857D)
-        static let divider: (light: UInt32, dark: UInt32) = (0xDDE2E6, 0x2C343C)
+        typealias Pair = (light: UInt32, dark: UInt32)
+        static let background: Pair = (0xFFFFFF, 0x111514)
+        static let secondaryBackground: Pair = (0xF5F7F6, 0x181D1B)
+        /// 次级背景之上的内容面（设置、记录里的分组）
+        static let surface: Pair = (0xFFFFFF, 0x1D2321)
+        static let textPrimary: Pair = (0x202623, 0xECEFED)
+        static let textSecondary: Pair = (0x626B66, 0xA9B2AD)
+        static let primary: Pair = (0x245743, 0x7CC4A3)
+        static let onPrimary: Pair = (0xFFFFFF, 0x0C1A14)
+        static let learnerAccent: Pair = (0xB35B4C, 0xE8A193)
+        static let onLearnerAccent: Pair = (0xFFFFFF, 0x2A0F0A)
+        static let blueAccent: Pair = (0x5C7889, 0x9DB8C8)
+        static let sageSurface: Pair = (0xEDF3EE, 0x1A2921)
+        static let blueSurface: Pair = (0xEEF2F5, 0x1A242B)
+        static let border: Pair = (0xE1E6E3, 0x2C3431)
+        /// 颜色模式里三声用的赭色（另外三个声调复用深松绿、雾蓝、陶红）
+        static let ochre: Pair = (0x86672D, 0xD6B36A)
     }
 
-    /// 页面背景（浅灰）
+    /// 主内容背景（白）
     static let background = Color(Hex.background)
-    /// 内容面（白）
+    /// 次级背景（冷浅灰）：设置、记录这类分组页面的底
+    static let secondaryBackground = Color(Hex.secondaryBackground)
+    /// 次级背景之上的内容面
     static let surface = Color(Hex.surface)
-    /// 主文字（深灰）
+    /// 标题、汉字、正文及主要线描（墨色）
     static let textPrimary = Color(Hex.textPrimary)
-    /// 次要文字
+    /// 拼音辅助说明、时间和次要标签
     static let textSecondary = Color(Hex.textSecondary)
-    /// 主要操作与参考曲线（青绿）
-    static let accent = Color(Hex.accent)
-    /// 放在 accent 色块上的文字 / 图标
-    static let onAccent = Color(Hex.onAccent)
-    /// 学习者曲线（玫红）
-    static let learner = Color(Hex.learner)
-    /// 技术失败（琥珀）。用于文字与图标，故取较深的一档以保证对比度
-    static let warning = Color(Hex.warning)
-    /// 录音中（停止键）
-    static let recording = Color(Hex.recording)
-    /// 分隔线与图表辅助线
-    static let divider = Color(Hex.divider)
+    /// 主按钮、选中状态、品牌声纹与参考曲线（深松绿）
+    static let primary = Color(Hex.primary)
+    /// 放在 primary 色块上的文字 / 图标
+    static let onPrimary = Color(Hex.onPrimary)
+    /// 学习者曲线、录音停止态、少量插图点缀（陶红）
+    static let learnerAccent = Color(Hex.learnerAccent)
+    /// 放在 learnerAccent 色块上的文字 / 图标（停止键）
+    static let onLearnerAccent = Color(Hex.onLearnerAccent)
+    /// 次级插图点缀（雾蓝），不用于大面积背景
+    static let blueAccent = Color(Hex.blueAccent)
+    /// 声调模块浅底
+    static let sageSurface = Color(Hex.sageSurface)
+    /// 送气模块浅底
+    static let blueSurface = Color(Hex.blueSurface)
+    /// 模块边界与分隔线。**不能当小字颜色用**
+    static let border = Color(Hex.border)
+    static let ochre = Color(Hex.ochre)
+
+    /// 出错与技术失败提示的**图标**色：沿用陶红，不另立一种颜色。
+    /// 提示文字一律用主文字色——陶红在浅色底上不够 4.5:1。
+    static let warning = learnerAccent
 
     // MARK: 曲线线型
 
-    /// 两条曲线的线型。参考是虚线、学习者是实线——**线型是颜色之外的第二个区分通道**：
-    /// 青绿与玫红的明度几乎相同（实测对比度约 1.1:1），色觉障碍或灰度显示下
-    /// 单靠颜色分不开，所以线型必须不同。`ThemeContrastTests` 守着这一点。
+    /// 两条曲线的线型。参考是实线、学习者是虚线——**线型是颜色之外的第二个区分通道**，
+    /// 色觉障碍或灰度显示下单靠颜色分不开。`ThemeContrastTests` 守着这一点。
+    /// 线型只是画法：不改变曲线形状、归一化、评分或左右时间方向。
     enum Curve {
-        static let referenceDash: [CGFloat] = [9, 6]
-        static let learnerDash: [CGFloat] = []
+        static let referenceDash: [CGFloat] = []
+        static let learnerDash: [CGFloat] = [8, 6]
         static let referenceWidth: CGFloat = 2.5
-        static let learnerWidth: CGFloat = 3
+        static let learnerWidth: CGFloat = 2.5
     }
 
     // MARK: 间距与尺寸（4 / 8 / 12 / 16 / 24）
@@ -74,13 +91,13 @@ enum Theme {
     }
 
     /// 常规横向边距
-    static let pageMargin: CGFloat = 16
-    /// 卡片圆角上限
-    static let radius: CGFloat = 8
+    static let pageMargin: CGFloat = 20
+    /// 图块圆角上限
+    static let radius: CGFloat = 6
     /// 交互热区下限
     static let minTap: CGFloat = 44
-    /// 录音键直径
-    static let recordButton: CGFloat = 64
+    /// 录音键直径。里面要放图标和一个词的标签，所以比 64 略大
+    static let recordButton: CGFloat = 72
     /// 反馈图高度（正常文字尺寸下）
     static let chartHeight: CGFloat = 220
 }
@@ -129,13 +146,19 @@ struct StatusLabel: View {
     var body: some View {
         Label {
             Text(text)
+                .foregroundStyle(textColor)
                 .fixedSize(horizontal: false, vertical: true)
         } icon: {
             Image(systemName: icon)
+                .foregroundStyle(color)
                 .accessibilityHidden(true)
         }
         .font(prominent ? .title3.weight(.semibold) : .body.weight(.medium))
-        .foregroundStyle(color)
+    }
+
+    /// 文字颜色：只有「通过」用深松绿；其余（含出错提示）用主文字色，保证读得清
+    private var textColor: Color {
+        kind == .success ? Theme.primary : Theme.textPrimary
     }
 
     private var icon: String {
@@ -148,7 +171,7 @@ struct StatusLabel: View {
 
     private var color: Color {
         switch kind {
-        case .success: return Theme.accent
+        case .success: return Theme.primary
         case .neutral: return Theme.textPrimary
         case .warning: return Theme.warning
         }

@@ -45,13 +45,13 @@ struct ModeA_StaticView: View {
                 }
                 .padding(.horizontal, Theme.Space.xs)
                 .frame(maxWidth: .infinity, maxHeight: .infinity)
-                .background(Theme.toneColor(tone).opacity(0.10))
+                .background(Theme.toneColor(tone).opacity(0.09))
                 .clipShape(RoundedRectangle(cornerRadius: Theme.radius))
                 .accessibilityElement(children: .ignore)
                 .accessibilityLabel(Text(accessibilityLabel(index: idx, tone: tone)))
             }
         }
-        .padding(Theme.Space.m)
+        .padding(.vertical, Theme.Space.s)
         .frame(maxWidth: .infinity, maxHeight: .infinity)
         // 音节顺序固定从左到右：阿拉伯语界面下也不镜像，否则「喝水」会被排成「水喝」
         .environment(\.layoutDirection, .leftToRight)

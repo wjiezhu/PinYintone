@@ -29,7 +29,7 @@ struct FreeWordPracticeView: View {
 
                 VStack(spacing: Theme.Space.xs) {
                     Text(currentWord)
-                        .font(.system(size: hanziSize, weight: .semibold))
+                        .font(.system(size: hanziSize, weight: .bold))
                         .foregroundStyle(Theme.textPrimary)
                     Text(pinyinConverter.pinyin(for: currentWord))
                         .font(.title3.weight(.medium))
@@ -75,7 +75,9 @@ struct FreeWordPracticeView: View {
                         }
                     }
                     .frame(maxWidth: .infinity, alignment: .leading)
-                    .surfaceCard()
+                    .padding(.vertical, Theme.Space.m)
+                    .overlay(alignment: .top) { RowDivider() }
+                    .overlay(alignment: .bottom) { RowDivider() }
                 }
             }
             .padding(.horizontal, Theme.pageMargin)
@@ -86,8 +88,6 @@ struct FreeWordPracticeView: View {
         .safeAreaInset(edge: .bottom, spacing: 0) { actionBar }
         .navigationTitle(NSLocalizedString("stage3_title", comment: ""))
         .navigationBarTitleDisplayMode(.inline)
-        // 与声调练习页一致：这一页底部只留操作栏
-        .toolbar(.hidden, for: .tabBar)
         .toolbar {
             ToolbarItemGroup(placement: .topBarTrailing) {
                 Button {
@@ -122,7 +122,7 @@ struct FreeWordPracticeView: View {
     /// 上一词 · 录音/停止 · 下一词。三格等宽，录音键恒在正中；左右顺序不随界面方向镜像。
     private var actionBar: some View {
         PracticeActionBar {
-            BarButton(icon: "backward.end.fill",
+            BarButton(icon: "backward.end",
                       caption: NSLocalizedString("bar_prev", comment: ""),
                       label: NSLocalizedString("freetext_prev", comment: ""),
                       id: "freeText.prev") { move(by: -1) }
@@ -132,7 +132,7 @@ struct FreeWordPracticeView: View {
                 vm.toggleRecording(targetWord: currentWord)
             }
         } trailing: {
-            BarButton(icon: "forward.end.fill",
+            BarButton(icon: "forward.end",
                       caption: NSLocalizedString("bar_next", comment: ""),
                       label: NSLocalizedString("freetext_next", comment: ""),
                       id: "freeText.next") { move(by: 1) }

@@ -33,7 +33,7 @@ struct AspirationView: View {
                         .foregroundStyle(Theme.textPrimary)
 
                     ProgressView(value: Double(vm.triggerRate))
-                        .tint(Theme.accent)
+                        .tint(Theme.primary)
                         .animation(reduceMotion ? nil : .easeInOut, value: vm.triggerRate)
 
                     // 是否达标同时用图标和文字表达
