@@ -10,8 +10,11 @@ final class LearnerPlaybackTests: XCTestCase {
     /// 合成 440 Hz 正弦，16 kHz 单声道，与 AudioEngine 的输出格式一致
     private func tone(seconds: Double = 0.3) -> [Int16] {
         let n = Int(16_000 * seconds)
-        return (0..<n).map { i in
-            Int16(sin(2 * .pi * 440 * Double(i) / 16_000) * 8000)
+        // 拆成带类型标注的两步：写成一个表达式时，Xcode 26.3（Swift 6.2）
+        // 的类型检查会超时报错，26.4 起才推得动。
+        return (0..<n).map { i -> Int16 in
+            let phase: Double = 2 * Double.pi * 440 * Double(i) / 16_000
+            return Int16(sin(phase) * 8000)
         }
     }
 
