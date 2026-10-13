@@ -1,56 +1,47 @@
 import SwiftUI
 
-/// 目标词卡片：汉字 + 拼音 + 声调徽章 + 释义。声调 / 自由文本通用。
+/// 目标词：汉字 + 拼音 + 释义。声调练习、自测、自由文本通用。
 ///
-/// 「词卡」版式的核心块：一次只回答一个问题——**这次要念什么**。
-/// 研究者视角的语料标注不在这里出现（见 body 内注释）。
+/// 一次只回答一个问题——**这次要念什么**。不做成卡片，直接排在内容区里。
+/// 汉字与拼音的排列方向固定从左到右：阿拉伯语界面下整页是从右到左，
+/// 但中文词的字序不能跟着镜像。
 struct LexemeCardView: View {
     let lexeme: Lexeme
-
-    private let toneColors: [Color] = [.green, .blue, .orange, .red]
+    @ObservedObject private var localization = LocalizationManager.shared
+    /// 汉字 40pt 起，随系统文字大小缩放（不随屏幕宽度缩放）
+    @ScaledMetric(relativeTo: .largeTitle) private var hanziSize: CGFloat = 40
 
     var body: some View {
-        VStack(spacing: 8) {
+        let gloss = lexeme.glosses(for: localization.language)
+        VStack(spacing: Theme.Space.xs) {
             Text(lexeme.hanzi)
-                .font(.system(size: 44, weight: .bold))
+                .font(.system(size: hanziSize, weight: .bold))
+                .foregroundStyle(Theme.textPrimary)
+                .environment(\.layoutDirection, .leftToRight)
+                .accessibilityIdentifier("practice.hanzi")
             Text(lexeme.pinyin)
-                .font(.title3)
-                .foregroundStyle(.secondary)
-            HStack(spacing: 6) {
-                ForEach(Array(lexeme.tones.enumerated()), id: \.offset) { _, tone in
-                    Text("\(tone)")
-                        .font(.caption.bold())
-                        .frame(width: 22, height: 22)
-                        .background(color(for: tone).opacity(0.18))
-                        .foregroundStyle(color(for: tone))
-                        .clipShape(Circle())
-                }
+                .font(.title3.weight(.medium))
+                .foregroundStyle(Theme.textSecondary)
+                .environment(\.layoutDirection, .leftToRight)
+            if !gloss.primary.isEmpty {
+                Text(gloss.primary)
+                    .font(.body)
+                    .foregroundStyle(Theme.textPrimary)
+                    .multilineTextAlignment(.center)
+                    .fixedSize(horizontal: false, vertical: true)
+                    .padding(.top, Theme.Space.xs)
             }
-
-            // 法语释义 + Darija 对译（面向摩洛哥学习者）
-            if !lexeme.french.isEmpty || !lexeme.darija.isEmpty {
-                VStack(spacing: 2) {
-                    Text(lexeme.french)
-                        .font(.subheadline.weight(.medium))
-                    Text(lexeme.darija)
-                        .font(.caption)
-                        .foregroundStyle(.secondary)
-                }
-                .multilineTextAlignment(.center)
-                .padding(.top, 2)
+            if let secondary = gloss.secondary {
+                Text(secondary)
+                    .font(.subheadline)
+                    .foregroundStyle(Theme.textSecondary)
+                    .multilineTextAlignment(.center)
+                    .fixedSize(horizontal: false, vertical: true)
             }
-
-            // 不显示 lexeme.focus：那是语料的"考察重点"标注（硬编码中文），
-            // 对四语界面的学习者读不懂，在裸测阶段还等于提前告知这题考什么。
-            // 它仍保留在语料与导出数据里，供研究者使用。
+            // 不显示 lexeme.focus：那是语料的「考察重点」标注（中文、面向研究者），
+            // 自测时还等于提前告知这题考什么。它仍保留在语料与导出数据里。
         }
         .frame(maxWidth: .infinity)
-        .padding(20)
-        .background(Color(.secondarySystemBackground))
-        .clipShape(RoundedRectangle(cornerRadius: 18))
-    }
-
-    private func color(for tone: Int) -> Color {
-        (1...4).contains(tone) ? toneColors[tone - 1] : .gray
+        .accessibilityElement(children: .combine)
     }
 }

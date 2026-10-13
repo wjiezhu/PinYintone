@@ -10,13 +10,14 @@ struct TokenEditorView: View {
 
     var body: some View {
         ScrollView {
-            VStack(alignment: .leading, spacing: 20) {
+            VStack(alignment: .leading, spacing: Theme.Space.l) {
                 Text(NSLocalizedString("freetext_edit_hint", comment: ""))
-                    .font(.subheadline)
-                    .foregroundStyle(.secondary)
+                    .font(.body)
+                    .foregroundStyle(Theme.textSecondary)
+                    .fixedSize(horizontal: false, vertical: true)
 
                 // 词条芯片流式布局
-                FlowLayout(spacing: 10) {
+                FlowLayout(spacing: Theme.Space.s) {
                     ForEach(Array(tokens.enumerated()), id: \.offset) { idx, token in
                         TokenChipView(
                             token: token,
@@ -28,9 +29,10 @@ struct TokenEditorView: View {
                 }
 
                 // 新增自定义词
-                HStack {
+                HStack(spacing: Theme.Space.s) {
                     TextField(NSLocalizedString("freetext_add_word", comment: ""), text: $newWord)
-                        .textFieldStyle(.roundedBorder)
+                        .frame(minHeight: Theme.minTap)
+                        .surfaceCard(padding: Theme.Space.m)
                     Button {
                         let trimmed = newWord.trimmingCharacters(in: .whitespacesAndNewlines)
                         if !trimmed.isEmpty {
@@ -38,8 +40,12 @@ struct TokenEditorView: View {
                             newWord = ""
                         }
                     } label: {
-                        Image(systemName: "plus.circle.fill").font(.title2)
+                        Image(systemName: "plus")
+                            .font(.body.weight(.semibold))
+                            .frame(width: Theme.minTap, height: Theme.minTap)
+                            .contentShape(Rectangle())
                     }
+                    .accessibilityLabel(NSLocalizedString("freetext_add_word", comment: ""))
                     .disabled(newWord.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty)
                 }
 
@@ -49,17 +55,14 @@ struct TokenEditorView: View {
                     FreeWordPracticeView(tokens: tokens, originalText: originalText)
                 } label: {
                     Text(NSLocalizedString("freetext_start_practice", comment: ""))
-                        .font(.headline)
-                        .frame(maxWidth: .infinity)
-                        .padding()
-                        .background(tokens.isEmpty ? Color.gray.opacity(0.4) : Color.accentColor)
-                        .foregroundStyle(.white)
-                        .clipShape(RoundedRectangle(cornerRadius: 14))
                 }
+                .buttonStyle(PrimaryButtonStyle())
                 .disabled(tokens.isEmpty)
             }
-            .padding(20)
+            .padding(.horizontal, Theme.pageMargin)
+            .padding(.vertical, Theme.Space.l)
         }
+        .background(Theme.background)
         .navigationTitle(NSLocalizedString("freetext_edit_title", comment: ""))
         .navigationBarTitleDisplayMode(.inline)
     }

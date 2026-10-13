@@ -1,63 +1,172 @@
 import XCTest
 @testable import PinYintone
 
+/// 研究配置的可用性与兼容性自检（需求 R03、验收 A01 / A23）。
 @MainActor
 final class ResearchConfigTests: XCTestCase {
 
-    private let keys = ["pt_research_manifest_config_id",
-                        "pt_research_window_start", "pt_research_window_end"]
+    private var config: ResearchConfig { .shared }
 
     override func setUp() {
         super.setUp()
-        keys.forEach { UserDefaults.standard.removeObject(forKey: $0) }
-        ResearchEventLog.shared.window = nil
+        config.setAvailableForTesting(nil)
+        ResearchTestSupport.freshAccount()
     }
     override func tearDown() {
-        keys.forEach { UserDefaults.standard.removeObject(forKey: $0) }
+        ResearchTestSupport.tearDown()
         super.tearDown()
     }
 
-    /// 没有配置时不得纳入，也不得猜一个
-    func testNoManifestMeansNoEnrollment() {
-        XCTAssertNil(ResearchConfig.shared.manifestID)
-        XCTAssertNil(ResearchConfig.shared.window)
-        XCTAssertNil(ResearchEnrollment.manifestID,
-                     "未下发配置时 manifestID 必须为 nil，不能有默认值")
+    private func served(consent: String = ResearchConsent.textVersion,
+                        eligibility: String? = ResearchEligibility.version,
+                        lexicon: String? = ResearchLexicon.lexiconVersion,
+                        appVersion: String? = AppEnvironment.appVersion,
+                        forms: [String: [String: String]]? = nil,
+                        isTest: Bool? = true,
+                        start: Date = Date().addingTimeInterval(-3600),
+                        end: Date = Date().addingTimeInterval(86_400)) -> APIClient.ActiveManifest {
+        .init(manifestID: "m", studyID: "s", collectionStartAt: start, collectionEndAt: end,
+              postTriggerCount: 5, consentVersion: consent, surveyVersion: "sv",
+              rewardRuleVersion: nil, appVersion: appVersion, buildNumber: "1",
+              lexiconVersion: lexicon, eligibilityVersion: eligibility,
+              surveyForms: forms, isTest: isTest)
     }
 
-    /// 窗口只有起止都在时才成立——半套缓存不得被当成有效窗口
-    func testPartialWindowCacheIsNotUsable() {
-        UserDefaults.standard.set(Date(), forKey: "pt_research_window_start")
-        XCTAssertNil(ResearchConfig.shared.window, "只有开始时间不构成窗口")
+    private func bundledFormSpec() -> [String: [String: String]] {
+        Dictionary(uniqueKeysWithValues: SurveyFormLoader.bundled.map { key, form in
+            (key, ["form_version": form.formVersion,
+                   "translation_version": form.translationVersion])
+        })
     }
 
-    /// 缓存的窗口要能在联网前就打开门禁（离线不应让已纳入者停止采集）
-    func testCachedWindowAppliedBeforeNetwork() {
-        let start = Date().addingTimeInterval(-60)
-        let end = Date().addingTimeInterval(3600)
-        let d = UserDefaults.standard
-        d.set("m-cached", forKey: "pt_research_manifest_config_id")
-        d.set(start, forKey: "pt_research_window_start")
-        d.set(end, forKey: "pt_research_window_end")
-
-        ResearchConfig.shared.applyCachedWindow()
-        XCTAssertNotNil(ResearchEventLog.shared.window)
-        XCTAssertEqual(ResearchEnrollment.manifestID, "m-cached")
+    /// 没有配置：不开放参加，不猜一个（验收 A01）
+    func testNoManifestMeansResearchIsClosed() {
+        XCTAssertNil(config.manifestID)
+        XCTAssertFalse(config.isOpen())
+        XCTAssertFalse(ResearchEnrollment.canJoinNow())
     }
 
-    /// 窗口外即便有配置也不采集
-    func testOutsideWindowBlocksCollection() {
-        let d = UserDefaults.standard
-        d.set("m1", forKey: "pt_research_manifest_config_id")
-        d.set(Date().addingTimeInterval(-7200), forKey: "pt_research_window_start")
-        d.set(Date().addingTimeInterval(-3600), forKey: "pt_research_window_end")
-        ResearchConfig.shared.applyCachedWindow()
+    func testMatchingManifestIsCompatible() {
+        XCTAssertNil(ResearchConfig.incompatibility(of: served(forms: bundledFormSpec())))
+    }
 
-        ResearchConsent.shared.grant(textVersion: "c1", language: "zh")
-        ResearchEventLog.shared.eligibility = .eligible
-        defer { ResearchConsent.shared.withdraw() }
+    /// 配置绑定的任何一项材料与本机实际携带的不符 → 不采用（验收 A23）
+    func testAnyMaterialMismatchClosesTheResearchPath() {
+        XCTAssertEqual(ResearchConfig.incompatibility(of: served(consent: "consent-9.9")),
+                       "consent_version")
+        XCTAssertEqual(ResearchConfig.incompatibility(of: served(eligibility: "eligibility-1.0-draft")),
+                       "eligibility_version")
+        XCTAssertEqual(ResearchConfig.incompatibility(of: served(lexicon: "lex-other")),
+                       "lexicon_version")
+        XCTAssertEqual(ResearchConfig.incompatibility(of: served(appVersion: "0.0")),
+                       "app_version")
+        var forms = bundledFormSpec()
+        forms["tone_needs_v1"]?["form_version"] = "tone_needs_v1-9.9"
+        XCTAssertEqual(ResearchConfig.incompatibility(of: served(forms: forms)),
+                       "survey_form:tone_needs_v1")
+        forms = bundledFormSpec()
+        forms["usability_short_v1"] = nil
+        XCTAssertEqual(ResearchConfig.incompatibility(of: served(forms: forms)),
+                       "survey_form:usability_short_v1")
+    }
 
-        XCTAssertFalse(ResearchEventLog.shared.log(.historyOpened),
-                       "采集窗口外不得产生研究事件")
+    /// 测试配置不得被正式用户采用
+    func testTestManifestIsRejectedByANonTestClient() {
+        XCTAssertEqual(ResearchConfig.incompatibility(of: served(isTest: true), isTestClient: false),
+                       "test_manifest")
+        XCTAssertNil(ResearchConfig.incompatibility(of: served(isTest: false), isTestClient: false))
+    }
+
+    func testInvertedWindowIsRejected() {
+        let now = Date()
+        XCTAssertEqual(ResearchConfig.incompatibility(of: served(start: now, end: now)), "window")
+    }
+
+    /// 配置过期：研究入口关闭，普通使用不受影响
+    func testExpiredManifestIsNotOpen() {
+        config.setAvailableForTesting(ResearchTestSupport.manifest(
+            start: Date().addingTimeInterval(-7200), end: Date().addingTimeInterval(-3600)))
+        XCTAssertFalse(config.isOpen())
+        XCTAssertFalse(ResearchEnrollment.canJoinNow())
+    }
+
+    func testNotYetStartedManifestIsNotOpen() {
+        config.setAvailableForTesting(ResearchTestSupport.manifest(
+            start: Date().addingTimeInterval(3600), end: Date().addingTimeInterval(7200)))
+        XCTAssertFalse(config.isOpen())
+    }
+
+    /// 研究入口需要：有账号、配置开放、状态允许邀请
+    func testJoinEntryRequiresAccountOpenManifestAndInvitableState() {
+        config.setAvailableForTesting(ResearchTestSupport.manifest())
+        XCTAssertTrue(ResearchEnrollment.canJoinNow())
+
+        ResearchStore.shared.activate(accountKey: nil)
+        XCTAssertFalse(ResearchEnrollment.canJoinNow(), "没有账号就没有研究入口")
+
+        ResearchTestSupport.enrolledAccount()
+        XCTAssertFalse(ResearchEnrollment.canJoinNow(), "已参与的人不再看到邀请")
+    }
+
+    // MARK: - 刷新
+
+    /// 刷新时报上本机的 App 版本与构建号——服务端据此只下发匹配的配置
+    func testRefreshStatesAppVersionAndBuild() async {
+        StubURLProtocol.install()
+        StubURLProtocol.on("GET", "research/manifest/active") { .json(404, ["detail": "none"]) }
+        await config.refresh()
+        let q = StubURLProtocol.requests(to: "research/manifest/active").first?.query
+        XCTAssertEqual(q?["appVersion"], AppEnvironment.appVersion)
+        XCTAssertEqual(q?["build"], AppEnvironment.buildNumber)
+        XCTAssertNotNil(q?["test"])
+    }
+
+    /// 服务端明确回答没有配置 → 清掉缓存，研究入口关闭，不报错给学习者
+    func testServerSaysNoManifestClearsCache() async {
+        config.setAvailableForTesting(ResearchTestSupport.manifest())
+        StubURLProtocol.install()
+        StubURLProtocol.on("GET", "research/manifest/active") { .json(404, ["detail": "none"]) }
+        await config.refresh()
+        XCTAssertNil(config.available)
+    }
+
+    /// 断网时保留缓存：离线不应让「开放」凭空消失（过期仍由时间挡住）
+    func testOfflineRefreshKeepsCachedManifest() async {
+        config.setAvailableForTesting(ResearchTestSupport.manifest())
+        StubURLProtocol.install()        // 没有登记任何回答 = 断网
+        await config.refresh()
+        XCTAssertNotNil(config.available)
+        XCTAssertTrue(config.isOpen())
+    }
+
+    /// 下发的配置与本机材料不匹配：视同没有配置
+    func testMismatchedServedManifestIsNotAdopted() async {
+        StubURLProtocol.install()
+        let start = ISO8601DateFormatter().string(from: Date().addingTimeInterval(-3600))
+        let end = ISO8601DateFormatter().string(from: Date().addingTimeInterval(86_400))
+        StubURLProtocol.on("GET", "research/manifest/active") {
+            .json(200, ["manifestID": "m", "studyID": "s", "collectionStartAt": start,
+                        "collectionEndAt": end, "postTriggerCount": 5,
+                        "consentVersion": "consent-some-other-text", "surveyVersion": "sv",
+                        "isTest": true])
+        }
+        await config.refresh()
+        XCTAssertNil(config.available)
+        XCTAssertFalse(config.isOpen())
+    }
+
+    func testMatchingServedManifestIsAdopted() async {
+        StubURLProtocol.install()
+        let start = ISO8601DateFormatter().string(from: Date().addingTimeInterval(-3600))
+        let end = ISO8601DateFormatter().string(from: Date().addingTimeInterval(86_400))
+        StubURLProtocol.on("GET", "research/manifest/active") {
+            .json(200, ["manifestID": "m-ok", "studyID": "s", "collectionStartAt": start,
+                        "collectionEndAt": end, "postTriggerCount": 5,
+                        "consentVersion": ResearchConsent.textVersion, "surveyVersion": "sv",
+                        "eligibilityVersion": ResearchEligibility.version, "isTest": true])
+        }
+        await config.refresh()
+        XCTAssertEqual(config.manifestID, "m-ok")
+        XCTAssertTrue(config.isOpen())
     }
 }

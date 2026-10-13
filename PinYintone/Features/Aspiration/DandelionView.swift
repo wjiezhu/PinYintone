@@ -27,7 +27,7 @@ struct DandelionView: View {
                 var stem = Path()
                 stem.move(to: CGPoint(x: center.x, y: center.y))
                 stem.addLine(to: CGPoint(x: center.x, y: size.height))
-                ctx.stroke(stem, with: .color(.green.opacity(0.6)),
+                ctx.stroke(stem, with: .color(Theme.textSecondary.opacity(0.6)),
                            style: StrokeStyle(lineWidth: 3, lineCap: .round))
 
                 // 花盘
@@ -35,7 +35,7 @@ struct DandelionView: View {
                 ctx.fill(
                     Path(ellipseIn: CGRect(x: center.x - diskR, y: center.y - diskR,
                                            width: diskR * 2, height: diskR * 2)),
-                    with: .color(.yellow.opacity(0.7))
+                    with: .color(Theme.primary.opacity(0.8))
                 )
 
                 // 种子
@@ -50,19 +50,19 @@ struct DandelionView: View {
                     let y = center.y + CGFloat(sin(seed.angle)) * r - drift * 0.4 + float
                     let opacity = Double(blown ? max(0, 1 - triggerRate * 0.6) : 0.9)
 
-                    let dotR: CGFloat = 3
+                    let dotR: CGFloat = 2.5
                     ctx.fill(
                         Path(ellipseIn: CGRect(x: x - dotR, y: y - dotR,
                                                width: dotR * 2, height: dotR * 2)),
-                        with: .color(.white.opacity(opacity))
+                        with: .color(Theme.textPrimary.opacity(opacity))
                     )
                     // 绒毛连线
                     if !blown {
                         var spoke = Path()
                         spoke.move(to: center)
                         spoke.addLine(to: CGPoint(x: x, y: y))
-                        ctx.stroke(spoke, with: .color(.white.opacity(0.25)),
-                                   style: StrokeStyle(lineWidth: 0.5))
+                        ctx.stroke(spoke, with: .color(Theme.textSecondary.opacity(0.45)),
+                                   style: StrokeStyle(lineWidth: 0.8))
                     }
                 }
             }

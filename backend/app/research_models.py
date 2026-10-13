@@ -20,7 +20,16 @@
 from datetime import datetime, timezone
 
 from sqlalchemy import (Boolean, Column, DateTime, ForeignKey, Integer, JSON,
-                        Numeric, String, UniqueConstraint)
+                        Numeric, String, UniqueConstraint, false)
+
+from sqlalchemy.orm import relationship
+
+# 下面各表里名字以下划线开头的 relationship（_participant、_manifest、_attempt……）
+# **只有一个用途：让 ORM 按外键顺序落库**——先写父表的行，再写引用它的子表的行。
+# 没有它们时 SQLAlchemy 不保证不同表之间的插入顺序：PostgreSQL 上同意记录会先于
+# 参与者落库，外键约束直接报错。SQLite 默认不检查外键，所以这只在线上出现
+# （2026-10-13 用 PostgreSQL 预演部署时发现，main 上的旧代码同样如此）。
+# 业务代码不通过这些属性取数，也不要给它们加级联删除。
 
 from .database import Base
 
@@ -65,6 +74,16 @@ class ResearchManifest(Base):
     collection_start_at = _ts(nullable=False)
     collection_end_at = _ts(nullable=False)
     frozen_at = _ts(nullable=False)
+    # 测试配置：同意文本未审定、问卷为 draft 或词条未核对时，只能冻结成测试配置。
+    # 测试配置只下发给自报为测试的客户端，其下纳入的参与者一律 is_test=true，
+    # 正式导出默认排除。**测试配置不能原地改成正式**——正式配置须新建。
+    is_test = Column(Boolean, nullable=False, default=False, server_default=false())
+    # 除 build_number 外还允许采集的构建号（修复版本）。为空 = 只认 build_number。
+    compatible_builds = Column(JSON, nullable=True)
+    # 各问卷的 form_version / translation_version 绑定：
+    # {form_key: {"form_version": ..., "translation_version": ...}}。
+    # 为空（旧配置）时不校验问卷版本。
+    survey_forms = Column(JSON, nullable=True)
 
 
 class ResearchParticipant(Base):
@@ -82,7 +101,8 @@ class ResearchParticipant(Base):
     exclusion_reason = Column(String(32), nullable=True)
     distribution_channel = Column(String(32), nullable=False)
     recruitment_source = Column(String(32), nullable=False)
-    # new|returning|unknown。本轮仅 new 可纳入。
+    # new|returning|unknown。**本轮不以新旧用户作为纳入条件**（V2_DECISIONS 第 15 条）；
+    # 如实记录，识别不了就是 unknown，不得为了通过检查写成 new。
     prior_use_status = Column(String(16), nullable=False)
     # verified_account_history|self_report|combined|insufficient
     #
@@ -92,6 +112,9 @@ class ResearchParticipant(Base):
     #   旧版下载未注册者会看起来像新用户，此类只能记 insufficient。
     prior_use_evidence = Column(String(32), nullable=False)
     is_test = Column(Boolean, nullable=False, default=False)
+    # 纳入时所用的配置。后续上传可用同一研究（study_id）下的配置，
+    # 本列只记「从哪份配置进来的」，供导出按配置清单筛人。旧行为空。
+    enrolled_manifest_id = Column(String, nullable=True)
 
 
 class ResearchIdentityMap(Base):
@@ -103,6 +126,7 @@ class ResearchIdentityMap(Base):
     __tablename__ = "research_identity_map"
     participant_id = Column(String, ForeignKey("research_participants.participant_id"),
                             primary_key=True)
+    _participant = relationship("ResearchParticipant")
     internal_user_id = Column(String, nullable=False, index=True)
     study_id = Column(String(64), nullable=False)
     created_at = _ts(nullable=False, default=_utcnow)
@@ -120,6 +144,7 @@ class ResearchConsentEvent(Base):
     consent_event_id = Column(String, primary_key=True)
     participant_id = Column(String, ForeignKey("research_participants.participant_id"),
                             nullable=False, index=True)
+    _participant = relationship("ResearchParticipant")
     action = Column(String(16), nullable=False)            # granted|withdrawn
     consent_version = Column(String(64), nullable=False)   # 用户**实际看到**的文本版本
     language = Column(String(32), nullable=False)          # 实际显示语言
@@ -169,7 +194,9 @@ class ResearchAttempt(Base):
     attempt_id = Column(String, primary_key=True)
     participant_id = Column(String, ForeignKey("research_participants.participant_id"),
                             nullable=False, index=True)
+    _participant = relationship("ResearchParticipant")
     manifest_id = Column(String, ForeignKey("research_manifests.manifest_id"), nullable=False)
+    _manifest = relationship("ResearchManifest")
     # 前台使用会话：冷启动或后台超过 30 分钟创建新编号。
     # 这是**操作定义**，不等于真实学习课次。
     session_id = Column(String, nullable=False, index=True)
@@ -178,6 +205,7 @@ class ResearchAttempt(Base):
     task_type = Column(String(16), nullable=False, index=True)
     lexeme_version_id = Column(String, ForeignKey("research_lexemes.lexeme_version_id"),
                                nullable=True)   # free_text 为 NULL，**不存用户原文**
+    _lexeme = relationship("ResearchLexeme")
     retry_of_attempt_id = Column(String, nullable=True)
     # 自测记录该词此前已练过的次数（决定 5：接受训练/测试词重叠，改为如实记录）
     prior_practice_count = Column(Integer, nullable=True)
@@ -208,7 +236,9 @@ class ResearchInteractionEvent(Base):
     event_id = Column(String, primary_key=True)
     participant_id = Column(String, ForeignKey("research_participants.participant_id"),
                             nullable=False, index=True)
+    _participant = relationship("ResearchParticipant")
     manifest_id = Column(String, ForeignKey("research_manifests.manifest_id"), nullable=False)
+    _manifest = relationship("ResearchManifest")
     session_id = Column(String, nullable=False, index=True)
     attempt_id = Column(String, nullable=True)          # 录音前发生的事件可 NULL
     lexeme_version_id = Column(String, nullable=True)
@@ -249,8 +279,11 @@ class ResearchAdviceRequest(Base):
     request_id = Column(String, primary_key=True)
     participant_id = Column(String, ForeignKey("research_participants.participant_id"),
                             nullable=False, index=True)
+    _participant = relationship("ResearchParticipant")
     attempt_id = Column(String, ForeignKey("research_attempts.attempt_id"), nullable=False)
+    _attempt = relationship("ResearchAttempt")
     manifest_id = Column(String, ForeignKey("research_manifests.manifest_id"), nullable=False)
+    _manifest = relationship("ResearchManifest")
     requested_at = _ts(nullable=False)
     received_at = _ts(nullable=False)
     status = Column(String(16), nullable=False)          # pending|succeeded|failed
@@ -280,7 +313,9 @@ class ResearchSurveyInstance(Base):
     survey_instance_id = Column(String, primary_key=True)
     participant_id = Column(String, ForeignKey("research_participants.participant_id"),
                             nullable=False, index=True)
+    _participant = relationship("ResearchParticipant")
     manifest_id = Column(String, ForeignKey("research_manifests.manifest_id"), nullable=False)
+    _manifest = relationship("ResearchManifest")
     form_key = Column(String(32), nullable=False)        # background_v1|tone_needs_v1|usability_short_v1
     form_version = Column(String(64), nullable=False)
     language = Column(String(32), nullable=False)        # zh|en|fr|ar（ar = 现代标准阿拉伯语）
@@ -296,6 +331,11 @@ class ResearchSurveyInstance(Base):
     # 邀请时累计合格次数；背景与前置填 0，**不事后用新增次数覆盖**
     qualifying_attempts_at_invite = Column(Integer, nullable=False)
     trigger_attempt_id = Column(String, nullable=True)
+    # 服务端首次收到 / 最近一次更新本实例的时间。与客户端的 invited_at /
+    # submitted_at 分开保存：**分类与窗口判定只看客户端发生时间**，
+    # 接收时间只用于导出截止（离线晚到的问卷不因此改变 timing_class）。
+    received_at = _ts(nullable=True)
+    updated_at = _ts(nullable=True)
     __table_args__ = (UniqueConstraint("participant_id", "form_key", "form_version",
                                        name="uq_survey_instance"),)
 
@@ -310,6 +350,7 @@ class ResearchSurveyAnswer(Base):
     survey_instance_id = Column(String,
                                 ForeignKey("research_survey_instances.survey_instance_id"),
                                 nullable=False, index=True)
+    _instance = relationship("ResearchSurveyInstance")
     question_id = Column(String(16), nullable=False)     # B01–B05 / PRE01–PRE06 / POST01–POST05
     answer_state = Column(String(16), nullable=False)    # answered|skipped|not_answered
     # 已回答的选项题必填；单选恰好 1 项。**禁止存显示标签代替选项码。**
@@ -326,7 +367,9 @@ class ResearchIssueReport(Base):
     report_id = Column(String, primary_key=True)
     participant_id = Column(String, ForeignKey("research_participants.participant_id"),
                             nullable=False, index=True)
+    _participant = relationship("ResearchParticipant")
     manifest_id = Column(String, ForeignKey("research_manifests.manifest_id"), nullable=False)
+    _manifest = relationship("ResearchManifest")
     attempt_id = Column(String, nullable=True)           # 能明确关联才填
     submitted_at = _ts(nullable=False)
     received_at = _ts(nullable=False)
@@ -347,7 +390,9 @@ class ResearchRewardEvent(Base):
     reward_event_id = Column(String, primary_key=True)
     participant_id = Column(String, ForeignKey("research_participants.participant_id"),
                             nullable=False, index=True)
+    _participant = relationship("ResearchParticipant")
     attempt_id = Column(String, ForeignKey("research_attempts.attempt_id"), nullable=False)
+    _attempt = relationship("ResearchAttempt")
     reward_rule_version = Column(String(64), nullable=False)
     points_delta = Column(Integer, nullable=False)       # 实际发放的正整数
     awarded_at = _ts(nullable=False)

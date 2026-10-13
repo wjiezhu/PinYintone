@@ -48,6 +48,12 @@ nonisolated struct ResearchAttemptRecord: Codable, Equatable {
 }
 
 /// 尝试记录的采集入口。与事件同样受研究门禁约束。
+///
+/// 一次真实录音 = 一个新的 `attempt_id`（字典 §7、需求 R07）。四种结局分别保存：
+/// 有效结果、技术失败、用户取消、未知中断。后三种**没有成绩**——不是零分。
+///
+/// 进行中的尝试也落盘：App 在录音或分析途中被杀，下次启动时这条尝试
+/// 按 `interrupted_unknown` 结账，而不是凭空消失。
 @MainActor
 final class ResearchAttemptLog {
 
@@ -56,20 +62,45 @@ final class ResearchAttemptLog {
 
     static let shared = ResearchAttemptLog()
 
+    private static let pendingQueue = "attempts"
+    private static let inFlightQueue = "attempts.inflight"
+
     private(set) var pending: [ResearchAttemptRecord] = []
     /// 进行中的尝试，按 attemptID 索引；结束时移入 pending
     private var inFlight: [UUID: ResearchAttemptRecord] = [:]
+    /// 单调时钟起点。不落盘——跨进程的时长本来就量不出来。
     private var startUptime: [UUID: TimeInterval] = [:]
 
     private init() {}
 
-    private var isCollecting: Bool { ResearchEventLog.shared.isCollecting }
+    /// 换账号（或启动）后重新加载。上次进程留下的进行中尝试一律是
+    /// **未知中断**：我们不知道它是被系统杀掉、崩溃还是用户强退，
+    /// 所以不编成取消，也不编成失败（字典 §8：未经确认的退出不得编码为 crash）。
+    func reload() {
+        let store = ResearchStore.shared
+        pending = store.loadQueue(Self.pendingQueue)
+        let orphans: [ResearchAttemptRecord] = store.loadQueue(Self.inFlightQueue)
+        inFlight = [:]
+        startUptime = [:]
+        for var r in orphans {
+            r.status = .interruptedUnknown
+            r.metricValue = nil
+            r.passed = nil
+            r.resultDisplayedAt = nil
+            // 结束时间不知道，留空；时长同样量不出来
+            r.timeQuality = .unknown
+            pending.append(r)
+        }
+        persist()
+    }
 
     /// 开始一次尝试（= 开始录音）。进入词页但没录音不调用本方法。
+    /// - Returns: 是否真的开始记录（未在采集时为 false）
+    @discardableResult
     func begin(attemptID: UUID, taskType: ResearchAttemptRecord.TaskType,
                lexemeVersionID: String?, priorPracticeCount: Int?,
-               retryOf: UUID? = nil, now: Date = Date()) {
-        guard isCollecting else { return }
+               retryOf: UUID? = nil, now: Date = Date()) -> Bool {
+        guard ResearchGate.shouldCollect(now: now) else { return false }
         inFlight[attemptID] = ResearchAttemptRecord(
             attemptID: attemptID,
             sessionID: ResearchSession.shared.sessionID,
@@ -89,7 +120,12 @@ final class ResearchAttemptLog {
             resultDisplayedAt: nil,
             timeQuality: .valid)
         startUptime[attemptID] = ProcessInfo.processInfo.systemUptime
+        persist()
+        return true
     }
+
+    /// 该编号的尝试是否正在被记录（已开始、尚未结账）
+    func isTracking(_ id: UUID) -> Bool { inFlight[id] != nil }
 
     /// 录音结束、开始分析
     func markAnalyzing(_ id: UUID, now: Date = Date()) {
@@ -97,12 +133,21 @@ final class ResearchAttemptLog {
         r.status = .analyzing
         r.recordingDurationMs = elapsedMs(since: id)
         inFlight[id] = r
+        persist()
     }
 
-    /// 评分成功。`metric` 是实际指标值，`passed` 是实际阈值判断。
+    /// 评分成功。`metric` 是实际指标值，`passed` 是实际判定结果
+    /// （含平调走向闸门，**不是**按阈值重算）。
+    ///
+    /// 指标必须是有限数：NaN / Infinity 不是成绩，按分析失败处理。
     func markSucceeded(_ id: UUID, metric: Double, passed: Bool,
                        signal: ResearchAttemptRecord.SignalStatus = .usable,
                        now: Date = Date()) {
+        guard metric.isFinite, metric >= 0 else {
+            markFailed(id, status: .analysisFailed, error: .analysisEngineError,
+                       signal: .unusable, now: now)
+            return
+        }
         guard var r = inFlight[id] else { return }
         r.status = .succeeded
         r.finishedAt = now
@@ -111,9 +156,10 @@ final class ResearchAttemptLog {
         r.metricValue = metric
         r.passed = passed
         inFlight[id] = r
+        persist()
     }
 
-    /// 失败。**metric 与 passed 保持 nil**——不填零分替代（需求 §7）。
+    /// 技术失败。**metric 与 passed 保持 nil**——不填零分替代（需求 R07）。
     func markFailed(_ id: UUID, status: ResearchAttemptRecord.Status,
                     error: ResearchErrorCode,
                     signal: ResearchAttemptRecord.SignalStatus = .unusable,
@@ -122,7 +168,33 @@ final class ResearchAttemptLog {
         r.status = status
         r.finishedAt = now
         r.signalStatus = signal
+        r.metricValue = nil
+        r.passed = nil
         r.errorCode = error
+        inFlight[id] = r
+        flushToPending(id)
+    }
+
+    /// 用户主动取消（录音中切词、退出页面、取消自测）。不是失败，也没有成绩。
+    func markCancelled(_ id: UUID, now: Date = Date()) {
+        guard var r = inFlight[id] else { return }
+        r.status = .cancelled
+        r.finishedAt = now
+        r.recordingDurationMs = r.recordingDurationMs ?? elapsedMs(since: id)
+        r.metricValue = nil
+        r.passed = nil
+        inFlight[id] = r
+        flushToPending(id)
+    }
+
+    /// 被系统打断（来电、切后台、音频会话被占用）而没能完成。
+    /// 我们确知它没完成，但不确知原因，故记为未知中断。
+    func markInterrupted(_ id: UUID, now: Date = Date()) {
+        guard var r = inFlight[id] else { return }
+        r.status = .interruptedUnknown
+        r.finishedAt = now
+        r.metricValue = nil
+        r.passed = nil
         inFlight[id] = r
         flushToPending(id)
     }
@@ -135,21 +207,35 @@ final class ResearchAttemptLog {
         flushToPending(id)
     }
 
-    /// 裸测等不展示结果的路径：直接结账，不填 resultDisplayedAt
+    /// 自测等不展示结果的路径：直接结账，不填 resultDisplayedAt
     func finishWithoutDisplay(_ id: UUID) { flushToPending(id) }
 
     func clearPendingOnWithdrawal() {
         pending.removeAll()
         inFlight.removeAll()
         startUptime.removeAll()
+        persist()
     }
 
-    func remove(_ ids: Set<UUID>) { pending.removeAll { ids.contains($0.attemptID) } }
+    func remove(_ ids: Set<UUID>) {
+        guard !ids.isEmpty else { return }
+        pending.removeAll { ids.contains($0.attemptID) }
+        persist()
+    }
 
     private func flushToPending(_ id: UUID) {
         guard let r = inFlight.removeValue(forKey: id) else { return }
         startUptime.removeValue(forKey: id)
         pending.append(r)
+        persist()
+        // 这次尝试已有定论：安排上传，不等下次打开 App
+        ResearchUploader.shared.scheduleFlushSoon()
+    }
+
+    private func persist() {
+        let store = ResearchStore.shared
+        store.saveQueue(Self.pendingQueue, pending)
+        store.saveQueue(Self.inFlightQueue, Array(inFlight.values))
     }
 
     /// 单调时钟测时长：墙钟会被改动或校时，做差值会出现负数（字典 §2 要求非负）

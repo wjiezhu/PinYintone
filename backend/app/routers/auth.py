@@ -1,10 +1,12 @@
+import uuid
 from datetime import datetime, timezone
 
 from fastapi import APIRouter, Depends, HTTPException
 from sqlalchemy.orm import Session
 
-from .. import models, schemas, security
+from .. import accounts, models, research_models, schemas, security
 from ..database import get_db
+from ..research_rules import latest_consent
 
 router = APIRouter(tags=["auth"])
 
@@ -60,6 +62,9 @@ def student_register(body: schemas.StudentRegisterRequest, db: Session = Depends
         db.add(user)
 
     if body.appleUserID:
+        # 这台设备换了一个 Apple 账号登录：先清掉上一个人的内部编号，
+        # 否则新账号会被当成同一位研究参与者
+        accounts.forget_previous_owner(user, body.appleUserID)
         user.apple_user_id = body.appleUserID
     if body.spokenLanguages is not None:
         user.spoken_languages = body.spokenLanguages
@@ -68,6 +73,9 @@ def student_register(body: schemas.StudentRegisterRequest, db: Session = Depends
     # 学生不绑定班级：classCode 恒为 None，数据进入"未绑定班级"池（CLAUDE.md 禁止事项 4）
     user.class_code = None
     user.native_language = body.nativeLanguage
+    # 账号的稳定内部编号：同一 Apple 账号的各设备行共用，研究纳入按它去重
+    db.flush()
+    accounts.ensure_account_id(db, user)
     db.commit()
     return schemas.StudentRegisterResponse()
 
@@ -88,6 +96,35 @@ def student_delete_account(deviceID: str, appleUserID: str | None = None,
         device_ids.update(r[0] for r in rows)
 
     ids = list(device_ids)
+
+    # 删除账号的人若在研究中，同时记一条「退出研究」。
+    # 不删研究表里的行（去标识化资料的保留策略尚未审定，且导出本就排除退出者），
+    # 但必须让服务端从此拒收该参与者的研究上传——否则账号没了，
+    # 另一台设备上的离线队列还能继续往研究库里写。
+    account_ids = {r[0] for r in db.query(models.User.account_id)
+                   .filter(models.User.device_id.in_(ids)).all() if r[0]}
+    apple_ids = {r[0] for r in db.query(models.User.apple_user_id)
+                 .filter(models.User.device_id.in_(ids)).all() if r[0]}
+    if appleUserID:
+        apple_ids.add(appleUserID)
+    now = datetime.now(timezone.utc)
+    withdrawn = 0
+    for im in (db.query(research_models.ResearchIdentityMap)
+               .filter(research_models.ResearchIdentityMap.internal_user_id
+                       .in_(account_ids | device_ids)).all()):
+        latest = latest_consent(db, im.participant_id)
+        if latest is None or latest.action != "granted":
+            continue
+        db.add(research_models.ResearchConsentEvent(
+            consent_event_id=str(uuid.uuid4()),
+            participant_id=im.participant_id,
+            action="withdrawn",
+            consent_version=latest.consent_version,
+            language=latest.language,
+            occurred_at=now,
+            received_at=now,
+        ))
+        withdrawn += 1
     deleted = {}
     for model, key in (
         (models.TrainingSession, "training_sessions"),
@@ -97,7 +134,11 @@ def student_delete_account(deviceID: str, appleUserID: str | None = None,
     ):
         deleted[key] = db.query(model).filter(
             model.device_id.in_(ids)).delete(synchronize_session=False)
+    # 账号没了，Apple 标识与内部编号的对应关系也一并删除
+    if apple_ids:
+        db.query(models.AccountLink).filter(
+            models.AccountLink.apple_user_id.in_(apple_ids)).delete(synchronize_session=False)
     db.commit()
-    return {"deleted": deleted, "deviceIDs": ids}
+    return {"deleted": deleted, "deviceIDs": ids, "researchWithdrawn": withdrawn}
 
 

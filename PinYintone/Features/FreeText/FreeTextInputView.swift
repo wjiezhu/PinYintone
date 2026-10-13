@@ -10,52 +10,51 @@ struct FreeTextInputView: View {
     private let maxChars = 200
 
     var body: some View {
-        VStack(alignment: .leading, spacing: 16) {
-            Text(NSLocalizedString("freetext_input_hint", comment: ""))
-                .font(.subheadline)
-                .foregroundStyle(.secondary)
+        ScrollView {
+            VStack(alignment: .leading, spacing: Theme.Space.l) {
+                Text(NSLocalizedString("freetext_input_hint", comment: ""))
+                    .font(.body)
+                    .foregroundStyle(Theme.textSecondary)
+                    .fixedSize(horizontal: false, vertical: true)
 
-            ZStack(alignment: .topLeading) {
-                TextEditor(text: $rawText)
-                    .frame(minHeight: 160)
-                    .padding(8)
-                    .background(Color(.secondarySystemBackground))
-                    .clipShape(RoundedRectangle(cornerRadius: 12))
-                    .onChange(of: rawText) { _, new in
-                        if new.count > maxChars { rawText = String(new.prefix(maxChars)) }
+                VStack(alignment: .trailing, spacing: Theme.Space.xs) {
+                    ZStack(alignment: .topLeading) {
+                        TextEditor(text: $rawText)
+                            .scrollContentBackground(.hidden)
+                            .frame(minHeight: 160)
+                            .onChange(of: rawText) { _, new in
+                                if new.count > maxChars { rawText = String(new.prefix(maxChars)) }
+                            }
+                        if rawText.isEmpty {
+                            Text(NSLocalizedString("freetext_placeholder", comment: ""))
+                                .foregroundStyle(Theme.textSecondary.opacity(0.7))
+                                .padding(.top, 8)
+                                .padding(.leading, 5)
+                                .allowsHitTesting(false)
+                        }
                     }
-                if rawText.isEmpty {
-                    Text(NSLocalizedString("freetext_placeholder", comment: ""))
-                        .foregroundStyle(.tertiary)
-                        .padding(16)
-                        .allowsHitTesting(false)
+                    .surfaceCard(padding: Theme.Space.s)
+
+                    Text("\(rawText.count) / \(maxChars)")
+                        .font(.footnote.monospacedDigit())
+                        .foregroundStyle(Theme.textSecondary)
                 }
-            }
 
-            HStack {
-                Spacer()
-                Text("\(rawText.count) / \(maxChars)")
-                    .font(.caption)
-                    .foregroundStyle(.secondary)
+                Button {
+                    tokens = tokenizer.tokenize(rawText)
+                    showEditor = !tokens.isEmpty
+                } label: {
+                    Text(NSLocalizedString("freetext_tokenize", comment: ""))
+                }
+                .buttonStyle(PrimaryButtonStyle())
+                .disabled(!canTokenize)
+                .accessibilityIdentifier("freeText.tokenize")
             }
-
-            Button {
-                tokens = tokenizer.tokenize(rawText)
-                showEditor = !tokens.isEmpty
-            } label: {
-                Text(NSLocalizedString("freetext_tokenize", comment: ""))
-                    .font(.headline)
-                    .frame(maxWidth: .infinity)
-                    .padding()
-                    .background(canTokenize ? Color.accentColor : Color.gray.opacity(0.4))
-                    .foregroundStyle(.white)
-                    .clipShape(RoundedRectangle(cornerRadius: 14))
-            }
-            .disabled(!canTokenize)
-
-            Spacer()
+            .padding(.horizontal, Theme.pageMargin)
+            .padding(.vertical, Theme.Space.l)
         }
-        .padding(20)
+        .scrollDismissesKeyboard(.interactively)
+        .background(Theme.background)
         .navigationTitle(NSLocalizedString("stage3_title", comment: ""))
         .navigationBarTitleDisplayMode(.inline)
         .toolbar {

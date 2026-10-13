@@ -8,20 +8,16 @@ final class ResearchEventLogTests: XCTestCase {
 
     override func setUp() {
         super.setUp()
-        log.clearPendingOnWithdrawal()
-        ResearchConsent.shared.withdraw()
-        log.eligibility = .eligible
-        log.window = .init(start: Date().addingTimeInterval(-60),
-                           end: Date().addingTimeInterval(3600))
+        ResearchTestSupport.freshAccount()
     }
     override func tearDown() {
-        log.clearPendingOnWithdrawal()
-        ResearchConsent.shared.withdraw()
+        ResearchTestSupport.tearDown()
         super.tearDown()
     }
 
+    /// 置为已纳入、采集中
     private func consent() {
-        ResearchConsent.shared.grant(textVersion: "c1", language: "zh")
+        ResearchTestSupport.enrolledAccount()
     }
 
     // MARK: - 门禁在写入前
@@ -33,17 +29,38 @@ final class ResearchEventLogTests: XCTestCase {
 
     func testNoEventsWhenIneligible() {
         consent()
-        log.eligibility = .excluded(.age)
+        ResearchStore.shared.update { $0.eligibility = "excluded:age" }
         XCTAssertFalse(log.log(.historyOpened))
         XCTAssertTrue(log.pending.isEmpty)
     }
 
     func testNoEventsOutsideWindow() {
-        consent()
-        log.window = .init(start: Date().addingTimeInterval(-7200),
-                           end: Date().addingTimeInterval(-3600))
+        ResearchTestSupport.enrolledAccount(
+            windowStart: Date().addingTimeInterval(-7200),
+            windowEnd: Date().addingTimeInterval(-3600))
         XCTAssertFalse(log.log(.historyOpened))
         XCTAssertTrue(log.pending.isEmpty)
+    }
+
+    /// 事件里的界面语言是用户在 App 内选择的那一种，不是系统区域（R08）
+    func testEventCarriesTheAppLanguage() {
+        let before = LocalizationManager.shared.language
+        defer { LocalizationManager.shared.setLanguage(before) }
+        LocalizationManager.shared.setLanguage("ar")
+        consent()
+        XCTAssertTrue(log.log(.historyOpened))
+        XCTAssertEqual(log.pending.last?.uiLanguage, "ar")
+    }
+
+    /// 队列落盘：App 被杀后事件不丢（此前只在内存里）
+    func testPendingEventsSurviveRelaunch() {
+        let key = ResearchTestSupport.enrolledAccount()
+        XCTAssertTrue(log.log(.historyOpened))
+        let id = log.pending[0].eventID
+        ResearchStore.shared.activate(accountKey: nil)
+        XCTAssertTrue(log.pending.isEmpty)
+        ResearchStore.shared.activate(accountKey: key)
+        XCTAssertEqual(log.pending.map(\.eventID), [id], "重启后应是同一条、同一个编号")
     }
 
     func testLogsWhenAllConditionsMet() {
@@ -84,10 +101,9 @@ final class ResearchEventLogTests: XCTestCase {
         consent()
         log.log(.historyOpened)
         XCTAssertFalse(log.pending.isEmpty)
-        ResearchConsent.shared.withdraw()
-        log.clearPendingOnWithdrawal()
-        XCTAssertTrue(log.pending.isEmpty, "撤回须立即清空待上传队列")
-        XCTAssertFalse(log.log(.historyOpened), "撤回后不得继续采集")
+        ResearchEnrollment.withdraw()
+        XCTAssertTrue(log.pending.isEmpty, "退出须立即清空待上传队列")
+        XCTAssertFalse(log.log(.historyOpened), "退出后不得继续采集")
     }
 
     // MARK: - 命名转换
@@ -107,15 +123,10 @@ final class RemainingEventWiringTests: XCTestCase {
 
     override func setUp() {
         super.setUp()
-        log.clearPendingOnWithdrawal()
-        log.eligibility = .eligible
-        log.window = .init(start: Date().addingTimeInterval(-60),
-                           end: Date().addingTimeInterval(3600))
-        ResearchConsent.shared.grant(textVersion: "c1", language: "zh")
+        ResearchTestSupport.enrolledAccount()
     }
     override func tearDown() {
-        log.clearPendingOnWithdrawal()
-        ResearchConsent.shared.withdraw()
+        ResearchTestSupport.tearDown()
         super.tearDown()
     }
 
@@ -162,9 +173,8 @@ final class RemainingEventWiringTests: XCTestCase {
 
     /// 崩溃事件同样受研究门禁约束
     func testCrashEventGatedByConsent() {
-        ResearchConsent.shared.withdraw()
-        log.clearPendingOnWithdrawal()
+        ResearchEnrollment.withdraw()
         XCTAssertEqual(ResearchCrashReporter.shared.record(crashCount: 3), 0,
-                       "撤回同意后不得再采集崩溃事件")
+                       "退出后不得再采集崩溃事件")
     }
 }

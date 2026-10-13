@@ -4,8 +4,6 @@ import SwiftUI
 struct SavedWordsView: View {
     @ObservedObject private var store = SavedWordsStore.shared
 
-    private let toneColors: [Color] = [.green, .blue, .orange, .red]
-
     var body: some View {
         Group {
             if store.words.isEmpty {
@@ -18,11 +16,14 @@ struct SavedWordsView: View {
                         } label: {
                             row(entry)
                         }
+                        .listRowBackground(Theme.surface)
                     }
                     .onDelete { store.remove(atOffsets: $0) }
                 }
+                .scrollContentBackground(.hidden)
             }
         }
+        .background(Theme.background)
         .navigationTitle(NSLocalizedString("saved_words_title", comment: ""))
         .navigationBarTitleDisplayMode(.inline)
         .toolbar {
@@ -33,71 +34,45 @@ struct SavedWordsView: View {
     }
 
     private func row(_ entry: SavedWord) -> some View {
-        HStack(spacing: 12) {
-            Text(entry.word)
-                .font(.title3.weight(.medium))
+        HStack(alignment: .center, spacing: Theme.Space.m) {
             VStack(alignment: .leading, spacing: 2) {
+                HStack(alignment: .center, spacing: Theme.Space.s) {
+                    Text(entry.word)
+                        .font(.title3.weight(.semibold))
+                        .foregroundStyle(Theme.textPrimary)
+                    ToneGlyphRow(tones: entry.tones)
+                }
                 Text(entry.pinyin)
                     .font(.subheadline)
-                    .foregroundStyle(.secondary)
-                HStack(spacing: 4) {
-                    ForEach(Array(entry.tones.enumerated()), id: \.offset) { _, tone in
-                        Text("\(tone)")
-                            .font(.caption2.bold())
-                            .frame(width: 18, height: 18)
-                            .background(color(for: tone).opacity(0.18))
-                            .foregroundStyle(color(for: tone))
-                            .clipShape(Circle())
-                    }
-                }
+                    .foregroundStyle(Theme.textSecondary)
             }
-            Spacer()
+            .environment(\.layoutDirection, .leftToRight)
+            Spacer(minLength: Theme.Space.s)
 
-            // 练习进度：最佳得分 + 次数
-            if let best = entry.bestScore {
-                VStack(alignment: .trailing, spacing: 2) {
-                    HStack(alignment: .firstTextBaseline, spacing: 1) {
-                        Text("\(best)")
-                            .font(.headline.monospacedDigit())
-                            .foregroundStyle(scoreColor(best))
-                        Text("/100")
-                            .font(.caption2)
-                            .foregroundStyle(.secondary)
-                    }
-                    Text(String(format: NSLocalizedString("saved_words_practice_count", comment: ""),
-                                entry.practiceCount))
-                        .font(.caption2)
-                        .foregroundStyle(.tertiary)
-                }
+            // 练过几次。只陈述次数，不给分数着色——这是练习日志，不是成绩单
+            if entry.practiceCount > 0 {
+                Text(String(format: NSLocalizedString("saved_words_practice_count", comment: ""),
+                            entry.practiceCount))
+                    .font(.subheadline)
+                    .foregroundStyle(Theme.textSecondary)
             }
         }
-        .padding(.vertical, 4)
-    }
-
-    private func scoreColor(_ score: Int) -> Color {
-        switch score {
-        case 90...:  return .green
-        case 75..<90: return .mint
-        case 60..<75: return .orange
-        default:      return .red
-        }
-    }
-
-    private func color(for tone: Int) -> Color {
-        (1...4).contains(tone) ? toneColors[tone - 1] : .gray
+        .frame(minHeight: Theme.minTap)
     }
 
     private var emptyState: some View {
-        VStack(spacing: 12) {
+        VStack(spacing: Theme.Space.m) {
             Image(systemName: "bookmark")
-                .font(.system(size: 52))
-                .foregroundStyle(.secondary)
+                .font(.system(size: 34, weight: .medium))
+                .foregroundStyle(Theme.textSecondary)
+                .accessibilityHidden(true)
             Text(NSLocalizedString("saved_words_empty", comment: ""))
-                .font(.callout)
-                .foregroundStyle(.secondary)
+                .font(.body)
+                .foregroundStyle(Theme.textSecondary)
                 .multilineTextAlignment(.center)
-                .padding(.horizontal, 40)
+                .fixedSize(horizontal: false, vertical: true)
         }
+        .padding(.horizontal, Theme.Space.xl)
         .frame(maxWidth: .infinity, maxHeight: .infinity)
     }
 }

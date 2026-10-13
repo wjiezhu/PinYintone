@@ -97,6 +97,18 @@ final class FreeWordPracticeViewModel: ObservableObject {
     // MARK: - 私有
 
     private func startRecording(targetWord: String) {
+        // 麦克风权限在首次实际录音前申请（需求 R02），不在启动时
+        if AVAudioApplication.shared.recordPermission == .undetermined {
+            Task { [weak self] in
+                _ = await AVAudioApplication.requestRecordPermission()
+                self?.beginRecording(targetWord: targetWord)
+            }
+            return
+        }
+        beginRecording(targetWord: targetWord)
+    }
+
+    private func beginRecording(targetWord: String) {
         if currentWord != targetWord { prepare(word: targetWord) }
         accumulated = []
         studentF0 = []
@@ -109,6 +121,7 @@ final class FreeWordPracticeViewModel: ObservableObject {
         // （字典 §7：free_text 的 lexeme_version_id 为 NULL）。
         let attemptID = UUID()
         currentAttemptID = attemptID
+        SurveyCenter.markPracticeStarted()
         ResearchAttemptLog.shared.begin(attemptID: attemptID, taskType: .freeText,
                                         lexemeVersionID: nil, priorPracticeCount: nil)
         isRecording = true
@@ -195,7 +208,7 @@ final class FreeWordPracticeViewModel: ObservableObject {
             duration: Date().timeIntervalSince(recordingStart),
             timestamp: Date(),
             // 关卡 3 不参与 A/B（无 groupAssignment 字段），只记录阶段供筛选
-            phase: ToneSequencer.shared.phase.rawValue
+            phase: TrainingPhase.training.rawValue
         )
     }
 }

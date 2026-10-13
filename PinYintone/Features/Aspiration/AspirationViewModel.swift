@@ -49,6 +49,19 @@ final class AspirationViewModel: ObservableObject {
     // MARK: - 校准（前 500ms 采底噪）
 
     func startCalibration() {
+        // 麦克风权限在首次实际录音前申请（需求 R02），不在启动时。
+        // 还没问过就先问；拒绝的话下面的启动会失败并给出提示。
+        if AVAudioApplication.shared.recordPermission == .undetermined {
+            Task { [weak self] in
+                _ = await AVAudioApplication.requestRecordPermission()
+                self?.beginCalibration()
+            }
+            return
+        }
+        beginCalibration()
+    }
+
+    private func beginCalibration() {
         calibrated = false
         calibrationFrames = []
         audioEngine.onChunk = { [weak self] pcm in
@@ -129,7 +142,7 @@ final class AspirationViewModel: ObservableObject {
             triggerRate: Double(triggerRate),
             passed: passed,
             timestamp: Date(),
-            phase: ToneSequencer.shared.phase.rawValue
+            phase: TrainingPhase.training.rawValue
         )
     }
 }

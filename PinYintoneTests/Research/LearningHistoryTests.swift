@@ -1,3 +1,4 @@
+import CoreData
 import XCTest
 @testable import PinYintone
 
@@ -30,9 +31,12 @@ final class LearningHistoryTests: XCTestCase {
             "en": ["improve", "progress", "proficiency", "level of"],
             "fr": ["progrès", "amélior", "niveau de"],
         ]
-        let keys = ["history_title", "history_summary", "history_total_practices",
-                    "history_words_practiced", "history_recent", "history_empty",
-                    "history_footer_note"]
+        let keys = ["history_title", "history_empty", "history_empty_filtered",
+                    "history_footer_note", "history_filter", "history_filter_all",
+                    "history_kind_fixed", "history_kind_free", "history_kind_self_test",
+                    "history_status_recorded", "history_status_technical",
+                    "tab_history", "result_title", "result_try_again",
+                    "self_test_done_title", "self_test_done_body"]
         for (lang, words) in banned {
             let b = try XCTUnwrap(Bundle(path: try XCTUnwrap(
                 Bundle.main.path(forResource: lang, ofType: "lproj"))))
@@ -54,5 +58,66 @@ final class LearningHistoryTests: XCTestCase {
         for k in ["history_title", "history_footer_note"] {
             XCTAssertNotEqual(b.localizedString(forKey: k, value: nil, table: nil), k)
         }
+    }
+
+    // MARK: - 记录行（需求 U05）
+
+    private func session(grade: String = "good", score: Double = 0.3, phase: String? = "training",
+                         status: ResultStatus = .validResult) -> TrainingSession {
+        let s = TrainingSession(context: CoreDataStack.shared.context)
+        s.id = UUID()
+        s.deviceID = "d"
+        s.role = "student"
+        s.groupAssignment = "n/a"
+        s.lexemeID = "canjia"
+        s.dtwScore = score
+        s.grade = grade
+        s.attemptNumber = 1
+        s.timestamp = Date()
+        s.phase = phase
+        s.resultStatus = status.rawValue
+        return s
+    }
+
+    /// 技术失败**单独标记**：按 resultStatus 识别，不看分数，更不显示成低分
+    func testTechnicalFailureIsFlaggedSeparatelyNotShownAsALowScore() {
+        let failed = session(grade: RecordSentinel.noGrade, score: RecordSentinel.noScore,
+                             status: .technicalRetry)
+        defer { CoreDataStack.shared.context.rollback() }
+        let entry = HistoryEntry(session: failed) { _ in "参加" }
+        XCTAssertEqual(entry.status, .technicalFailure)
+        XCTAssertNotEqual(entry.status, .notPassed, "技术失败不是「未通过」")
+        XCTAssertEqual(entry.kind, .fixedWord)
+    }
+
+    func testPracticeRowsShowPassOrTryAgain() {
+        defer { CoreDataStack.shared.context.rollback() }
+        XCTAssertEqual(HistoryEntry(session: session(grade: "good")) { $0 }.status, .passed)
+        XCTAssertEqual(HistoryEntry(session: session(grade: "fail")) { $0 }.status, .notPassed)
+    }
+
+    /// 自测本来就不给评价，记录页也不补给——哪怕库里存着它的成绩
+    func testSelfTestRowsNeverRevealPassOrFail() {
+        defer { CoreDataStack.shared.context.rollback() }
+        for phase in ["self_test", "pretest", "posttest"] {
+            for grade in ["excellent", "fail"] {
+                let entry = HistoryEntry(session: session(grade: grade, phase: phase)) { $0 }
+                XCTAssertEqual(entry.kind, .selfTest, phase)
+                XCTAssertEqual(entry.status, .recorded, "\(phase)/\(grade) 泄露了评价")
+            }
+        }
+    }
+
+    /// 自测的技术失败同样单独标记
+    func testSelfTestTechnicalFailureIsStillFlagged() {
+        defer { CoreDataStack.shared.context.rollback() }
+        let entry = HistoryEntry(session: session(grade: RecordSentinel.noGrade,
+                                                  score: RecordSentinel.noScore,
+                                                  phase: "self_test", status: .technicalRetry)) { $0 }
+        XCTAssertEqual(entry.status, .technicalFailure)
+    }
+
+    func testThreeKindsAreFilterable() {
+        XCTAssertEqual(HistoryEntry.Kind.allCases, [.fixedWord, .freeText, .selfTest])
     }
 }

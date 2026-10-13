@@ -1,5 +1,12 @@
 -- Pinyintone 实验数据导出 / 统计（PostgreSQL / Neon）
 --
+-- ⚠ **本文件只针对旧业务表的历史数据**（training_sessions 等）。
+--   新版研究数据在独立的 research_* 表里，一律用 backend/scripts/export_research.py 导出，
+--   **不能用本文件代替**（见 RESEARCH_RUNBOOK.md 的 A 部分）。
+--   · schema_version >= 6：取消「前测 → 训练 → 后测」三阶段。phase 只会是
+--     'training'（普通练习）或 'self_test'（学习者自选的自测）；下面涉及 pretest / posttest
+--     的段落只对更早的记录有内容。自选自测有自选择偏差，不是前后测。
+--
 -- ⚠ 设计变更：**已取消 A/B 分组**。训练阶段有两种反馈呈现方式
 --   （颜色块 / 动态 F0 曲线），由学习者自己在设置里切换，不再有随机分组。
 --   · schema_version >= 5：新增**平调词走向闸门**——全一声的词首末下滑 > 3 个半音

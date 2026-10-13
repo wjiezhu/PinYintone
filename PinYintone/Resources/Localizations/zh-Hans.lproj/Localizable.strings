@@ -4,10 +4,9 @@
 "welcome_title" = "欢迎使用 Pinyintone";
 "role_student" = "我是学生";
 "role_teacher" = "我是教师";
-"stage1_title" = "送气训练";
-"stage2_title" = "声调训练";
-"stage3_title" = "文本练习";
-
+"stage1_title" = "送气练习";
+"stage2_title" = "声调练习";
+"stage3_title" = "自由文本";
 // 引导页
 "onboarding_mic_body" = "Pinyintone 需要麦克风权限来分析您的发音。";
 "onboarding_mic_allow" = "继续";
@@ -83,8 +82,8 @@
 "grade_good" = "良好";
 "grade_needs_practice" = "继续练习";
 "grade_fail" = "再试一次";
-"legend_native" = "母语者";
-"legend_you" = "你";
+"legend_native" = "参考";
+"legend_you" = "本次";
 "feedback_continue" = "继续";
 "settings_delete_account" = "删除账号";
 "settings_delete_footer" = "将永久删除你的账号及全部练习记录，此操作不可撤销。";
@@ -97,7 +96,7 @@
 "feedback_next_word" = "下一个词";
 "feedback_skip_hint" = "这个词有点难，可以先跳过，稍后再练。";
 "tone_retry_mic_unavailable" = "没能开始录音。请确认没有其他 App 正在占用麦克风，然后再试一次。";
-"tone_retry_no_voice" = "没听清，请靠近麦克风重录。";
+"tone_retry_no_voice" = "未录到声音，请靠近麦克风重新录音。";
 "replay_own_recording" = "回听我的录音";
 "replay_failed" = "没能播放刚才的录音，请再试一次。";
 "record_start" = "开始录音";
@@ -133,31 +132,17 @@
 "saved_words_empty" = "还没有收藏的词条。练习时点书签即可添加。";
 "save_word" = "收藏词条";
 "saved_words_practice_count" = "练习 %d 次";
-"play_sample" = "听样例";
+"play_sample" = "听示范";
 
 // 使用说明
 "help_title" = "使用说明";
 "help_stage1_body" = "对着麦克风用力送气吹散蒲公英 —— 练习送气音（p / t / k）。";
-"help_stage2_body" = "点「听样例」听标准读音，再录音念出来，得到 0–100 分（60 分及以上为通过）。";
+"help_stage2_body" = "点「听示范」听参考读音，再录音念出来。每次录音得到一个 0–100 的本次结果（60 及以上为通过）。";
 "help_stage3_body" = "粘贴或输入中文，自动分词，逐词练习。点书签收藏词条，之后在「我的词条」复习。";
-"help_tip" = "在安静环境练习，麦克风对准嘴。多练分数会进步。";
+"help_tip" = "在安静环境练习，麦克风对准嘴。";
 "help_privacy" = "不上传录音，只上传分析结果（分数），用于研究。";
 
 // ── 研究阶段（升级需求 §3.1）──────────────────────────
-"phase_pretest" = "前测";
-"phase_training" = "训练";
-"phase_posttest" = "后测";
-"phase_goal_pretest" = "这一轮只录音：不打分、不给颜色和曲线提示。请按你现在的读法读出来。";
-"phase_goal_training" = "听示范 → 录音 → 看反馈 → 再练一次。";
-"phase_goal_posttest" = "这一轮同样只录音：不打分、不给颜色和曲线提示。";
-"phase_complete_title" = "本阶段完成";
-"phase_complete_pretest" = "前测已完成，接下来进入训练。";
-"phase_complete_training" = "训练没有固定终点，随时可以继续练习。";
-"phase_complete_posttest" = "后测已完成，感谢你的参与。";
-"phase_start_posttest" = "开始后测";
-"blind_ready" = "准备好后按下录音。";
-"blind_recording" = "正在录音…";
-"assessment_recorded" = "已记录";
 "tone_next_word" = "下一个词";
 
 // 反馈条件（受试内 A/B，绑定词集而非学习者）
@@ -177,12 +162,11 @@
 "onboarding_mic_skip" = "暂不开启，先浏览";
 
 // 反馈显示模式（学习者自选，非实验分组）
-"condition_staticColor" = "颜色块";
-"condition_dynamicF0" = "音高曲线";
+"condition_staticColor" = "颜色";
+"condition_dynamicF0" = "曲线";
 "settings_feedback_style" = "反馈显示方式";
-"settings_feedback_style_footer" = "训练时结果怎么显示。两种方式通关标准一样，换了不影响分数。前测和后测两种方式都不显示反馈。";
+"settings_feedback_style_footer" = "练习时结果怎么显示。两种方式通过标准一样，换了不影响分数。自测时两种方式都不显示反馈。";
 "tone_slot_a11y" = "第 %1$d 个字：%2$d 声，%3$@";
-
 // 教练提示卡：一次一条可执行动作（档案 §4.3）
 "coach_title" = "下一次这样做";
 "coach_stay_high" = "「%@」要一直保持高，别往下掉。";
@@ -261,3 +245,127 @@
 "history_empty" = "还没有练习记录。";
 "history_attempt_n" = "第 %d 次";
 "history_footer_note" = "这里是你的练习日志，记录练过什么、练了多少。它不是考试成绩。";
+
+/* 2026-10 研究流程与界面改版 */
+"common_dismiss" = "关闭这条提示";
+"common_more" = "更多";
+"common_retry" = "重试";
+"tab_practice" = "练习";
+"tab_history" = "记录";
+"tab_settings" = "设置";
+"tab_teacher" = "教师";
+"home_continue" = "继续练习";
+"home_words" = "词条";
+"home_more" = "更多练习";
+"home_research_invite" = "参加学习研究（自愿）";
+"home_research_resume" = "继续完成参加研究的步骤";
+"home_survey_pre" = "继续填写练习前问卷";
+"home_survey_post" = "继续填写使用后问卷";
+"tone_stage_preparing" = "正在准备参考…";
+"tone_stage_ready" = "点下方的麦克风开始录音，再点一次停止。";
+"tone_stage_recording" = "正在录音。念完后再点一次停止。";
+"tone_stage_analyzing" = "正在分析…";
+"tone_fail_mic_denied" = "麦克风未开启。请在系统设置里允许 Pinyintone 使用麦克风，然后回到这里继续。";
+"tone_fail_interrupted" = "录音被打断了，这次没有结果。请重新录音。";
+"tone_fail_analysis" = "这次没能得出分析结果，请重新录音。";
+"result_title" = "本次结果";
+"result_try_again" = "再试一次";
+"result_score_a11y" = "本次结果 %d 分，满分 100";
+"replay_stop" = "停止回听";
+"sample_stop" = "停止示范";
+"chart_empty" = "录音后，这里显示你的声调曲线。";
+"chart_a11y_reference_only" = "参考声调曲线";
+"chart_a11y_with_yours" = "参考曲线与你本次的声调曲线";
+"mic_explain_title" = "使用麦克风";
+"word_picker_title" = "选择词条";
+"word_picker_search" = "搜索汉字或拼音";
+"word_picker_empty" = "没有找到匹配的词条。";
+"word_current" = "当前词";
+"self_test_title" = "自测";
+"self_test_start" = "开始自测";
+"self_test_exit" = "退出自测";
+"self_test_progress" = "第 %1$d / %2$d 词";
+"self_test_ready" = "点下方的麦克风录音。自测不显示结果。";
+"self_test_saving" = "正在保存…";
+"self_test_recorded" = "已录到。";
+"self_test_done_title" = "自测已完成";
+"self_test_done_body" = "全部词条都已录到。自测不显示分数或评价。";
+"self_test_back_to_practice" = "返回练习";
+"history_filter" = "筛选";
+"history_filter_all" = "全部";
+"history_kind_fixed" = "固定词";
+"history_kind_free" = "自由文本";
+"history_kind_self_test" = "自测";
+"history_status_recorded" = "已录";
+"history_status_technical" = "未录到";
+"history_empty_filtered" = "这一类还没有记录。";
+"settings_support" = "帮助与问题反馈";
+"research_section" = "研究参与";
+"research_section_footer" = "参加研究完全自愿，不参加不影响任何功能。退出研究不会删除你的账号和学习记录。";
+"research_status" = "状态";
+"research_status_not_joined" = "未参加";
+"research_status_closed" = "目前未开放";
+"research_status_consented" = "已同意，尚未完成";
+"research_status_pending" = "待提交（等待联网）";
+"research_status_enrolled" = "已参与";
+"research_status_ineligible" = "本轮未纳入";
+"research_status_withdrawn" = "已退出";
+"research_status_withdrawn_pending" = "已退出（等待联网确认）";
+"research_join" = "了解并参加";
+"research_resume" = "继续参加步骤";
+"research_rejoin" = "重新填写背景信息";
+"research_sync_now" = "立即提交未上传的内容";
+"research_withdraw" = "退出研究";
+"research_withdraw_confirm_title" = "退出研究？";
+"research_withdraw_confirm_message" = "退出后立即停止采集，尚未上传的研究内容会从本机清除。你的账号和学习记录不受影响。本轮退出后不能重新参加。";
+"research_withdrawn_body" = "你已退出研究，不再采集研究数据。可以继续正常使用全部功能。";
+"research_enrolling" = "正在确认…";
+"research_enroll_saved_hint" = "你的回答已保存在本机。可以现在重试，也可以先去练习，稍后在「设置 → 研究参与」里继续。";
+"research_enroll_refused" = "目前无法加入本轮研究。你可以继续正常使用全部功能。";
+"research_continue_later" = "稍后再说，先去练习";
+"research_enrolled_title" = "已加入研究";
+"research_enrolled_body" = "谢谢。你可以随时在「设置 → 研究参与」里退出。";
+"research_enrolled_pending_body" = "已加入。你的背景信息已保存在本机，联网后会自动提交。";
+"research_start_practice" = "开始练习";
+"research_ineligible_title" = "谢谢你的回答";
+"research_ineligible_body" = "根据你的回答，本轮研究不会收集你的数据。你的回答没有上传。可以继续正常使用全部功能。";
+"research_not_open_title" = "目前未开放";
+"research_not_open_body" = "现在不在研究的参加时间内。你可以继续正常使用全部功能。";
+"consent_version_line" = "说明版本：%@";
+"consent_draft_notice" = "这是测试用的说明稿，尚未经研究方审定，不用于正式研究。";
+"survey_start_now" = "现在填写";
+"survey_later" = "稍后填写";
+"survey_decline" = "不填写";
+"survey_pre_name" = "练习前问卷";
+"survey_post_name" = "使用后问卷";
+"survey_pre_invite_title" = "练习前问卷（6 题）";
+"survey_pre_invite_body" = "开始练习前，愿意回答几个关于你声调学习情况的问题吗？每题都可以跳过，也可以稍后再填。";
+"survey_post_invite_title" = "使用后问卷（5 题）";
+"survey_post_invite_body" = "你已经练习了几次。愿意花一两分钟说说使用感受吗？回答不影响练习，每题都可以跳过。";
+"survey_progress_a11y" = "第 %1$d 题，共 %2$d 题";
+"survey_status_invited" = "待填写";
+"survey_status_deferred" = "稍后填写";
+"survey_status_declined" = "已选择不填写";
+"survey_status_saved_pending" = "已保存，等待联网提交";
+"survey_status_submitted" = "已提交";
+"survey_status_not_accepted" = "未能提交（参加时间已结束）";
+"survey_thanks" = "感谢你的反馈。";
+"survey_saved_pending_body" = "你的回答已保存在本机，联网后会自动提交，也可以现在重试。";
+"survey_unavailable" = "这份问卷目前不可用。";
+"issue_mail_opened" = "已打开邮件。你的反馈将通过邮件发送，不会进入研究数据。";
+
+/* 界面改版：操作栏与结果区的短标签 */
+"bar_listen" = "听示范";
+"bar_stop" = "停止";
+"bar_next" = "下一词";
+"bar_prev" = "上一词";
+"replay_short" = "回听";
+"advice_short" = "建议";
+"tone_name_5" = "轻声";
+"tone_slot_neutral_a11y" = "第 %1$d 个字：%2$@";
+"common_delete" = "删除";
+
+/* 2.3 版界面：模块首页与练习页 */
+"home_start" = "开始练习";
+"record_short" = "录音";
+"word_picker_short" = "选词";

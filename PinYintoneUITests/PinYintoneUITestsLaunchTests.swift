@@ -20,12 +20,10 @@ final class PinYintoneUITestsLaunchTests: XCTestCase {
     @MainActor
     func testLaunch() throws {
         let app = XCUIApplication()
+        // 启动截图也必须带测试地址并清空本机状态：不带的话 App 连的是线上后端，
+        // 启动时的自动同步会把本机残留的测试记录传上去。
+        app.launchEnvironment = ["PT_API_BASE_URL": "http://127.0.0.1:9", "PT_UITEST_RESET": "1"]
         app.launch()
-
-        // Insert steps here to perform after app launch but before taking a screenshot,
-        // such as logging into a test account or navigating somewhere in the app
-        // XCUIAutomation Documentation
-        // https://developer.apple.com/documentation/xcuiautomation
 
         let attachment = XCTAttachment(screenshot: app.screenshot())
         attachment.name = "Launch Screen"

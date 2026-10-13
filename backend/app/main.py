@@ -55,6 +55,19 @@ if engine.dialect.name == "postgresql":
             "ALTER TABLE aspiration_attempts ADD COLUMN IF NOT EXISTS app_version VARCHAR",
             "ALTER TABLE freetext_records ADD COLUMN IF NOT EXISTS schema_version INTEGER",
             "ALTER TABLE freetext_records ADD COLUMN IF NOT EXISTS app_version VARCHAR",
+            # 研究流程修复（2026-10）：全部是**加列**，不改写、不删除任何既有数据
+            "ALTER TABLE users ADD COLUMN IF NOT EXISTS account_id VARCHAR",
+            "CREATE INDEX IF NOT EXISTS ix_users_account_id ON users (account_id)",
+            "ALTER TABLE research_manifests "
+            "ADD COLUMN IF NOT EXISTS is_test BOOLEAN NOT NULL DEFAULT FALSE",
+            "ALTER TABLE research_manifests ADD COLUMN IF NOT EXISTS compatible_builds JSON",
+            "ALTER TABLE research_manifests ADD COLUMN IF NOT EXISTS survey_forms JSON",
+            "ALTER TABLE research_participants "
+            "ADD COLUMN IF NOT EXISTS enrolled_manifest_id VARCHAR",
+            "ALTER TABLE research_survey_instances "
+            "ADD COLUMN IF NOT EXISTS received_at TIMESTAMPTZ",
+            "ALTER TABLE research_survey_instances "
+            "ADD COLUMN IF NOT EXISTS updated_at TIMESTAMPTZ",
         ):
             _conn.execute(text(_ddl))
         _conn.commit()

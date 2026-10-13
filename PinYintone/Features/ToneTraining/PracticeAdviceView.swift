@@ -15,19 +15,18 @@ struct PracticeAdviceView: View {
     var body: some View {
         NavigationStack {
             ScrollView {
-                VStack(alignment: .leading, spacing: 18) {
+                VStack(alignment: .leading, spacing: Theme.Space.l) {
                     // 分区一：这个词该怎么读。**不声称用户发生了偏误**。
                     // 没有已核对提示时整块不渲染——不得套用别词提示。
                     if let hint = advice.teacherHint {
-                        section(title: "advice_target_title", body: hint, tint: .accentColor)
+                        section(title: "advice_target_title", body: hint)
                     }
 
                     // 分区二：这次的情况。只放一条主建议。
                     section(title: "advice_this_time_title",
-                            body: NSLocalizedString(advice.mainSentenceKey, comment: ""),
-                            tint: .secondary)
+                            body: NSLocalizedString(advice.mainSentenceKey, comment: ""))
 
-                    VStack(spacing: 10) {
+                    VStack(spacing: Theme.Space.s) {
                         actionButton("advice_action_listen", "speaker.wave.2") {
                             onPlaySample()
                         }
@@ -38,10 +37,12 @@ struct PracticeAdviceView: View {
                             dismiss(); onPracticeAgain()
                         }
                     }
-                    .padding(.top, 4)
+                    .padding(.top, Theme.Space.xs)
                 }
-                .padding(20)
+                .padding(.horizontal, Theme.pageMargin)
+                .padding(.vertical, Theme.Space.l)
             }
+            .background(Theme.secondaryBackground)
             .navigationTitle(NSLocalizedString("advice_title", comment: ""))
             .navigationBarTitleDisplayMode(.inline)
             .toolbar {
@@ -50,30 +51,26 @@ struct PracticeAdviceView: View {
                 }
             }
         }
+        .tint(Theme.primary)
     }
 
-    private func section(title: String, body: String, tint: Color) -> some View {
-        VStack(alignment: .leading, spacing: 6) {
-            Text(NSLocalizedString(title, comment: ""))
-                .font(.caption2.weight(.semibold))
-                .textCase(.uppercase).kerning(0.8)
-                .foregroundStyle(tint)
+    private func section(title: String, body: String) -> some View {
+        VStack(alignment: .leading, spacing: Theme.Space.s) {
+            SectionTitle(key: title)
             Text(body)
-                .font(.callout)
+                .font(.body)
+                .foregroundStyle(Theme.textPrimary)
                 .fixedSize(horizontal: false, vertical: true)
         }
         .frame(maxWidth: .infinity, alignment: .leading)
-        .padding(14)
-        .background(Color.secondary.opacity(0.08))
-        .clipShape(RoundedRectangle(cornerRadius: 12))
+        .surfaceCard()
     }
 
     private func actionButton(_ key: String, _ symbol: String,
                               _ action: @escaping () -> Void) -> some View {
         Button(action: action) {
             Label(NSLocalizedString(key, comment: ""), systemImage: symbol)
-                .frame(maxWidth: .infinity)
         }
-        .buttonStyle(.bordered)
+        .buttonStyle(SecondaryButtonStyle())
     }
 }

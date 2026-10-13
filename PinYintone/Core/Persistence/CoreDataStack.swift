@@ -20,6 +20,15 @@ final class CoreDataStack {
             $0.shouldMigrateStoreAutomatically = true
             $0.shouldInferMappingModelAutomatically = true
         }
+        #if DEBUG
+        // 单元测试用内存库：测试里走练习流程会落练习记录，不能留在 App 的正式本机库里——
+        // 留下来的未同步记录，下次正常启动这个 App 时会被自动同步传到后端。
+        if TestHost.isRunningUnitTests {
+            container.persistentStoreDescriptions.forEach {
+                $0.url = URL(fileURLWithPath: "/dev/null")
+            }
+        }
+        #endif
 
         var loadError: Error?
         container.loadPersistentStores { _, error in loadError = error }

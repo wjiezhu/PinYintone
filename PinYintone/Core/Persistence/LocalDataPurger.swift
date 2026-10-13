@@ -6,6 +6,7 @@ import Foundation
 /// App Store 审核指南 5.1.1(v)：提供账号注册的 App 必须能真正删除账号数据，
 /// 仅"退出登录"不满足要求。服务端删除由 `APIClient.deleteAccount` 负责，
 /// 本类负责机上残留（Core Data 三张表 + UserDefaults 里的游标/计数）。
+@MainActor
 enum LocalDataPurger {
 
     /// 需一并清除的本地进度键（与 CorpusLoader / ToneSequencer / ToneAttemptStore 对应）
@@ -21,12 +22,15 @@ enum LocalDataPurger {
         "pt_tone_cursor_training",
         "pt_tone_cursor_posttest",
         "pt_counterbalance_index",   // A/B 时期的历史键，仍需清理
+        "pt_tone_practice_cursor",
+        "pt_research_home_row_dismissed",
         FeedbackStyle.storageKey,
     ]
 
     static func purgeAll() {
         purgeCoreData()
         progressKeys.forEach { UserDefaults.standard.removeObject(forKey: $0) }
+        LearnerRecordingStore.shared.clear()
     }
 
     private static func purgeCoreData() {

@@ -1,74 +1,74 @@
 import SwiftUI
 
-/// 关卡 1：送气训练（/p/ /t/ /k/ · 吹散蒲公英）。
-/// 展示词条 → 500ms 噪声校准 → 对麦克风送气 → 振幅超阈 → 蒲公英飞散 → 通关。
+/// 送气练习（/p/ /t/ /k/ · 吹散蒲公英）。补充练习，不进入本轮研究的声调主分析。
+/// 展示词条 → 500ms 噪声校准 → 对麦克风送气 → 振幅超阈 → 蒲公英飞散 → 达标。
+///
+/// 达标后只在页面里给一行状态和「下一个词」，**不弹全屏庆祝遮罩**。
 struct AspirationView: View {
     @StateObject private var vm = AspirationViewModel()
+    @Environment(\.accessibilityReduceMotion) private var reduceMotion
 
     var body: some View {
-        VStack(spacing: 24) {
-            if let lex = vm.currentLexeme {
-                LexemeCardView(lexeme: lex)
-                Text(NSLocalizedString("aspiration_prompt", comment: ""))
-                    .font(.subheadline)
-                    .foregroundStyle(.secondary)
-                    .multilineTextAlignment(.center)
-            }
-
-            if !vm.calibrated {
-                ProgressView(NSLocalizedString("aspiration_calibrating", comment: ""))
-                    .frame(maxHeight: .infinity)
-            } else {
-                DandelionView(triggerRate: vm.triggerRate)
-                    .frame(width: 220, height: 220)
-
-                // 送气强度（百分比，用户友好）
-                Text("\(Int((vm.triggerRate * 100).rounded()))%")
-                    .font(.system(size: 34, weight: .bold, design: .rounded))
-                    .monospacedDigit()
-                    .foregroundStyle(vm.triggered ? .green : .orange)
-
-                ProgressView(value: Double(vm.triggerRate))
-                    .tint(vm.triggered ? .green : .orange)
-                    .animation(.easeInOut, value: vm.triggerRate)
-                    .padding(.horizontal)
-
-                Text(statusText)
-                    .font(.headline)
-                    .foregroundStyle(vm.triggered ? Color.green : Color.primary)
-
-                // 技术性失败提示（麦克风起不来 / 没录上）。用 mic.slash 图标，
-                // 与送气是否达标严格区分——后者才是发音评价。
-                if let hint = vm.retryHint {
-                    Label(hint, systemImage: "mic.slash")
-                        .font(.footnote)
-                        .foregroundStyle(.orange)
+        ScrollView {
+            VStack(spacing: Theme.Space.xl) {
+                if let lex = vm.currentLexeme {
+                    LexemeCardView(lexeme: lex)
+                    Text(NSLocalizedString("aspiration_prompt", comment: ""))
+                        .font(.body)
+                        .foregroundStyle(Theme.textSecondary)
                         .multilineTextAlignment(.center)
-                        .padding(.horizontal)
+                        .fixedSize(horizontal: false, vertical: true)
                 }
 
-                Spacer()
+                if !vm.calibrated {
+                    ProgressView(NSLocalizedString("aspiration_calibrating", comment: ""))
+                        .frame(minHeight: 220)
+                } else {
+                    DandelionView(triggerRate: vm.triggerRate)
+                        .frame(width: 200, height: 200)
+
+                    // 送气强度
+                    Text("\(Int((vm.triggerRate * 100).rounded()))%")
+                        .font(.title.weight(.semibold).monospacedDigit())
+                        .foregroundStyle(Theme.textPrimary)
+
+                    ProgressView(value: Double(vm.triggerRate))
+                        .tint(Theme.primary)
+                        .animation(reduceMotion ? nil : .easeInOut, value: vm.triggerRate)
+
+                    // 是否达标同时用图标和文字表达
+                    StatusLabel(kind: vm.triggered ? .success : .neutral, text: statusText)
+                }
+
+                // 技术性失败（麦克风起不来 / 没录上）。与送气是否达标严格区分。
+                if let hint = vm.retryHint {
+                    StatusLabel(kind: .warning, text: hint)
+                        .frame(maxWidth: .infinity, alignment: .leading)
+                }
+
+                if vm.passed {
+                    Button {
+                        vm.loadNextLexeme()
+                    } label: {
+                        Label(NSLocalizedString("tone_next_word", comment: ""),
+                              systemImage: "forward.end")
+                    }
+                    .buttonStyle(PrimaryButtonStyle())
+                    .accessibilityIdentifier("aspiration.next")
+                }
             }
+            .padding(.horizontal, Theme.pageMargin)
+            .padding(.vertical, Theme.Space.l)
+            .frame(maxWidth: .infinity)
         }
-        .padding()
+        .scrollBounceBehavior(.basedOnSize)
+        .background(Theme.background)
         .navigationTitle(NSLocalizedString("stage1_title", comment: ""))
         .navigationBarTitleDisplayMode(.inline)
         .onAppear {
             if vm.currentLexeme == nil { vm.loadNextLexeme() }
         }
         .onDisappear { vm.stop() }
-        .overlay {
-            if vm.passed {
-                // 关卡 1 沿用单按钮形态（不传 onNext）：行为与此前一致
-                FeedbackOverlayView(
-                    result: FeedbackResult(dtwScore: 0, grade: .excellent,
-                                           attemptNumber: 1, segments: []),
-                    onRetry: { vm.loadNextLexeme() }
-                )
-                .transition(.scale.combined(with: .opacity))
-            }
-        }
-        .animation(.spring(duration: 0.3), value: vm.passed)
     }
 
     private var statusText: String {

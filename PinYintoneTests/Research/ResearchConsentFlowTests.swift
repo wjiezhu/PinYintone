@@ -7,14 +7,10 @@ final class ResearchConsentFlowTests: XCTestCase {
 
     override func setUp() {
         super.setUp()
-        ResearchConsent.shared.withdraw()
-        ResearchIdentity.shared.clearOnWithdrawal()
-        ResearchEventLog.shared.clearPendingOnWithdrawal()
-        UserDefaults.standard.removeObject(forKey: "pt_research_manifest_config_id")
+        ResearchTestSupport.freshAccount()
     }
     override func tearDown() {
-        ResearchConsent.shared.withdraw()
-        ResearchIdentity.shared.clearOnWithdrawal()
+        ResearchTestSupport.tearDown()
         super.tearDown()
     }
 
@@ -65,41 +61,65 @@ final class ResearchConsentFlowTests: XCTestCase {
         }
     }
 
-    /// 谢绝后不得采集，且状态被记住以免反复打扰
-    func testDeclineStopsCollectionAndIsRemembered() {
-        ResearchConsent.shared.decline()
-        XCTAssertFalse(ResearchConsent.shared.allowsResearchCollection)
-        ResearchEventLog.shared.eligibility = .eligible
-        ResearchEventLog.shared.window = .init(start: Date().addingTimeInterval(-60),
-                                               end: Date().addingTimeInterval(3600))
-        XCTAssertFalse(ResearchEventLog.shared.log(.historyOpened),
-                       "谢绝研究后不得产生任何研究事件")
+    /// 同意只是「已同意待纳入」——**不等于已参加**，不产生任何研究日志
+    func testGrantIsNotEnrollment() {
+        ResearchConsent.grant()
+        let s = ResearchStore.shared.state
+        XCTAssertEqual(s.participation, .consentedPending)
+        XCTAssertEqual(s.consentVersion, ResearchConsent.textVersion)
+        XCTAssertNotNil(s.consentAt)
+        XCTAssertFalse(ResearchGate.shouldCollect())
+        XCTAssertFalse(ResearchEventLog.shared.log(.historyOpened))
     }
 
-    /// 未配置 manifest 时不得纳入——不能猜一个默认配置
-    func testEnrollFailsWithoutManifest() async {
-        do {
-            try await ResearchEnrollment.enrollCurrentUser(consentLanguage: "zh")
-            XCTFail("未配置 manifest 时不应纳入成功")
-        } catch {
-            XCTAssertFalse(ResearchIdentity.shared.isEnrolled)
+    /// 同意时记的是用户在 App 内选择并实际看到的界面语言，不是系统区域（R08）
+    func testConsentLanguageIsTheAppLanguageNotTheSystemLocale() {
+        let before = LocalizationManager.shared.language
+        defer { LocalizationManager.shared.setLanguage(before) }
+        for language in ["ar", "fr", "zh", "en"] {
+            LocalizationManager.shared.setLanguage(language)
+            ResearchConsent.grant()
+            XCTAssertEqual(ResearchStore.shared.state.consentLanguage, language)
+            XCTAssertTrue(["zh", "en", "fr", "ar"].contains(
+                ResearchStore.shared.state.consentLanguage ?? ""))
         }
     }
 
-    /// 撤回：即便联网失败，端侧也必须立即停采并清队列
-    func testWithdrawStopsCollectionEvenIfOffline() async {
-        ResearchConsent.shared.grant(textVersion: "c1", language: "zh")
-        ResearchIdentity.shared.store(participantID: "p1", manifestID: "m1", studyID: "s1")
-        ResearchEventLog.shared.eligibility = .eligible
-        ResearchEventLog.shared.window = .init(start: Date().addingTimeInterval(-60),
-                                               end: Date().addingTimeInterval(3600))
-        ResearchEventLog.shared.log(.historyOpened)
-        XCTAssertFalse(ResearchEventLog.shared.pending.isEmpty)
+    /// 谢绝后不采集，且状态被记住；之后仍可由用户主动重新进入
+    func testDeclineStopsCollectionAndIsRememberedButCanBeReopenedByTheUser() {
+        ResearchConsent.decline()
+        let s = ResearchStore.shared.state
+        XCTAssertEqual(s.participation, .declined)
+        XCTAssertFalse(ResearchGate.shouldCollect())
+        XCTAssertTrue(ResearchConsent.canOfferInvitation(s), "主动重新进入时可以再问")
+    }
 
-        await ResearchEnrollment.withdraw(language: "zh")   // 无后端，联网必失败
+    /// 已参与、已退出、已判不符合者不再被邀请
+    func testNoInvitationOnceEnrolledWithdrawnOrExcluded() {
+        for participation in [ResearchState.Participation.enrolled, .withdrawn, .ineligible] {
+            var s = ResearchState()
+            s.participation = participation
+            XCTAssertFalse(ResearchConsent.canOfferInvitation(s), "\(participation)")
+        }
+    }
 
-        XCTAssertTrue(ResearchEventLog.shared.pending.isEmpty, "撤回须清空待传队列")
-        XCTAssertFalse(ResearchConsent.shared.allowsResearchCollection)
-        XCTAssertFalse(ResearchIdentity.shared.isEnrolled)
+    /// 关键题当时没答（无法判定）的人可以主动回来重填；明确不符合的不行
+    func testRestartOnlyForUndeterminedEligibility() {
+        ResearchStore.shared.update { s in
+            s.participation = .ineligible
+            s.eligibility = "excluded:age"
+        }
+        ResearchConsent.restart()
+        XCTAssertEqual(ResearchStore.shared.state.participation, .ineligible)
+
+        ResearchStore.shared.update { $0.eligibility = "pending" }
+        ResearchConsent.restart()
+        XCTAssertEqual(ResearchStore.shared.state.participation, .notAsked)
+    }
+
+    /// 未审定的同意文本不能冒充正式版本
+    func testShippedConsentTextIsStillMarkedUnpublished() {
+        XCTAssertTrue(ResearchConsent.textVersion.contains("unpublished"),
+                      "研究者审定文本后才可去掉该标记，并须同步四语文案与配置")
     }
 }

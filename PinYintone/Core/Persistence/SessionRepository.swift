@@ -99,6 +99,32 @@ final class SessionRepository {
         return (try? context.fetch(req)) ?? []
     }
 
+    /// 学习记录页用：按时间倒序取本机**全部**声调记录，含技术失败。
+    ///
+    /// 技术失败的 `dtwScore` 是 -1 哨兵、`grade` 是 "n/a"——调用方必须按
+    /// `resultStatus` 单独标记它们，**不得**把哨兵当成绩显示或统计。
+    func fetchAllForHistory(limit: Int = 300) -> [TrainingSession] {
+        let req: NSFetchRequest<TrainingSession> = TrainingSession.fetchRequest()
+        req.sortDescriptors = [NSSortDescriptor(key: "timestamp", ascending: false)]
+        req.fetchLimit = limit
+        return (try? context.fetch(req)) ?? []
+    }
+
+    /// 最近一次**真正录上了**的声调练习（首页「继续练习」用）。
+    ///
+    /// 技术失败不算——没录上不算练过；自测也不算，它不是普通练习。
+    /// 一条都没有时返回 nil：首页据此只给普通练习入口，不编一条「上次练到」。
+    func lastPracticedWord() -> (lexemeID: String, at: Date)? {
+        let req: NSFetchRequest<TrainingSession> = TrainingSession.fetchRequest()
+        req.predicate = NSPredicate(
+            format: "(resultStatus == nil OR resultStatus != %@) AND (phase == nil OR phase == %@)",
+            ResultStatus.technicalRetry.rawValue, TrainingPhase.training.rawValue)
+        req.sortDescriptors = [NSSortDescriptor(key: "timestamp", ascending: false)]
+        req.fetchLimit = 1
+        guard let latest = (try? context.fetch(req))?.first else { return nil }
+        return (latest.lexemeID, latest.timestamp)
+    }
+
     /// 技术失败的次数。单独呈现——它反映的是录音是否顺利，不是发音水平。
     func technicalRetryCount() -> Int {
         let req: NSFetchRequest<TrainingSession> = TrainingSession.fetchRequest()

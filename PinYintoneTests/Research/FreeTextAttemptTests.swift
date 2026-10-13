@@ -9,17 +9,10 @@ final class FreeTextAttemptTests: XCTestCase {
 
     override func setUp() {
         super.setUp()
-        log.clearPendingOnWithdrawal()
-        ResearchSurveyTrigger.shared.reset()
-        ResearchEventLog.shared.eligibility = .eligible
-        ResearchEventLog.shared.window = .init(start: Date().addingTimeInterval(-60),
-                                               end: Date().addingTimeInterval(3600))
-        ResearchConsent.shared.grant(textVersion: "c1", language: "zh")
+        ResearchTestSupport.enrolledAccount()
     }
     override func tearDown() {
-        log.clearPendingOnWithdrawal()
-        ResearchSurveyTrigger.shared.reset()
-        ResearchConsent.shared.withdraw()
+        ResearchTestSupport.tearDown()
         super.tearDown()
     }
 
@@ -40,10 +33,10 @@ final class FreeTextAttemptTests: XCTestCase {
     /// 自由文本即便结果已显示，也不计入使用后问卷的 5 次阈值
     func testFreeTextNeverCountsTowardPostSurvey() {
         for _ in 0..<10 {
-            ResearchSurveyTrigger.shared.recordQualifyingAttempt(
+            SurveyCenter.recordQualifyingAttempt(
                 UUID(), taskType: .freeText, resultDisplayed: true)
         }
-        XCTAssertEqual(ResearchSurveyTrigger.shared.qualifyingCount, 0,
+        XCTAssertEqual(SurveyCenter.qualifyingCount, 0,
                        "自由文本不计入这 5 次")
     }
 

@@ -1,59 +1,70 @@
 import SwiftUI
 
-/// 角色选择页：[我是学生] [我是教师]
+/// 账号入口：学生（Sign in with Apple）或教师。
 struct RoleSelectView: View {
-    @State private var goStudent = false
-    @State private var goTeacher = false
+    var body: some View {
+        ScrollView {
+            VStack(alignment: .leading, spacing: Theme.Space.xl) {
+                BrandHeader()
+                    .padding(.top, Theme.Space.xl)
+
+                VStack(alignment: .leading, spacing: Theme.Space.s) {
+                    SectionTitle(key: "role_select_title")
+                    NavigationLink {
+                        StudentSignupView()
+                    } label: {
+                        EntryRow(icon: "graduationcap",
+                                 title: NSLocalizedString("role_student", comment: ""))
+                            .surfaceCard(padding: Theme.Space.m)
+                    }
+                    .buttonStyle(.plain)
+                    .accessibilityIdentifier("role.student")
+
+                    NavigationLink {
+                        TeacherSignupView()
+                    } label: {
+                        EntryRow(icon: "person.2",
+                                 title: NSLocalizedString("role_teacher", comment: ""))
+                            .surfaceCard(padding: Theme.Space.m)
+                    }
+                    .buttonStyle(.plain)
+                    .accessibilityIdentifier("role.teacher")
+                }
+
+                NavigationLink {
+                    LanguagePickerPage()
+                } label: {
+                    Label(NSLocalizedString("settings_language", comment: ""), systemImage: "globe")
+                        .font(.body.weight(.medium))
+                        .foregroundStyle(Theme.primary)
+                        .frame(minHeight: Theme.minTap)
+                        .contentShape(Rectangle())
+                }
+                .buttonStyle(.plain)
+                .accessibilityIdentifier("role.language")
+            }
+            .padding(.horizontal, Theme.pageMargin)
+            .padding(.bottom, Theme.Space.xl)
+        }
+        .background(Theme.background)
+        // 给下一页的返回键一个文字（否则是系统语言的「Back」）
+        .navigationTitle("PinYintone")
+        .toolbar(.hidden, for: .navigationBar)
+    }
+}
+
+/// 登录前改界面语言（选错了语言的人不该被困在看不懂的登录页上）
+struct LanguagePickerPage: View {
+    @Environment(\.dismiss) private var dismiss
 
     var body: some View {
-        VStack(spacing: 32) {
-            Spacer()
-            Image(systemName: "person.2.fill")
-                .font(.system(size: 56))
-                .foregroundStyle(.tint)
-            Text(NSLocalizedString("role_select_title", comment: ""))
-                .font(.title.bold())
-                .multilineTextAlignment(.center)
-            Spacer()
-            VStack(spacing: 16) {
-                roleButton(
-                    label: NSLocalizedString("role_student", comment: ""),
-                    icon: "graduationcap.fill",
-                    color: .blue
-                ) { goStudent = true }
-
-                roleButton(
-                    label: NSLocalizedString("role_teacher", comment: ""),
-                    icon: "person.badge.shield.checkmark.fill",
-                    color: .purple
-                ) { goTeacher = true }
-            }
-            .padding(.horizontal, 32)
-            .padding(.bottom, 48)
+        ScrollView {
+            LanguageChoiceList(marksCurrent: true) { dismiss() }
+                .padding(.horizontal, Theme.pageMargin)
+                .padding(.vertical, Theme.Space.l)
         }
-        .navigationTitle("")
-        .navigationBarBackButtonHidden(true)
-        .navigationDestination(isPresented: $goStudent) { StudentSignupView() }
-        .navigationDestination(isPresented: $goTeacher) { TeacherSignupView() }
-    }
-
-    private func roleButton(label: String, icon: String, color: Color, action: @escaping () -> Void) -> some View {
-        Button(action: action) {
-            HStack(spacing: 16) {
-                Image(systemName: icon)
-                    .font(.title2)
-                    .foregroundStyle(color)
-                    .frame(width: 36)
-                Text(label)
-                    .font(.headline)
-                Spacer()
-                Image(systemName: "chevron.right")
-                    .foregroundStyle(.secondary)
-            }
-            .padding()
-            .background(Color(.secondarySystemBackground))
-            .clipShape(RoundedRectangle(cornerRadius: 14))
-        }
-        .buttonStyle(.plain)
+        .background(Theme.background)
+        .navigationTitle(NSLocalizedString("settings_language", comment: ""))
+        .navigationBarTitleDisplayMode(.inline)
     }
 }

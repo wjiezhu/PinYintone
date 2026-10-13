@@ -68,6 +68,18 @@ nonisolated struct ResearchEvent: Codable, Equatable {
     let uiLanguage: String
     let payload: [String: String]
 
+    /// 上报时的字段名以服务端 `ResearchEventDTO` 为准。
+    ///
+    /// ⚠ 历史缺陷：本类型曾按属性名原样编码，事件名发成了 `name`，
+    /// 而服务端要的是 `eventName`——**真实 App 发出的每一条事件都被 422 拒收**。
+    /// 接口验证脚本自己拼的请求体字段是对的，所以脚本全绿、App 全丢。
+    /// `ResearchWireFormatTests` 现在逐字段对照两端。
+    enum CodingKeys: String, CodingKey {
+        case eventID, sessionID, attemptID, lexemeVersionID
+        case name = "eventName"
+        case occurredAt, sessionElapsedMs, uiLanguage, payload
+    }
+
     enum ValidationError: Error, Equatable {
         case missingAttemptID(ResearchEventName)
         case negativeElapsed(Int64)
