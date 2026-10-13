@@ -6,6 +6,10 @@ import Foundation
 /// 理想声调形状由 PinyinConverter 取声调 → ToneContour 合成（与声调训练一致）。
 @MainActor
 final class FreeWordPracticeViewModel: ObservableObject {
+
+    // 勿删：见 CLAUDE.md 禁令 18（隐式析构在 iOS 18.5 / 26.2 上实测崩溃）
+    nonisolated deinit {}
+
     @Published var studentF0: [Float] = []
     @Published var idealShape: [Float] = []     // 理想声调轮廓（归一化）
     @Published var currentTones: [Int] = []

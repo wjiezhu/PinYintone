@@ -18,6 +18,10 @@ import MetricKit
 /// 不上传任何堆栈或诊断正文——字典 §8：「不上传堆栈个人信息」。
 @MainActor
 final class ResearchCrashReporter: NSObject {
+
+    // 勿删：见 CLAUDE.md 禁令 18（隐式析构在 iOS 18.5 / 26.2 上实测崩溃）
+    nonisolated deinit {}
+
     static let shared = ResearchCrashReporter()
 
     private override init() { super.init() }

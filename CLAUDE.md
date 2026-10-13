@@ -127,3 +127,11 @@
     实例化 IO unit 并缓存其格式。若此刻会话停在 `.playback`（刚听完 TTS 示范或回听
     就是这种状态），拿到的是 0 Hz 无效格式，后续校验必然失败，
     表现为「听完示范再录音就起不来」。`AudioEngine.start()` 的步骤顺序不得调换
+18. **禁止删除各类里的 `nonisolated deinit {}`，新增 `class` 时必须同样补上**——
+    工程开了 `SWIFT_DEFAULT_ACTOR_ISOLATION = MainActor`，不写析构时编译器会合成
+    **隔离析构**，经 `swift_task_deinitOnExecutor` 释放对象。该路径在 iOS 18.5 与 26.2
+    的系统运行时里会 abort（`StopLookupScope` 释放未分配指针），26.4 正常；
+    表现为对象一释放进程就崩（退出练习页时 `ViewModel → AudioEngine` 即此路径）。
+    显式写出的析构不走这条路径。验证方式：单元测试须在 iOS 18.5 / 26.2 模拟器上各跑一遍，
+    只在最新系统上跑**测不出来**；另有 `scripts/check-isolated-deinit.sh` 直接查编译产物，
+    漏加的类会被点名（不依赖系统版本，也不依赖该类有没有测试）

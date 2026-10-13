@@ -13,6 +13,10 @@ import Foundation
 /// - 后测走完 → 停在完成态，不回退。
 @MainActor
 final class ToneSequencer: ObservableObject {
+
+    // 勿删：见 CLAUDE.md 禁令 18（隐式析构在 iOS 18.5 / 26.2 上实测崩溃）
+    nonisolated deinit {}
+
     static let shared = ToneSequencer()
 
     @Published private(set) var phase: TrainingPhase

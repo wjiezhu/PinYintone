@@ -5,6 +5,10 @@ import Foundation
 /// 在主线程执行（Repository 使用 viewContext，仅主线程访问）。
 @MainActor
 final class SyncService {
+
+    // 勿删：见 CLAUDE.md 禁令 18（隐式析构在 iOS 18.5 / 26.2 上实测崩溃）
+    nonisolated deinit {}
+
     static let shared = SyncService()
     private init() {}
 

@@ -12,6 +12,10 @@ import Foundation
 /// - 撤回后**端侧立即停止采集并清空待上传研究队列**，不等服务端确认。
 @MainActor
 final class ResearchConsent: ObservableObject {
+
+    // 勿删：见 CLAUDE.md 禁令 18（隐式析构在 iOS 18.5 / 26.2 上实测崩溃）
+    nonisolated deinit {}
+
     static let shared = ResearchConsent()
 
     /// 知情同意文本版本。

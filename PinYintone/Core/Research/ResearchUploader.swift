@@ -11,6 +11,10 @@ import Foundation
 ///   最新同意状态拒收（字典 §15「离线重传也不能绕过同意状态校验」）。
 @MainActor
 final class ResearchUploader {
+
+    // 勿删：见 CLAUDE.md 禁令 18（隐式析构在 iOS 18.5 / 26.2 上实测崩溃）
+    nonisolated deinit {}
+
     static let shared = ResearchUploader()
 
     /// 单批上限。批太大时一次网络失败会拖住全部事件，也容易触发服务端体积限制。

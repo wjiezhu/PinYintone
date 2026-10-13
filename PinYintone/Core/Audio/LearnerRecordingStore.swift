@@ -12,6 +12,10 @@ import Foundation
 /// 代价是进程结束即失去，无法跨启动回听。按当前保留策略这正是想要的行为。
 @MainActor
 final class LearnerRecordingStore: ObservableObject {
+
+    // 勿删：见 CLAUDE.md 禁令 18（隐式析构在 iOS 18.5 / 26.2 上实测崩溃）
+    nonisolated deinit {}
+
     static let shared = LearnerRecordingStore()
 
     /// 16 kHz 单声道 PCM。与 `AudioEngine.sampleRate` 一致。

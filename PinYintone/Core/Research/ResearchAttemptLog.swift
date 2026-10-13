@@ -50,6 +50,10 @@ nonisolated struct ResearchAttemptRecord: Codable, Equatable {
 /// 尝试记录的采集入口。与事件同样受研究门禁约束。
 @MainActor
 final class ResearchAttemptLog {
+
+    // 勿删：见 CLAUDE.md 禁令 18（隐式析构在 iOS 18.5 / 26.2 上实测崩溃）
+    nonisolated deinit {}
+
     static let shared = ResearchAttemptLog()
 
     private(set) var pending: [ResearchAttemptRecord] = []

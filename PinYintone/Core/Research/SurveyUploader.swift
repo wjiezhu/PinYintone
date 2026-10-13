@@ -6,6 +6,10 @@ import Foundation
 /// 符合条件后才上传背景实例」——未纳入就上传等于把不合格者的答案也收进研究库。
 @MainActor
 final class SurveyUploader {
+
+    // 勿删：见 CLAUDE.md 禁令 18（隐式析构在 iOS 18.5 / 26.2 上实测崩溃）
+    nonisolated deinit {}
+
     static let shared = SurveyUploader()
     private init() {}
 

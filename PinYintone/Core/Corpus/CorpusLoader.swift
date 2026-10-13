@@ -11,6 +11,10 @@ import Foundation
 /// - 游标写入 UserDefaults（每台设备每次安装独立），冷启动续接不归零，
 ///   避免每个 session 都从第一个词重新开始导致首词被过度采样。
 final class CorpusLoader {
+
+    // 勿删：见 CLAUDE.md 禁令 18（隐式析构在 iOS 18.5 / 26.2 上实测崩溃）
+    nonisolated deinit {}
+
     static let shared = CorpusLoader()
 
     private let lexemes: [Lexeme]

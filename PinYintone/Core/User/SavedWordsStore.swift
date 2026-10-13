@@ -4,6 +4,10 @@ import Foundation
 /// 收藏词条本地存储（UserDefaults 持久化）。新收藏置顶，自动去重。
 @MainActor
 final class SavedWordsStore: ObservableObject {
+
+    // 勿删：见 CLAUDE.md 禁令 18（隐式析构在 iOS 18.5 / 26.2 上实测崩溃）
+    nonisolated deinit {}
+
     static let shared = SavedWordsStore()
 
     @Published private(set) var words: [SavedWord] = []

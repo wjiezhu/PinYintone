@@ -4,6 +4,10 @@ import Foundation
 /// 从 Bundle 内 feedback_templates.json 按「评分等级 → 语言」随机抽取一条反馈语句。
 /// 语言沿用 app 四语：fr / zh / en / ar。
 final class FeedbackTemplateLoader {
+
+    // 勿删：见 CLAUDE.md 禁令 18（隐式析构在 iOS 18.5 / 26.2 上实测崩溃）
+    nonisolated deinit {}
+
     static let shared = FeedbackTemplateLoader()
 
     /// [gradeRawValue: [language: [模板语句]]]

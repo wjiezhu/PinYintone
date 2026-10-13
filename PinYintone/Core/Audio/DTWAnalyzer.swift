@@ -7,6 +7,9 @@ import Foundation
 /// - 通关线：归一化 DTW ≤ 0.5
 final class DTWAnalyzer {
 
+    // 勿删：见 CLAUDE.md 禁令 18（隐式析构在 iOS 18.5 / 26.2 上实测崩溃）
+    nonisolated deinit {}
+
     /// 评分上限（有限哨兵值）。任一侧无有声帧时返回此值而非 .infinity：
     /// Float.infinity 无法被 JSONEncoder 编码，会导致训练记录同步失败且 UI 显示 "inf"。
     /// 9.99 远超通关线 0.5，语义仍是 fail。

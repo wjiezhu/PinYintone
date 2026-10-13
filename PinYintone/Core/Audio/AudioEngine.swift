@@ -15,6 +15,9 @@ import Foundation
 /// - `isRecording` / `currentTime` 为线程安全的只读属性
 final class AudioEngine {
 
+    // 勿删：见 CLAUDE.md 禁令 18（隐式析构在 iOS 18.5 / 26.2 上实测崩溃）
+    nonisolated deinit {}
+
     enum AudioEngineError: Error {
         case converterUnavailable      // 无法创建 AVAudioConverter
         case engineStartFailed(Error)  // AVAudioEngine 启动失败

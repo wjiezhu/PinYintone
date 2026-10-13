@@ -16,6 +16,10 @@ import Foundation
 /// ⚠ 积分**不是**声调能力或教学效果指标，导出与论文中不得如此解读。
 @MainActor
 final class RewardLedger: ObservableObject {
+
+    // 勿删：见 CLAUDE.md 禁令 18（隐式析构在 iOS 18.5 / 26.2 上实测崩溃）
+    nonisolated deinit {}
+
     static let shared = RewardLedger()
 
     private enum Key {
@@ -83,6 +87,10 @@ final class RewardLedger: ObservableObject {
 /// 未参加研究者不生成镜像，但业务积分照发。
 @MainActor
 final class RewardEventLog {
+
+    // 勿删：见 CLAUDE.md 禁令 18（隐式析构在 iOS 18.5 / 26.2 上实测崩溃）
+    nonisolated deinit {}
+
     static let shared = RewardEventLog()
     private(set) var pending: [Record] = []
     private init() {}

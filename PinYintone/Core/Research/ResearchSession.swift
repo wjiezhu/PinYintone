@@ -9,6 +9,10 @@ import Foundation
 /// 用它做差值会出现负数或跳变，而字典要求该值非负且单调。
 @MainActor
 final class ResearchSession {
+
+    // 勿删：见 CLAUDE.md 禁令 18（隐式析构在 iOS 18.5 / 26.2 上实测崩溃）
+    nonisolated deinit {}
+
     static let shared = ResearchSession()
 
     /// 后台超过此时长即视为新会话
