@@ -22,7 +22,7 @@ final class MicrophonePermissionUITests: PinYintoneUITestCase {
     private func openPractice(reset: Bool) {
         launch(reset: reset, baseURL: Self.offlineURL, language: "fr", audio: "off",
                login: newLoginID("mic"))
-        if reset { signIn() }
+        signIn()
         tap(app.buttons["home.tone"])
         let record = app.buttons["practice.record"]
         XCTAssertTrue(record.waitForExistence(timeout: 10))
@@ -71,7 +71,9 @@ final class MicrophonePermissionUITests: PinYintoneUITestCase {
     /// 在系统设置里恢复权限之后：不用重装，回到 App 就能录——录音引擎能启动。
     func testRecordingWorksAfterPermissionIsRestored() throws {
         try requireState("granted")
-        openPractice(reset: false)
+        // 每个用例结束后 App 都会被清回未登录状态，所以这里重新登录；
+        // 系统里的麦克风权限不随 App 状态重置而变
+        openPractice(reset: true)
         let record = app.buttons["practice.record"]
         record.tap()
         let stopLabel = NSPredicate(format: "label CONTAINS[c] 'Arr'")
