@@ -163,6 +163,7 @@ struct SurveyFormView: View {
                 .foregroundStyle(Theme.textSecondary)
                 .accessibilityLabel(String(format: NSLocalizedString("survey_progress_a11y", comment: ""),
                                            draft.index + 1, form.questions.count))
+                .accessibilityIdentifier("survey.progress.\(draft.index + 1)")
             ProgressView(value: Double(draft.index + 1), total: Double(form.questions.count))
                 .tint(Theme.primary)
                 .accessibilityHidden(true)

@@ -77,7 +77,63 @@ final class ScreenTourUITests: PinYintoneUITestCase {
         shot("tour-17-aspiration")
     }
 
-    /// 没录到声音：琥珀色的技术失败说明，**不是低分**；录音键原地可再点。
+    /// A14 / A15 / A24：示范 → 录音 → 回听 → 再录，连续三轮；再换词、切模式。
+    /// 录音键在待录、录音中、有结果各状态下**位置和大小都不变**，两侧按钮也不动。
+    ///
+    /// 这里的录音是合成信号，验证的是界面状态机与播放互斥；
+    /// 真实麦克风与音频会话要在真机上验。
+    func testRecordButtonStaysPutAcrossStatesAndRounds() {
+        launch(reset: true, baseURL: Self.offlineURL, language: "zh",
+               login: newLoginID("tour-stable"))
+        signIn()
+        tap(app.buttons["home.tone"])
+        let record = app.buttons["practice.record"]
+        let listen = app.buttons["practice.listen"]
+        let next = app.buttons["practice.next"]
+        XCTAssertTrue(record.waitForExistence(timeout: 10))
+        let enabled = NSPredicate(format: "isEnabled == true")
+        expectation(for: enabled, evaluatedWith: record)
+        waitForExpectations(timeout: 10)
+        let home = (record.frame, listen.frame, next.frame)
+
+        func assertUnmoved(_ state: String, file: StaticString = #filePath, line: UInt = #line) {
+            XCTAssertEqual(record.frame, home.0, "\(state)：录音键移位了", file: file, line: line)
+            XCTAssertEqual(listen.frame, home.1, "\(state)：示范键移位了", file: file, line: line)
+            XCTAssertEqual(next.frame, home.2, "\(state)：下一词键移位了", file: file, line: line)
+        }
+
+        for round in 1...3 {
+            listen.tap()                                   // 听示范
+            Thread.sleep(forTimeInterval: 0.6)
+            assertUnmoved("第 \(round) 轮 示范播放中")
+            record.tap()                                   // 播放中直接开始录音：先停播放
+            Thread.sleep(forTimeInterval: 0.8)
+            assertUnmoved("第 \(round) 轮 录音中")
+            XCTAssertFalse(listen.isEnabled, "录音时不能再播放示范")
+            XCTAssertFalse(next.isEnabled, "录音时不能切词")
+            XCTAssertFalse(app.buttons["practice.wordPicker"].isEnabled, "录音时不能选词")
+            Thread.sleep(forTimeInterval: 0.5)
+            record.tap()                                   // 停止
+            XCTAssertTrue(app.buttons["practice.tryAgain"].waitForExistence(timeout: 10),
+                          "第 \(round) 轮没有出结果")
+            assertUnmoved("第 \(round) 轮 结果显示后")
+            tap(app.buttons["practice.replay"])            // 回听
+            Thread.sleep(forTimeInterval: 0.5)
+            listen.tap()                                   // 回听中点示范：两者互斥，不该崩
+            Thread.sleep(forTimeInterval: 0.5)
+            assertUnmoved("第 \(round) 轮 回听与示范切换后")
+        }
+        app.buttons["practice.mode.colour"].tap()
+        assertUnmoved("切到颜色模式后")
+        app.buttons["practice.mode.curve"].tap()
+        next.tap()
+        expectation(for: enabled, evaluatedWith: record)
+        waitForExpectations(timeout: 10)
+        assertUnmoved("换到下一词后")
+        XCTAssertTrue(app.buttons["home.tone"].exists == false, "仍在练习页")
+    }
+
+    /// 没录到声音：技术失败说明，**不是低分**；录音键原地可再点。
     func testTourTechnicalFailure() {
         launch(reset: true, baseURL: Self.offlineURL, language: "zh", audio: "silent",
                login: newLoginID("tour-silent"))
@@ -89,6 +145,14 @@ final class ScreenTourUITests: PinYintoneUITestCase {
         XCTAssertFalse(app.buttons["practice.tryAgain"].exists, "技术失败不显示成绩区")
         shot("tour-20-practice-technical-failure")
         XCTAssertTrue(app.buttons["practice.record"].isEnabled, "技术失败后可以直接重录")
+        // 没有研究配置时：研究入口不出现，本机也不积攒任何研究记录（A01）
+        app.navigationBars.buttons.element(boundBy: 0).tap()
+        XCTAssertFalse(app.buttons["home.research"].exists)
+        tab(2)
+        XCTAssertEqual(debugValue("participation"), "notAsked")
+        XCTAssertEqual(debugValue("collecting"), "no")
+        XCTAssertEqual(debugValue("pendingAttempts"), "0")
+        XCTAssertEqual(debugValue("pendingEvents"), "0")
     }
 
     /// 四种界面语言的关键页（需求 U07 / A25）。阿拉伯语为从右到左，

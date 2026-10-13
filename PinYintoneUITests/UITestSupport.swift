@@ -141,10 +141,16 @@ class PinYintoneUITestCase: XCTestCase {
         XCTAssertTrue(agree.waitForExistence(timeout: 10), file: file, line: line)
         XCTAssertFalse(agree.isEnabled, "未勾选之前「同意」不可点——不默认勾选", file: file, line: line)
         let toggle = app.switches["consent.toggle"]
-        for _ in 0..<6 where !toggle.exists || !toggle.isHittable { app.swipeUp() }
+        // 开关在说明的最末尾。要滚到它**整个**露在底部按钮栏之上再点：
+        // 只露出一半时 isHittable 也是 true，点下去会落在按钮栏的「暂不参加」上。
+        let barTop = agree.frame.minY
+        for _ in 0..<8 where !toggle.exists || toggle.frame.maxY > barTop - 8 { app.swipeUp() }
         XCTAssertTrue(toggle.waitForExistence(timeout: 5), file: file, line: line)
+        XCTAssertLessThan(toggle.frame.maxY, barTop, "同意开关应能滚到按钮栏之上",
+                          file: file, line: line)
         // SwiftUI 的 Toggle：点整行不一定切换，点右侧的开关本体
         toggle.coordinate(withNormalizedOffset: CGVector(dx: 0.92, dy: 0.5)).tap()
+        XCTAssertTrue(agree.waitForExistence(timeout: 5), file: file, line: line)
         XCTAssertTrue(agree.isEnabled, "勾选后应可同意", file: file, line: line)
         agree.tap()
     }
