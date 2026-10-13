@@ -1,0 +1,93 @@
+# 每个 PR、以及 main 上的每次提交都跑：后端 pytest + iOS 单元测试。
+#
+# iOS 这边**故意**在旧系统模拟器上也跑：隐式隔离析构崩溃（CLAUDE.md 禁令 18）
+# 在 iOS 18.5 / 26.2 上必现、在 26.4 上不出现，只跑最新系统测不出来。
+#
+# 旧系统的版本号是写死的，不是「取镜像里最旧的」：GitHub 的 runner 镜像哪天
+# 不再带这个版本，对应那一路会直接报错并列出可用机型，到时改下面 matrix 即可。
+# 这比覆盖范围悄悄缩水、而 CI 仍然全绿要好。
+name: CI
+
+on:
+  pull_request:
+  push:
+    branches: [main]
+
+concurrency:
+  group: ci-${{ github.ref }}
+  cancel-in-progress: true
+
+permissions:
+  contents: read
+
+jobs:
+  backend:
+    name: 后端 pytest
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    defaults:
+      run:
+        working-directory: backend
+    steps:
+      - uses: actions/checkout@v7
+      - uses: actions/setup-python@v7
+        with:
+          # 与线上一致的 3.12（render.yaml / runtime.txt）
+          python-version-file: backend/.python-version
+          cache: pip
+          cache-dependency-path: |
+            backend/requirements.txt
+            backend/requirements-dev.txt
+      - name: 安装依赖
+        run: pip install -r requirements.txt -r requirements-dev.txt
+      - name: pytest
+        run: pytest tests/ -q
+
+  ios:
+    name: iOS 单元测试（iOS ${{ matrix.os }}）
+    runs-on: ${{ matrix.runner }}
+    timeout-minutes: 40
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          # iOS 18.5 的模拟器只在 macos-15 镜像里有，那上面最新的 Xcode 是 26.3
+          - { runner: macos-15, xcode: "26.3",   os: "18.5",   device: "iPhone 16 Pro" }
+          # 26.4.1 与本机开发环境一致；26.2 是实测会崩的系统版本
+          - { runner: macos-26, xcode: "26.4.1", os: "26.2",   device: "iPhone 17 Pro" }
+          - { runner: macos-26, xcode: "26.4.1", os: "latest", device: "iPhone 17 Pro" }
+    steps:
+      - uses: actions/checkout@v7
+
+      - name: 选定 Xcode ${{ matrix.xcode }}
+        run: |
+          sudo xcode-select -s "/Applications/Xcode_${{ matrix.xcode }}.app"
+          xcodebuild -version
+
+      # 只跑单元测试（PinYintoneTests），不跑 UI 测试。
+      # 关掉并行：并行会克隆多个模拟器，崩溃时日志互相穿插，很难看出是哪个用例。
+      - name: 单元测试
+        run: |
+          set -o pipefail
+          xcodebuild test \
+            -project PinYintone.xcodeproj \
+            -scheme PinYintone \
+            -destination "platform=iOS Simulator,OS=${{ matrix.os }},name=${{ matrix.device }}" \
+            -only-testing:PinYintoneTests \
+            -parallel-testing-enabled NO \
+            -derivedDataPath build/dd \
+            CODE_SIGNING_ALLOWED=NO
+
+      - name: 检查隔离析构（CLAUDE.md 禁令 18）
+        run: scripts/check-isolated-deinit.sh build/dd/Build/Products/Debug-iphonesimulator/PinYintone.app
+
+      - name: 失败时上传测试结果与崩溃报告
+        if: failure()
+        uses: actions/upload-artifact@v7
+        with:
+          name: ios-${{ matrix.os }}-failure
+          path: |
+            build/dd/Logs/Test/*.xcresult
+            ~/Library/Logs/DiagnosticReports/*.ips
+          if-no-files-found: ignore
+          retention-days: 7
