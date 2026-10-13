@@ -237,7 +237,7 @@ struct ToneTrainingView: View {
             }
             // 换词提示：连续几次没通过时给一个出口，不是评价
             if vm.consecutiveFailures >= vm.skipHintThreshold {
-                Text(NSLocalizedString("tone_skip_hint", comment: ""))
+                Text(NSLocalizedString("feedback_skip_hint", comment: ""))
                     .font(.subheadline)
                     .foregroundStyle(Theme.textSecondary)
                     .fixedSize(horizontal: false, vertical: true)

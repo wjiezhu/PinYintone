@@ -83,8 +83,8 @@
 "grade_good" = "Bien";
 "grade_needs_practice" = "Continue à t'entraîner";
 "grade_fail" = "Réessaie";
-"legend_native" = "Natif";
-"legend_you" = "Toi";
+"legend_native" = "Référence";
+"legend_you" = "Cette tentative";
 "feedback_continue" = "Continuer";
 "settings_delete_account" = "Supprimer le compte";
 "settings_delete_footer" = "Supprime définitivement votre compte et tous vos enregistrements de pratique. Action irréversible.";
@@ -97,7 +97,7 @@
 "feedback_next_word" = "Mot suivant";
 "feedback_skip_hint" = "Ce mot est difficile — vous pouvez le passer et y revenir plus tard.";
 "tone_retry_mic_unavailable" = "Impossible de démarrer l'enregistrement. Vérifiez qu'aucune autre app n'utilise le micro, puis réessayez.";
-"tone_retry_no_voice" = "Je n'ai pas bien entendu. Rapprochez-vous du micro et réessayez.";
+"tone_retry_no_voice" = "Aucune voix n’a été enregistrée. Rapprochez-vous du micro et enregistrez à nouveau.";
 "replay_own_recording" = "Réécouter mon enregistrement";
 "replay_failed" = "Impossible de lire votre enregistrement. Veuillez réessayer.";
 "record_start" = "Démarrer l'enregistrement";
@@ -133,7 +133,7 @@
 "saved_words_empty" = "Aucun mot enregistré. Touche le marque-page pendant l'entraînement pour en ajouter.";
 "save_word" = "Enregistrer le mot";
 "saved_words_practice_count" = "%d pratiques";
-"play_sample" = "Écouter";
+"play_sample" = "Écouter le modèle";
 
 // Aide / instructions
 "help_title" = "Comment utiliser";
@@ -144,20 +144,6 @@
 "help_privacy" = "Aucun enregistrement n'est envoyé — seulement les résultats d'analyse (scores), à des fins de recherche.";
 
 // ── Phases de recherche (spec §3.1) ──────────────────
-"phase_pretest" = "Pré-test";
-"phase_training" = "Entraînement";
-"phase_posttest" = "Post-test";
-"phase_goal_pretest" = "Ce tour enregistre seulement : ni note, ni couleur, ni courbe. Prononcez comme vous le faites aujourd'hui.";
-"phase_goal_training" = "Écoutez → enregistrez → lisez le retour → recommencez.";
-"phase_goal_posttest" = "Ce tour enregistre seulement lui aussi : ni note, ni couleur, ni courbe.";
-"phase_complete_title" = "Phase terminée";
-"phase_complete_pretest" = "Pré-test terminé. L'entraînement commence.";
-"phase_complete_training" = "L'entraînement n'a pas de fin fixe — continuez quand vous voulez.";
-"phase_complete_posttest" = "Post-test terminé. Merci de votre participation.";
-"phase_start_posttest" = "Commencer le post-test";
-"blind_ready" = "Appuyez sur enregistrer quand vous êtes prêt·e.";
-"blind_recording" = "Enregistrement…";
-"assessment_recorded" = "Enregistré";
 "tone_next_word" = "Mot suivant";
 
 // Conditions de retour (A/B intra-sujet, liées aux listes de mots, pas aux apprenants)
@@ -177,10 +163,10 @@
 "onboarding_mic_skip" = "Plus tard, je regarde d'abord";
 
 // 反馈显示模式（学习者自选，非实验分组）
-"condition_staticColor" = "Blocs de couleur";
-"condition_dynamicF0" = "Courbe de hauteur";
+"condition_staticColor" = "Couleur";
+"condition_dynamicF0" = "Courbe";
 "settings_feedback_style" = "Type de retour";
-"settings_feedback_style_footer" = "Comment votre résultat s'affiche pendant l'entraînement. Les deux utilisent le même seuil de réussite : changer ne modifie jamais votre score. Ni le pré-test ni le post-test n'affichent de retour.";
+"settings_feedback_style_footer" = "Comment votre résultat s’affiche pendant la pratique. Les deux utilisent le même seuil de réussite : changer ne modifie jamais votre score. L’auto-test n’affiche aucun retour dans les deux cas.";
 "tone_slot_a11y" = "Caractère %1$d : ton %2$d, %3$@";
 
 // 教练提示卡：一次一条可执行动作（档案 §4.3）
@@ -261,3 +247,111 @@
 "history_empty" = "Aucun exercice enregistré pour l'instant.";
 "history_attempt_n" = "Essai %d";
 "history_footer_note" = "Un journal de ce que vous avez travaillé. Ce n'est pas une note d'examen.";
+
+/* 2026-10 研究流程与界面改版 */
+"common_dismiss" = "Fermer ce message";
+"common_more" = "Plus";
+"common_retry" = "Réessayer";
+"tab_practice" = "Pratique";
+"tab_history" = "Historique";
+"tab_settings" = "Réglages";
+"tab_teacher" = "Enseignant";
+"home_continue" = "Continuer";
+"home_words" = "Mots";
+"home_more" = "Autres exercices";
+"home_research_invite" = "Participer à une étude (facultatif)";
+"home_research_resume" = "Terminer l’inscription à l’étude";
+"home_survey_pre" = "Poursuivre le questionnaire préalable";
+"home_survey_post" = "Poursuivre le questionnaire d’avis";
+"tone_stage_preparing" = "Préparation de la référence…";
+"tone_stage_ready" = "Touchez le micro ci-dessous pour enregistrer, puis touchez-le à nouveau pour arrêter.";
+"tone_stage_recording" = "Enregistrement en cours. Touchez à nouveau quand vous avez terminé.";
+"tone_stage_analyzing" = "Analyse en cours…";
+"tone_fail_mic_denied" = "Le micro est désactivé. Autorisez Pinyintone à utiliser le micro dans Réglages, puis revenez ici.";
+"tone_fail_interrupted" = "L’enregistrement a été interrompu ; il n’y a pas de résultat. Veuillez enregistrer à nouveau.";
+"tone_fail_analysis" = "Cet enregistrement n’a pas pu être analysé. Veuillez enregistrer à nouveau.";
+"result_title" = "Cette tentative";
+"result_try_again" = "Réessayer";
+"result_score_a11y" = "Cette tentative : %d sur 100";
+"replay_stop" = "Arrêter la lecture";
+"sample_stop" = "Arrêter le modèle";
+"chart_empty" = "Votre courbe de hauteur s’affichera ici après l’enregistrement.";
+"chart_a11y_reference_only" = "Courbe de hauteur de référence";
+"chart_a11y_with_yours" = "Courbe de référence et votre courbe pour cette tentative";
+"mic_explain_title" = "Utilisation du micro";
+"word_picker_title" = "Choisir un mot";
+"word_picker_search" = "Rechercher des caractères ou du pinyin";
+"word_picker_empty" = "Aucun mot correspondant.";
+"word_current" = "Mot actuel";
+"self_test_title" = "Auto-test";
+"self_test_start" = "Commencer un auto-test";
+"self_test_exit" = "Quitter l’auto-test";
+"self_test_progress" = "Mot %1$d sur %2$d";
+"self_test_ready" = "Touchez le micro ci-dessous pour enregistrer. Aucun résultat n’est affiché pendant l’auto-test.";
+"self_test_saving" = "Sauvegarde en cours…";
+"self_test_recorded" = "Enregistré.";
+"self_test_done_title" = "Auto-test terminé";
+"self_test_done_body" = "Tous les mots ont été enregistrés. L’auto-test n’affiche ni note ni évaluation.";
+"self_test_back_to_practice" = "Retour à la pratique";
+"history_filter" = "Filtrer";
+"history_filter_all" = "Tout";
+"history_kind_fixed" = "Liste de mots";
+"history_kind_free" = "Texte libre";
+"history_kind_self_test" = "Auto-test";
+"history_status_recorded" = "Enregistré";
+"history_status_technical" = "Non enregistré";
+"history_empty_filtered" = "Aucun enregistrement de ce type pour l’instant.";
+"settings_support" = "Aide et commentaires";
+"research_section" = "Participation à l’étude";
+"research_section_footer" = "La participation est volontaire et n’a aucune incidence sur les fonctionnalités. Quitter l’étude ne supprime ni votre compte ni votre historique.";
+"research_status" = "Statut";
+"research_status_not_joined" = "Non participant";
+"research_status_closed" = "Non ouverte pour le moment";
+"research_status_consented" = "Accepté, non terminé";
+"research_status_pending" = "En attente d’envoi";
+"research_status_enrolled" = "Participant";
+"research_status_ineligible" = "Non retenu cette fois";
+"research_status_withdrawn" = "Étude quittée";
+"research_status_withdrawn_pending" = "Étude quittée (confirmation en attente de connexion)";
+"research_join" = "En savoir plus et participer";
+"research_resume" = "Poursuivre l’inscription";
+"research_rejoin" = "Répondre à nouveau aux questions de profil";
+"research_sync_now" = "Envoyer maintenant les données en attente";
+"research_withdraw" = "Quitter l’étude";
+"research_withdraw_confirm_title" = "Quitter l’étude ?";
+"research_withdraw_confirm_message" = "La collecte s’arrête immédiatement et les données d’étude non encore envoyées sont effacées de cet appareil. Votre compte et votre historique ne sont pas concernés. Vous ne pourrez pas rejoindre l’étude pendant cette période.";
+"research_withdrawn_body" = "Vous avez quitté l’étude ; plus aucune donnée d’étude n’est collectée. Vous pouvez continuer à utiliser toutes les fonctionnalités.";
+"research_enrolling" = "Confirmation en cours…";
+"research_enroll_saved_hint" = "Vos réponses sont enregistrées sur cet appareil. Vous pouvez réessayer maintenant, ou pratiquer d’abord et reprendre plus tard dans Réglages → Participation à l’étude.";
+"research_enroll_refused" = "Vous ne pouvez pas rejoindre l’étude pour le moment. Vous pouvez continuer à utiliser toutes les fonctionnalités.";
+"research_continue_later" = "Plus tard — aller pratiquer";
+"research_enrolled_title" = "Vous participez à l’étude";
+"research_enrolled_body" = "Merci. Vous pouvez quitter l’étude à tout moment dans Réglages → Participation à l’étude.";
+"research_enrolled_pending_body" = "Vous participez à l’étude. Vos réponses de profil sont enregistrées sur cet appareil et seront envoyées automatiquement dès que vous serez en ligne.";
+"research_start_practice" = "Commencer à pratiquer";
+"research_ineligible_title" = "Merci pour vos réponses";
+"research_ineligible_body" = "D’après vos réponses, cette étude ne collectera pas vos données. Vos réponses n’ont pas été envoyées. Vous pouvez continuer à utiliser toutes les fonctionnalités.";
+"research_not_open_title" = "Non ouverte pour le moment";
+"research_not_open_body" = "L’étude n’accepte pas de participants pour le moment. Vous pouvez continuer à utiliser toutes les fonctionnalités.";
+"consent_version_line" = "Version de la notice : %@";
+"consent_draft_notice" = "Ceci est une version d’essai de la notice. Elle n’a pas été approuvée et ne sert pas à l’étude officielle.";
+"survey_start_now" = "Répondre maintenant";
+"survey_later" = "Répondre plus tard";
+"survey_decline" = "Ne pas répondre";
+"survey_pre_name" = "Questionnaire préalable";
+"survey_post_name" = "Questionnaire d’avis";
+"survey_pre_invite_title" = "Questionnaire préalable (6 questions)";
+"survey_pre_invite_body" = "Avant de commencer, accepteriez-vous de répondre à quelques questions sur votre apprentissage des tons ? Vous pouvez passer une question ou répondre plus tard.";
+"survey_post_invite_title" = "Questionnaire d’avis (5 questions)";
+"survey_post_invite_body" = "Vous avez pratiqué plusieurs fois. Accepteriez-vous de prendre une ou deux minutes pour nous dire comment cela s’est passé ? Vos réponses n’ont aucune incidence sur votre pratique et vous pouvez passer n’importe quelle question.";
+"survey_progress_a11y" = "Question %1$d sur %2$d";
+"survey_status_invited" = "Non commencé";
+"survey_status_deferred" = "À terminer plus tard";
+"survey_status_declined" = "Refusé";
+"survey_status_saved_pending" = "Enregistré, en attente d’envoi";
+"survey_status_submitted" = "Envoyé";
+"survey_status_not_accepted" = "Envoi impossible (la période de l’étude est terminée)";
+"survey_thanks" = "Merci pour vos réponses.";
+"survey_saved_pending_body" = "Vos réponses sont enregistrées sur cet appareil et seront envoyées automatiquement dès que vous serez en ligne. Vous pouvez aussi réessayer maintenant.";
+"survey_unavailable" = "Ce questionnaire n’est pas disponible pour le moment.";
+"issue_mail_opened" = "Votre application de messagerie s’est ouverte. Votre message est envoyé par e-mail et n’est pas ajouté aux données de l’étude.";

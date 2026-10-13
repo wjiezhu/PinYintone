@@ -46,16 +46,12 @@ final class SurveyOutcomeTests: XCTestCase {
         let eligible = outcome([("B01", ["adult"], .answered),
                                 ("B02", ["MA"], .answered),
                                 ("B03", ["hsk3"], .answered)])
-        XCTAssertEqual(ResearchEligibility.evaluate(
-            isAdult: eligible.isAdult, nationalities: eligible.nationalities,
-            courseStage: eligible.courseStage, consentGranted: true,
-            priorUse: .init(status: .new, evidence: .selfReport)), .eligible)
+        XCTAssertEqual(ResearchEligibility.evaluate(background: eligible, consentGranted: true),
+                       .eligible)
 
-        // 跳过背景表 → pending，不是「不合格」，也不纳入
+        // 跳过关键题 → pending，不是「不合格」，也不纳入：缺失不推定符合
         let unknown = outcome([("B01", nil, .skipped)])
-        XCTAssertEqual(ResearchEligibility.evaluate(
-            isAdult: unknown.isAdult, nationalities: unknown.nationalities,
-            courseStage: unknown.courseStage, consentGranted: true,
-            priorUse: .init(status: .new, evidence: .selfReport)), .pending)
+        XCTAssertEqual(ResearchEligibility.evaluate(background: unknown, consentGranted: true),
+                       .pending)
     }
 }

@@ -85,8 +85,8 @@
 "grade_good" = "جيد";
 "grade_needs_practice" = "واصل التدريب";
 "grade_fail" = "حاول مجدداً";
-"legend_native" = "متحدث أصلي";
-"legend_you" = "أنت";
+"legend_native" = "المرجع";
+"legend_you" = "هذه المحاولة";
 "feedback_continue" = "متابعة";
 "settings_delete_account" = "حذف الحساب";
 "settings_delete_footer" = "سيتم حذف حسابك وجميع سجلات التدريب نهائياً. لا يمكن التراجع عن هذا الإجراء.";
@@ -99,7 +99,7 @@
 "feedback_next_word" = "الكلمة التالية";
 "feedback_skip_hint" = "هذه الكلمة صعبة — يمكنك تخطيها والعودة إليها لاحقاً.";
 "tone_retry_mic_unavailable" = "تعذّر بدء التسجيل. تأكّد من عدم استخدام تطبيق آخر للميكروفون، ثم أعد المحاولة.";
-"tone_retry_no_voice" = "لم أسمع بوضوح. اقترب من الميكروفون وحاول مجدداً.";
+"tone_retry_no_voice" = "لم يُسجَّل أي صوت. اقترب من الميكروفون وسجّل من جديد.";
 "replay_own_recording" = "الاستماع إلى تسجيلي";
 "replay_failed" = "تعذر تشغيل تسجيلك. يرجى المحاولة مرة أخرى.";
 "record_start" = "بدء التسجيل";
@@ -135,7 +135,7 @@
 "saved_words_empty" = "لا توجد كلمات محفوظة بعد. اضغط على العلامة أثناء التدريب لإضافتها.";
 "save_word" = "حفظ الكلمة";
 "saved_words_practice_count" = "تدربت %d مرة";
-"play_sample" = "استمع";
+"play_sample" = "تشغيل النموذج";
 
 // كيفية الاستخدام
 "help_title" = "كيفية الاستخدام";
@@ -146,20 +146,6 @@
 "help_privacy" = "لا يُرفع أي تسجيل صوتي — فقط نتائج التحليل (الدرجات)، لأغراض البحث.";
 
 // ── مراحل البحث (المواصفة §3.1) ──────────────────────
-"phase_pretest" = "اختبار قبلي";
-"phase_training" = "تدريب";
-"phase_posttest" = "اختبار بعدي";
-"phase_goal_pretest" = "هذه الجولة تسجيل فقط: بلا درجة وبلا ألوان أو منحنيات. انطق كما تنطق الآن.";
-"phase_goal_training" = "استمع ← سجّل ← اقرأ الملاحظات ← أعد المحاولة.";
-"phase_goal_posttest" = "هذه الجولة تسجيل فقط أيضاً: بلا درجة وبلا ألوان أو منحنيات.";
-"phase_complete_title" = "انتهت المرحلة";
-"phase_complete_pretest" = "انتهى الاختبار القبلي، ويبدأ التدريب الآن.";
-"phase_complete_training" = "التدريب بلا نهاية محددة، يمكنك المتابعة متى شئت.";
-"phase_complete_posttest" = "انتهى الاختبار البعدي. شكراً لمشاركتك.";
-"phase_start_posttest" = "ابدأ الاختبار البعدي";
-"blind_ready" = "اضغط زر التسجيل عندما تكون جاهزاً.";
-"blind_recording" = "جارٍ التسجيل…";
-"assessment_recorded" = "تم التسجيل";
 "tone_next_word" = "الكلمة التالية";
 
 // شروط التغذية الراجعة (تصميم داخل الفرد، مرتبطة بمجموعة الكلمات لا بالمتعلم)
@@ -179,10 +165,10 @@
 "onboarding_mic_skip" = "لاحقاً، أريد التصفّح أولاً";
 
 // 反馈显示模式（学习者自选，非实验分组）
-"condition_staticColor" = "كتل ملوّنة";
-"condition_dynamicF0" = "منحنى النغمة";
+"condition_staticColor" = "الألوان";
+"condition_dynamicF0" = "المنحنى";
 "settings_feedback_style" = "طريقة عرض النتيجة";
-"settings_feedback_style_footer" = "كيف تظهر نتيجتك أثناء التدريب. الطريقتان تستخدمان العتبة نفسها، فالتبديل لا يغيّر درجتك. الاختبار القبلي والبعدي لا يعرضان أي نتيجة في الحالتين.";
+"settings_feedback_style_footer" = "كيف تظهر نتيجتك أثناء التدريب. الطريقتان تستخدمان العتبة نفسها، فالتبديل لا يغيّر درجتك. الاختبار الذاتي لا يعرض أي ملاحظات في الحالتين.";
 "tone_slot_a11y" = "الحرف %1$d: النغمة %2$d، %3$@";
 
 // 教练提示卡：一次一条可执行动作（档案 §4.3）
@@ -263,3 +249,111 @@
 "history_empty" = "لا توجد سجلات تدريب بعد.";
 "history_attempt_n" = "المحاولة %d";
 "history_footer_note" = "سجل لما تدربت عليه ومقداره. ليس درجة اختبار.";
+
+/* 2026-10 研究流程与界面改版 */
+"common_dismiss" = "إغلاق هذا التنبيه";
+"common_more" = "المزيد";
+"common_retry" = "إعادة المحاولة";
+"tab_practice" = "التدريب";
+"tab_history" = "السجل";
+"tab_settings" = "الإعدادات";
+"tab_teacher" = "المعلّم";
+"home_continue" = "متابعة";
+"home_words" = "الكلمات";
+"home_more" = "تمارين أخرى";
+"home_research_invite" = "المشاركة في دراسة (اختياري)";
+"home_research_resume" = "إكمال خطوات المشاركة في الدراسة";
+"home_survey_pre" = "متابعة استبيان ما قبل التدريب";
+"home_survey_post" = "متابعة استبيان الرأي بعد الاستخدام";
+"tone_stage_preparing" = "جارٍ تجهيز المرجع…";
+"tone_stage_ready" = "اضغط على الميكروفون في الأسفل لبدء التسجيل، ثم اضغط مرة أخرى للإيقاف.";
+"tone_stage_recording" = "جارٍ التسجيل. اضغط مرة أخرى عند الانتهاء.";
+"tone_stage_analyzing" = "جارٍ التحليل…";
+"tone_fail_mic_denied" = "الميكروفون غير مفعّل. اسمح لـ Pinyintone باستخدام الميكروفون من الإعدادات ثم عُد إلى هنا.";
+"tone_fail_interrupted" = "تمت مقاطعة التسجيل، ولا توجد نتيجة. يُرجى التسجيل من جديد.";
+"tone_fail_analysis" = "تعذّر تحليل هذا التسجيل. يُرجى التسجيل من جديد.";
+"result_title" = "هذه المحاولة";
+"result_try_again" = "حاول مرة أخرى";
+"result_score_a11y" = "هذه المحاولة: %d من 100";
+"replay_stop" = "إيقاف التشغيل";
+"sample_stop" = "إيقاف النموذج";
+"chart_empty" = "سيظهر منحنى نبرتك هنا بعد التسجيل.";
+"chart_a11y_reference_only" = "منحنى النبرة المرجعي";
+"chart_a11y_with_yours" = "المنحنى المرجعي ومنحنى نبرتك في هذه المحاولة";
+"mic_explain_title" = "استخدام الميكروفون";
+"word_picker_title" = "اختيار كلمة";
+"word_picker_search" = "ابحث بالحروف الصينية أو البينيين";
+"word_picker_empty" = "لا توجد كلمات مطابقة.";
+"word_current" = "الكلمة الحالية";
+"self_test_title" = "اختبار ذاتي";
+"self_test_start" = "بدء اختبار ذاتي";
+"self_test_exit" = "الخروج من الاختبار الذاتي";
+"self_test_progress" = "الكلمة %1$d من %2$d";
+"self_test_ready" = "اضغط على الميكروفون في الأسفل للتسجيل. لا تُعرض أي نتيجة أثناء الاختبار الذاتي.";
+"self_test_saving" = "جارٍ الحفظ…";
+"self_test_recorded" = "تم التسجيل.";
+"self_test_done_title" = "اكتمل الاختبار الذاتي";
+"self_test_done_body" = "تم تسجيل جميع الكلمات. لا يعرض الاختبار الذاتي درجات أو تقييمات.";
+"self_test_back_to_practice" = "العودة إلى التدريب";
+"history_filter" = "تصفية";
+"history_filter_all" = "الكل";
+"history_kind_fixed" = "قائمة الكلمات";
+"history_kind_free" = "نص حر";
+"history_kind_self_test" = "اختبار ذاتي";
+"history_status_recorded" = "تم التسجيل";
+"history_status_technical" = "لم يُسجَّل";
+"history_empty_filtered" = "لا توجد سجلات من هذا النوع بعد.";
+"settings_support" = "المساعدة والملاحظات";
+"research_section" = "المشاركة في الدراسة";
+"research_section_footer" = "المشاركة اختيارية ولا تؤثر في أي ميزة. الانسحاب من الدراسة لا يحذف حسابك ولا سجل تدريبك.";
+"research_status" = "الحالة";
+"research_status_not_joined" = "غير مشارك";
+"research_status_closed" = "غير متاحة حاليًا";
+"research_status_consented" = "تمت الموافقة، لم تكتمل بعد";
+"research_status_pending" = "بانتظار الإرسال";
+"research_status_enrolled" = "مشارك";
+"research_status_ineligible" = "غير مشمول هذه المرة";
+"research_status_withdrawn" = "تم الانسحاب";
+"research_status_withdrawn_pending" = "تم الانسحاب (بانتظار التأكيد عند الاتصال)";
+"research_join" = "التعرّف والمشاركة";
+"research_resume" = "متابعة خطوات المشاركة";
+"research_rejoin" = "الإجابة عن أسئلة الخلفية من جديد";
+"research_sync_now" = "إرسال البيانات المعلّقة الآن";
+"research_withdraw" = "الانسحاب من الدراسة";
+"research_withdraw_confirm_title" = "الانسحاب من الدراسة؟";
+"research_withdraw_confirm_message" = "يتوقف الجمع فورًا وتُمحى من هذا الجهاز بيانات الدراسة التي لم تُرسل بعد. لا يتأثر حسابك ولا سجل تدريبك. لا يمكنك الانضمام مجددًا خلال هذه الجولة.";
+"research_withdrawn_body" = "لقد انسحبت من الدراسة ولن تُجمع بيانات دراسة بعد الآن. يمكنك متابعة استخدام جميع الميزات كالمعتاد.";
+"research_enrolling" = "جارٍ التأكيد…";
+"research_enroll_saved_hint" = "إجاباتك محفوظة على هذا الجهاز. يمكنك إعادة المحاولة الآن، أو التدرّب أولًا والمتابعة لاحقًا من الإعدادات ← المشاركة في الدراسة.";
+"research_enroll_refused" = "لا يمكنك الانضمام إلى هذه الجولة من الدراسة حاليًا. يمكنك متابعة استخدام جميع الميزات كالمعتاد.";
+"research_continue_later" = "لاحقًا — الانتقال إلى التدريب";
+"research_enrolled_title" = "لقد انضممت إلى الدراسة";
+"research_enrolled_body" = "شكرًا لك. يمكنك الانسحاب في أي وقت من الإعدادات ← المشاركة في الدراسة.";
+"research_enrolled_pending_body" = "لقد انضممت. إجابات الخلفية محفوظة على هذا الجهاز وستُرسل تلقائيًا عند الاتصال بالإنترنت.";
+"research_start_practice" = "بدء التدريب";
+"research_ineligible_title" = "شكرًا على إجاباتك";
+"research_ineligible_body" = "بناءً على إجاباتك، لن تجمع هذه الجولة من الدراسة بياناتك. لم تُرسل إجاباتك. يمكنك متابعة استخدام جميع الميزات كالمعتاد.";
+"research_not_open_title" = "غير متاحة حاليًا";
+"research_not_open_body" = "الدراسة لا تستقبل مشاركين في الوقت الحالي. يمكنك متابعة استخدام جميع الميزات كالمعتاد.";
+"consent_version_line" = "إصدار ورقة المعلومات: %@";
+"consent_draft_notice" = "هذه نسخة تجريبية من ورقة المعلومات، لم تُعتمد بعد ولا تُستخدم في الدراسة الرسمية.";
+"survey_start_now" = "الإجابة الآن";
+"survey_later" = "الإجابة لاحقًا";
+"survey_decline" = "عدم الإجابة";
+"survey_pre_name" = "استبيان ما قبل التدريب";
+"survey_post_name" = "استبيان الرأي بعد الاستخدام";
+"survey_pre_invite_title" = "استبيان ما قبل التدريب (6 أسئلة)";
+"survey_pre_invite_body" = "قبل بدء التدريب، هل تودّ الإجابة عن بضعة أسئلة حول تعلّمك للنبرات؟ يمكنك تخطي أي سؤال أو الإجابة لاحقًا.";
+"survey_post_invite_title" = "استبيان الرأي (5 أسئلة)";
+"survey_post_invite_body" = "لقد تدرّبت عدة مرات. هل تودّ قضاء دقيقة أو دقيقتين لإخبارنا عن تجربتك؟ إجاباتك لا تؤثر في تدريبك، ويمكنك تخطي أي سؤال.";
+"survey_progress_a11y" = "السؤال %1$d من %2$d";
+"survey_status_invited" = "لم يبدأ";
+"survey_status_deferred" = "للإكمال لاحقًا";
+"survey_status_declined" = "تم الاعتذار";
+"survey_status_saved_pending" = "محفوظ، بانتظار الإرسال";
+"survey_status_submitted" = "تم الإرسال";
+"survey_status_not_accepted" = "تعذّر الإرسال (انتهت فترة الدراسة)";
+"survey_thanks" = "شكرًا على ملاحظاتك.";
+"survey_saved_pending_body" = "إجاباتك محفوظة على هذا الجهاز وستُرسل تلقائيًا عند الاتصال بالإنترنت. يمكنك أيضًا إعادة المحاولة الآن.";
+"survey_unavailable" = "هذا الاستبيان غير متاح حاليًا.";
+"issue_mail_opened" = "تم فتح تطبيق البريد. تُرسل ملاحظاتك عبر البريد الإلكتروني ولا تُضاف إلى بيانات الدراسة.";

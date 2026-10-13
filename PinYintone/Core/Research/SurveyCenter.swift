@@ -198,10 +198,26 @@ enum SurveyCenter {
             .filter { !$0.isSynced && $0.rejectedReason == nil }
     }
 
-    static func markSynced(_ formKey: String, status: SurveyRecord.Status) {
+    /// 上传得到服务端确认后对账。`sent` 是这次发出去的状态，`server` 是服务端此刻保存的状态。
+    ///
+    /// - 两者一致：这一状态已送达。
+    /// - 服务端已是**最终状态**而本机不是（同一账号在另一台设备上已经填完）：
+    ///   以服务端为准，本机不再邀请、不再让人重填一遍。
+    /// - 其余情况（服务端停在一个不低于本机的非最终状态）：本机这次的内容已送达。
+    ///
+    /// 用户在上传途中又改了状态（比如刚点了提交）时，本机状态已不等于 `sent`，
+    /// 这里只记「`sent` 已送达」，新状态仍是待传。
+    static func reconcile(_ formKey: String, sent: SurveyRecord.Status,
+                          server: SurveyRecord.Status?) {
         store.update { s in
             guard var r = s.surveys[formKey] else { return }
-            r.syncedStatus = status
+            if let server, server.isFinal, !r.status.isFinal {
+                r.status = server
+                r.syncedStatus = server
+                r.draft = nil
+            } else {
+                r.syncedStatus = sent
+            }
             s.surveys[formKey] = r
         }
     }

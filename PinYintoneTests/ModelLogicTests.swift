@@ -12,23 +12,26 @@ final class ModelLogicTests: XCTestCase {
 
     // MARK: - 阶段与反馈呈现（升级需求 §3.1）
 
-    /// 取消 A/B 后仍是硬约束：训练池与测试词集不得重叠，
-    /// 否则前后测增益会被"练过的词"污染。
-    func testTrainingPoolDoesNotOverlapAssessmentSet() {
-        let training = Set(WordSet.trainingSets
-            .flatMap { CorpusLoader.shared.tonePool(wordSet: $0) }
-            .map(\.id))
-        let assessment = Set(CorpusLoader.shared.assessmentPool().map(\.id))
-        XCTAssertFalse(training.isEmpty)
-        XCTAssertFalse(assessment.isEmpty)
-        XCTAssertTrue(training.isDisjoint(with: assessment),
-                      "训练池与测试词集重叠：\(training.intersection(assessment))")
+    /// 普通练习的词表是全部声调词条——自愿练习不要求练习词与自测词不重叠（需求 R06）
+    @MainActor
+    func testPracticePoolIsTheWholeToneLexicon() {
+        let pool = ToneSequencer().pool.map(\.id)
+        let all = CorpusLoader.shared.lexemes(in: .tone).map(\.id)
+        XCTAssertEqual(Set(pool), Set(all))
+        XCTAssertEqual(pool.count, all.count)
+        let selfTest = Set(CorpusLoader.shared.assessmentPool().map(\.id))
+        XCTAssertFalse(selfTest.isEmpty)
+        XCTAssertTrue(selfTest.isSubset(of: Set(pool)), "自测词也可以在普通练习里练")
     }
 
-    func testOnlyTrainingPhaseShowsFeedback() {
-        XCTAssertFalse(TrainingPhase.pretest.showsFeedback, "前测必须裸测")
-        XCTAssertFalse(TrainingPhase.posttest.showsFeedback, "后测必须裸测")
+    /// 只有普通练习呈现反馈；自测以及历史上的前测、后测都不呈现
+    func testOnlyPracticeShowsFeedback() {
         XCTAssertTrue(TrainingPhase.training.showsFeedback)
+        for phase in [TrainingPhase.selfTest, .pretest, .posttest] {
+            XCTAssertFalse(phase.showsFeedback, "\(phase)")
+            XCTAssertTrue(phase.isAssessment)
+        }
+        XCTAssertEqual(TrainingPhase.selfTest.rawValue, "self_test")
     }
 
     // MARK: - 理想四声轮廓合成

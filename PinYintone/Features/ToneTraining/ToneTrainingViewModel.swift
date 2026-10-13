@@ -116,6 +116,9 @@ final class ToneTrainingViewModel: ObservableObject {
 
     private let sequencer: ToneSequencer
     private let recorder: RecordingSource
+    /// 录音来源是否为真实麦克风。不是的话（界面测试的合成信号、单元测试的替身）
+    /// 不申请麦克风权限，也不做 TTS 参照合成——两者在无人值守的环境里都不可靠。
+    private let usesMicrophone: Bool
     private let framer = AudioFramer()           // 512/128 帧化（CLAUDE.md）
     private let f0Extractor = F0Extractor()
     private let dtwAnalyzer = DTWAnalyzer()
@@ -156,7 +159,9 @@ final class ToneTrainingViewModel: ObservableObject {
     /// 是非隔离的），所以不能写成 `sequencer: ToneSequencer = .shared`。
     init(sequencer: ToneSequencer? = nil, recorder: RecordingSource? = nil) {
         self.sequencer = sequencer ?? ToneSequencer.shared
-        self.recorder = recorder ?? RecordingSourceFactory.make()
+        let source = recorder ?? RecordingSourceFactory.make()
+        self.recorder = source
+        self.usesMicrophone = source is AudioEngine
 
         // 帧化层每凑满帧 → 提 F0 → 累积；实时曲线节流刷新
         framer.onFrame = { [weak self] frame in
@@ -235,8 +240,8 @@ final class ToneTrainingViewModel: ObservableObject {
         currentAttemptID = nil
         stage = .preparing
 
-        // 界面测试用合成信号时不做 TTS 参照合成：模拟器上它慢且不稳定
-        if RecordingSourceFactory.isSynthetic {
+        // 不是真实麦克风时不做 TTS 参照合成：无人值守的模拟器上它慢且不稳定
+        if !usesMicrophone {
             markReferenceReady()
             return
         }
@@ -484,7 +489,7 @@ final class ToneTrainingViewModel: ObservableObject {
     func startRecording() {
         guard canRecord, stage != .recording, currentLexeme != nil else { return }
         // 麦克风权限在**首次实际录音前**申请（需求 R02），不在启动时。
-        if !RecordingSourceFactory.isSynthetic {
+        if usesMicrophone {
             switch AVAudioApplication.shared.recordPermission {
             case .granted:
                 break
@@ -553,13 +558,13 @@ final class ToneTrainingViewModel: ObservableObject {
             stage = .recording
         } catch {
             // 启动失败必须给出可执行提示：否则学习者看到的是一个按了没反应的按钮
-            let denied = !RecordingSourceFactory.isSynthetic
+            let denied = usesMicrophone
                 && AVAudioApplication.shared.recordPermission != .granted
             stage = .failed(denied ? .microphoneDenied : .microphoneUnavailable)
-            persistTechnicalRetry(reason: Self.failureReason(for: error), voicedFrameCount: 0)
+            persistTechnicalRetry(reason: failureReason(for: error), voicedFrameCount: 0)
             ResearchAttemptLog.shared.markFailed(
                 attemptID, status: .recordingFailed,
-                error: Self.researchErrorCode(for: error))
+                error: researchErrorCode(for: error))
         }
     }
 
@@ -820,8 +825,8 @@ final class ToneTrainingViewModel: ObservableObject {
     private var legacyPhase: TrainingPhase { mode == .selfTest ? .selfTest : .training }
 
     /// 映射到字典 §8 的固定错误码（研究库的固定枚举，服务端按白名单校验）
-    private static func researchErrorCode(for error: Error) -> ResearchErrorCode {
-        if !RecordingSourceFactory.isSynthetic,
+    private func researchErrorCode(for error: Error) -> ResearchErrorCode {
+        if usesMicrophone,
            AVAudioApplication.shared.recordPermission != .granted { return .permissionDenied }
         guard let e = error as? AudioEngine.AudioEngineError else { return .unknown }
         switch e {
@@ -831,9 +836,9 @@ final class ToneTrainingViewModel: ObservableObject {
     }
 
     /// 把录音启动错误映射成匿名的失败原因（不含任何录音内容）
-    private static func failureReason(for error: Error) -> FailureReason {
+    private func failureReason(for error: Error) -> FailureReason {
         // 权限被拒最常见，且会伪装成 invalidInputFormat，所以先单独判掉
-        if !RecordingSourceFactory.isSynthetic,
+        if usesMicrophone,
            AVAudioApplication.shared.recordPermission != .granted {
             return .permissionDenied
         }

@@ -40,12 +40,16 @@ struct ModeB_F0WaveformView: View {
                     if ref.count > 1 {
                         ctx.stroke(path(from: ref, denom: denom, in: size),
                                    with: .color(Theme.accent),
-                                   style: StrokeStyle(lineWidth: 2.5, lineCap: .round, dash: [9, 6]))
+                                   style: StrokeStyle(lineWidth: Theme.Curve.referenceWidth,
+                                                      lineCap: .round,
+                                                      dash: Theme.Curve.referenceDash))
                     }
                     if stu.count > 1 {
                         ctx.stroke(path(from: stu, denom: denom, in: size),
                                    with: .color(Theme.learner),
-                                   style: StrokeStyle(lineWidth: 3, lineCap: .round, lineJoin: .round))
+                                   style: StrokeStyle(lineWidth: Theme.Curve.learnerWidth,
+                                                      lineCap: .round, lineJoin: .round,
+                                                      dash: Theme.Curve.learnerDash))
                     }
                 }
                 if reference.count < 2 && student.count < 2 {

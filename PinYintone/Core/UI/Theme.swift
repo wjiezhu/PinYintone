@@ -5,7 +5,7 @@ import UIKit
 ///
 /// 颜色全部是**语义色**，浅色与深色各一套，由系统外观自动切换——
 /// 不写死白底或白字，深色模式下不会出现看不清的文字。
-/// 对比度实测见 docs/UI_CONTRAST.md。
+/// 对比度由 `ThemeContrastTests` 实测并守住。
 ///
 /// 功能色只有三种，且**不单靠颜色传达信息**：
 /// - 青绿：主要操作、参考曲线
@@ -15,28 +15,53 @@ enum Theme {
 
     // MARK: 颜色
 
-    /// 页面背景（浅灰）
-    static let background = Color(light: 0xF5F7F8, dark: 0x0F1316)
-    /// 内容面（白）
-    static let surface = Color(light: 0xFFFFFF, dark: 0x1A2026)
-    /// 主文字（深灰）
-    static let textPrimary = Color(light: 0x20262D, dark: 0xECEFF2)
-    /// 次要文字
-    static let textSecondary = Color(light: 0x59636E, dark: 0xA9B3BD)
-    /// 主要操作与参考曲线（青绿）
-    static let accent = Color(light: 0x007F78, dark: 0x3CC2B8)
-    /// 放在 accent 色块上的文字 / 图标
-    static let onAccent = Color(light: 0xFFFFFF, dark: 0x06201E)
-    /// 学习者曲线（玫红）
-    static let learner = Color(light: 0xC94461, dark: 0xF08AA2)
-    /// 技术失败（琥珀）。用于文字与图标，故取较深的一档以保证对比度
-    static let warning = Color(light: 0x8A5300, dark: 0xF2B655)
-    /// 录音中（停止键）
-    static let recording = Color(light: 0xB3261E, dark: 0xF2857D)
-    /// 分隔线与图表辅助线
-    static let divider = Color(light: 0xDDE2E6, dark: 0x2C343C)
+    /// 色值表（浅色 / 深色）。颜色只在这里定义一次；
+    /// `ThemeContrastTests` 直接读这张表实测对比度，改色值时测试会跟着重算。
+    enum Hex {
+        static let background: (light: UInt32, dark: UInt32) = (0xF5F7F8, 0x0F1316)
+        static let surface: (light: UInt32, dark: UInt32) = (0xFFFFFF, 0x1A2026)
+        static let textPrimary: (light: UInt32, dark: UInt32) = (0x20262D, 0xECEFF2)
+        static let textSecondary: (light: UInt32, dark: UInt32) = (0x59636E, 0xA9B3BD)
+        static let accent: (light: UInt32, dark: UInt32) = (0x007F78, 0x3CC2B8)
+        static let onAccent: (light: UInt32, dark: UInt32) = (0xFFFFFF, 0x06201E)
+        static let learner: (light: UInt32, dark: UInt32) = (0xC94461, 0xF08AA2)
+        static let warning: (light: UInt32, dark: UInt32) = (0x8A5300, 0xF2B655)
+        static let recording: (light: UInt32, dark: UInt32) = (0xB3261E, 0xF2857D)
+        static let divider: (light: UInt32, dark: UInt32) = (0xDDE2E6, 0x2C343C)
+    }
 
-    static let accentUIColor = UIColor(light: 0x007F78, dark: 0x3CC2B8)
+    /// 页面背景（浅灰）
+    static let background = Color(Hex.background)
+    /// 内容面（白）
+    static let surface = Color(Hex.surface)
+    /// 主文字（深灰）
+    static let textPrimary = Color(Hex.textPrimary)
+    /// 次要文字
+    static let textSecondary = Color(Hex.textSecondary)
+    /// 主要操作与参考曲线（青绿）
+    static let accent = Color(Hex.accent)
+    /// 放在 accent 色块上的文字 / 图标
+    static let onAccent = Color(Hex.onAccent)
+    /// 学习者曲线（玫红）
+    static let learner = Color(Hex.learner)
+    /// 技术失败（琥珀）。用于文字与图标，故取较深的一档以保证对比度
+    static let warning = Color(Hex.warning)
+    /// 录音中（停止键）
+    static let recording = Color(Hex.recording)
+    /// 分隔线与图表辅助线
+    static let divider = Color(Hex.divider)
+
+    // MARK: 曲线线型
+
+    /// 两条曲线的线型。参考是虚线、学习者是实线——**线型是颜色之外的第二个区分通道**：
+    /// 青绿与玫红的明度几乎相同（实测对比度约 1.1:1），色觉障碍或灰度显示下
+    /// 单靠颜色分不开，所以线型必须不同。`ThemeContrastTests` 守着这一点。
+    enum Curve {
+        static let referenceDash: [CGFloat] = [9, 6]
+        static let learnerDash: [CGFloat] = []
+        static let referenceWidth: CGFloat = 2.5
+        static let learnerWidth: CGFloat = 3
+    }
 
     // MARK: 间距与尺寸（4 / 8 / 12 / 16 / 24）
 
@@ -74,6 +99,10 @@ extension UIColor {
 extension Color {
     init(light: UInt32, dark: UInt32) {
         self.init(uiColor: UIColor(light: light, dark: dark))
+    }
+
+    init(_ hex: (light: UInt32, dark: UInt32)) {
+        self.init(light: hex.light, dark: hex.dark)
     }
 }
 

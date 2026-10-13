@@ -22,6 +22,9 @@ struct StudentSignupView: View {
                 languagesSection
                 errorLabel
                 appleButton
+                #if DEBUG
+                uiTestLoginButton
+                #endif
             }
             .padding(24)
         }
@@ -117,6 +120,21 @@ struct StudentSignupView: View {
         .clipShape(RoundedRectangle(cornerRadius: 14))
     }
 
+    #if DEBUG
+    /// 仅开发构建、且启动时带了 `PT_UITEST_LOGIN` 才出现：界面测试用它建立账号，
+    /// 因为 Sign in with Apple 没法在无人值守的模拟器里完成。正式构建里不存在。
+    @ViewBuilder
+    private var uiTestLoginButton: some View {
+        if let identifier = UITestSupport.loginIdentifier {
+            Button("UI test sign-in") {
+                submit(appleUserID: identifier, nickname: nil, languages: [])
+            }
+            .buttonStyle(.bordered)
+            .accessibilityIdentifier("signup.uiTestLogin")
+        }
+    }
+    #endif
+
     // MARK: - Actions
 
     private func handleAppleResult(_ result: Result<ASAuthorization, Error>) {
@@ -136,11 +154,12 @@ struct StudentSignupView: View {
                    languages: Array(selectedLanguages))
 
         case .failure(let error):
-            // 用户主动取消不算错误，不打扰
+            // 用户主动取消不算错误：停在本页，登录按钮仍在，可重试，也可返回上一步
             if let authError = error as? ASAuthorizationError, authError.code == .canceled {
                 return
             }
-            errorMessage = error.localizedDescription
+            // 其它失败给一句看得懂、说明下一步的话，而不是系统的原始报错
+            errorMessage = NSLocalizedString("signup_apple_failed", comment: "")
         }
     }
 

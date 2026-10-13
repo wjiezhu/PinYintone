@@ -8,15 +8,10 @@ final class ResearchAttemptLogTests: XCTestCase {
 
     override func setUp() {
         super.setUp()
-        log.clearPendingOnWithdrawal()
-        ResearchEventLog.shared.eligibility = .eligible
-        ResearchEventLog.shared.window = .init(start: Date().addingTimeInterval(-60),
-                                               end: Date().addingTimeInterval(3600))
-        ResearchConsent.shared.grant(textVersion: "c1", language: "zh")
+        ResearchTestSupport.enrolledAccount()
     }
     override func tearDown() {
-        log.clearPendingOnWithdrawal()
-        ResearchConsent.shared.withdraw()
+        ResearchTestSupport.tearDown()
         super.tearDown()
     }
 
@@ -70,7 +65,7 @@ final class ResearchAttemptLogTests: XCTestCase {
     // MARK: - 门禁与时长
 
     func testNoAttemptRecordedWithoutConsent() {
-        ResearchConsent.shared.withdraw()
+        ResearchTestSupport.freshAccount()       // 未参加研究
         let id = begin()
         log.markFailed(id, status: .analysisFailed, error: .noSignal)
         XCTAssertTrue(log.pending.isEmpty, "未同意不得产生研究记录")
@@ -103,5 +98,85 @@ final class ResearchAttemptLogTests: XCTestCase {
         log.markSucceeded(id, metric: 0.4, passed: true)
         log.finishWithoutDisplay(id)
         XCTAssertEqual(log.pending.first { $0.attemptID == id }?.priorPracticeCount, 7)
+    }
+
+    // MARK: - 四种结局分别保存（需求 R07、验收 A14 / A18）
+
+    /// 取消不是失败：没有成绩，也不强求错误码
+    func testCancelledAttemptHasNoScoreAndNoError() {
+        let id = begin()
+        log.markCancelled(id)
+        let r = log.pending.first { $0.attemptID == id }
+        XCTAssertEqual(r?.status, .cancelled)
+        XCTAssertNil(r?.metricValue)
+        XCTAssertNil(r?.passed)
+        XCTAssertNil(r?.errorCode)
+        XCTAssertNotNil(r?.finishedAt)
+    }
+
+    /// 被系统打断：确知没完成、不确知原因 → 未知中断
+    func testInterruptedAttemptIsRecordedAsUnknownInterruption() {
+        let id = begin()
+        log.markInterrupted(id)
+        let r = log.pending.first { $0.attemptID == id }
+        XCTAssertEqual(r?.status, .interruptedUnknown)
+        XCTAssertNil(r?.metricValue)
+        XCTAssertNil(r?.passed)
+    }
+
+    /// 录音途中 App 被杀：下次启动时这条尝试按未知中断结账，而不是消失，
+    /// 也不被编成崩溃或失败。
+    func testAttemptLeftInFlightBecomesUnknownInterruptionAfterRelaunch() {
+        let key = ResearchStore.shared.accountKey
+        let id = begin()
+        log.markAnalyzing(id)
+        XCTAssertTrue(log.pending.isEmpty, "还在进行中，不应已入待传队列")
+
+        ResearchStore.shared.activate(accountKey: nil)      // 进程结束
+        ResearchStore.shared.activate(accountKey: key)      // 再次启动
+
+        let r = log.pending.first { $0.attemptID == id }
+        XCTAssertEqual(r?.status, .interruptedUnknown)
+        XCTAssertNil(r?.metricValue)
+        XCTAssertNil(r?.finishedAt, "结束时间不知道就留空，不补造")
+        XCTAssertEqual(r?.timeQuality, .unknown)
+        XCTAssertFalse(log.isTracking(id))
+    }
+
+    /// NaN / Infinity / 负数不是成绩：按分析失败记，不带分
+    func testNonFiniteMetricIsRecordedAsFailureNotScore() {
+        for bad in [Double.nan, .infinity, -1] {
+            let id = begin()
+            log.markAnalyzing(id)
+            log.markSucceeded(id, metric: bad, passed: true)
+            let r = log.pending.first { $0.attemptID == id }
+            XCTAssertEqual(r?.status, .analysisFailed, "\(bad)")
+            XCTAssertNil(r?.metricValue)
+            XCTAssertNil(r?.passed)
+            XCTAssertEqual(r?.errorCode, .analysisEngineError)
+        }
+    }
+
+    /// 重录是新尝试、新编号，并关联上一次
+    func testRetryGetsNewIDAndLinksToPrevious() {
+        let first = begin()
+        log.markCancelled(first)
+        let second = UUID()
+        log.begin(attemptID: second, taskType: .fixedWord, lexemeVersionID: "lex-canjia",
+                  priorPracticeCount: nil, retryOf: first)
+        log.markCancelled(second)
+        XCTAssertNotEqual(first, second)
+        XCTAssertEqual(log.pending.first { $0.attemptID == second }?.retryOfAttemptID, first)
+        XCTAssertNil(log.pending.first { $0.attemptID == first }?.retryOfAttemptID)
+    }
+
+    /// 待传队列落盘
+    func testPendingAttemptsSurviveRelaunch() {
+        let key = ResearchStore.shared.accountKey
+        let id = begin()
+        log.markFailed(id, status: .analysisFailed, error: .noSignal)
+        ResearchStore.shared.activate(accountKey: nil)
+        ResearchStore.shared.activate(accountKey: key)
+        XCTAssertEqual(log.pending.map(\.attemptID), [id])
     }
 }

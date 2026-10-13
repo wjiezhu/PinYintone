@@ -83,8 +83,8 @@
 "grade_good" = "Good";
 "grade_needs_practice" = "Keep practicing";
 "grade_fail" = "Try again";
-"legend_native" = "Native";
-"legend_you" = "You";
+"legend_native" = "Reference";
+"legend_you" = "This attempt";
 "feedback_continue" = "Continue";
 "settings_delete_account" = "Delete Account";
 "settings_delete_footer" = "Permanently deletes your account and all practice records. This cannot be undone.";
@@ -97,7 +97,7 @@
 "feedback_next_word" = "Next word";
 "feedback_skip_hint" = "This one is tricky — you can skip it and come back later.";
 "tone_retry_mic_unavailable" = "Could not start recording. Check that no other app is using the microphone, then try again.";
-"tone_retry_no_voice" = "Didn't catch that. Move closer to the mic and try again.";
+"tone_retry_no_voice" = "No voice was recorded. Move closer to the microphone and record again.";
 "replay_own_recording" = "Play my recording";
 "replay_failed" = "Could not play your recording. Please try again.";
 "record_start" = "Start recording";
@@ -133,7 +133,7 @@
 "saved_words_empty" = "No saved words yet. Tap the bookmark while practicing to add one.";
 "save_word" = "Save word";
 "saved_words_practice_count" = "Practiced %d times";
-"play_sample" = "Listen";
+"play_sample" = "Play the model";
 
 // Help / instructions
 "help_title" = "How to use";
@@ -144,20 +144,6 @@
 "help_privacy" = "Your audio is never uploaded — only analysis results (scores), for research.";
 
 // ── Research phases (upgrade spec §3.1) ──────────────
-"phase_pretest" = "Pre-test";
-"phase_training" = "Training";
-"phase_posttest" = "Post-test";
-"phase_goal_pretest" = "This round only records: no score, no colour or curve hints. Just say it the way you say it now.";
-"phase_goal_training" = "Listen → record → read the feedback → try again.";
-"phase_goal_posttest" = "This round only records too: no score, no colour or curve hints.";
-"phase_complete_title" = "Phase complete";
-"phase_complete_pretest" = "Pre-test done. Training starts next.";
-"phase_complete_training" = "Training has no fixed end — keep practising whenever you like.";
-"phase_complete_posttest" = "Post-test done. Thank you for taking part.";
-"phase_start_posttest" = "Start post-test";
-"blind_ready" = "Tap record when you are ready.";
-"blind_recording" = "Recording…";
-"assessment_recorded" = "Recorded";
 "tone_next_word" = "Next word";
 
 // Feedback conditions (within-subject A/B, bound to word sets, not to learners)
@@ -177,10 +163,10 @@
 "onboarding_mic_skip" = "Not now, just look around";
 
 // 反馈显示模式（学习者自选，非实验分组）
-"condition_staticColor" = "Colour blocks";
-"condition_dynamicF0" = "Pitch curve";
+"condition_staticColor" = "Colour";
+"condition_dynamicF0" = "Curve";
 "settings_feedback_style" = "Feedback style";
-"settings_feedback_style_footer" = "How your result is shown during training. Both use the same pass mark, so switching never changes your score. Pre-test and post-test show no feedback either way.";
+"settings_feedback_style_footer" = "How your result is shown during practice. Both use the same pass mark, so switching never changes your score. A self-check shows no feedback either way.";
 "tone_slot_a11y" = "Character %1$d: tone %2$d, %3$@";
 
 // 教练提示卡：一次一条可执行动作（档案 §4.3）
@@ -261,3 +247,111 @@
 "history_empty" = "No practice records yet.";
 "history_attempt_n" = "Attempt %d";
 "history_footer_note" = "A log of what you practised and how much. It is not a test score.";
+
+/* 2026-10 研究流程与界面改版 */
+"common_dismiss" = "Dismiss";
+"common_more" = "More";
+"common_retry" = "Try again";
+"tab_practice" = "Practice";
+"tab_history" = "History";
+"tab_settings" = "Settings";
+"tab_teacher" = "Teacher";
+"home_continue" = "Continue";
+"home_words" = "Words";
+"home_more" = "More practice";
+"home_research_invite" = "Take part in a study (optional)";
+"home_research_resume" = "Finish joining the study";
+"home_survey_pre" = "Continue the pre-practice questionnaire";
+"home_survey_post" = "Continue the feedback questionnaire";
+"tone_stage_preparing" = "Preparing the reference…";
+"tone_stage_ready" = "Tap the microphone below to start recording. Tap again to stop.";
+"tone_stage_recording" = "Recording. Tap again when you have finished.";
+"tone_stage_analyzing" = "Analysing…";
+"tone_fail_mic_denied" = "The microphone is turned off. Allow Pinyintone to use the microphone in Settings, then come back here.";
+"tone_fail_interrupted" = "The recording was interrupted, so there is no result. Please record again.";
+"tone_fail_analysis" = "This recording could not be analysed. Please record again.";
+"result_title" = "This attempt";
+"result_try_again" = "Try again";
+"result_score_a11y" = "This attempt: %d out of 100";
+"replay_stop" = "Stop playback";
+"sample_stop" = "Stop the model";
+"chart_empty" = "Your pitch curve appears here after you record.";
+"chart_a11y_reference_only" = "Reference pitch curve";
+"chart_a11y_with_yours" = "Reference curve and your pitch curve for this attempt";
+"mic_explain_title" = "Using the microphone";
+"word_picker_title" = "Choose a word";
+"word_picker_search" = "Search characters or pinyin";
+"word_picker_empty" = "No matching words.";
+"word_current" = "Current word";
+"self_test_title" = "Self-check";
+"self_test_start" = "Start a self-check";
+"self_test_exit" = "Exit self-check";
+"self_test_progress" = "Word %1$d of %2$d";
+"self_test_ready" = "Tap the microphone below to record. No result is shown during a self-check.";
+"self_test_saving" = "Saving…";
+"self_test_recorded" = "Recorded.";
+"self_test_done_title" = "Self-check complete";
+"self_test_done_body" = "All words have been recorded. A self-check does not show scores or ratings.";
+"self_test_back_to_practice" = "Back to practice";
+"history_filter" = "Filter";
+"history_filter_all" = "All";
+"history_kind_fixed" = "Word list";
+"history_kind_free" = "Free text";
+"history_kind_self_test" = "Self-check";
+"history_status_recorded" = "Recorded";
+"history_status_technical" = "Not recorded";
+"history_empty_filtered" = "No records of this kind yet.";
+"settings_support" = "Help and feedback";
+"research_section" = "Study participation";
+"research_section_footer" = "Taking part is voluntary and does not affect any feature. Leaving the study does not delete your account or your practice history.";
+"research_status" = "Status";
+"research_status_not_joined" = "Not taking part";
+"research_status_closed" = "Not open at the moment";
+"research_status_consented" = "Agreed, not finished yet";
+"research_status_pending" = "Waiting to be submitted";
+"research_status_enrolled" = "Taking part";
+"research_status_ineligible" = "Not included this time";
+"research_status_withdrawn" = "Left the study";
+"research_status_withdrawn_pending" = "Left the study (waiting to confirm online)";
+"research_join" = "Learn more and take part";
+"research_resume" = "Continue joining";
+"research_rejoin" = "Answer the background questions again";
+"research_sync_now" = "Submit pending data now";
+"research_withdraw" = "Leave the study";
+"research_withdraw_confirm_title" = "Leave the study?";
+"research_withdraw_confirm_message" = "Collection stops immediately and any study data not yet uploaded is erased from this device. Your account and practice history are not affected. You cannot rejoin during this round.";
+"research_withdrawn_body" = "You have left the study and no further study data is collected. You can keep using every feature as usual.";
+"research_enrolling" = "Confirming…";
+"research_enroll_saved_hint" = "Your answers are saved on this device. You can try again now, or practise first and continue later under Settings → Study participation.";
+"research_enroll_refused" = "You cannot join this round of the study at the moment. You can keep using every feature as usual.";
+"research_continue_later" = "Later — go to practice";
+"research_enrolled_title" = "You have joined the study";
+"research_enrolled_body" = "Thank you. You can leave at any time under Settings → Study participation.";
+"research_enrolled_pending_body" = "You have joined. Your background answers are saved on this device and will be submitted automatically when you are online.";
+"research_start_practice" = "Start practising";
+"research_ineligible_title" = "Thank you for your answers";
+"research_ineligible_body" = "Based on your answers, this round of the study will not collect your data. Your answers were not uploaded. You can keep using every feature as usual.";
+"research_not_open_title" = "Not open at the moment";
+"research_not_open_body" = "The study is not accepting participants right now. You can keep using every feature as usual.";
+"consent_version_line" = "Information sheet version: %@";
+"consent_draft_notice" = "This is a test draft of the information sheet. It has not been approved and is not used for the formal study.";
+"survey_start_now" = "Answer now";
+"survey_later" = "Answer later";
+"survey_decline" = "Do not answer";
+"survey_pre_name" = "Pre-practice questionnaire";
+"survey_post_name" = "Feedback questionnaire";
+"survey_pre_invite_title" = "Pre-practice questionnaire (6 questions)";
+"survey_pre_invite_body" = "Before you start practising, would you answer a few questions about how you learn tones? You can skip any question or answer later.";
+"survey_post_invite_title" = "Feedback questionnaire (5 questions)";
+"survey_post_invite_body" = "You have practised a few times. Would you take a minute or two to tell us how it went? Your answers do not affect your practice, and you can skip any question.";
+"survey_progress_a11y" = "Question %1$d of %2$d";
+"survey_status_invited" = "Not started";
+"survey_status_deferred" = "To finish later";
+"survey_status_declined" = "Declined";
+"survey_status_saved_pending" = "Saved, waiting to be submitted";
+"survey_status_submitted" = "Submitted";
+"survey_status_not_accepted" = "Could not be submitted (the study period has ended)";
+"survey_thanks" = "Thank you for your feedback.";
+"survey_saved_pending_body" = "Your answers are saved on this device and will be submitted automatically when you are online. You can also try again now.";
+"survey_unavailable" = "This questionnaire is not available at the moment.";
+"issue_mail_opened" = "Your mail app has been opened. Your feedback is sent by email and is not added to the study data.";

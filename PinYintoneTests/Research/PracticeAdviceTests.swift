@@ -84,15 +84,10 @@ final class PracticeAdviceTests: XCTestCase {
 final class AdviceRequestLogTests: XCTestCase {
     override func setUp() {
         super.setUp()
-        AdviceRequestLog.shared.clearPendingOnWithdrawal()
-        ResearchEventLog.shared.eligibility = .eligible
-        ResearchEventLog.shared.window = .init(start: Date().addingTimeInterval(-60),
-                                               end: Date().addingTimeInterval(3600))
-        ResearchConsent.shared.grant(textVersion: "c1", language: "zh")
+        ResearchTestSupport.enrolledAccount()
     }
     override func tearDown() {
-        AdviceRequestLog.shared.clearPendingOnWithdrawal()
-        ResearchConsent.shared.withdraw()
+        ResearchTestSupport.tearDown()
         super.tearDown()
     }
 
@@ -109,12 +104,19 @@ final class AdviceRequestLogTests: XCTestCase {
     /// 模板路径**不声称模型生成**
     func testTemplatePathIsNotMarkedAsAI() {
         AdviceRequestLog.shared.record(
-            advice: .make(result: nil, lexemeID: nil), attemptID: nil, lexemeVersionID: nil)
+            advice: .make(result: nil, lexemeID: nil), attemptID: UUID(), lexemeVersionID: nil)
         XCTAssertEqual(AdviceRequestLog.shared.pending.first?.sourceType, "rule_feedback")
     }
 
     func testNotRecordedWithoutConsent() {
-        ResearchConsent.shared.withdraw()
+        ResearchTestSupport.freshAccount()
+        AdviceRequestLog.shared.record(
+            advice: .make(result: nil, lexemeID: nil), attemptID: UUID(), lexemeVersionID: nil)
+        XCTAssertTrue(AdviceRequestLog.shared.pending.isEmpty)
+    }
+
+    /// 建议必须挂在一次具体的尝试上（服务端该列非空）；没有尝试就不记，不造编号
+    func testNotRecordedWithoutAnAttempt() {
         AdviceRequestLog.shared.record(
             advice: .make(result: nil, lexemeID: nil), attemptID: nil, lexemeVersionID: nil)
         XCTAssertTrue(AdviceRequestLog.shared.pending.isEmpty)

@@ -108,10 +108,9 @@ final class ResearchUploader {
                 let ack = try await APIClient.shared.uploadSurvey(
                     record, timingClass: timing, participantID: pid, manifestID: mid)
                 guard sameAccount() else { return uploaded }
-                // 以服务端保存的状态为准：它可能已经存有更新的最终状态
-                let serverStatus = ack.status.flatMap(SurveyRecord.Status.init(rawValue:)) ?? sending
-                SurveyCenter.markSynced(record.formKey,
-                                        status: serverStatus == sending ? sending : serverStatus)
+                // 与服务端此刻保存的状态对账（它可能已存有另一台设备提交的最终答案）
+                SurveyCenter.reconcile(record.formKey, sent: sending,
+                                       server: ack.status.flatMap(SurveyRecord.Status.init(rawValue:)))
                 uploaded += 1
             } catch let error as ResearchAPIError {
                 guard sameAccount() else { return uploaded }
