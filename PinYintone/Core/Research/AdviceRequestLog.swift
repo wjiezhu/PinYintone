@@ -6,6 +6,10 @@ import Foundation
 /// 网络重传复用 `requestID`；用户再次主动点击则新建编号。
 @MainActor
 final class AdviceRequestLog {
+
+    // 勿删：见 CLAUDE.md 禁令 18（隐式析构在 iOS 18.5 / 26.2 上实测崩溃）
+    nonisolated deinit {}
+
     static let shared = AdviceRequestLog()
     private(set) var pending: [Record] = []
     private init() {}

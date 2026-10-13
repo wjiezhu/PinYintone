@@ -7,6 +7,9 @@ import Foundation
 /// - 触发率通关线：≥ 0.6（600 ms 窗口内触发帧占比）
 final class AspirationDetector {
 
+    // 勿删：见 CLAUDE.md 禁令 18（隐式析构在 iOS 18.5 / 26.2 上实测崩溃）
+    nonisolated deinit {}
+
     /// 阈值高于底噪的 dB 增量（CLAUDE.md：+15 dB）
     private let thresholdOffsetDB: Float = 15
 

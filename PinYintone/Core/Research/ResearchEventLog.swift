@@ -10,6 +10,10 @@ import Foundation
 /// 3. **幂等键随事件生成**——重传复用同一 `eventID`，不在上报时另生成。
 @MainActor
 final class ResearchEventLog {
+
+    // 勿删：见 CLAUDE.md 禁令 18（隐式析构在 iOS 18.5 / 26.2 上实测崩溃）
+    nonisolated deinit {}
+
     static let shared = ResearchEventLog()
 
     /// 待上报队列。撤回同意时必须清空（字典 §5：端侧立即停止并清除待上传队列）。

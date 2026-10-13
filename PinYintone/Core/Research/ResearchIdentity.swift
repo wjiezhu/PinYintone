@@ -9,6 +9,10 @@ import Foundation
 /// 幂等地返回**同一个**编号，不会产生第二份。
 @MainActor
 final class ResearchIdentity: ObservableObject {
+
+    // 勿删：见 CLAUDE.md 禁令 18（隐式析构在 iOS 18.5 / 26.2 上实测崩溃）
+    nonisolated deinit {}
+
     static let shared = ResearchIdentity()
 
     private enum Key {

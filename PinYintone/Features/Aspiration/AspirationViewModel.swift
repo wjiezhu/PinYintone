@@ -6,6 +6,10 @@ import Foundation
 /// 参数遵循 CLAUDE.md：阈值 = 底噪 + 15 dB，触发率通关线 ≥ 0.6。
 @MainActor
 final class AspirationViewModel: ObservableObject {
+
+    // 勿删：见 CLAUDE.md 禁令 18（隐式析构在 iOS 18.5 / 26.2 上实测崩溃）
+    nonisolated deinit {}
+
     @Published var currentLexeme: Lexeme?
     @Published var triggerRate: Float = 0
     @Published var triggered: Bool = false      // 当前帧是否超阈

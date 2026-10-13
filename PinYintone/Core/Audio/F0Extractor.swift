@@ -6,6 +6,9 @@ import Foundation
 /// 参数遵循 CLAUDE.md：帧长 512、检测 75–500 Hz、YIN 阈值 0.15、无声帧返回 0.0
 final class F0Extractor {
 
+    // 勿删：见 CLAUDE.md 禁令 18（隐式析构在 iOS 18.5 / 26.2 上实测崩溃）
+    nonisolated deinit {}
+
     // CLAUDE.md 锁定参数
     let sampleRate: Float = 16_000
     let minF0: Float = 75            // 检测下限

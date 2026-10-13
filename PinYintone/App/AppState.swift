@@ -8,6 +8,10 @@ import Foundation
 /// 动态 F0 可视化，没有需要按人或按词集保存的条件。
 @MainActor
 final class AppState: ObservableObject {
+
+    // 勿删：见 CLAUDE.md 禁令 18（隐式析构在 iOS 18.5 / 26.2 上实测崩溃）
+    nonisolated deinit {}
+
     /// 是否为教师模式（解锁教师控制台入口）
     @Published var isTeacherMode: Bool = false
     /// 教师 JWT（仅教师模式有值）

@@ -11,6 +11,10 @@ import Foundation
 /// - **反馈呈现**：训练阶段一律动态 F0 可视化（已取消 A/B 分组）。
 @MainActor
 final class ToneTrainingViewModel: ObservableObject {
+
+    // 勿删：见 CLAUDE.md 禁令 18（隐式析构在 iOS 18.5 / 26.2 上实测崩溃）
+    nonisolated deinit {}
+
     @Published var currentLexeme: Lexeme?
     /// 当前研究阶段；测试阶段不呈现任何反馈（升级需求 §3.1）
     @Published private(set) var phase: TrainingPhase = .pretest

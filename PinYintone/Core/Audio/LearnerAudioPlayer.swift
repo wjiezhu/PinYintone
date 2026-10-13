@@ -10,6 +10,10 @@ import Foundation
 /// 零第三方依赖：AVFoundation 是系统框架（CLAUDE.md 禁令 5）。
 @MainActor
 final class LearnerAudioPlayer {
+
+    // 勿删：见 CLAUDE.md 禁令 18（隐式析构在 iOS 18.5 / 26.2 上实测崩溃）
+    nonisolated deinit {}
+
     static let shared = LearnerAudioPlayer()
 
     private let engine = AVAudioEngine()

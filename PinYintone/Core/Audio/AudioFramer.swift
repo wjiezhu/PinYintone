@@ -12,6 +12,9 @@ import Foundation
 /// ```
 final class AudioFramer {
 
+    // 勿删：见 CLAUDE.md 禁令 18（隐式析构在 iOS 18.5 / 26.2 上实测崩溃）
+    nonisolated deinit {}
+
     let frameSize: Int   // 512（CLAUDE.md）
     let hopSize: Int     // 128（CLAUDE.md）
 

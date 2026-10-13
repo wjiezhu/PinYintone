@@ -15,6 +15,10 @@ enum ReferenceType: String {
 /// 3) `referenceF0FromBundledAudio` 从随包真人录音提 F0（质量优于 TTS，优先使用）。
 /// 合成/加载失败或无声时返回空数组，调用方应依次回退。
 final class SpeechService {
+
+    // 勿删：见 CLAUDE.md 禁令 18（隐式析构在 iOS 18.5 / 26.2 上实测崩溃）
+    nonisolated deinit {}
+
     static let shared = SpeechService()
 
     private let player = AVSpeechSynthesizer()

@@ -6,6 +6,10 @@ import SwiftUI
 /// 立即使用用户选择的语言，无需重启 App。
 @MainActor
 final class LocalizationManager: ObservableObject {
+
+    // 勿删：见 CLAUDE.md 禁令 18（隐式析构在 iOS 18.5 / 26.2 上实测崩溃）
+    nonisolated deinit {}
+
     static let shared = LocalizationManager()
 
     /// 受支持的语言（code → 显示名）；code 对应 OnboardingFlowView 的选择
@@ -59,6 +63,10 @@ final class LocalizationManager: ObservableObject {
 
 /// Bundle.main 的替身：本地化查找改走 override 指向的 .lproj
 final class LocalizedBundle: Bundle, @unchecked Sendable {
+
+    // 勿删：见 CLAUDE.md 禁令 18（隐式析构在 iOS 18.5 / 26.2 上实测崩溃）
+    nonisolated deinit {}
+
     nonisolated(unsafe) static var override: Bundle?
 
     override func localizedString(forKey key: String, value: String?, table tableName: String?) -> String {
