@@ -56,6 +56,9 @@ struct PracticeHomeView: View {
                 .padding(.bottom, Theme.Space.xl)
             }
             .background(Theme.background)
+            // 导航栏在首页不显示，但标题要给：下一页的返回键用它当文字。
+            // 不给的话 iOS 17 / 18 上返回键是系统语言的「Back」，与 App 里选的语言对不上。
+            .navigationTitle(NSLocalizedString("tab_practice", comment: ""))
             .toolbar(.hidden, for: .navigationBar)
             .onAppear { reloadLastPracticed() }
             .navigationDestination(for: Route.self) { route in

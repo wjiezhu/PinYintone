@@ -48,6 +48,9 @@ struct ToneTrainingView: View {
         // 自测中不能用系统返回直接离开：先明确退出自测，回到普通练习
         .navigationBarBackButtonHidden(vm.mode == .selfTest)
         .toolbar { toolbar }
+        // 返回键只留箭头：标题长、屏幕窄时系统会把返回文字换成**系统语言**的「Back」，
+        // 与 App 里选的语言对不上。箭头在哪种语言里都一样。
+        .toolbarRole(.editor)
         .onAppear {
             if !didApplyInitialWord, let initialLexemeID {
                 didApplyInitialWord = true

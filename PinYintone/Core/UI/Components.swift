@@ -127,7 +127,7 @@ struct ModuleTile: View {
     let title: String
     let kind: ModuleIllustration.Kind
     var tone: Tone = .plain
-    /// 一列排布（窄屏、放大文字）时：名称在前、图在后，横着排
+    /// 一列排布（放大文字）时：名称占满整行，图固定大小放在下面
     var wide = false
 
     private var fill: Color {
@@ -141,11 +141,11 @@ struct ModuleTile: View {
     var body: some View {
         Group {
             if wide {
-                HStack(alignment: .center, spacing: Theme.Space.l) {
+                // 放大文字时：名称独占一行（长的法语名称不必逐音节折行），图在下面靠前
+                VStack(alignment: .leading, spacing: Theme.Space.m) {
                     name
-                    Spacer(minLength: 0)
                     ModuleIllustration(kind: kind, backdrop: fill)
-                        .frame(width: 112)
+                        .frame(width: 132)
                 }
             } else {
                 VStack(alignment: .leading, spacing: Theme.Space.m) {

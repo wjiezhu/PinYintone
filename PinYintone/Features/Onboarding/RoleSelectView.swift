@@ -47,6 +47,8 @@ struct RoleSelectView: View {
             .padding(.bottom, Theme.Space.xl)
         }
         .background(Theme.background)
+        // 给下一页的返回键一个文字（否则是系统语言的「Back」）
+        .navigationTitle("PinYintone")
         .toolbar(.hidden, for: .navigationBar)
     }
 }
