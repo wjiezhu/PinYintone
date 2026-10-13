@@ -5,35 +5,47 @@ import Foundation
 /// 字典 §1 要求端侧筛选：「仅符合条件并明确同意者写入研究库」，
 /// 且「后台不得先收集所有用户的研究事件，再只在导出时过滤」。
 ///
-/// 因此所有 `research_*` 写入都必须先问 `shouldCollect`，
-/// 而不是先写下来等服务端或导出时再筛。把判断集中在这里，
-/// 是为了避免「每处埋点都记得加条件」——那个约定在本项目已被证伪过一次
-/// （技术失败哨兵值在 export.sql 里筛了、在 teacher.py 里漏了）。
+/// 因此所有 `research_*` 写入都必须先问这里，而不是先写下来等服务端或导出时再筛。
+/// 把判断集中在一处，是为了避免「每处埋点都记得加条件」——那个约定在本项目
+/// 已被证伪过不止一次（技术失败哨兵在 export.sql 里筛了、teacher.py 里漏了；
+/// 问卷接口漏了同意校验）。
+///
+/// 两道门要分清（需求 R04）：
+/// - `shouldCollect`：能不能**产生新的**研究数据。要求此刻在采集窗口内。
+/// - `canUpload`：能不能**补传已经合法产生的**数据。不看窗口——
+///   窗口内产生、窗口关闭后才联网的记录照样要传，窗口关闭不清队列。
 @MainActor
 enum ResearchGate {
 
     /// 当前是否应当产生研究记录。
     ///
-    /// 四个条件缺一不可：持有有效同意、资格判定为 eligible、
-    /// 处于采集窗口内、且不是测试账户被排除的情形。
-    /// - Parameters:
-    ///   - eligibility: 端侧资格判定结果
-    ///   - now: 判定时刻（便于测试注入）
-    ///   - window: 采集窗口，左闭右开；统一 14 天，**非每人 14 天**
-    static func shouldCollect(eligibility: ResearchEligibility.Outcome,
-                              now: Date = Date(),
-                              window: CollectionWindow?) -> Bool {
-        guard ResearchConsent.shared.allowsResearchCollection else { return false }
-        guard eligibility == .eligible else { return false }
-        guard let window else { return false }   // 窗口未配置则不采集，不猜测
+    /// 缺一不可：服务端已确认纳入、端侧资格为 eligible、持有研究身份、
+    /// 此刻处于纳入所用配置的采集窗口内。
+    /// 「已同意但尚未纳入」不算——服务端确认之前不产生研究日志。
+    static func shouldCollect(now: Date = Date()) -> Bool {
+        shouldCollect(state: ResearchStore.shared.state, now: now)
+    }
+
+    /// 纯函数版本，便于测试。
+    nonisolated static func shouldCollect(state: ResearchState, now: Date) -> Bool {
+        guard state.participation == .enrolled else { return false }
+        guard state.eligibilityOutcome == .eligible else { return false }
+        guard state.hasIdentity else { return false }
+        guard let window = state.window else { return false }   // 窗口未知则不采集，不猜测
         return window.contains(now)
+    }
+
+    /// 是否可以上传已产生的研究数据。退出后一律不行（由退出指令先行）。
+    nonisolated static func canUpload(state: ResearchState) -> Bool {
+        state.participation == .enrolled && state.hasIdentity
+            && state.pendingWithdrawal == nil
     }
 
     /// 采集窗口（字典 §3 `collection_start_at` / `collection_end_at`）。
     ///
-    /// 统一窗口、左闭右开。`collection_start_at` 是新版在 App Store
-    /// **实际公开可用**的时点，须上线后核实，不得填预计日期。
-    struct CollectionWindow {
+    /// 由配置显式给出起止时间，**左闭右开**：起点纳入、终点排除。
+    /// 长度不再固定为 14 天（需求 R04），由研究者与导师确定。
+    nonisolated struct CollectionWindow: Equatable {
         let start: Date
         let end: Date
         func contains(_ t: Date) -> Bool { t >= start && t < end }

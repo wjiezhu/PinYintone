@@ -99,6 +99,17 @@ final class SessionRepository {
         return (try? context.fetch(req)) ?? []
     }
 
+    /// 学习记录页用：按时间倒序取本机**全部**声调记录，含技术失败。
+    ///
+    /// 技术失败的 `dtwScore` 是 -1 哨兵、`grade` 是 "n/a"——调用方必须按
+    /// `resultStatus` 单独标记它们，**不得**把哨兵当成绩显示或统计。
+    func fetchAllForHistory(limit: Int = 300) -> [TrainingSession] {
+        let req: NSFetchRequest<TrainingSession> = TrainingSession.fetchRequest()
+        req.sortDescriptors = [NSSortDescriptor(key: "timestamp", ascending: false)]
+        req.fetchLimit = limit
+        return (try? context.fetch(req)) ?? []
+    }
+
     /// 技术失败的次数。单独呈现——它反映的是录音是否顺利，不是发音水平。
     func technicalRetryCount() -> Int {
         let req: NSFetchRequest<TrainingSession> = TrainingSession.fetchRequest()

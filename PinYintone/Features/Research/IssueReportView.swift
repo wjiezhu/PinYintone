@@ -15,7 +15,7 @@ struct IssueReportView: View {
     @State private var detail = ""
     @State private var state: SubmitState = .editing
 
-    private enum SubmitState { case editing, sending, sent, failed }
+    private enum SubmitState { case editing, sending, sent, mailed, failed }
 
     /// 与 POST04 同一组类别，便于和问卷回答对照（但二者**分别统计**）
     private static let categories = ["cannot_find_action", "recording_failed",
@@ -59,6 +59,11 @@ struct IssueReportView: View {
                     Label(NSLocalizedString("issue_sent", comment: ""),
                           systemImage: "checkmark.circle")
                         .foregroundStyle(.green)
+                } else if state == .mailed {
+                    // 走的是邮件，如实说明，不显示成「已提交」
+                    Label(NSLocalizedString("issue_mail_opened", comment: ""),
+                          systemImage: "envelope")
+                        .foregroundStyle(Theme.textSecondary)
                 } else if state == .failed {
                     Label(NSLocalizedString("issue_failed", comment: ""),
                           systemImage: "exclamationmark.triangle")
@@ -75,7 +80,8 @@ struct IssueReportView: View {
                     Button(NSLocalizedString("survey_submit", comment: "")) {
                         Task { await submit() }
                     }
-                    .disabled(category == nil || state == .sending || state == .sent)
+                    .disabled(category == nil || state == .sending || state == .sent
+                              || state == .mailed)
                 }
             }
         }
@@ -85,11 +91,11 @@ struct IssueReportView: View {
         guard let category else { return }
         let text = detail.trimmingCharacters(in: .whitespacesAndNewlines)
 
-        guard ResearchIdentity.shared.isEnrolled,
-              ResearchConsent.shared.allowsResearchCollection else {
-            // 非研究用户：不写研究表，走知情说明中的联系渠道
+        guard ResearchGate.shouldCollect() else {
+            // 没有研究身份（未参加、已退出、不在采集期）：**不写研究表**，
+            // 也不假装反馈已进研究库——走知情说明里写明的联系渠道。
             openMail(category: category, detail: text)
-            state = .sent
+            state = .mailed
             return
         }
 
@@ -116,13 +122,30 @@ struct IssueReportView: View {
 }
 
 /// 研究用户的问题上报。
+///
+/// 与其它研究写入同一道门禁：只有此刻在采集中才写研究表。
+/// 报告编号在第一次尝试时生成并在重试时复用——网络失败后用户再点一次提交，
+/// 服务端只会有一份。
 @MainActor
 enum IssueReporter {
+    private static var pendingID: (key: String, id: String)?
+
     static func submit(category: String, detail: String?) async throws {
-        let id = ResearchIdentity.shared
-        guard let pid = id.participantID, let mid = id.manifestID else { return }
+        let state = ResearchStore.shared.state
+        guard ResearchGate.shouldCollect(),
+              let pid = state.participantID, let mid = state.manifestID else { return }
+        // 同样的内容重试时复用同一个 report_id
+        let key = "\(category)|\(detail ?? "")"
+        let reportID: String
+        if let pending = pendingID, pending.key == key {
+            reportID = pending.id
+        } else {
+            reportID = UUID().uuidString
+            pendingID = (key, reportID)
+        }
         try await APIClient.shared.reportIssue(
-            reportID: UUID().uuidString, participantID: pid, manifestID: mid,
+            reportID: reportID, participantID: pid, manifestID: mid,
             submittedAt: Date(), category: category, detail: detail)
+        pendingID = nil
     }
 }

@@ -1,14 +1,16 @@
 import SwiftUI
 
-/// 模式 B（dynamicF0，实验组）：Canvas 叠加绘制母语者参照（蓝色虚线）与
-/// 学习者实时 F0（橙色实线）。对应论文图 2「自我叠加轨迹拟合」。
+/// 曲线模式：参考曲线（青绿虚线）与学习者曲线（玫红实线）叠加。
 /// 输入为已归一化（z-score）的轨迹。
 ///
-/// **显示与评分必须同源（P0-5）**：两条曲线采用与 `DTWAnalyzer` 完全相同的
-/// 预处理——丢弃 0（无声）帧——并共用同一条横轴刻度（按有声帧索引等距，
-/// 分母取两者较长者）。此前各自按画布宽度拉伸铺满，会让学习者把橙线"目测对齐"
-/// 到蓝线却仍判 fail（真实节奏对不上），反馈自相矛盾。现在时长差异会如实呈现：
-/// 说得过快/过慢，橙线就短/长于蓝线。
+/// **显示与评分必须同源**：两条曲线采用与 `DTWAnalyzer` 完全相同的预处理——
+/// 丢弃 0（无声）帧——并共用同一条横轴刻度（按有声帧索引等距，分母取两者较长者）。
+/// 各自按画布宽度拉伸铺满的话，学习者会把自己的线「目测对齐」到参考线却仍不通过
+/// （真实节奏对不上）。现在时长差异如实呈现：说得快，线就短。
+///
+/// 两条线同时用**颜色和线型**区分（虚线 / 实线），不单靠颜色。
+/// 时间方向固定从左到右：阿拉伯语界面下也不镜像，否则升调会被画成降调。
+/// 没有有效基频时显示中性的空状态，**不画假曲线**。
 struct ModeB_F0WaveformView: View {
     let lexeme: Lexeme
     let studentF0: [Float]
@@ -18,39 +20,56 @@ struct ModeB_F0WaveformView: View {
     private let vMin: Float = -2.5
     private let vMax: Float = 2.5
 
+    /// 与 DTW 相同的预处理：丢弃 0（无声）帧；NaN/Inf 一并滤掉
+    /// （非有限值坐标传入 CoreGraphics 会直接 abort 进程）
+    private var reference: [Float] { referenceF0.filter { $0 != 0 && $0.isFinite } }
+    private var student: [Float] { studentF0.filter { $0 != 0 && $0.isFinite } }
+
     var body: some View {
-        Canvas { ctx, size in
-            drawGuides(ctx: &ctx, size: size)
-
-            // 与 DTW 相同的预处理：丢弃 0（无声）帧；NaN/Inf 一并滤掉
-            // （非有限值坐标传入 CoreGraphics 会直接 abort 进程）
-            let ref = referenceF0.filter { $0 != 0 && $0.isFinite }
-            let stu = studentF0.filter { $0 != 0 && $0.isFinite }
-            // 共用横轴刻度：分母取两者较长者，短的那条自然提前结束
-            let denom = max(max(ref.count, stu.count) - 1, 1)
-
-            if !ref.isEmpty {
-                ctx.stroke(
-                    path(from: ref, denom: denom, in: size),
-                    with: .color(.blue.opacity(0.75)),
-                    style: StrokeStyle(lineWidth: 2.5, dash: [10, 6])
-                )
+        VStack(spacing: 0) {
+            legend
+                .padding(.horizontal, Theme.Space.m)
+                .padding(.vertical, Theme.Space.s)
+            ZStack {
+                Canvas { ctx, size in
+                    drawGuides(ctx: &ctx, size: size)
+                    let ref = reference
+                    let stu = student
+                    // 共用横轴刻度：分母取两者较长者，短的那条自然提前结束
+                    let denom = max(max(ref.count, stu.count) - 1, 1)
+                    if ref.count > 1 {
+                        ctx.stroke(path(from: ref, denom: denom, in: size),
+                                   with: .color(Theme.accent),
+                                   style: StrokeStyle(lineWidth: 2.5, lineCap: .round, dash: [9, 6]))
+                    }
+                    if stu.count > 1 {
+                        ctx.stroke(path(from: stu, denom: denom, in: size),
+                                   with: .color(Theme.learner),
+                                   style: StrokeStyle(lineWidth: 3, lineCap: .round, lineJoin: .round))
+                    }
+                }
+                if reference.count < 2 && student.count < 2 {
+                    emptyState
+                }
             }
-            if !stu.isEmpty {
-                ctx.stroke(
-                    path(from: stu, denom: denom, in: size),
-                    with: .color(.orange),
-                    style: StrokeStyle(lineWidth: 3, lineCap: .round, lineJoin: .round)
-                )
-            }
+            .padding(.horizontal, Theme.Space.m)
+            .padding(.bottom, Theme.Space.m)
         }
-        .background(Color(.systemGray6).opacity(0.5))
-        .clipShape(RoundedRectangle(cornerRadius: 12))
-        .overlay(alignment: .topLeading) { legend }
+        .environment(\.layoutDirection, .leftToRight)
+        .accessibilityElement(children: .ignore)
+        .accessibilityLabel(Text(accessibilitySummary))
     }
 
-    /// 已去 0 帧的有声序列 → 路径。`denom` 为两条曲线共用的横轴分母，
-    /// 使二者落在同一时间刻度上（不各自拉伸铺满画布）。
+    /// 没有可画的基频：如实说明，不画一条好看的假线
+    private var emptyState: some View {
+        Text(NSLocalizedString("chart_empty", comment: ""))
+            .font(.subheadline)
+            .foregroundStyle(Theme.textSecondary)
+            .multilineTextAlignment(.center)
+            .padding(Theme.Space.l)
+    }
+
+    /// 已去 0 帧的有声序列 → 路径。`denom` 为两条曲线共用的横轴分母。
     private func path(from voiced: [Float], denom: Int, in size: CGSize) -> Path {
         var p = Path()
         for (i, v) in voiced.enumerated() {
@@ -73,27 +92,38 @@ struct ModeB_F0WaveformView: View {
             let y = size.height * frac
             line.move(to: CGPoint(x: 0, y: y))
             line.addLine(to: CGPoint(x: size.width, y: y))
-            ctx.stroke(line, with: .color(.gray.opacity(0.15)),
-                       style: StrokeStyle(lineWidth: 1, dash: [4, 4]))
+            ctx.stroke(line, with: .color(Theme.divider), style: StrokeStyle(lineWidth: 1))
         }
     }
 
     private var legend: some View {
-        HStack(spacing: 12) {
-            label(color: .blue, text: NSLocalizedString("legend_native", comment: ""), dashed: true)
-            label(color: .orange, text: NSLocalizedString("legend_you", comment: ""), dashed: false)
+        HStack(spacing: Theme.Space.l) {
+            legendItem(color: Theme.accent, dashed: true,
+                       text: NSLocalizedString("legend_native", comment: ""))
+            legendItem(color: Theme.learner, dashed: false,
+                       text: NSLocalizedString("legend_you", comment: ""))
+            Spacer(minLength: 0)
         }
-        .font(.caption2)
-        .padding(8)
+        .font(.footnote)
     }
 
-    private func label(color: Color, text: String, dashed: Bool) -> some View {
-        HStack(spacing: 4) {
-            RoundedRectangle(cornerRadius: 1)
-                .fill(color)
-                .frame(width: 16, height: 3)
-                .opacity(dashed ? 0.75 : 1)
-            Text(text).foregroundStyle(.secondary)
+    private func legendItem(color: Color, dashed: Bool, text: String) -> some View {
+        HStack(spacing: Theme.Space.xs) {
+            Canvas { ctx, size in
+                var p = Path()
+                p.move(to: CGPoint(x: 0, y: size.height / 2))
+                p.addLine(to: CGPoint(x: size.width, y: size.height / 2))
+                ctx.stroke(p, with: .color(color),
+                           style: StrokeStyle(lineWidth: 2.5, lineCap: .round,
+                                              dash: dashed ? [5, 4] : []))
+            }
+            .frame(width: 26, height: 10)
+            Text(text).foregroundStyle(Theme.textSecondary)
         }
+    }
+
+    private var accessibilitySummary: String {
+        NSLocalizedString(student.count > 1 ? "chart_a11y_with_yours" : "chart_a11y_reference_only",
+                          comment: "")
     }
 }

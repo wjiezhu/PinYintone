@@ -11,8 +11,14 @@ final class AdviceRequestLog {
     nonisolated deinit {}
 
     static let shared = AdviceRequestLog()
+    private static let queueName = "advice"
     private(set) var pending: [Record] = []
     private init() {}
+
+    /// 换账号后从该账号的存储域重新加载
+    func reload() { pending = ResearchStore.shared.loadQueue(Self.queueName) }
+
+    private func persist() { ResearchStore.shared.saveQueue(Self.queueName, pending) }
 
     nonisolated struct Record: Codable, Equatable {
         let requestID: UUID
@@ -33,7 +39,11 @@ final class AdviceRequestLog {
 
     func record(advice: PracticeAdvice, attemptID: UUID?, lexemeVersionID: String?) {
         guard ResearchEventLog.shared.isCollecting else { return }
+        // 建议必须挂在一次具体的尝试上（服务端该列非空）。没有尝试就不记，
+        // 不造一个假的编号。
+        guard attemptID != nil else { return }
         let now = Date()
+        defer { persist() }
         pending.append(Record(
             requestID: UUID(),
             attemptID: attemptID,
@@ -53,6 +63,14 @@ final class AdviceRequestLog {
             lexemeVersionID: lexemeVersionID))
     }
 
-    func clearPendingOnWithdrawal() { pending.removeAll() }
-    func remove(_ ids: Set<UUID>) { pending.removeAll { ids.contains($0.requestID) } }
+    func clearPendingOnWithdrawal() {
+        pending.removeAll()
+        persist()
+    }
+
+    func remove(_ ids: Set<UUID>) {
+        guard !ids.isEmpty else { return }
+        pending.removeAll { ids.contains($0.requestID) }
+        persist()
+    }
 }

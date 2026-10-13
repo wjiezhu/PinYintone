@@ -19,8 +19,12 @@ final class UserManager: ObservableObject {
     /// 启动时读取本地持久化的用户档案
     func bootstrap() {
         guard let data = UserDefaults.standard.data(forKey: Self.storageKey),
-              let p = try? JSONDecoder().decode(UserProfile.self, from: data) else { return }
+              let p = try? JSONDecoder().decode(UserProfile.self, from: data) else {
+            ResearchStore.shared.activate(for: nil)
+            return
+        }
         profile = p
+        ResearchStore.shared.activate(for: p)
     }
 
     /// 学生注册（Sign in with Apple）。后端按 deviceID / Apple ID 幂等建档，
@@ -39,10 +43,12 @@ final class UserManager: ObservableObject {
             spokenLanguages: spokenLanguages.map(\.rawValue),
             registeredAt: Date()
         )
-        // 注册到后端（失败不阻塞本地建档，下次同步补上）
+        // 注册到后端（失败不阻塞本地建档，下次同步补上；参加研究前也会再补一次）
         _ = try? await APIClient.shared.registerUser(p)
         save(p)
         profile = p
+        // 研究状态按账号隔离：切到这个账号自己的那一份
+        ResearchStore.shared.activate(for: p)
     }
 
     /// 修改显示名（升级需求 §4.1：姓名可选，首次授权后允许学习者自行修改）。
@@ -79,16 +85,20 @@ final class UserManager: ObservableObject {
         )
         save(p)
         profile = p
+        ResearchStore.shared.activate(for: p)     // 教师账号没有研究状态
         return resp.classCode
     }
 
-    /// 退出登录 / 切换账号：清除本地档案，回到引导（角色选择）流程。
-    /// 注意：
-    /// - 不清除实验排程（反平衡格子一经确定不再变，退出重进不得换条件）
-    /// - 不清除语言偏好
+    /// 退出登录 / 切换账号：清除本地档案，回到登录流程。不清除语言偏好。
+    ///
+    /// 研究状态**按账号隔离**：登出后当前没有研究身份，不采集；
+    /// 这个账号的研究状态与待传队列留在它自己的存储域里，等它重新登录时接着用，
+    /// 下一个登录的人看不到也用不到。
     func logout() {
+        LearnerRecordingStore.shared.clear()
         UserDefaults.standard.removeObject(forKey: Self.storageKey)
         profile = nil
+        ResearchStore.shared.activate(for: nil)
     }
 
     /// 删除账号：清空服务端与本机的全部个人数据，回到引导流程。
@@ -100,8 +110,10 @@ final class UserManager: ObservableObject {
         try await APIClient.shared.deleteAccount(
             deviceID: profile.deviceID, appleUserID: profile.appleUserID)
 
-        // 服务端删除成功后再清本地：本地训练记录、练习游标、尝试计数
+        // 服务端删除成功后再清本地：本地训练记录、练习位置、尝试计数，
+        // 以及这个账号的研究状态与全部待传内容（服务端已同时记为退出研究）
         LocalDataPurger.purgeAll()
+        ResearchStore.shared.purgeCurrentAccount()
         UserDefaults.standard.removeObject(forKey: Self.storageKey)
         self.profile = nil
     }

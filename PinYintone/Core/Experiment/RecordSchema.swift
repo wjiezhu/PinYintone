@@ -30,7 +30,14 @@ enum RecordSchema {
     ///      `grade = 'fail'` 且 `dtwScore <= 0.5` 的记录即被闸门拦下的那些，
     ///      无需额外字段即可识别。取数时 `passed` 应以 `grade` 为准，
     ///      不要再用 `dtw_score <= 0.5` 重算。
-    static let version = 5
+    /// - 6：**取消强制三阶段**。`phase` 不再有 `pretest` / `posttest`：
+    ///      普通练习写 `training`，学习者主动发起的可选自测写 `self_test`。
+    ///      自测是自选时间做的，**不是规范化的前后测**，不得与 v2–v5 的
+    ///      `pretest` / `posttest` 记录合并当作前后测证据。
+    ///      训练词与自测词不再要求不重叠；`assessmentSetVersion` 仅自测记录有值。
+    ///      送气与自由文本记录的 `phase` 恒为 `training`（此前会跟着声调阶段写成
+    ///      `pretest` 等，那是错的——它们从不属于声调的前后测）。
+    static let version = 6
 
     /// 形如 "1.2 (9)"：短版本号 + 构建号，便于按构建定位数据
     static let appVersion: String = {

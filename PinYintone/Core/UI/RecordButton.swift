@@ -1,37 +1,36 @@
 import SwiftUI
 
-/// 关卡 2 和关卡 3 共用的录音按钮。
-/// 录音中：红色脉冲圆 + 停止图标；待机：麦克风图标。
+/// 录音键。声调练习、自测、自由文本共用。
+///
+/// 全 App 统一「**点一下开始，再点一下停止**」，不混用长按（需求 U03）。
+/// 外框尺寸固定：待录、录音中、不可用三种状态下按钮不变大变小，
+/// 所以它在底部操作栏里的位置一毫米都不动。
 struct RecordButton: View {
     let isRecording: Bool
+    /// 分析中、参考未就绪时为 false：按钮变淡且不可点，但仍占着原来的位置
+    var isEnabled: Bool = true
     let action: () -> Void
 
     var body: some View {
         Button(action: action) {
             ZStack {
-                // 录音中的脉冲光晕
-                if isRecording {
-                    TimelineView(.animation) { timeline in
-                        let t = timeline.date.timeIntervalSinceReferenceDate
-                        let scale = 1.0 + 0.15 * sin(t * 3)
-                        Circle()
-                            .fill(Color.red.opacity(0.25))
-                            .frame(width: 96, height: 96)
-                            .scaleEffect(scale)
-                    }
-                }
                 Circle()
-                    .fill(isRecording ? Color.red : Color.accentColor)
-                    .frame(width: 76, height: 76)
+                    .fill(isRecording ? Theme.recording : Theme.accent)
+                    .frame(width: Theme.recordButton, height: Theme.recordButton)
                 Image(systemName: isRecording ? "stop.fill" : "mic.fill")
-                    .font(.system(size: 30, weight: .bold))
-                    .foregroundStyle(.white)
+                    .font(.system(size: 26, weight: .semibold))
+                    .foregroundStyle(isRecording ? Color.white : Theme.onAccent)
+                    .accessibilityHidden(true)
             }
-            .frame(width: 100, height: 100)
+            // 热区略大于可见圆，且恒定
+            .frame(width: Theme.recordButton + 12, height: Theme.recordButton + 12)
+            .contentShape(Circle())
+            .opacity(isEnabled ? 1 : 0.35)
         }
         .buttonStyle(.plain)
-        .accessibilityLabel(isRecording
-            ? NSLocalizedString("record_stop", comment: "")
-            : NSLocalizedString("record_start", comment: ""))
+        .disabled(!isEnabled)
+        .accessibilityLabel(NSLocalizedString(isRecording ? "record_stop" : "record_start",
+                                              comment: ""))
+        .accessibilityIdentifier("practice.record")
     }
 }

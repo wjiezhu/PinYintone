@@ -15,6 +15,13 @@ final class APIClient {
             guard let s, !s.trimmingCharacters(in: .whitespaces).isEmpty else { return nil }
             return URL(string: s)
         }
+        #if DEBUG
+        // 仅开发构建：用启动环境变量把后端指到本地测试服务，
+        // 这样界面测试与对账验收不碰线上数据。正式构建里这段代码不存在。
+        if let parsed = parse(ProcessInfo.processInfo.environment["PT_API_BASE_URL"]) {
+            return parsed
+        }
+        #endif
         if let url = Bundle.main.url(forResource: "APIConfig", withExtension: "plist"),
            let dict = NSDictionary(contentsOf: url),
            let parsed = parse(dict["BaseURL"] as? String) {
@@ -29,7 +36,6 @@ final class APIClient {
     // MARK: - Private helpers
 
     private struct ErrorResponse: Codable { let detail: String }
-    private struct ResearchEventAck: Decodable { let received: Int; let inserted: Int }
 
     private func request<T: Decodable>(
         _ path: String,
@@ -64,11 +70,46 @@ final class APIClient {
 
     /// 研究接口专用：日期一律 ISO8601。**所有 research/ 路径必须走这里**——
     /// 见 `ResearchJSON` 的说明，默认编码会让时间错 31 年且全程静默。
+    ///
+    /// 错误统一抛 `ResearchAPIError`，把「传输失败」与「服务端明确拒绝」分开：
+    /// 前者稍后原样重试，后者重试也没用。此前两者都被包成同一个网络错误，
+    /// 上传队列分不清该等还是该放弃。
     private func researchRequest<T: Decodable>(
-        _ path: String, method: String = "GET", body: (any Encodable)? = nil
+        _ path: String, method: String = "GET", query: [URLQueryItem] = [],
+        body: (any Encodable)? = nil
     ) async throws -> T {
-        try await request(path, method: method, body: body,
-                          encoder: ResearchJSON.encoder, decoder: ResearchJSON.decoder)
+        var comps = URLComponents(url: baseURL.appendingPathComponent(path),
+                                  resolvingAgainstBaseURL: false)
+        if !query.isEmpty { comps?.queryItems = query }
+        guard let url = comps?.url else { throw ResearchAPIError.transport(URLError(.badURL)) }
+        var req = URLRequest(url: url)
+        req.httpMethod = method
+        req.timeoutInterval = 20
+        req.setValue("application/json", forHTTPHeaderField: "Content-Type")
+        do {
+            if let body { req.httpBody = try ResearchJSON.encoder.encode(body) }
+        } catch {
+            throw ResearchAPIError.encoding(error)
+        }
+
+        let data: Data, response: URLResponse
+        do {
+            (data, response) = try await URLSession.shared.data(for: req)
+        } catch {
+            throw ResearchAPIError.transport(error)
+        }
+        guard let http = response as? HTTPURLResponse else {
+            throw ResearchAPIError.transport(URLError(.badServerResponse))
+        }
+        guard (200..<300).contains(http.statusCode) else {
+            let detail = (try? JSONDecoder().decode(ErrorResponse.self, from: data))?.detail
+            throw ResearchAPIError.http(status: http.statusCode, detail: detail)
+        }
+        do {
+            return try ResearchJSON.decoder.decode(T.self, from: data)
+        } catch {
+            throw ResearchAPIError.decoding(error)
+        }
     }
 
     // MARK: - Auth
@@ -93,7 +134,8 @@ final class APIClient {
         try await request("student/register", method: "POST", body: profile)
     }
 
-    /// 删除账号：清除服务端该用户及其全部训练数据。
+    // MARK: - Research
+
     struct EnrollResearchResponse: Decodable {
         let participantID: String
         let studyID: String
@@ -102,25 +144,35 @@ final class APIClient {
 
     /// 纳入研究。返回的 participantID 由**服务端**随机生成，
     /// 客户端不得自行构造或从账号键派生（字典 §4）。
+    ///
+    /// 调用前提：已有业务账号（服务端按它去重，同账号换设备返回同一编号）、
+    /// 端侧已判定合格。使用史如实上报，识别不了就是 unknown。
     func enrollResearch(internalUserID: String, manifestID: String,
                         consentVersion: String, consentLanguage: String,
-                        consentOccurredAt: Date, isTest: Bool) async throws -> EnrollResearchResponse {
+                        consentOccurredAt: Date, eligibilityVersion: String,
+                        priorUse: PriorUse, isTest: Bool) async throws -> EnrollResearchResponse {
         struct Body: Encodable {
             let internalUserID: String, manifestID: String
             let consentVersion: String, consentLanguage: String
             let consentOccurredAt: Date
+            let eligibilityStatus: String, eligibilityVersion: String
+            let priorUseStatus: String, priorUseEvidence: String
             let isTest: Bool
         }
         return try await researchRequest("research/enroll", method: "POST",
-                                 body: Body(internalUserID: internalUserID,
-                                            manifestID: manifestID,
-                                            consentVersion: consentVersion,
-                                            consentLanguage: consentLanguage,
-                                            consentOccurredAt: consentOccurredAt,
-                                            isTest: isTest))
+                                         body: Body(internalUserID: internalUserID,
+                                                    manifestID: manifestID,
+                                                    consentVersion: consentVersion,
+                                                    consentLanguage: consentLanguage,
+                                                    consentOccurredAt: consentOccurredAt,
+                                                    eligibilityStatus: "eligible",
+                                                    eligibilityVersion: eligibilityVersion,
+                                                    priorUseStatus: priorUse.status.rawValue,
+                                                    priorUseEvidence: priorUse.evidence.rawValue,
+                                                    isTest: isTest))
     }
 
-    /// 撤回研究同意。服务端**追加**一条 withdrawn，不改写历史。
+    /// 退出研究。服务端**追加**一条 withdrawn，不改写历史；重复调用幂等。
     func withdrawResearch(participantID: String, consentVersion: String,
                           consentLanguage: String, occurredAt: Date) async throws {
         struct Body: Encodable {
@@ -130,10 +182,10 @@ final class APIClient {
         }
         struct Ack: Decodable { let status: String }
         let _: Ack = try await researchRequest("research/withdraw", method: "POST",
-                                       body: Body(participantID: participantID,
-                                                  consentVersion: consentVersion,
-                                                  consentLanguage: consentLanguage,
-                                                  occurredAt: occurredAt))
+                                               body: Body(participantID: participantID,
+                                                          consentVersion: consentVersion,
+                                                          consentLanguage: consentLanguage,
+                                                          occurredAt: occurredAt))
     }
 
     struct ActiveManifest: Decodable {
@@ -146,18 +198,50 @@ final class APIClient {
         let surveyVersion: String
         /// 为空表示积分功能未上线
         let rewardRuleVersion: String?
+        // 以下供客户端自检（见 ResearchConfig.incompatibility）
+        let appVersion: String?
+        let buildNumber: String?
+        let lexiconVersion: String?
+        let eligibilityVersion: String?
+        let surveyForms: [String: [String: String]]?
+        let isTest: Bool?
     }
 
-    /// 取当前生效的研究配置。404 表示暂无生效配置——
+    /// 取与本构建匹配的当前生效研究配置。404 表示暂无——
     /// 此时不得纳入任何人，也不得猜一个配置。
-    func fetchActiveManifest() async throws -> ActiveManifest {
-        try await researchRequest("research/manifest/active")
+    func fetchActiveManifest(appVersion: String, build: String,
+                             test: Bool) async throws -> ActiveManifest {
+        try await researchRequest("research/manifest/active", query: [
+            .init(name: "appVersion", value: appVersion),
+            .init(name: "build", value: build),
+            .init(name: "test", value: test ? "true" : "false"),
+        ])
+    }
+
+    /// 批量上报的回执。`rejected` 里是服务端明确不收的记录（窗口外、归属不符等），
+    /// 重传也不会被接受——客户端据此把它们移出队列，而不是让一条坏记录堵死全部。
+    struct BatchAck: Decodable {
+        struct Rejected: Decodable { let id: String; let reason: String }
+        let received: Int
+        let inserted: Int
+        let duplicates: Int?
+        let rejected: [Rejected]?
     }
 
     /// 上报练习尝试。失败抛错由调用方保留队列重试。
-    func uploadResearchAttempts(_ batch: any Encodable) async throws {
-        let _: ResearchEventAck = try await researchRequest("research/attempts",
-                                                    method: "POST", body: batch)
+    func uploadResearchAttempts(_ batch: any Encodable) async throws -> BatchAck {
+        try await researchRequest("research/attempts", method: "POST", body: batch)
+    }
+
+    /// 上报研究操作事件。失败抛错由调用方保留队列重试——
+    /// **不得**在这里吞掉错误，否则离线期间的事件会静默丢失。
+    func uploadResearchEvents(_ batch: any Encodable) async throws -> BatchAck {
+        try await researchRequest("research/events", method: "POST", body: batch)
+    }
+
+    /// 上报「练习建议」点击记录。
+    func uploadResearchAdvice(_ batch: any Encodable) async throws -> BatchAck {
+        try await researchRequest("research/advice", method: "POST", body: batch)
     }
 
     /// 报告问题。report_id 为幂等键，网络重传不产生重复报告。
@@ -169,37 +253,55 @@ final class APIClient {
         }
         struct Ack: Decodable { let reportID: String }
         let _: Ack = try await researchRequest("research/issues", method: "POST",
-                                       body: Body(reportID: reportID,
-                                                  participantID: participantID,
-                                                  manifestID: manifestID,
-                                                  submittedAt: submittedAt,
-                                                  category: category, detail: detail))
+                                               body: Body(reportID: reportID,
+                                                          participantID: participantID,
+                                                          manifestID: manifestID,
+                                                          submittedAt: submittedAt,
+                                                          category: category, detail: detail))
     }
 
-    /// 上报一份问卷（实例 + 逐题答案）。
-    func uploadSurvey(participantID: String, manifestID: String,
-                      outcome: SurveyOutcome, timingClass: String,
-                      qualifyingAttemptsAtInvite: Int) async throws {
+    struct SurveyAck: Decodable {
+        let surveyInstanceID: String
+        let alreadySubmitted: Bool
+        /// 服务端此刻保存的状态。以它为准判断「是否已提交」。
+        let status: String?
+        let updated: Bool?
+    }
+
+    /// 上报一份问卷的当前状态（实例 + 逐题答案）。
+    ///
+    /// 邀请时间、邀请时合格次数、语言、表单与译文版本都取自**实例里的快照**，
+    /// 不是此刻的值——重试上传不改变它们。
+    func uploadSurvey(_ record: SurveyRecord, timingClass: String,
+                      participantID: String, manifestID: String) async throws -> SurveyAck {
+        struct Outcome: Encodable {
+            let formKey: String, formVersion: String, translationVersion: String
+            let language: String
+            let answers: [SurveyAnswer]
+            let status: String
+            let startedAt: Date?, submittedAt: Date?
+        }
         struct Body: Encodable {
             let participantID: String, manifestID: String
-            let outcome: SurveyOutcome
+            let surveyInstanceID: String
+            let invitedAt: Date
+            let outcome: Outcome
             let timingClass: String
             let qualifyingAttemptsAtInvite: Int
         }
-        struct Ack: Decodable { let surveyInstanceID: String }
-        let _: Ack = try await researchRequest("research/surveys", method: "POST",
-                                       body: Body(participantID: participantID,
-                                                  manifestID: manifestID,
-                                                  outcome: outcome,
-                                                  timingClass: timingClass,
-                                                  qualifyingAttemptsAtInvite: qualifyingAttemptsAtInvite))
-    }
-
-    /// 上报研究操作事件。失败抛错由调用方保留队列重试——
-    /// **不得**在这里吞掉错误，否则离线期间的事件会静默丢失。
-    func uploadResearchEvents(_ batch: any Encodable) async throws {
-        let _: ResearchEventAck = try await researchRequest("research/events",
-                                                    method: "POST", body: batch)
+        return try await researchRequest("research/surveys", method: "POST", body: Body(
+            participantID: participantID, manifestID: manifestID,
+            surveyInstanceID: record.instanceID.uuidString,
+            invitedAt: record.invitedAt,
+            outcome: Outcome(formKey: record.formKey, formVersion: record.formVersion,
+                             translationVersion: record.translationVersion,
+                             language: record.language,
+                             answers: record.status.isFinal ? record.answers : [],
+                             status: record.status.rawValue,
+                             startedAt: record.startedAt,
+                             submittedAt: record.status.isFinal ? record.submittedAt : nil),
+            timingClass: timingClass,
+            qualifyingAttemptsAtInvite: record.qualifyingAttemptsAtInvite))
     }
 
     /// App Store 审核指南 5.1.1(v) 强制要求；亦作为研究伦理的「撤回同意」通道。
@@ -295,4 +397,37 @@ struct TeacherLoginResponse: Codable {
     let token: String
     let teacherID: Int
     let classCode: String
+}
+
+/// 研究接口的错误。区分「稍后重试有意义」与「重试也没用」。
+enum ResearchAPIError: Error {
+    /// 没连上、超时、连接中断
+    case transport(Error)
+    /// 服务端给了明确的非 2xx 回答
+    case http(status: Int, detail: String?)
+    case encoding(Error)
+    case decoding(Error)
+
+    /// 稍后原样重试是否可能成功。
+    /// 传输失败、服务端临时故障（5xx）、超时与限流可以重试；
+    /// 其余 4xx 是服务端对**这份数据**的明确拒绝，重试只会得到同样的回答。
+    var isRetryable: Bool {
+        switch self {
+        case .transport: return true
+        case .http(let status, _): return status >= 500 || status == 408 || status == 429
+        case .encoding, .decoding: return false
+        }
+    }
+
+    /// 服务端拒绝时给出的机读原因（`detail` 冒号前的部分），如 `no_active_consent`
+    var reasonCode: String? {
+        guard case .http(_, let detail?) = self else { return nil }
+        let head = detail.split(whereSeparator: { $0 == "：" || $0 == ":" }).first.map(String.init)
+        return head?.trimmingCharacters(in: .whitespaces)
+    }
+
+    var status: Int? {
+        if case .http(let status, _) = self { return status }
+        return nil
+    }
 }

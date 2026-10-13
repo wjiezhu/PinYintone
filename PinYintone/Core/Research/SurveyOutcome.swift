@@ -18,7 +18,7 @@ nonisolated struct SurveyAnswer: Codable, Equatable {
     let answeredAt: Date?
 }
 
-nonisolated struct SurveyOutcome: Codable {
+nonisolated struct SurveyOutcome: Codable, Equatable {
     let formKey: String
     let formVersion: String
     let translationVersion: String

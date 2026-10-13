@@ -36,6 +36,14 @@ final class FreeTextRepository {
         return record
     }
 
+    /// 学习记录页用：按时间倒序取本机的自由文本练习
+    func fetchHistory(limit: Int = 200) -> [FreeTextRecord] {
+        let req: NSFetchRequest<FreeTextRecord> = FreeTextRecord.fetchRequest()
+        req.sortDescriptors = [NSSortDescriptor(key: "timestamp", ascending: false)]
+        req.fetchLimit = limit
+        return (try? context.fetch(req)) ?? []
+    }
+
     func fetchUnsynced() -> [FreeTextRecord] {
         let req = FreeTextRecord.fetchRequest()
         req.predicate = NSPredicate(format: "synced == NO")

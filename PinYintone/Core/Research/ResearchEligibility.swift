@@ -10,8 +10,12 @@ import Foundation
 /// 不符合条件或不同意的用户**正常使用全部功能**，只是不产生研究记录。
 nonisolated enum ResearchEligibility {
 
-    /// 纳入规则版本；规则变化必须递增并写入 manifest.eligibility_version
-    static let version = "eligibility-1.0-draft"
+    /// 纳入规则版本；规则变化必须递增并写入 manifest.eligibility_version。
+    ///
+    /// - 1.0-draft：成年、国籍含 MA、课程 hsk1–3，且**仅新用户**。
+    /// - 2.0：去掉新用户门槛。研究者已确认本轮不区分新旧用户
+    ///   （docs/V2_DECISIONS.md 第 15 条、2026-10-13 需求 R01）。
+    static let version = "eligibility-2.0"
 
     /// 课程阶段白名单。
     /// ⚠ 以三份研究文档的 `eligibility_spec` 为准（hsk1/hsk2/hsk3）——
@@ -42,12 +46,13 @@ nonisolated enum ResearchEligibility {
     ///   - nationalities: B02 选中的 ISO 国家码（`prefer_not` 视为空集）
     ///   - courseStage: B03 选中的课程阶段码
     ///   - consentGranted: 是否**当前**持有有效研究同意
-    ///   - priorUse: 新旧用户判定（仅 `new` 可纳入）
+    ///
+    /// **不看新旧用户**。使用历史仍如实记录（`PriorUse`，识别不了就是 unknown），
+    /// 但不参与纳入判定——更不得为了通过检查把它写成 `new`。
     static func evaluate(isAdult: Bool?,
                          nationalities: Set<String>?,
                          courseStage: String?,
-                         consentGranted: Bool,
-                         priorUse: PriorUse) -> Outcome {
+                         consentGranted: Bool) -> Outcome {
         // 同意是前提：未同意不进入研究库，但这不是「不合格」，
         // 而是根本不产生参与者记录（字典 §5：拒绝时不必创建参与者）。
         guard consentGranted else { return .pending }
@@ -62,9 +67,24 @@ nonisolated enum ResearchEligibility {
         guard allowedCourseStages.contains(courseStage) else {
             return .excluded(.courseStage)
         }
-        // 本轮仅纳入新用户
-        guard priorUse.status == .new else { return .excluded(.duplicate) }
         return .eligible
+    }
+
+    /// 由背景答卷判定。关键题没答、选了「不愿回答」→ pending，**不推定符合**。
+    static func evaluate(background outcome: SurveyOutcome, consentGranted: Bool) -> Outcome {
+        evaluate(isAdult: outcome.isAdult, nationalities: outcome.nationalities,
+                 courseStage: outcome.courseStage, consentGranted: consentGranted)
+    }
+}
+
+extension ResearchEligibility.Outcome {
+    /// 持久化与上报用的编码：eligible / pending / excluded:<原因>
+    var storageValue: String {
+        switch self {
+        case .eligible: return "eligible"
+        case .pending: return "pending"
+        case .excluded(let reason): return "excluded:\(reason.rawValue)"
+        }
     }
 }
 
@@ -98,6 +118,7 @@ nonisolated struct PriorUse: Equatable {
             : PriorUse(status: .new, evidence: .insufficient)
     }
 
-    /// 查询失败（离线等）时的安全默认：不推定为新用户。
+    /// 本工程尚未实现旧库查询，所以实际上报的恒为这个值。
+    /// 它**不影响纳入**（本轮不区分新旧用户），只是如实说明「不知道」。
     static let unknown = PriorUse(status: .unknown, evidence: .insufficient)
 }

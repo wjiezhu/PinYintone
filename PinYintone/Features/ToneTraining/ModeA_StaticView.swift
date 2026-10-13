@@ -12,31 +12,43 @@ struct ModeA_StaticView: View {
     let studentF0: [Float]      // 静态模式不绘制实时曲线
     let referenceF0: [Float]
 
-    private let toneColors: [Color] = [.green, .blue, .orange, .red]
+    private let toneColors: [Color] = [
+        Color(light: 0x1B7F3B, dark: 0x6FD08C),   // 一声
+        Color(light: 0x1F5FBF, dark: 0x7FB0F5),   // 二声
+        Color(light: 0x8A5300, dark: 0xF2B655),   // 三声
+        Color(light: 0xB3261E, dark: 0xF2857D),   // 四声
+    ]
     private let toneArrows = ["arrow.right", "arrow.up.right", "arrow.down.right", "arrow.down.right"]
 
     var body: some View {
-        HStack(spacing: 14) {
+        HStack(spacing: Theme.Space.m) {
             ForEach(Array(lexeme.tones.enumerated()), id: \.offset) { idx, tone in
-                VStack(spacing: 10) {
+                VStack(spacing: Theme.Space.s) {
                     Image(systemName: symbol(tone))
-                        .font(.system(size: 40, weight: .bold))
+                        .font(.system(size: 34, weight: .semibold))
                         .foregroundStyle(color(tone))
+                        .accessibilityHidden(true)
                     Text("\(tone)")
-                        .font(.title3.bold())
+                        .font(.title3.weight(.semibold))
+                        .foregroundStyle(Theme.textPrimary)
                     Text(name(tone))
-                        .font(.caption)
-                        .foregroundStyle(.secondary)
+                        .font(.subheadline)
+                        .foregroundStyle(Theme.textSecondary)
+                        .multilineTextAlignment(.center)
+                        .fixedSize(horizontal: false, vertical: true)
                 }
-                .frame(maxWidth: .infinity)
-                .padding(.vertical, 24)
-                .background(color(tone).opacity(0.12))
-                .clipShape(RoundedRectangle(cornerRadius: 16))
+                .frame(maxWidth: .infinity, maxHeight: .infinity)
+                .padding(.vertical, Theme.Space.m)
+                .background(color(tone).opacity(0.10))
+                .clipShape(RoundedRectangle(cornerRadius: Theme.radius))
                 .accessibilityElement(children: .ignore)
                 .accessibilityLabel(Text(accessibilityLabel(index: idx, tone: tone)))
             }
         }
+        .padding(Theme.Space.m)
         .frame(maxWidth: .infinity, maxHeight: .infinity)
+        // 音节顺序固定从左到右：阿拉伯语界面下也不镜像，否则「喝水」会被排成「水喝」
+        .environment(\.layoutDirection, .leftToRight)
     }
 
     private func color(_ tone: Int) -> Color {

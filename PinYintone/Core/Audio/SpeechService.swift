@@ -43,7 +43,15 @@ final class SpeechService {
     var isSpeaking: Bool { player.isSpeaking }
 
     /// 朗读文本（默认放慢语速便于模仿）。
-    func speak(_ text: String, rate: Float = 0.4) {
+    ///
+    /// - Parameters:
+    ///   - onStart: 语音**实际开始播放**时回调（来自合成器的 didStart）。
+    ///     `model_audio_started` 事件必须在这里记——不是在点击时，也不是在
+    ///     `speak` 返回时：`isSpeaking` 在语音刚入队、还没出声时就已经是 true，
+    ///     合成失败的那些也会被它算成一次播放。
+    ///   - onEnd: 播放结束或被打断时回调，用于让界面恢复「可播放」状态。
+    func speak(_ text: String, rate: Float = 0.4,
+               onStart: (() -> Void)? = nil, onEnd: (() -> Void)? = nil) {
         guard !text.isEmpty else { return }
         player.stopSpeaking(at: .immediate)
         try? AVAudioSession.sharedInstance().setCategory(.playback, mode: .default, options: [.duckOthers])
@@ -51,8 +59,19 @@ final class SpeechService {
         let u = AVSpeechUtterance(string: text)
         u.voice = zhVoice()
         u.rate = rate
+        playbackDelegate.onStart = onStart
+        playbackDelegate.onEnd = onEnd
+        player.delegate = playbackDelegate
         player.speak(u)
     }
+
+    /// 立即停止示范播放。开始录音或回听之前调用——示范、回听、录音三者互斥。
+    func stopSpeaking() {
+        guard player.isSpeaking else { return }
+        player.stopSpeaking(at: .immediate)
+    }
+
+    private let playbackDelegate = SpeechPlaybackDelegate()
 
     // MARK: - 真人母语者参照 F0（优先级最高）
 
@@ -395,5 +414,41 @@ final class SpeechService {
             // 超时兜底：若未收到结束回调，6s 后用已有数据返回
             DispatchQueue.global().asyncAfter(deadline: .now() + 6) { finish() }
         }
+    }
+}
+
+/// 示范播放的开始 / 结束回调。合成器在自己的线程回调，统一转回主线程。
+final class SpeechPlaybackDelegate: NSObject, AVSpeechSynthesizerDelegate {
+
+    // 勿删：见 CLAUDE.md 禁令 18（隐式析构在 iOS 18.5 / 26.2 上实测崩溃）
+    nonisolated deinit {}
+
+    var onStart: (() -> Void)?
+    var onEnd: (() -> Void)?
+
+    nonisolated func speechSynthesizer(_ synthesizer: AVSpeechSynthesizer,
+                                       didStart utterance: AVSpeechUtterance) {
+        Task { @MainActor in
+            let callback = self.onStart
+            self.onStart = nil          // 一次播放只报一次开始
+            callback?()
+        }
+    }
+
+    nonisolated func speechSynthesizer(_ synthesizer: AVSpeechSynthesizer,
+                                       didFinish utterance: AVSpeechUtterance) {
+        Task { @MainActor in self.finish() }
+    }
+
+    nonisolated func speechSynthesizer(_ synthesizer: AVSpeechSynthesizer,
+                                       didCancel utterance: AVSpeechUtterance) {
+        Task { @MainActor in self.finish() }
+    }
+
+    private func finish() {
+        let callback = onEnd
+        onEnd = nil
+        onStart = nil
+        callback?()
     }
 }
