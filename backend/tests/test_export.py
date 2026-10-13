@@ -185,3 +185,145 @@ def test_unknown_manifest_aborts(db, tmp_path):
     _seed(db)
     with pytest.raises(SystemExit):
         export(db, ["no_such"], str(tmp_path))
+
+
+# =====================================================================
+# 2026-10：截止时点、研究归属与核对汇总（需求 R04 / R09 / 验收 A26）
+# =====================================================================
+
+def _survey(db, pid, form, status, timing, *, n=0, received=None, updated=None):
+    db.add(m.ResearchSurveyInstance(
+        survey_instance_id=f"{form}-{pid}", participant_id=pid, manifest_id="m1",
+        form_key=form, form_version="v1", language="fr", translation_version="t",
+        invited_at=NOW, status=status, timing_class=timing,
+        qualifying_attempts_at_invite=n,
+        submitted_at=NOW if status in ("complete", "partial", "declined") else None,
+        received_at=received or NOW, updated_at=updated or received or NOW))
+
+
+def _event(db, eid, pid, name="feedback_displayed", attempt=None, when=None):
+    db.add(m.ResearchInteractionEvent(
+        event_id=eid, participant_id=pid, manifest_id="m1", session_id="s",
+        attempt_id=attempt, event_name=name, occurred_at=when or NOW, received_at=NOW,
+        ui_language="fr", payload={}))
+
+
+def test_data_arriving_after_cutoff_is_left_out_and_counted(db, tmp_path):
+    """定稿之后才到的窗口内补传，不悄悄进入已定稿结果（R04）。"""
+    _seed(db)
+    cutoff = NOW + timedelta(hours=1)
+    db.add(m.ResearchAttempt(
+        attempt_id="a-late", participant_id="ok", manifest_id="m1", session_id="s",
+        task_type="fixed_word", started_at=NOW, received_at=NOW + timedelta(hours=2),
+        status="succeeded", finished_at=NOW, signal_status="usable", metric_value=0.3,
+        passed=True, time_quality="valid"))
+    db.commit()
+    meta = export(db, ["m1"], str(tmp_path), cutoff=cutoff)
+    ids = {r["attempt_id"] for r in _rows(tmp_path / "attempts.csv")}
+    assert "a-late" not in ids and "a-ok" in ids
+    assert meta["arrived_after_cutoff"] == {"attempts": 1}
+    saved = json.loads((tmp_path / "export_meta.json").read_text(encoding="utf-8"))
+    assert saved["data_cutoff"] == cutoff.isoformat()
+
+
+def test_survey_finished_after_cutoff_is_left_out(db, tmp_path):
+    """截止时还是「稍后填写」、截止后才提交的问卷：导出里不能出现提交后的状态。"""
+    _seed(db)
+    _survey(db, "ok", "usability_short_v1", "complete", "after_practice", n=5,
+            received=NOW, updated=NOW + timedelta(hours=3))
+    db.commit()
+    meta = export(db, ["m1"], str(tmp_path), cutoff=NOW + timedelta(hours=1))
+    forms = {r["form_key"] for r in _rows(tmp_path / "survey_instances.csv")}
+    assert "usability_short_v1" not in forms
+    assert meta["arrived_after_cutoff"]["survey_instances"] == 1
+
+
+def test_participants_of_other_studies_are_not_counted_at_all(db, tmp_path):
+    """新旧研究分开：别的研究的人既不纳入，也不出现在排除统计里。"""
+    _seed(db)
+    db.add(m.ResearchParticipant(
+        participant_id="other-study", study_id="s-old", enrolled_at=NOW,
+        eligibility_version="e", eligibility_status="eligible",
+        distribution_channel="app_store", recruitment_source="unknown",
+        prior_use_status="unknown", prior_use_evidence="insufficient", is_test=False))
+    db.commit()
+    meta = export(db, ["m1"], str(tmp_path))
+    assert meta["participants_enrolled_in_these_studies"] == 9
+    assert meta["participants_included"] == 3
+    assert sum(meta["participants_excluded_by_reason"].values()) == 6
+
+
+def test_server_side_exclusion_is_respected(db, tmp_path):
+    """服务端复核后改为 excluded 的参与者不进导出。"""
+    _seed(db)
+    p = db.get(m.ResearchParticipant, "ok")
+    p.eligibility_status, p.exclusion_reason = "excluded", "age"
+    db.commit()
+    meta = export(db, ["m1"], str(tmp_path))
+    assert "ok" not in {r["participant_id"] for r in _rows(tmp_path / "participants.csv")}
+    assert meta["participants_excluded_by_reason"]["age"] == 3
+
+
+def test_background_must_be_finally_submitted(db, tmp_path):
+    """只有「已邀请 / 稍后填写」的背景实例不能证明合格——缺失不推定满足。"""
+    _seed(db)
+    inst = db.get(m.ResearchSurveyInstance, "bg-ok")
+    inst.status = "deferred"
+    db.commit()
+    meta = export(db, ["m1"], str(tmp_path))
+    assert meta["participants_excluded_by_reason"]["no_background"] == 1
+
+
+def test_summary_reconciles_with_the_csv_files(db, tmp_path):
+    """核对汇总里的每个数，都能从同一次导出的 CSV 里数出来（A26）。"""
+    _seed(db)
+    _survey(db, "ok", "tone_needs_v1", "complete", "before_first_attempt")
+    _survey(db, "old", "tone_needs_v1", "partial", "late_pre", n=2)
+    _survey(db, "unknown_prior", "tone_needs_v1", "declined", "before_first_attempt")
+    _survey(db, "ok", "usability_short_v1", "complete", "after_practice", n=5)
+    _survey(db, "old", "usability_short_v1", "deferred", "after_practice", n=5)
+    _attempt(db, "a-cancel", "old", NOW, metric=None, passed=None, status="cancelled")
+    _event(db, "e1", "ok", attempt="a-ok")
+    _event(db, "e2", "ok", name="history_opened")
+    _event(db, "e3", "ok", attempt="a-out")          # 指向窗口外的尝试
+    _event(db, "e-test", "test")                     # 测试账户的事件
+    db.commit()
+
+    meta = export(db, ["m1"], str(tmp_path))
+    s = json.loads((tmp_path / "summary.json").read_text(encoding="utf-8"))
+
+    assert s["participants"]["included"] == len(_rows(tmp_path / "participants.csv")) == 3
+    assert s["surveys"]["background_v1"]["submitted"] == 3
+
+    pre = s["surveys"]["tone_needs_v1"]
+    assert pre["by_status"] == {"complete": 1, "partial": 1, "declined": 1}
+    assert pre["by_timing_class"] == {"before_first_attempt": 2, "late_pre": 1}
+    assert pre["submitted"] == 2 and pre["explicitly_declined"] == 1
+
+    post = s["surveys"]["usability_short_v1"]
+    assert post["participants_with_instance"] == 2, "被邀请过的人数"
+    assert post["submitted"] == 1 and post["by_status"] == {"complete": 1, "deferred": 1}
+    assert post["participants_without_instance"] == 1, "从未达到邀请条件的人"
+
+    attempts = _rows(tmp_path / "attempts.csv")
+    assert s["attempts"]["total"] == len(attempts) == 3
+    assert s["attempts"]["by_status"] == {
+        "succeeded": 1, "analysis_failed": 1, "cancelled": 1}
+    assert s["attempts"]["passed"] == {"true": 1, "null": 2}, "无成绩是 null，不是 false"
+
+    events = _rows(tmp_path / "interaction_events.csv")
+    assert s["events"]["total_distinct"] == len(events) == 3
+    assert s["events"]["referencing_attempt_not_in_export"] == 1
+    assert meta["survey_status_counts"] == s["surveys"]
+
+
+def test_meta_records_commit_cutoff_and_config(db, tmp_path):
+    _seed(db)
+    export(db, ["m1"], str(tmp_path))
+    meta = json.loads((tmp_path / "export_meta.json").read_text(encoding="utf-8"))
+    for k in ("backend_commit", "data_cutoff", "manifests", "interpretation_limits",
+              "participants_enrolled_in_these_studies", "survey_status_counts"):
+        assert k in meta, k
+    assert meta["manifests"][0]["app_version"] == "2.0"
+    assert meta["manifests"][0]["build_number"] == "1"
+    assert any("passed" in x for x in meta["interpretation_limits"])

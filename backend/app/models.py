@@ -24,6 +24,10 @@ class User(Base):
     __tablename__ = "users"
     device_id = Column(String, primary_key=True)
     apple_user_id = Column(String, index=True, nullable=True)  # Sign in with Apple 稳定标识
+    # 业务账号的稳定内部编号：同一 Apple 账号在多台设备上共用一个值。
+    # 研究纳入按它（而不是 device_id）去重，否则同一人换设备会变成第二位参与者。
+    # 服务端随机生成，不是 Apple 标识的派生值；旧行为空，注册或纳入时补上。
+    account_id = Column(String, index=True, nullable=True)
     nickname = Column(String, nullable=True)
     class_code = Column(String, index=True, nullable=True)
     role = Column(String, nullable=False, default="guest")

@@ -20,7 +20,7 @@
 from datetime import datetime, timezone
 
 from sqlalchemy import (Boolean, Column, DateTime, ForeignKey, Integer, JSON,
-                        Numeric, String, UniqueConstraint)
+                        Numeric, String, UniqueConstraint, false)
 
 from .database import Base
 
@@ -65,6 +65,16 @@ class ResearchManifest(Base):
     collection_start_at = _ts(nullable=False)
     collection_end_at = _ts(nullable=False)
     frozen_at = _ts(nullable=False)
+    # 测试配置：同意文本未审定、问卷为 draft 或词条未核对时，只能冻结成测试配置。
+    # 测试配置只下发给自报为测试的客户端，其下纳入的参与者一律 is_test=true，
+    # 正式导出默认排除。**测试配置不能原地改成正式**——正式配置须新建。
+    is_test = Column(Boolean, nullable=False, default=False, server_default=false())
+    # 除 build_number 外还允许采集的构建号（修复版本）。为空 = 只认 build_number。
+    compatible_builds = Column(JSON, nullable=True)
+    # 各问卷的 form_version / translation_version 绑定：
+    # {form_key: {"form_version": ..., "translation_version": ...}}。
+    # 为空（旧配置）时不校验问卷版本。
+    survey_forms = Column(JSON, nullable=True)
 
 
 class ResearchParticipant(Base):
@@ -82,7 +92,8 @@ class ResearchParticipant(Base):
     exclusion_reason = Column(String(32), nullable=True)
     distribution_channel = Column(String(32), nullable=False)
     recruitment_source = Column(String(32), nullable=False)
-    # new|returning|unknown。本轮仅 new 可纳入。
+    # new|returning|unknown。**本轮不以新旧用户作为纳入条件**（V2_DECISIONS 第 15 条）；
+    # 如实记录，识别不了就是 unknown，不得为了通过检查写成 new。
     prior_use_status = Column(String(16), nullable=False)
     # verified_account_history|self_report|combined|insufficient
     #
@@ -92,6 +103,9 @@ class ResearchParticipant(Base):
     #   旧版下载未注册者会看起来像新用户，此类只能记 insufficient。
     prior_use_evidence = Column(String(32), nullable=False)
     is_test = Column(Boolean, nullable=False, default=False)
+    # 纳入时所用的配置。后续上传可用同一研究（study_id）下的配置，
+    # 本列只记「从哪份配置进来的」，供导出按配置清单筛人。旧行为空。
+    enrolled_manifest_id = Column(String, nullable=True)
 
 
 class ResearchIdentityMap(Base):
@@ -296,6 +310,11 @@ class ResearchSurveyInstance(Base):
     # 邀请时累计合格次数；背景与前置填 0，**不事后用新增次数覆盖**
     qualifying_attempts_at_invite = Column(Integer, nullable=False)
     trigger_attempt_id = Column(String, nullable=True)
+    # 服务端首次收到 / 最近一次更新本实例的时间。与客户端的 invited_at /
+    # submitted_at 分开保存：**分类与窗口判定只看客户端发生时间**，
+    # 接收时间只用于导出截止（离线晚到的问卷不因此改变 timing_class）。
+    received_at = _ts(nullable=True)
+    updated_at = _ts(nullable=True)
     __table_args__ = (UniqueConstraint("participant_id", "form_key", "form_version",
                                        name="uq_survey_instance"),)
 

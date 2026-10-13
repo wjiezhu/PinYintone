@@ -198,12 +198,20 @@ class ResearchEventBatch(BaseModel):
 
 
 class ResearchEnrollRequest(BaseModel):
-    """纳入研究。internalUserID 是业务账号键，**不是** Apple 标识。"""
+    """纳入研究。internalUserID 是业务账号键（设备档案编号），**不是** Apple 标识。
+
+    服务端据此找到已注册的业务账号，再按账号的稳定内部编号去重——
+    所以必须**先注册账号、后纳入**，同一账号换设备也只有一位参与者。
+    """
     internalUserID: str
     manifestID: str
     consentVersion: str
     consentLanguage: str
     consentOccurredAt: IsoDatetime
+    # 端侧背景筛选的结论。只有 eligible 才允许调用本接口；缺失即拒绝，
+    # 不推定满足。背景表到达后服务端会按答案复核。
+    eligibilityStatus: str | None = None
+    eligibilityVersion: str | None = None
     recruitmentSource: str = "unknown"
     priorUseStatus: str = "unknown"
     priorUseEvidence: str = "insufficient"
@@ -248,6 +256,11 @@ class SurveyUploadRequest(BaseModel):
     outcome: SurveyOutcomeDTO
     timingClass: str
     qualifyingAttemptsAtInvite: int = 0
+    # 客户端生成的稳定实例编号（幂等键）。同一份问卷从「已邀请」到「稍后填写」
+    # 再到最终提交，始终是同一个编号；网络重传也复用它。
+    surveyInstanceID: str | None = None
+    # 邀请发生的时间（客户端时钟）。首次写入后不再被后续上传覆盖。
+    invitedAt: IsoDatetime | None = None
 
 
 class ActiveManifestResponse(BaseModel):
@@ -259,6 +272,39 @@ class ActiveManifestResponse(BaseModel):
     consentVersion: str
     surveyVersion: str
     rewardRuleVersion: str | None = None
+    # 以下各版本供客户端自检：任一项与本机实际材料不符，客户端关闭研究路径
+    # （普通练习不受影响），而不是带着错的材料去采集。
+    appVersion: str | None = None
+    buildNumber: str | None = None
+    lexiconVersion: str | None = None
+    scoringVersion: str | None = None
+    feedbackVersion: str | None = None
+    eligibilityVersion: str | None = None
+    surveyForms: dict[str, dict[str, str]] | None = None
+    isTest: bool = False
+
+
+class AdviceRequestDTO(BaseModel):
+    """一次「练习建议」点击（字典 §9）。"""
+    requestID: str
+    attemptID: str
+    requestedAt: IsoDatetime
+    status: str
+    generatedAt: IsoDatetime | None = None
+    displayedAt: IsoDatetime | None = None
+    sourceType: str
+    teacherHintVersion: str | None = None
+    evidenceCodes: list[str] = []
+    evidenceSnapshot: dict[str, str] = {}
+    outputLanguage: str | None = None
+    outputText: str | None = None
+    errorCode: str | None = None
+
+
+class AdviceRequestBatch(BaseModel):
+    participantID: str
+    manifestID: str
+    requests: list[AdviceRequestDTO]
 
 
 class ResearchAttemptDTO(BaseModel):
