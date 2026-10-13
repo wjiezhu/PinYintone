@@ -1,27 +1,30 @@
 import SwiftUI
 
-/// 使用说明（被试可随时点主页右下角「i」查看）。文案随 App 语言本地化。
+/// 使用说明（设置页进入）。文案随 App 语言本地化。
 struct HelpView: View {
     @Environment(\.dismiss) private var dismiss
 
     var body: some View {
         NavigationStack {
-            List {
-                section(icon: "wind", color: .teal,
-                        title: NSLocalizedString("stage1_title", comment: ""),
-                        body: NSLocalizedString("help_stage1_body", comment: ""))
-                section(icon: "waveform.and.mic", color: .blue,
-                        title: NSLocalizedString("stage2_title", comment: ""),
-                        body: NSLocalizedString("help_stage2_body", comment: ""))
-                section(icon: "text.bubble", color: .purple,
-                        title: NSLocalizedString("stage3_title", comment: ""),
-                        body: NSLocalizedString("help_stage3_body", comment: ""))
-
-                Section {
-                    label("lightbulb", .orange, NSLocalizedString("help_tip", comment: ""))
-                    label("lock.shield", .green, NSLocalizedString("help_privacy", comment: ""))
+            ScrollView {
+                VStack(alignment: .leading, spacing: Theme.Space.l) {
+                    GroupedCard {
+                        topic(icon: "waveform", title: "stage2_title", body: "help_stage2_body")
+                        RowDivider()
+                        topic(icon: "text.cursor", title: "stage3_title", body: "help_stage3_body")
+                        RowDivider()
+                        topic(icon: "wind", title: "stage1_title", body: "help_stage1_body")
+                    }
+                    GroupedCard {
+                        note(icon: "lightbulb", text: "help_tip")
+                        RowDivider()
+                        note(icon: "lock.shield", text: "help_privacy")
+                    }
                 }
+                .padding(.horizontal, Theme.pageMargin)
+                .padding(.vertical, Theme.Space.l)
             }
+            .background(Theme.background)
             .navigationTitle(NSLocalizedString("help_title", comment: ""))
             .navigationBarTitleDisplayMode(.inline)
             .toolbar {
@@ -30,20 +33,38 @@ struct HelpView: View {
                 }
             }
         }
+        .tint(Theme.accent)
     }
 
-    private func section(icon: String, color: Color, title: String, body: String) -> some View {
-        Section {
-            Text(body).font(.subheadline)
-        } header: {
-            Label(title, systemImage: icon).foregroundStyle(color)
+    private func topic(icon: String, title: String, body: String) -> some View {
+        HStack(alignment: .top, spacing: Theme.Space.m) {
+            IconTile(systemName: icon)
+            VStack(alignment: .leading, spacing: Theme.Space.xs) {
+                Text(NSLocalizedString(title, comment: ""))
+                    .font(.body.weight(.semibold))
+                    .foregroundStyle(Theme.textPrimary)
+                Text(NSLocalizedString(body, comment: ""))
+                    .font(.subheadline)
+                    .foregroundStyle(Theme.textSecondary)
+                    .fixedSize(horizontal: false, vertical: true)
+            }
+            Spacer(minLength: 0)
         }
+        .padding(.vertical, Theme.Space.m)
     }
 
-    private func label(_ icon: String, _ color: Color, _ text: String) -> some View {
-        HStack(alignment: .top, spacing: 10) {
-            Image(systemName: icon).foregroundStyle(color).frame(width: 24)
-            Text(text).font(.subheadline)
+    private func note(icon: String, text: String) -> some View {
+        HStack(alignment: .firstTextBaseline, spacing: Theme.Space.m) {
+            Image(systemName: icon)
+                .foregroundStyle(Theme.accent)
+                .frame(width: 24)
+                .accessibilityHidden(true)
+            Text(NSLocalizedString(text, comment: ""))
+                .font(.subheadline)
+                .foregroundStyle(Theme.textPrimary)
+                .fixedSize(horizontal: false, vertical: true)
+            Spacer(minLength: 0)
         }
+        .padding(.vertical, Theme.Space.m)
     }
 }

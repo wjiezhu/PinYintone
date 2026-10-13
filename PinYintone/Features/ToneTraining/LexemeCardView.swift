@@ -8,17 +8,19 @@ import SwiftUI
 struct LexemeCardView: View {
     let lexeme: Lexeme
     @ObservedObject private var localization = LocalizationManager.shared
+    /// 汉字 40pt 起，随系统文字大小缩放（不随屏幕宽度缩放）
+    @ScaledMetric(relativeTo: .largeTitle) private var hanziSize: CGFloat = 40
 
     var body: some View {
         let gloss = lexeme.glosses(for: localization.language)
         VStack(spacing: Theme.Space.xs) {
             Text(lexeme.hanzi)
-                .font(.system(size: 36, weight: .semibold))
+                .font(.system(size: hanziSize, weight: .semibold))
                 .foregroundStyle(Theme.textPrimary)
                 .environment(\.layoutDirection, .leftToRight)
                 .accessibilityIdentifier("practice.hanzi")
             Text(lexeme.pinyin)
-                .font(.title3)
+                .font(.title3.weight(.medium))
                 .foregroundStyle(Theme.textSecondary)
                 .environment(\.layoutDirection, .leftToRight)
             if !gloss.primary.isEmpty {

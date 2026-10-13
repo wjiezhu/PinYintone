@@ -165,7 +165,7 @@ struct ResearchJoinFlowView: View {
                             Text(NSLocalizedString("common_retry", comment: ""))
                                 .frame(maxWidth: .infinity, minHeight: 28)
                         }
-                        .buttonStyle(.borderedProminent)
+                        .buttonStyle(PrimaryButtonStyle())
                         .accessibilityIdentifier("research.retryEnroll")
                     }
                     Button {
@@ -174,7 +174,7 @@ struct ResearchJoinFlowView: View {
                         Text(NSLocalizedString("research_continue_later", comment: ""))
                             .frame(maxWidth: .infinity, minHeight: 28)
                     }
-                    .buttonStyle(.bordered)
+                    .buttonStyle(SecondaryButtonStyle())
                     .accessibilityIdentifier("research.later")
                 }
             }
@@ -182,6 +182,8 @@ struct ResearchJoinFlowView: View {
         .padding(Theme.pageMargin)
         .frame(maxWidth: .infinity, maxHeight: .infinity)
         .background(Theme.background)
+        .accessibilityElement(children: .contain)
+        .accessibilityIdentifier("research.enrolling")
         .navigationTitle(NSLocalizedString("consent_title", comment: ""))
         .navigationBarTitleDisplayMode(.inline)
         .task {
@@ -212,6 +214,7 @@ struct ResearchJoinFlowView: View {
         return VStack(alignment: .leading, spacing: Theme.Space.l) {
             StatusLabel(kind: .success, text: NSLocalizedString("research_enrolled_title", comment: ""))
                 .font(.title3.weight(.semibold))
+                .accessibilityIdentifier("research.enrolledTitle")
             Text(NSLocalizedString(store.state.backgroundAcked
                                    ? "research_enrolled_body" : "research_enrolled_pending_body",
                                    comment: ""))
@@ -248,7 +251,7 @@ struct ResearchJoinFlowView: View {
                     Text(NSLocalizedString("research_start_practice", comment: ""))
                         .frame(maxWidth: .infinity, minHeight: 28)
                 }
-                .buttonStyle(.borderedProminent)
+                .buttonStyle(PrimaryButtonStyle())
                 .accessibilityIdentifier("research.done")
             }
         }
@@ -268,14 +271,12 @@ struct ResearchJoinFlowView: View {
 
     private func messageView(icon: String, title: String, body: String) -> some View {
         VStack(alignment: .leading, spacing: Theme.Space.l) {
-            Image(systemName: icon)
-                .font(.title)
-                .foregroundStyle(Theme.textSecondary)
-                .accessibilityHidden(true)
+            IconTile(systemName: icon, size: 56)
             Text(NSLocalizedString(title, comment: ""))
                 .font(.title3.weight(.semibold))
                 .foregroundStyle(Theme.textPrimary)
                 .fixedSize(horizontal: false, vertical: true)
+                .accessibilityIdentifier("research.message.\(title)")
             Text(NSLocalizedString(body, comment: ""))
                 .font(.body)
                 .foregroundStyle(Theme.textSecondary)
@@ -287,7 +288,7 @@ struct ResearchJoinFlowView: View {
                 Text(NSLocalizedString("research_start_practice", comment: ""))
                     .frame(maxWidth: .infinity, minHeight: 28)
             }
-            .buttonStyle(.borderedProminent)
+            .buttonStyle(PrimaryButtonStyle())
             .accessibilityIdentifier("research.done")
         }
         .padding(Theme.pageMargin)
@@ -311,21 +312,24 @@ struct SurveyInvitationButtons: View {
                 Text(NSLocalizedString("survey_start_now", comment: ""))
                     .frame(maxWidth: .infinity, minHeight: 28)
             }
-            .buttonStyle(.borderedProminent)
+            .buttonStyle(PrimaryButtonStyle())
             .accessibilityIdentifier("surveyInvite.start")
 
             Button(action: onLater) {
                 Text(NSLocalizedString("survey_later", comment: ""))
                     .frame(maxWidth: .infinity, minHeight: 28)
             }
-            .buttonStyle(.bordered)
+            .buttonStyle(SecondaryButtonStyle())
             .accessibilityIdentifier("surveyInvite.later")
 
             Button(action: onDecline) {
                 Text(NSLocalizedString("survey_decline", comment: ""))
-                    .frame(maxWidth: .infinity, minHeight: 28)
+                    .font(.body)
+                    .foregroundStyle(Theme.textSecondary)
+                    .frame(maxWidth: .infinity, minHeight: Theme.minTap)
+                    .contentShape(Rectangle())
             }
-            .buttonStyle(.borderless)
+            .buttonStyle(.plain)
             .accessibilityIdentifier("surveyInvite.decline")
         }
     }
@@ -409,7 +413,7 @@ struct ResearchSurveyContent: View {
                         }
                         .frame(maxWidth: .infinity, minHeight: 28)
                     }
-                    .buttonStyle(.bordered)
+                    .buttonStyle(SecondaryButtonStyle())
                     .disabled(isRetrying)
                     .accessibilityIdentifier("survey.retryUpload")
                 }
@@ -417,7 +421,7 @@ struct ResearchSurveyContent: View {
                     Text(NSLocalizedString("common_close", comment: ""))
                         .frame(maxWidth: .infinity, minHeight: 28)
                 }
-                .buttonStyle(.borderedProminent)
+                .buttonStyle(PrimaryButtonStyle())
                 .accessibilityIdentifier("survey.close")
             }
         }
@@ -426,6 +430,7 @@ struct ResearchSurveyContent: View {
         .background(Theme.background)
         .navigationTitle(title)
         .navigationBarTitleDisplayMode(.inline)
+        .accessibilityElement(children: .contain)
         .accessibilityIdentifier("survey.result")
     }
 }
@@ -478,7 +483,8 @@ struct PostSurveyInvitationSheet: View {
                 .padding(Theme.pageMargin)
                 .frame(maxWidth: .infinity, maxHeight: .infinity, alignment: .topLeading)
                 .background(Theme.background)
-                .accessibilityIdentifier("surveyInvite.post")
+                .accessibilityElement(children: .contain)
+        .accessibilityIdentifier("surveyInvite.post")
             }
         }
         .tint(Theme.accent)

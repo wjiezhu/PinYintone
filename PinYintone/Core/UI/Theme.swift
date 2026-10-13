@@ -123,6 +123,8 @@ struct StatusLabel: View {
     enum Kind { case success, neutral, warning }
     let kind: Kind
     let text: String
+    /// 结果区的主状态用大一号
+    var prominent = false
 
     var body: some View {
         Label {
@@ -132,7 +134,7 @@ struct StatusLabel: View {
             Image(systemName: icon)
                 .accessibilityHidden(true)
         }
-        .font(.body.weight(.medium))
+        .font(prominent ? .title3.weight(.semibold) : .body.weight(.medium))
         .foregroundStyle(color)
     }
 

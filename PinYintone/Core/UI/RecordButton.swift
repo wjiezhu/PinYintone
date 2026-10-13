@@ -14,6 +14,9 @@ struct RecordButton: View {
     var body: some View {
         Button(action: action) {
             ZStack {
+                // 外圈：一圈同色的淡晕，让它从操作栏里站出来；尺寸恒定
+                Circle()
+                    .fill((isRecording ? Theme.recording : Theme.accent).opacity(0.16))
                 Circle()
                     .fill(isRecording ? Theme.recording : Theme.accent)
                     .frame(width: Theme.recordButton, height: Theme.recordButton)

@@ -23,6 +23,9 @@ struct PinyintoneApp: App {
                 .environmentObject(appState)
                 .environment(\.managedObjectContext, CoreDataStack.shared.context)
                 .onAppear { appState.sync(with: UserManager.shared.profile) }
+                #if DEBUG
+                .preferredColorScheme(UITestSupport.forcedColorScheme)
+                #endif
         }
         .onChange(of: scenePhase) { _, phase in
             if phase == .active {
@@ -94,12 +97,23 @@ final class ConnectivityMonitor {
 ///   无法在无人值守的模拟器里完成）
 /// - `PT_API_BASE_URL`：把后端指到本地测试服务（见 APIClient）
 /// - `PT_SYNTHETIC_AUDIO=match|silent`：用合成信号代替麦克风（见 RecordingSource）
+/// - `PT_UITEST_APPEARANCE=dark|light`：固定外观，用来截深色界面
+///   （无界面的模拟器上系统外观切换不生效）。不设则跟随系统。
 ///
 /// 开发构建下纳入的参与者一律 is_test=true，正式导出默认排除。
 enum UITestSupport {
     private static var env: [String: String] { ProcessInfo.processInfo.environment }
 
     static var loginIdentifier: String? { env["PT_UITEST_LOGIN"] }
+
+    /// nil = 跟随系统（正常情况）
+    static var forcedColorScheme: ColorScheme? {
+        switch env["PT_UITEST_APPEARANCE"] {
+        case "dark": return .dark
+        case "light": return .light
+        default: return nil
+        }
+    }
 
     static func applyLaunchOverrides() {
         if env["PT_UITEST_RESET"] == "1" { resetEverything() }

@@ -29,8 +29,8 @@ struct LearningHistoryView: View {
     }
 
     var body: some View {
-        List {
-            Section {
+        ScrollView {
+            LazyVStack(alignment: .leading, spacing: Theme.Space.xl) {
                 Picker(NSLocalizedString("history_filter", comment: ""), selection: $filter) {
                     Text(NSLocalizedString("history_filter_all", comment: ""))
                         .tag(HistoryEntry.Kind?.none)
@@ -40,36 +40,35 @@ struct LearningHistoryView: View {
                     }
                 }
                 .pickerStyle(.segmented)
-                .listRowInsets(EdgeInsets(top: 8, leading: 0, bottom: 8, trailing: 0))
-                .listRowBackground(Color.clear)
                 .accessibilityIdentifier("history.filter")
-            }
 
-            if visible.isEmpty {
-                // 真实的空状态：没有记录就说没有，不放示例
-                Section {
-                    Text(NSLocalizedString(entries.isEmpty ? "history_empty" : "history_empty_filtered",
-                                           comment: ""))
-                        .foregroundStyle(Theme.textSecondary)
-                        .frame(maxWidth: .infinity, alignment: .leading)
-                        .accessibilityIdentifier("history.empty")
-                }
-            } else {
-                ForEach(days, id: \.day) { group in
-                    Section {
-                        ForEach(group.items) { row($0) }
-                    } header: {
-                        Text(group.day, format: .dateTime.year().month().day().weekday(.wide))
+                if visible.isEmpty {
+                    emptyState
+                } else {
+                    ForEach(days, id: \.day) { group in
+                        VStack(alignment: .leading, spacing: Theme.Space.s) {
+                            Text(group.day, format: .dateTime.year().month().day().weekday(.wide))
+                                .font(.footnote.weight(.semibold))
+                                .foregroundStyle(Theme.textSecondary)
+                                .accessibilityAddTraits(.isHeader)
+                            GroupedCard {
+                                ForEach(Array(group.items.enumerated()), id: \.element.id) { index, entry in
+                                    if index > 0 { RowDivider() }
+                                    row(entry)
+                                }
+                            }
+                        }
                     }
-                }
-                Section {
-                } footer: {
                     Text(NSLocalizedString("history_footer_note", comment: ""))
+                        .font(.footnote)
+                        .foregroundStyle(Theme.textSecondary)
+                        .fixedSize(horizontal: false, vertical: true)
                 }
             }
+            .padding(.horizontal, Theme.pageMargin)
+            .padding(.top, Theme.Space.s)
+            .padding(.bottom, Theme.Space.xl)
         }
-        .listStyle(.insetGrouped)
-        .scrollContentBackground(.hidden)
         .background(Theme.background)
         .navigationTitle(NSLocalizedString("history_title", comment: ""))
         .navigationBarTitleDisplayMode(.large)
@@ -80,15 +79,36 @@ struct LearningHistoryView: View {
         }
     }
 
+    /// 真实的空状态：没有记录就说没有，不放示例
+    private var emptyState: some View {
+        VStack(spacing: Theme.Space.m) {
+            Image(systemName: "list.bullet.rectangle")
+                .font(.system(size: 34, weight: .medium))
+                .foregroundStyle(Theme.textSecondary)
+                .accessibilityHidden(true)
+            Text(NSLocalizedString(entries.isEmpty ? "history_empty" : "history_empty_filtered",
+                                   comment: ""))
+                .font(.body)
+                .foregroundStyle(Theme.textSecondary)
+                .multilineTextAlignment(.center)
+                .fixedSize(horizontal: false, vertical: true)
+                .accessibilityIdentifier("history.empty")
+        }
+        .frame(maxWidth: .infinity, minHeight: 180)
+        .surfaceCard()
+    }
+
     private func row(_ entry: HistoryEntry) -> some View {
-        HStack(alignment: .firstTextBaseline, spacing: Theme.Space.m) {
+        HStack(alignment: .center, spacing: Theme.Space.m) {
             VStack(alignment: .leading, spacing: 2) {
                 Text(entry.title)
-                    .font(.title3.weight(.medium))
+                    .font(.title3.weight(.semibold))
                     .foregroundStyle(Theme.textPrimary)
                     .environment(\.layoutDirection, .leftToRight)
-                HStack(spacing: Theme.Space.s) {
+                HStack(spacing: Theme.Space.xs) {
                     Text(entry.timestamp, format: .dateTime.hour().minute())
+                        .monospacedDigit()
+                    Text("·").accessibilityHidden(true)
                     Text(NSLocalizedString(entry.kind.labelKey, comment: ""))
                 }
                 .font(.subheadline)
@@ -97,6 +117,7 @@ struct LearningHistoryView: View {
             Spacer(minLength: Theme.Space.s)
             statusView(entry.status)
         }
+        .padding(.vertical, Theme.Space.m)
         .frame(minHeight: Theme.minTap)
         .accessibilityElement(children: .combine)
     }
@@ -109,7 +130,7 @@ struct LearningHistoryView: View {
         } icon: {
             Image(systemName: status.icon).accessibilityHidden(true)
         }
-        .font(.subheadline)
+        .font(.subheadline.weight(.medium))
         .foregroundStyle(status == .technicalFailure ? Theme.warning
                          : (status == .passed ? Theme.accent : Theme.textSecondary))
         .multilineTextAlignment(.trailing)
@@ -153,7 +174,7 @@ struct HistoryEntry: Identifiable, Equatable {
             switch self {
             case .passed: return "checkmark.circle.fill"
             case .notPassed: return "arrow.counterclockwise.circle"
-            case .recorded: return "circle.fill"
+            case .recorded: return "waveform"
             case .technicalFailure: return "exclamationmark.triangle.fill"
             }
         }

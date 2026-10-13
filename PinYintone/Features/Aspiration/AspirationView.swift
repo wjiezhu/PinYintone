@@ -52,9 +52,8 @@ struct AspirationView: View {
                     } label: {
                         Label(NSLocalizedString("tone_next_word", comment: ""),
                               systemImage: "forward.end")
-                            .frame(maxWidth: .infinity, minHeight: 28)
                     }
-                    .buttonStyle(.borderedProminent)
+                    .buttonStyle(PrimaryButtonStyle())
                     .accessibilityIdentifier("aspiration.next")
                 }
             }

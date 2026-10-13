@@ -3,68 +3,65 @@ import SwiftUI
 /// 账号入口：学生（Sign in with Apple）或教师。
 struct RoleSelectView: View {
     var body: some View {
-        List {
-            Section {
-                NavigationLink {
-                    StudentSignupView()
-                } label: {
-                    Label(NSLocalizedString("role_student", comment: ""),
-                          systemImage: "graduationcap")
-                        .frame(minHeight: Theme.minTap)
-                }
-                .accessibilityIdentifier("role.student")
+        ScrollView {
+            VStack(alignment: .leading, spacing: Theme.Space.xl) {
+                BrandHeader()
+                    .padding(.top, Theme.Space.xl)
 
-                NavigationLink {
-                    TeacherSignupView()
-                } label: {
-                    Label(NSLocalizedString("role_teacher", comment: ""),
-                          systemImage: "person.badge.shield.checkmark")
-                        .frame(minHeight: Theme.minTap)
-                }
-                .accessibilityIdentifier("role.teacher")
-            } header: {
-                Text(NSLocalizedString("role_select_title", comment: ""))
-            }
+                VStack(alignment: .leading, spacing: Theme.Space.s) {
+                    SectionTitle(key: "role_select_title")
+                    NavigationLink {
+                        StudentSignupView()
+                    } label: {
+                        EntryRow(icon: "graduationcap",
+                                 title: NSLocalizedString("role_student", comment: ""))
+                            .surfaceCard(padding: Theme.Space.m)
+                    }
+                    .buttonStyle(.plain)
+                    .accessibilityIdentifier("role.student")
 
-            Section {
+                    NavigationLink {
+                        TeacherSignupView()
+                    } label: {
+                        EntryRow(icon: "person.2",
+                                 title: NSLocalizedString("role_teacher", comment: ""))
+                            .surfaceCard(padding: Theme.Space.m)
+                    }
+                    .buttonStyle(.plain)
+                    .accessibilityIdentifier("role.teacher")
+                }
+
                 NavigationLink {
                     LanguagePickerPage()
                 } label: {
                     Label(NSLocalizedString("settings_language", comment: ""), systemImage: "globe")
+                        .font(.body.weight(.medium))
+                        .foregroundStyle(Theme.accent)
+                        .frame(minHeight: Theme.minTap)
+                        .contentShape(Rectangle())
                 }
+                .buttonStyle(.plain)
+                .accessibilityIdentifier("role.language")
             }
+            .padding(.horizontal, Theme.pageMargin)
+            .padding(.bottom, Theme.Space.xl)
         }
-        .listStyle(.insetGrouped)
-        .scrollContentBackground(.hidden)
         .background(Theme.background)
-        .navigationTitle("Pinyintone")
-        .navigationBarTitleDisplayMode(.large)
-        .navigationBarBackButtonHidden(true)
+        .toolbar(.hidden, for: .navigationBar)
     }
 }
 
 /// 登录前改界面语言（选错了语言的人不该被困在看不懂的登录页上）
 struct LanguagePickerPage: View {
-    @ObservedObject private var localization = LocalizationManager.shared
     @Environment(\.dismiss) private var dismiss
 
     var body: some View {
-        List {
-            ForEach(LocalizationManager.supported, id: \.code) { lang in
-                Button {
-                    localization.setLanguage(lang.code)
-                    dismiss()
-                } label: {
-                    HStack {
-                        Text(lang.label).foregroundStyle(Theme.textPrimary)
-                        Spacer()
-                        if localization.language == lang.code {
-                            Image(systemName: "checkmark").foregroundStyle(Theme.accent)
-                        }
-                    }
-                }
-            }
+        ScrollView {
+            LanguageChoiceList(marksCurrent: true) { dismiss() }
+                .padding(.horizontal, Theme.pageMargin)
+                .padding(.vertical, Theme.Space.l)
         }
+        .background(Theme.background)
         .navigationTitle(NSLocalizedString("settings_language", comment: ""))
         .navigationBarTitleDisplayMode(.inline)
     }

@@ -43,13 +43,15 @@ struct FreeF0Canvas: View {
         .padding([.horizontal, .bottom], Theme.Space.m)
         .background(Theme.surface)
         .clipShape(RoundedRectangle(cornerRadius: Theme.radius))
+        .overlay(RoundedRectangle(cornerRadius: Theme.radius).strokeBorder(Theme.divider))
         .overlay(alignment: .topLeading) {
             HStack(spacing: Theme.Space.l) {
                 legendItem(color: Theme.accent, text: NSLocalizedString("freetext_legend_ideal", comment: ""), dashed: true)
                 legendItem(color: Theme.learner, text: NSLocalizedString("legend_you", comment: ""), dashed: false)
             }
             .font(.footnote)
-            .padding(Theme.Space.s)
+            .padding(.horizontal, Theme.Space.m)
+            .padding(.vertical, Theme.Space.s)
         }
         .environment(\.layoutDirection, .leftToRight)
         .accessibilityElement(children: .ignore)

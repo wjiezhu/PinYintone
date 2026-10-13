@@ -27,7 +27,7 @@ struct DandelionView: View {
                 var stem = Path()
                 stem.move(to: CGPoint(x: center.x, y: center.y))
                 stem.addLine(to: CGPoint(x: center.x, y: size.height))
-                ctx.stroke(stem, with: .color(.green.opacity(0.6)),
+                ctx.stroke(stem, with: .color(Theme.textSecondary.opacity(0.6)),
                            style: StrokeStyle(lineWidth: 3, lineCap: .round))
 
                 // 花盘
@@ -35,7 +35,7 @@ struct DandelionView: View {
                 ctx.fill(
                     Path(ellipseIn: CGRect(x: center.x - diskR, y: center.y - diskR,
                                            width: diskR * 2, height: diskR * 2)),
-                    with: .color(.yellow.opacity(0.7))
+                    with: .color(Theme.accent.opacity(0.8))
                 )
 
                 // 种子

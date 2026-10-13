@@ -68,7 +68,7 @@ struct ResearchConsentView: View {
                     Text(NSLocalizedString("consent_agree", comment: ""))
                         .frame(maxWidth: .infinity, minHeight: 28)
                 }
-                .buttonStyle(.borderedProminent)
+                .buttonStyle(PrimaryButtonStyle())
                 .disabled(!hasReadAndAgreed)
                 .accessibilityIdentifier("consent.agree")
 
@@ -79,12 +79,10 @@ struct ResearchConsentView: View {
                     Text(NSLocalizedString("consent_decline", comment: ""))
                         .frame(maxWidth: .infinity, minHeight: 28)
                 }
-                .buttonStyle(.bordered)
+                .buttonStyle(SecondaryButtonStyle())
                 .accessibilityIdentifier("consent.decline")
             }
-            .padding(.horizontal, Theme.pageMargin)
-            .padding(.vertical, Theme.Space.m)
-            .background(.bar)
+            .bottomBarSurface()
         }
         .navigationTitle(NSLocalizedString("consent_title", comment: ""))
         .navigationBarTitleDisplayMode(.inline)

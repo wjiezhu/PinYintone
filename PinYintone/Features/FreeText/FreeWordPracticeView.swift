@@ -14,6 +14,7 @@ struct FreeWordPracticeView: View {
     @State private var currentIndex: Int = 0
 
     private let pinyinConverter = PinyinConverter()
+    @ScaledMetric(relativeTo: .largeTitle) private var hanziSize: CGFloat = 40
 
     private var currentWord: String {
         tokens.indices.contains(currentIndex) ? tokens[currentIndex] : ""
@@ -28,10 +29,10 @@ struct FreeWordPracticeView: View {
 
                 VStack(spacing: Theme.Space.xs) {
                     Text(currentWord)
-                        .font(.system(size: 36, weight: .semibold))
+                        .font(.system(size: hanziSize, weight: .semibold))
                         .foregroundStyle(Theme.textPrimary)
                     Text(pinyinConverter.pinyin(for: currentWord))
-                        .font(.title3)
+                        .font(.title3.weight(.medium))
                         .foregroundStyle(Theme.textSecondary)
                 }
                 .frame(maxWidth: .infinity)
@@ -51,21 +52,30 @@ struct FreeWordPracticeView: View {
                 if let result = vm.feedbackResult {
                     VStack(alignment: .leading, spacing: Theme.Space.s) {
                         SectionTitle(key: "result_title")
-                        HStack(alignment: .firstTextBaseline) {
+                        HStack(alignment: .center, spacing: Theme.Space.m) {
                             StatusLabel(kind: result.grade == .fail ? .neutral : .success,
                                         text: NSLocalizedString(result.grade == .fail
                                                                 ? "result_not_passed" : "result_passed",
-                                                                comment: ""))
-                            Spacer()
-                            Text("\(result.score) / 100")
-                                .font(.body.monospacedDigit())
-                                .foregroundStyle(Theme.textSecondary)
+                                                                comment: ""),
+                                        prominent: true)
+                            Spacer(minLength: 0)
+                            HStack(alignment: .firstTextBaseline, spacing: 3) {
+                                Text("\(result.score)")
+                                    .font(.title2.weight(.semibold).monospacedDigit())
+                                    .foregroundStyle(Theme.textPrimary)
+                                Text("/ 100")
+                                    .font(.footnote.monospacedDigit())
+                                    .foregroundStyle(Theme.textSecondary)
+                            }
+                            .environment(\.layoutDirection, .leftToRight)
+                            .accessibilityElement(children: .ignore)
+                            .accessibilityLabel(String(format: NSLocalizedString("result_score_a11y",
+                                                                                 comment: ""),
+                                                       result.score))
                         }
                     }
-                    .padding(Theme.Space.l)
                     .frame(maxWidth: .infinity, alignment: .leading)
-                    .background(Theme.surface)
-                    .clipShape(RoundedRectangle(cornerRadius: Theme.radius))
+                    .surfaceCard()
                 }
             }
             .padding(.horizontal, Theme.pageMargin)
@@ -76,6 +86,8 @@ struct FreeWordPracticeView: View {
         .safeAreaInset(edge: .bottom, spacing: 0) { actionBar }
         .navigationTitle(NSLocalizedString("stage3_title", comment: ""))
         .navigationBarTitleDisplayMode(.inline)
+        // 与声调练习页一致：这一页底部只留操作栏
+        .toolbar(.hidden, for: .tabBar)
         .toolbar {
             ToolbarItemGroup(placement: .topBarTrailing) {
                 Button {
@@ -109,34 +121,23 @@ struct FreeWordPracticeView: View {
 
     /// 上一词 · 录音/停止 · 下一词。三格等宽，录音键恒在正中；左右顺序不随界面方向镜像。
     private var actionBar: some View {
-        HStack(spacing: 0) {
-            barButton(icon: "backward.end", label: "freetext_prev") { move(by: -1) }
+        PracticeActionBar {
+            BarButton(icon: "backward.end.fill",
+                      caption: NSLocalizedString("bar_prev", comment: ""),
+                      label: NSLocalizedString("freetext_prev", comment: ""),
+                      id: "freeText.prev") { move(by: -1) }
                 .disabled(currentIndex == 0 || vm.isRecording)
-                .frame(maxWidth: .infinity)
+        } center: {
             RecordButton(isRecording: vm.isRecording) {
                 vm.toggleRecording(targetWord: currentWord)
             }
-            .frame(maxWidth: .infinity)
-            barButton(icon: "forward.end", label: "freetext_next") { move(by: 1) }
+        } trailing: {
+            BarButton(icon: "forward.end.fill",
+                      caption: NSLocalizedString("bar_next", comment: ""),
+                      label: NSLocalizedString("freetext_next", comment: ""),
+                      id: "freeText.next") { move(by: 1) }
                 .disabled(currentIndex >= tokens.count - 1 || vm.isRecording)
-                .frame(maxWidth: .infinity)
         }
-        .padding(.horizontal, Theme.pageMargin)
-        .padding(.top, Theme.Space.s)
-        .padding(.bottom, Theme.Space.xs)
-        .background(.bar)
-        .environment(\.layoutDirection, .leftToRight)
-    }
-
-    private func barButton(icon: String, label: String,
-                           action: @escaping () -> Void) -> some View {
-        Button(action: action) {
-            Image(systemName: icon)
-                .font(.title2)
-                .frame(width: 56, height: Theme.minTap + 4)
-                .contentShape(Rectangle())
-        }
-        .accessibilityLabel(NSLocalizedString(label, comment: ""))
     }
 
     private func move(by delta: Int) {

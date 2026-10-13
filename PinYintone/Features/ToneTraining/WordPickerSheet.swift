@@ -36,6 +36,7 @@ struct WordPickerSheet: View {
                 if words.isEmpty {
                     Text(NSLocalizedString("word_picker_empty", comment: ""))
                         .foregroundStyle(Theme.textSecondary)
+                        .listRowBackground(Theme.surface)
                 } else {
                     ForEach(words) { lexeme in
                         Button {
@@ -46,9 +47,13 @@ struct WordPickerSheet: View {
                                     isCurrent: lexeme.id == currentID)
                         }
                         .accessibilityIdentifier("word.\(lexeme.id)")
+                        .listRowBackground(Theme.surface)
                     }
                 }
             }
+            .listStyle(.plain)
+            .scrollContentBackground(.hidden)
+            .background(Theme.surface)
             .searchable(text: $query,
                         prompt: NSLocalizedString("word_picker_search", comment: ""))
             .navigationTitle(NSLocalizedString("word_picker_title", comment: ""))
@@ -70,11 +75,14 @@ struct WordRow: View {
     var isCurrent = false
 
     var body: some View {
-        HStack(alignment: .firstTextBaseline, spacing: Theme.Space.m) {
+        HStack(alignment: .center, spacing: Theme.Space.m) {
             VStack(alignment: .leading, spacing: 2) {
-                Text(lexeme.hanzi)
-                    .font(.title3.weight(.medium))
-                    .foregroundStyle(Theme.textPrimary)
+                HStack(alignment: .center, spacing: Theme.Space.s) {
+                    Text(lexeme.hanzi)
+                        .font(.title3.weight(.semibold))
+                        .foregroundStyle(Theme.textPrimary)
+                    ToneGlyphRow(tones: lexeme.tones)
+                }
                 Text(lexeme.pinyin)
                     .font(.subheadline)
                     .foregroundStyle(Theme.textSecondary)

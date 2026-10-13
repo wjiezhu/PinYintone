@@ -23,6 +23,7 @@ struct ToneTrainingView: View {
     @ObservedObject private var recordings = LearnerRecordingStore.shared
     @Environment(\.openURL) private var openURL
     @Environment(\.accessibilityReduceMotion) private var reduceMotion
+    @Environment(\.dynamicTypeSize) private var typeSize
 
     @State private var showWordPicker = false
     @State private var showMicExplanation = false
@@ -41,12 +42,15 @@ struct ToneTrainingView: View {
         }
         .background(Theme.background)
         .safeAreaInset(edge: .bottom, spacing: 0) { actionBar }
-        .navigationTitle(NSLocalizedString(vm.mode == .selfTest ? "self_test_title" : "stage2_title",
-                                           comment: ""))
+        // 放大文字时导航栏放不下长标题（系统会截成「…」），标题改放到内容区顶部并允许换行
+        .navigationTitle(typeSize.isAccessibilitySize ? "" : pageTitle)
         .navigationBarTitleDisplayMode(.inline)
         // 自测中不能用系统返回直接离开：先明确退出自测，回到普通练习
         .navigationBarBackButtonHidden(vm.mode == .selfTest)
         .toolbar { toolbar }
+        // 练习页底部只留一条操作栏：主导航在这一页收起，返回首页后恢复。
+        // 两条栏叠在一起时，录音键离拇指更远，也分不清哪条是哪条。
+        .toolbar(.hidden, for: .tabBar)
         .onAppear {
             if !didApplyInitialWord, let initialLexemeID {
                 didApplyInitialWord = true
@@ -77,6 +81,10 @@ struct ToneTrainingView: View {
                 .presentationDetents([.medium, .large])
         }
         .sheet(isPresented: $showMicExplanation) { micExplanation }
+    }
+
+    private var pageTitle: String {
+        NSLocalizedString(vm.mode == .selfTest ? "self_test_title" : "stage2_title", comment: "")
     }
 
     // MARK: - 工具栏
@@ -123,8 +131,17 @@ struct ToneTrainingView: View {
     private func practiceContent(_ lexeme: Lexeme) -> some View {
         ScrollView {
             VStack(spacing: Theme.Space.l) {
+                if typeSize.isAccessibilitySize {
+                    Text(pageTitle)
+                        .font(.headline)
+                        .foregroundStyle(Theme.textSecondary)
+                        .multilineTextAlignment(.center)
+                        .fixedSize(horizontal: false, vertical: true)
+                        .accessibilityAddTraits(.isHeader)
+                }
                 LexemeCardView(lexeme: lexeme)
-                    .padding(.top, Theme.Space.s)
+                    .padding(.top, Theme.Space.m)
+                    .padding(.bottom, Theme.Space.xs)
 
                 modeSwitcher
 
@@ -170,8 +187,7 @@ struct ToneTrainingView: View {
         }
         .frame(height: Theme.chartHeight)
         .frame(maxWidth: .infinity)
-        .background(Theme.surface)
-        .clipShape(RoundedRectangle(cornerRadius: Theme.radius))
+        .surfaceCard(padding: 0)
         .accessibilityIdentifier("practice.chart")
     }
 
@@ -181,110 +197,163 @@ struct ToneTrainingView: View {
     /// 技术失败用琥珀色加图标，说明可以怎么办——**不显示成低分**。
     @ViewBuilder
     private var statusArea: some View {
-        VStack(alignment: .leading, spacing: Theme.Space.m) {
-            switch vm.stage {
-            case .preparing:
-                progressLine("tone_stage_preparing")
-            case .ready:
-                hintLine("tone_stage_ready")
-            case .recording:
-                hintLine("tone_stage_recording")
-            case .analyzing:
-                progressLine("tone_stage_analyzing")
-            case .feedback:
-                if let result = vm.feedbackResult { resultBlock(result) }
-            case .failed(let failure):
-                failureBlock(failure)
-            case .selfTestRecorded:
-                EmptyView()
+        switch vm.stage {
+        case .preparing:
+            statusLine("tone_stage_preparing", spinning: true)
+        case .ready:
+            statusLine("tone_stage_ready", icon: "mic")
+        case .recording:
+            statusLine("tone_stage_recording", icon: "record.circle.fill",
+                       iconColor: Theme.recording, textColor: Theme.textPrimary)
+        case .analyzing:
+            statusLine("tone_stage_analyzing", spinning: true)
+        case .feedback:
+            if let result = vm.feedbackResult { resultBlock(result) }
+        case .failed(let failure):
+            failureBlock(failure)
+        case .selfTestRecorded:
+            EmptyView()
+        }
+    }
+
+    /// 一行状态：图标（或转圈）+ 一句话，居中
+    private func statusLine(_ key: String, icon: String? = nil, spinning: Bool = false,
+                            iconColor: Color = Theme.textSecondary,
+                            textColor: Color = Theme.textSecondary) -> some View {
+        HStack(alignment: .firstTextBaseline, spacing: Theme.Space.s) {
+            if spinning {
+                ProgressView()
+            } else if let icon {
+                Image(systemName: icon)
+                    .foregroundStyle(iconColor)
+                    .accessibilityHidden(true)
             }
-        }
-        .frame(maxWidth: .infinity, alignment: .leading)
-        .accessibilityIdentifier("practice.status")
-    }
-
-    private func progressLine(_ key: String) -> some View {
-        HStack(spacing: Theme.Space.s) {
-            ProgressView()
             Text(NSLocalizedString(key, comment: ""))
-                .font(.body)
-                .foregroundStyle(Theme.textSecondary)
+                .foregroundStyle(textColor)
+                .multilineTextAlignment(.leading)
+                .fixedSize(horizontal: false, vertical: true)
         }
-    }
-
-    private func hintLine(_ key: String) -> some View {
-        Text(NSLocalizedString(key, comment: ""))
-            .font(.body)
-            .foregroundStyle(Theme.textSecondary)
-            .fixedSize(horizontal: false, vertical: true)
+        .font(.subheadline)
+        .frame(maxWidth: .infinity)
+        .padding(.vertical, Theme.Space.s)
     }
 
     /// 本次结果。只说这一次录音的情况，不称「能力评分」，也不做音节级判断。
     private func resultBlock(_ result: FeedbackResult) -> some View {
-        VStack(alignment: .leading, spacing: Theme.Space.m) {
-            SectionTitle(key: "result_title")
-            HStack(alignment: .firstTextBaseline) {
-                StatusLabel(kind: result.grade == .fail ? .neutral : .success,
-                            text: NSLocalizedString(result.grade == .fail
-                                                    ? "result_not_passed" : "result_passed",
-                                                    comment: ""))
-                Spacer()
-                Text("\(result.score) / 100")
-                    .font(.body.monospacedDigit())
-                    .foregroundStyle(Theme.textSecondary)
-                    .accessibilityLabel(String(format: NSLocalizedString("result_score_a11y",
-                                                                         comment: ""), result.score))
-            }
-            // 换词提示：连续几次没通过时给一个出口，不是评价
-            if vm.consecutiveFailures >= vm.skipHintThreshold {
-                Text(NSLocalizedString("feedback_skip_hint", comment: ""))
-                    .font(.subheadline)
-                    .foregroundStyle(Theme.textSecondary)
-                    .fixedSize(horizontal: false, vertical: true)
-            }
-            HStack(spacing: Theme.Space.s) {
-                Button {
-                    vm.clearFeedbackForRetry()
-                } label: {
-                    Label(NSLocalizedString("result_try_again", comment: ""),
-                          systemImage: "arrow.counterclockwise")
-                }
-                .accessibilityIdentifier("practice.tryAgain")
-
-                if recordings.hasRecording {
-                    Button {
-                        vm.replayOwnRecording()
-                    } label: {
-                        Label(NSLocalizedString(vm.playing == .ownRecording
-                                                ? "replay_stop" : "replay_own_recording",
-                                                comment: ""),
-                              systemImage: vm.playing == .ownRecording
-                                  ? "stop.circle" : "play.circle")
+        VStack(alignment: .leading, spacing: 0) {
+            VStack(alignment: .leading, spacing: Theme.Space.s) {
+                SectionTitle(key: "result_title")
+                // 一行放得下就左右排；文字放大后放不下，改成上下排（不缩字、不断词）
+                ViewThatFits(in: .horizontal) {
+                    HStack(alignment: .center, spacing: Theme.Space.m) {
+                        resultStatus(result)
+                        Spacer(minLength: 0)
+                        resultScore(result)
                     }
-                    .accessibilityIdentifier("practice.replay")
+                    VStack(alignment: .leading, spacing: Theme.Space.xs) {
+                        resultStatus(result)
+                        resultScore(result)
+                    }
                 }
-
-                // 建议：点了才打开，不自动弹出
-                Button {
-                    vm.openAdvice()
-                } label: {
-                    Label(NSLocalizedString("advice_open", comment: ""),
-                          systemImage: "lightbulb")
+                // 换词提示：连续几次没通过时给一个出口，不是评价
+                if vm.consecutiveFailures >= vm.skipHintThreshold {
+                    Text(NSLocalizedString("feedback_skip_hint", comment: ""))
+                        .font(.subheadline)
+                        .foregroundStyle(Theme.textSecondary)
+                        .fixedSize(horizontal: false, vertical: true)
                 }
-                .accessibilityIdentifier("practice.advice")
             }
-            .buttonStyle(.bordered)
-            .labelStyle(.titleAndIcon)
-            .font(.subheadline)
+            .padding(Theme.Space.l)
+            .frame(maxWidth: .infinity, alignment: .leading)
+
+            RowDivider()
+
+            // 三个后续动作等宽排开，位置固定；没有可回听的录音时回听一格不出现
+            HStack(spacing: 0) {
+                resultAction(icon: "arrow.counterclockwise", caption: "result_try_again",
+                             label: "result_try_again", id: "practice.tryAgain") {
+                    vm.clearFeedbackForRetry()
+                }
+                if recordings.hasRecording {
+                    columnDivider
+                    resultAction(icon: vm.playing == .ownRecording ? "stop.fill" : "play.fill",
+                                 caption: vm.playing == .ownRecording ? "bar_stop" : "replay_short",
+                                 label: vm.playing == .ownRecording
+                                     ? "replay_stop" : "replay_own_recording",
+                                 id: "practice.replay") {
+                        vm.replayOwnRecording()
+                    }
+                }
+                columnDivider
+                // 建议：点了才打开，不自动弹出
+                resultAction(icon: "lightbulb", caption: "advice_short",
+                             label: "advice_open", id: "practice.advice") {
+                    vm.openAdvice()
+                }
+            }
+            .fixedSize(horizontal: false, vertical: true)
         }
-        .padding(Theme.Space.l)
-        .frame(maxWidth: .infinity, alignment: .leading)
         .background(Theme.surface)
         .clipShape(RoundedRectangle(cornerRadius: Theme.radius))
+        .overlay(RoundedRectangle(cornerRadius: Theme.radius).strokeBorder(Theme.divider))
         // 结果**真正出现在屏幕上**才算「已显示」：研究记录的结果显示时间、
         // feedback_displayed 事件、合格练习计次都从这里触发，按尝试编号去重。
         .onAppear { vm.feedbackDidAppear() }
+        .accessibilityElement(children: .contain)
         .accessibilityIdentifier("practice.result")
+    }
+
+    private func resultStatus(_ result: FeedbackResult) -> some View {
+        StatusLabel(kind: result.grade == .fail ? .neutral : .success,
+                    text: NSLocalizedString(result.grade == .fail
+                                            ? "result_not_passed" : "result_passed", comment: ""),
+                    prominent: true)
+    }
+
+    private func resultScore(_ result: FeedbackResult) -> some View {
+        HStack(alignment: .firstTextBaseline, spacing: 3) {
+            Text("\(result.score)")
+                .font(.title2.weight(.semibold).monospacedDigit())
+                .foregroundStyle(Theme.textPrimary)
+            Text("/ 100")
+                .font(.footnote.monospacedDigit())
+                .foregroundStyle(Theme.textSecondary)
+        }
+        .fixedSize()
+        // 数字的书写方向不随界面方向镜像
+        .environment(\.layoutDirection, .leftToRight)
+        .accessibilityElement(children: .ignore)
+        .accessibilityLabel(String(format: NSLocalizedString("result_score_a11y", comment: ""),
+                                   result.score))
+    }
+
+    private var columnDivider: some View {
+        Theme.divider.frame(width: 1)
+    }
+
+    /// 结果区的一个动作：图标在上、一个短词在下。完整说明给 VoiceOver。
+    private func resultAction(icon: String, caption: String, label: String, id: String,
+                              action: @escaping () -> Void) -> some View {
+        Button(action: action) {
+            VStack(spacing: Theme.Space.xs) {
+                Image(systemName: icon)
+                    .font(.body.weight(.semibold))
+                    .frame(height: 22)
+                    .accessibilityHidden(true)
+                Text(NSLocalizedString(caption, comment: ""))
+                    .font(.footnote.weight(.medium))
+                    .multilineTextAlignment(.center)
+                    .fixedSize(horizontal: false, vertical: true)
+            }
+            .foregroundStyle(Theme.accent)
+            .padding(.vertical, Theme.Space.m)
+            .padding(.horizontal, Theme.Space.xs)
+            .frame(maxWidth: .infinity, minHeight: 60, maxHeight: .infinity)
+            .contentShape(Rectangle())
+        }
+        .buttonStyle(.plain)
+        .accessibilityLabel(NSLocalizedString(label, comment: ""))
+        .accessibilityIdentifier(id)
     }
 
     private func failureBlock(_ failure: ToneTrainingViewModel.Failure) -> some View {
@@ -298,14 +367,17 @@ struct ToneTrainingView: View {
                     Label(NSLocalizedString("onboarding_open_settings", comment: ""),
                           systemImage: "gearshape")
                 }
-                .buttonStyle(.bordered)
+                .buttonStyle(SecondaryButtonStyle())
                 .accessibilityIdentifier("practice.openSettings")
             }
         }
-        .padding(Theme.Space.l)
         .frame(maxWidth: .infinity, alignment: .leading)
-        .background(Theme.surface)
+        .padding(Theme.Space.l)
+        .background(Theme.warning.opacity(0.08))
         .clipShape(RoundedRectangle(cornerRadius: Theme.radius))
+        .overlay(RoundedRectangle(cornerRadius: Theme.radius)
+            .strokeBorder(Theme.warning.opacity(0.4)))
+        .accessibilityElement(children: .contain)
         .accessibilityIdentifier("practice.failure")
     }
 
@@ -314,57 +386,50 @@ struct ToneTrainingView: View {
     /// 听示范 · 录音/停止 · 下一词。三格等宽，录音键恒在正中。
     /// 用不上的格子（自测里没有示范和换词）留空占位，不移除——否则录音键会横跳。
     private var actionBar: some View {
-        HStack(spacing: 0) {
-            Group {
-                if vm.mode == .practice {
-                    barButton(icon: vm.playing == .sample ? "stop.circle" : "speaker.wave.2",
-                              label: vm.playing == .sample ? "sample_stop" : "play_sample",
-                              id: "practice.listen") { vm.playSample() }
-                        // 录音时不能再播放示范
-                        .disabled(vm.isBusy)
-                } else {
-                    Color.clear.frame(height: Theme.minTap)
-                }
+        PracticeActionBar {
+            if vm.mode == .practice {
+                BarButton(icon: vm.playing == .sample ? "stop.fill" : "speaker.wave.2.fill",
+                          caption: NSLocalizedString(vm.playing == .sample ? "bar_stop" : "bar_listen",
+                                                     comment: ""),
+                          label: NSLocalizedString(vm.playing == .sample
+                                                   ? "sample_stop" : "play_sample", comment: ""),
+                          id: "practice.listen") { vm.playSample() }
+                    // 录音时不能再播放示范
+                    .disabled(vm.isBusy)
+            } else {
+                BarPlaceholder()
             }
-            .frame(maxWidth: .infinity)
-
+        } center: {
             RecordButton(isRecording: vm.isRecording,
                          isEnabled: vm.canRecord && !vm.selfTestFinished) {
                 handleRecordTap()
             }
-            .frame(maxWidth: .infinity)
-
-            Group {
-                if vm.mode == .practice {
-                    barButton(icon: "forward.end", label: "tone_next_word",
-                              id: "practice.next") { vm.loadNext() }
-                        // 录音时不能切词
-                        .disabled(vm.isBusy)
-                } else {
-                    Color.clear.frame(height: Theme.minTap)
-                }
+            .accessibilityValue(stageDescription)
+        } trailing: {
+            if vm.mode == .practice {
+                BarButton(icon: "forward.end.fill",
+                          caption: NSLocalizedString("bar_next", comment: ""),
+                          label: NSLocalizedString("tone_next_word", comment: ""),
+                          id: "practice.next") { vm.loadNext() }
+                    // 录音时不能切词
+                    .disabled(vm.isBusy)
+            } else {
+                BarPlaceholder()
             }
-            .frame(maxWidth: .infinity)
         }
-        .padding(.horizontal, Theme.pageMargin)
-        .padding(.top, Theme.Space.s)
-        .padding(.bottom, Theme.Space.xs)
-        .frame(maxWidth: .infinity)
-        .background(.bar)
-        // 操作栏的左右顺序固定，不随界面方向镜像：示范在左、下一词在右
-        .environment(\.layoutDirection, .leftToRight)
     }
 
-    private func barButton(icon: String, label: String, id: String,
-                           action: @escaping () -> Void) -> some View {
-        Button(action: action) {
-            Image(systemName: icon)
-                .font(.title2)
-                .frame(width: 56, height: Theme.minTap + 4)
-                .contentShape(Rectangle())
+    /// 录音键的无障碍取值：当前处在流程的哪一步。VoiceOver 聚焦到按钮时会读出来。
+    private var stageDescription: String {
+        switch vm.stage {
+        case .preparing: return NSLocalizedString("tone_stage_preparing", comment: "")
+        case .ready: return ""
+        case .recording: return NSLocalizedString("tone_stage_recording", comment: "")
+        case .analyzing: return NSLocalizedString("tone_stage_analyzing", comment: "")
+        case .feedback: return NSLocalizedString("result_title", comment: "")
+        case .selfTestRecorded: return NSLocalizedString("self_test_recorded", comment: "")
+        case .failed(let failure): return NSLocalizedString(failure.messageKey, comment: "")
         }
-        .accessibilityLabel(NSLocalizedString(label, comment: ""))
-        .accessibilityIdentifier(id)
     }
 
     private func handleRecordTap() {
@@ -381,10 +446,7 @@ struct ToneTrainingView: View {
         NavigationStack {
             ScrollView {
                 VStack(alignment: .leading, spacing: Theme.Space.l) {
-                    Image(systemName: "mic")
-                        .font(.largeTitle)
-                        .foregroundStyle(Theme.accent)
-                        .accessibilityHidden(true)
+                    IconTile(systemName: "mic.fill", size: 56)
                     Text(NSLocalizedString("onboarding_mic_body", comment: ""))
                         .font(.body)
                         .foregroundStyle(Theme.textPrimary)
@@ -404,9 +466,8 @@ struct ToneTrainingView: View {
                     vm.startRecording()      // 触发系统授权框；同意后直接开始录
                 } label: {
                     Text(NSLocalizedString("onboarding_mic_allow", comment: ""))
-                        .frame(maxWidth: .infinity, minHeight: 28)
                 }
-                .buttonStyle(.borderedProminent)
+                .buttonStyle(PrimaryButtonStyle())
                 .padding(Theme.pageMargin)
                 .accessibilityIdentifier("mic.allow")
             }
@@ -459,12 +520,8 @@ struct SelfTestContent: View {
                 if vm.selfTestFinished {
                     finished
                 } else if let lexeme = vm.currentLexeme, let session = vm.selfTest {
-                    Text(String(format: NSLocalizedString("self_test_progress", comment: ""),
-                                session.position, session.total))
-                        .font(.subheadline.weight(.medium).monospacedDigit())
-                        .foregroundStyle(Theme.textSecondary)
+                    progress(session)
                         .padding(.top, Theme.Space.l)
-                        .accessibilityIdentifier("selfTest.progress")
 
                     LexemeCardView(lexeme: lexeme)
 
@@ -478,6 +535,27 @@ struct SelfTestContent: View {
             .frame(maxWidth: .infinity)
         }
         .scrollBounceBehavior(.basedOnSize)
+    }
+
+    /// 进度：一行「第 x / n 词」加一排小格。用中性灰，不用任何评价色——
+    /// 它只表示录到第几个，不表示录得怎么样。
+    private func progress(_ session: SelfTestSession) -> some View {
+        VStack(spacing: Theme.Space.s) {
+            Text(String(format: NSLocalizedString("self_test_progress", comment: ""),
+                        session.position, session.total))
+                .font(.subheadline.weight(.semibold).monospacedDigit())
+                .foregroundStyle(Theme.textSecondary)
+                .accessibilityIdentifier("selfTest.progress")
+            HStack(spacing: Theme.Space.xs) {
+                ForEach(0..<max(session.total, 1), id: \.self) { index in
+                    Capsule()
+                        .fill(index < session.position ? Theme.textSecondary : Theme.divider)
+                        .frame(height: 4)
+                }
+            }
+            .frame(maxWidth: 220)
+            .accessibilityHidden(true)
+        }
     }
 
     /// 只说录音处于什么状态，绝不透露任何音高或评价信息
@@ -495,12 +573,13 @@ struct SelfTestContent: View {
                         Label(NSLocalizedString("onboarding_open_settings", comment: ""),
                               systemImage: "gearshape")
                     }
-                    .buttonStyle(.bordered)
+                    .buttonStyle(SecondaryButtonStyle())
                 }
             default:
                 Image(systemName: icon)
-                    .font(.system(size: 44))
+                    .font(.system(size: 34, weight: .medium))
                     .foregroundStyle(Theme.textSecondary)
+                    .frame(height: 44)
                     .accessibilityHidden(true)
                 Text(NSLocalizedString(statusKey, comment: ""))
                     .font(.body)
@@ -509,7 +588,9 @@ struct SelfTestContent: View {
                     .fixedSize(horizontal: false, vertical: true)
             }
         }
-        .frame(maxWidth: .infinity, minHeight: 140)
+        .frame(maxWidth: .infinity, minHeight: 132)
+        .surfaceCard()
+        .accessibilityElement(children: .contain)
         .accessibilityIdentifier("selfTest.status")
     }
 
@@ -533,10 +614,7 @@ struct SelfTestContent: View {
 
     private var finished: some View {
         VStack(spacing: Theme.Space.l) {
-            Image(systemName: "checkmark.circle")
-                .font(.system(size: 48))
-                .foregroundStyle(Theme.accent)
-                .accessibilityHidden(true)
+            IconTile(systemName: "checkmark", size: 56)
                 .padding(.top, Theme.Space.xl)
             Text(NSLocalizedString("self_test_done_title", comment: ""))
                 .font(.title3.weight(.semibold))
@@ -551,11 +629,11 @@ struct SelfTestContent: View {
                 vm.endSelfTest()
             } label: {
                 Text(NSLocalizedString("self_test_back_to_practice", comment: ""))
-                    .frame(maxWidth: .infinity, minHeight: 28)
             }
-            .buttonStyle(.borderedProminent)
+            .buttonStyle(PrimaryButtonStyle())
             .accessibilityIdentifier("selfTest.back")
         }
+        .accessibilityElement(children: .contain)
         .accessibilityIdentifier("selfTest.finished")
     }
 }

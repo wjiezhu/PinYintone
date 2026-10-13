@@ -13,14 +13,17 @@ struct TeacherSignupView: View {
 
     var body: some View {
         ScrollView {
-            VStack(spacing: 28) {
+            VStack(alignment: .leading, spacing: Theme.Space.xl) {
                 headerSection
                 formSection
                 errorLabel
                 submitButton
             }
-            .padding(24)
+            .padding(.horizontal, Theme.pageMargin)
+            .padding(.vertical, Theme.Space.l)
+            .frame(maxWidth: .infinity, alignment: .leading)
         }
+        .background(Theme.background)
         .navigationTitle(NSLocalizedString("role_teacher", comment: ""))
         .navigationBarTitleDisplayMode(.large)
         .disabled(isLoading)
@@ -36,16 +39,10 @@ struct TeacherSignupView: View {
     // MARK: - Sub-views
 
     private var headerSection: some View {
-        VStack(spacing: 8) {
-            Image(systemName: "person.badge.shield.checkmark.fill")
-                .font(.system(size: 44))
-                .foregroundStyle(.purple)
-            Text(NSLocalizedString("teacher_signup_subtitle", comment: ""))
-                .font(.subheadline)
-                .foregroundStyle(.secondary)
-                .multilineTextAlignment(.center)
-        }
-        .padding(.top, 8)
+        Text(NSLocalizedString("teacher_signup_subtitle", comment: ""))
+            .font(.body)
+            .foregroundStyle(Theme.textSecondary)
+            .fixedSize(horizontal: false, vertical: true)
     }
 
     private var formSection: some View {
@@ -66,29 +63,19 @@ struct TeacherSignupView: View {
     @ViewBuilder
     private var errorLabel: some View {
         if let msg = errorMessage {
-            Text(msg)
-                .font(.callout)
-                .foregroundStyle(.red)
-                .multilineTextAlignment(.center)
+            StatusLabel(kind: .warning, text: msg)
         }
     }
 
     private var submitButton: some View {
         Button { submit() } label: {
-            Group {
-                if isLoading {
-                    ProgressView()
-                } else {
-                    Text(NSLocalizedString("signup_submit", comment: ""))
-                        .font(.headline)
-                }
+            if isLoading {
+                ProgressView()
+            } else {
+                Text(NSLocalizedString("signup_submit", comment: ""))
             }
-            .frame(maxWidth: .infinity)
-            .padding()
-            .background(Color.accentColor)
-            .foregroundStyle(.white)
-            .clipShape(RoundedRectangle(cornerRadius: 14))
         }
+        .buttonStyle(PrimaryButtonStyle())
         .disabled(isLoading || name.isEmpty || email.isEmpty || password.isEmpty)
     }
 
@@ -97,43 +84,34 @@ struct TeacherSignupView: View {
     private func classCodeRevealSheet(code: String) -> some View {
         VStack(spacing: 32) {
             Spacer()
-            Image(systemName: "checkmark.seal.fill")
-                .font(.system(size: 64))
-                .foregroundStyle(.green)
+            IconTile(systemName: "checkmark", size: 64)
             Text(NSLocalizedString("teacher_classcode_title", comment: ""))
                 .font(.title.bold())
             VStack(spacing: 8) {
                 Text(code)
                     .font(.system(size: 52, weight: .bold, design: .monospaced))
-                    .foregroundStyle(Color.accentColor)
+                    .foregroundStyle(Theme.accent)
                 Text(NSLocalizedString("teacher_classcode_body", comment: ""))
                     .font(.callout)
-                    .foregroundStyle(.secondary)
+                    .foregroundStyle(Theme.textSecondary)
                     .multilineTextAlignment(.center)
                     .padding(.horizontal, 32)
             }
             ShareLink(item: String(format: NSLocalizedString("teacher_classcode_share", comment: ""), code)) {
                 Label(NSLocalizedString("teacher_classcode_share_btn", comment: ""), systemImage: "square.and.arrow.up")
-                    .font(.headline)
-                    .frame(maxWidth: .infinity)
-                    .padding()
-                    .background(Color(.secondarySystemBackground))
-                    .clipShape(RoundedRectangle(cornerRadius: 14))
             }
-            .padding(.horizontal, 32)
+            .buttonStyle(SecondaryButtonStyle())
+            .padding(.horizontal, Theme.pageMargin)
             Button(NSLocalizedString("teacher_classcode_go_dashboard", comment: "")) {
                 // ContentView 检测到 profile.role == .teacher 后自动切换到 TeacherDashboardView
                 generatedClassCode = nil
             }
-            .font(.headline)
-            .frame(maxWidth: .infinity)
-            .padding()
-            .background(Color.accentColor)
-            .foregroundStyle(.white)
-            .clipShape(RoundedRectangle(cornerRadius: 14))
-            .padding(.horizontal, 32)
+            .buttonStyle(PrimaryButtonStyle())
+            .padding(.horizontal, Theme.pageMargin)
             Spacer()
         }
+        .frame(maxWidth: .infinity)
+        .background(Theme.background)
     }
 
     // MARK: - Helpers
@@ -142,31 +120,29 @@ struct TeacherSignupView: View {
         label: String, icon: String, text: Binding<String>,
         contentType: UITextContentType, keyboard: UIKeyboardType
     ) -> some View {
-        VStack(alignment: .leading, spacing: 6) {
-            Label(label, systemImage: icon)
-                .font(.caption)
-                .foregroundStyle(.secondary)
+        VStack(alignment: .leading, spacing: Theme.Space.s) {
+            Text(label)
+                .font(.subheadline.weight(.medium))
+                .foregroundStyle(Theme.textPrimary)
             TextField(label, text: text)
                 .textContentType(contentType)
                 .keyboardType(keyboard)
                 .autocapitalization(.none)
                 .disableAutocorrection(true)
-                .padding(12)
-                .background(Color(.secondarySystemBackground))
-                .clipShape(RoundedRectangle(cornerRadius: 10))
+                .frame(minHeight: Theme.minTap)
+                .surfaceCard(padding: Theme.Space.m)
         }
     }
 
     private func secureField(label: String, icon: String, text: Binding<String>) -> some View {
-        VStack(alignment: .leading, spacing: 6) {
-            Label(label, systemImage: icon)
-                .font(.caption)
-                .foregroundStyle(.secondary)
+        VStack(alignment: .leading, spacing: Theme.Space.s) {
+            Text(label)
+                .font(.subheadline.weight(.medium))
+                .foregroundStyle(Theme.textPrimary)
             SecureField(label, text: text)
                 .textContentType(.newPassword)
-                .padding(12)
-                .background(Color(.secondarySystemBackground))
-                .clipShape(RoundedRectangle(cornerRadius: 10))
+                .frame(minHeight: Theme.minTap)
+                .surfaceCard(padding: Theme.Space.m)
         }
     }
 

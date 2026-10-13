@@ -4,10 +4,9 @@
 "welcome_title" = "Bienvenue sur Pinyintone";
 "role_student" = "Je suis étudiant(e)";
 "role_teacher" = "Je suis enseignant(e)";
-"stage1_title" = "Entraînement aspiration";
+"stage1_title" = "Entraînement à l'aspiration";
 "stage2_title" = "Entraînement des tons";
 "stage3_title" = "Pratique de texte";
-
 // Onboarding
 "onboarding_mic_body" = "Pinyintone a besoin du microphone pour analyser votre prononciation.";
 "onboarding_mic_allow" = "Continuer";
@@ -138,9 +137,9 @@
 // Aide / instructions
 "help_title" = "Comment utiliser";
 "help_stage1_body" = "Soufflez fort dans le micro pour disperser le pissenlit — entraîne les sons aspirés (p / t / k).";
-"help_stage2_body" = "Touchez Écouter pour le modèle, puis enregistrez-vous. Vous obtenez un score sur 100 (≥ 60 = réussi).";
+"help_stage2_body" = "Touchez Modèle pour écouter la référence, puis enregistrez-vous. Chaque enregistrement reçoit un résultat sur 100 (≥ 60 = réussi).";
 "help_stage3_body" = "Collez ou saisissez du chinois, il se découpe en mots, entraînez chaque mot. Marquez des mots pour les revoir dans Mes mots.";
-"help_tip" = "Pratiquez dans un endroit calme, micro près de la bouche. Le score s'améliore avec la pratique.";
+"help_tip" = "Pratiquez dans un endroit calme, micro près de la bouche.";
 "help_privacy" = "Aucun enregistrement n'est envoyé — seulement les résultats d'analyse (scores), à des fins de recherche.";
 
 // ── Phases de recherche (spec §3.1) ──────────────────
@@ -168,7 +167,6 @@
 "settings_feedback_style" = "Type de retour";
 "settings_feedback_style_footer" = "Comment votre résultat s’affiche pendant la pratique. Les deux utilisent le même seuil de réussite : changer ne modifie jamais votre score. L’auto-test n’affiche aucun retour dans les deux cas.";
 "tone_slot_a11y" = "Caractère %1$d : ton %2$d, %3$@";
-
 // 教练提示卡：一次一条可执行动作（档案 §4.3）
 "coach_title" = "À essayer la prochaine fois";
 "coach_stay_high" = "Gardez « %@ » tout en haut — ne laissez pas la voix descendre.";
@@ -355,3 +353,14 @@
 "survey_saved_pending_body" = "Vos réponses sont enregistrées sur cet appareil et seront envoyées automatiquement dès que vous serez en ligne. Vous pouvez aussi réessayer maintenant.";
 "survey_unavailable" = "Ce questionnaire n’est pas disponible pour le moment.";
 "issue_mail_opened" = "Votre application de messagerie s’est ouverte. Votre message est envoyé par e-mail et n’est pas ajouté aux données de l’étude.";
+
+/* 界面改版：操作栏与结果区的短标签 */
+"bar_listen" = "Modèle";
+"bar_stop" = "Arrêter";
+"bar_next" = "Suivant";
+"bar_prev" = "Précédent";
+"replay_short" = "Réécouter";
+"advice_short" = "Conseil";
+"tone_name_5" = "Neutre";
+"tone_slot_neutral_a11y" = "Caractère %1$d : %2$@";
+"common_delete" = "Supprimer";

@@ -79,7 +79,7 @@ struct SurveyFormView: View {
                         .fixedSize(horizontal: false, vertical: true)
                 }
 
-                VStack(alignment: .leading, spacing: 0) {
+                VStack(alignment: .leading, spacing: Theme.Space.s) {
                     ForEach(question.options, id: \.code) { opt in
                         optionRow(opt)
                     }
@@ -91,8 +91,12 @@ struct SurveyFormView: View {
                             showCountryPicker = true
                         } label: {
                             Label(ui("search_country"), systemImage: "magnifyingglass")
+                                .font(.body.weight(.medium))
+                                .foregroundStyle(Theme.accent)
                                 .frame(maxWidth: .infinity, minHeight: Theme.minTap, alignment: .leading)
+                                .contentShape(Rectangle())
                         }
+                        .buttonStyle(.plain)
                         .accessibilityIdentifier("survey.countrySearch")
                     }
                 }
@@ -206,15 +210,15 @@ struct SurveyFormView: View {
                 TextField(localized(input.hint) ?? ui("other_optional"),
                           text: textBinding("\(question.questionId).\(opt.code)", limit: input.maxChars),
                           axis: .vertical)
-                    .textFieldStyle(.roundedBorder)
+                    .frame(minHeight: 28)
+                    .surfaceCard(padding: Theme.Space.m)
                     .focused($textFocused)
                 Text(ui("privacy_hint"))
                     .font(.footnote)
                     .foregroundStyle(Theme.textSecondary)
                     .fixedSize(horizontal: false, vertical: true)
             }
-            .padding(.leading, 36)
-            .padding(.bottom, Theme.Space.s)
+            .padding(.bottom, Theme.Space.xs)
         }
     }
 
@@ -229,9 +233,10 @@ struct SurveyFormView: View {
         .accessibilityAddTraits(.isSelected)
     }
 
-    /// 单选用圆钮，多选用复选框（需求 U06）。选中状态同时靠形状与颜色表达。
+    /// 单选用圆钮，多选用复选框（需求 U06）。每个选项一格；
+    /// 选中状态同时靠图标形状、描边和颜色表达。
     private func choiceLabel(text: String, chosen: Bool, single: Bool) -> some View {
-        HStack(alignment: .firstTextBaseline, spacing: Theme.Space.m) {
+        HStack(alignment: .center, spacing: Theme.Space.m) {
             Image(systemName: chosen
                   ? (single ? "largecircle.fill.circle" : "checkmark.square.fill")
                   : (single ? "circle" : "square"))
@@ -239,13 +244,18 @@ struct SurveyFormView: View {
                 .foregroundStyle(chosen ? Theme.accent : Theme.textSecondary)
                 .accessibilityHidden(true)
             Text(text)
-                .font(.body)
+                .font(.body.weight(chosen ? .medium : .regular))
                 .foregroundStyle(Theme.textPrimary)
                 .multilineTextAlignment(.leading)
                 .fixedSize(horizontal: false, vertical: true)
             Spacer(minLength: 0)
         }
-        .frame(maxWidth: .infinity, minHeight: Theme.minTap, alignment: .leading)
+        .frame(maxWidth: .infinity, minHeight: 28, alignment: .leading)
+        .padding(Theme.Space.m)
+        .background(chosen ? Theme.accent.opacity(0.08) : Theme.surface)
+        .clipShape(RoundedRectangle(cornerRadius: Theme.radius))
+        .overlay(RoundedRectangle(cornerRadius: Theme.radius)
+            .strokeBorder(chosen ? Theme.accent : Theme.divider, lineWidth: chosen ? 1.5 : 1))
         .contentShape(Rectangle())
     }
 
@@ -281,28 +291,25 @@ struct SurveyFormView: View {
             Button(ui("previous")) {
                 move(-1)
             }
-            .buttonStyle(.bordered)
+            .buttonStyle(SecondaryButtonStyle(fillsHeight: true))
             .disabled(draft.index == 0)
             .accessibilityIdentifier("survey.previous")
 
             Button(ui("skip_question")) {
                 skipCurrent()
             }
-            .buttonStyle(.bordered)
+            .buttonStyle(SecondaryButtonStyle(fillsHeight: true))
             .accessibilityIdentifier("survey.skip")
 
             Button(isLast ? ui("submit") : ui("next")) {
                 if isLast { submit() } else { move(1) }
             }
-            .buttonStyle(.borderedProminent)
+            .buttonStyle(PrimaryButtonStyle(fillsHeight: true))
             .accessibilityIdentifier(isLast ? "survey.submit" : "survey.next")
         }
-        .font(.body.weight(.medium))
-        .multilineTextAlignment(.center)
-        .frame(maxWidth: .infinity)
-        .padding(.horizontal, Theme.pageMargin)
-        .padding(.vertical, Theme.Space.m)
-        .background(.bar)
+        // 三个按钮等高：文字长的那个换行时，另外两个跟着长高，不会参差
+        .fixedSize(horizontal: false, vertical: true)
+        .bottomBarSurface()
     }
 
     // MARK: - 作答逻辑

@@ -29,19 +29,23 @@ struct SettingsView: View {
     private var profile: UserProfile? { userManager.profile }
 
     var body: some View {
-        List {
-            accountSection
-            languageSection
-            feedbackStyleSection
-            if profile?.role == .student { researchSection }
-            supportSection
-            accountActionsSection
-            #if DEBUG
-            debugSection
-            #endif
+        ScrollView {
+            VStack(alignment: .leading, spacing: Theme.Space.xl) {
+                accountSection
+                languageSection
+                feedbackStyleSection
+                if profile?.role == .student { researchSection }
+                supportSection
+                accountActionsSection
+                #if DEBUG
+                debugSection
+                #endif
+            }
+            .padding(.horizontal, Theme.pageMargin)
+            .padding(.top, Theme.Space.s)
+            .padding(.bottom, Theme.Space.xl)
         }
-        .listStyle(.insetGrouped)
-        .scrollContentBackground(.hidden)
+        .scrollDismissesKeyboard(.interactively)
         .background(Theme.background)
         .navigationTitle(NSLocalizedString("settings_title", comment: ""))
         .navigationBarTitleDisplayMode(.large)
@@ -107,67 +111,150 @@ struct SettingsView: View {
         }
     }
 
+    // MARK: - 版式
+
+    /// 一组设置：小标题 + 一块内容面（行间细线）+ 可选的说明文字
+    private func group(_ titleKey: String?, footerKey: String? = nil,
+                       rows: [AnyView]) -> some View {
+        VStack(alignment: .leading, spacing: Theme.Space.s) {
+            if let titleKey { SectionTitle(key: titleKey) }
+            GroupedCard {
+                ForEach(Array(rows.enumerated()), id: \.offset) { index, row in
+                    if index > 0 { RowDivider() }
+                    row
+                }
+            }
+            if let footerKey {
+                Text(NSLocalizedString(footerKey, comment: ""))
+                    .font(.footnote)
+                    .foregroundStyle(Theme.textSecondary)
+                    .fixedSize(horizontal: false, vertical: true)
+            }
+        }
+    }
+
+    /// 只读的一行：左边名称，右边取值
+    private func valueRow(_ titleKey: String, value: String, valueID: String = "") -> AnyView {
+        AnyView(
+            HStack(alignment: .firstTextBaseline, spacing: Theme.Space.m) {
+                Text(NSLocalizedString(titleKey, comment: ""))
+                    .foregroundStyle(Theme.textPrimary)
+                Spacer(minLength: Theme.Space.s)
+                Text(value)
+                    .foregroundStyle(Theme.textSecondary)
+                    .multilineTextAlignment(.trailing)
+                    .fixedSize(horizontal: false, vertical: true)
+                    .accessibilityIdentifier(valueID)
+            }
+            .font(.body)
+            .padding(.vertical, Theme.Space.m)
+            .frame(minHeight: Theme.minTap + 4)
+        )
+    }
+
+    /// 可点的一行：图标 + 名称。不可逆的操作用红色并配图标，不单靠颜色。
+    private func actionRow(_ titleKey: String, icon: String, id: String,
+                           destructive: Bool = false, busy: Bool = false,
+                           action: @escaping () -> Void) -> AnyView {
+        AnyView(
+            Button(action: action) {
+                HStack(spacing: Theme.Space.m) {
+                    Image(systemName: icon)
+                        .font(.body.weight(.medium))
+                        .foregroundStyle(destructive ? Theme.recording : Theme.accent)
+                        .frame(width: 28)
+                        .accessibilityHidden(true)
+                    Text(NSLocalizedString(titleKey, comment: ""))
+                        .font(.body)
+                        .foregroundStyle(destructive ? Theme.recording : Theme.textPrimary)
+                        .multilineTextAlignment(.leading)
+                        .fixedSize(horizontal: false, vertical: true)
+                    Spacer(minLength: 0)
+                    if busy { ProgressView() }
+                }
+                .padding(.vertical, Theme.Space.m)
+                .frame(minHeight: Theme.minTap + 4)
+                .contentShape(Rectangle())
+            }
+            .buttonStyle(.plain)
+            .disabled(busy)
+            .accessibilityIdentifier(id)
+        )
+    }
+
     // MARK: - 账号
 
     private var accountSection: some View {
-        Section(NSLocalizedString("settings_account", comment: "")) {
-            if let profile {
-                LabeledContent(NSLocalizedString("settings_role", comment: ""),
-                               value: roleLabel(profile.role))
-                // 显示名可改：姓名本就是可选信息
-                if profile.role == .student {
-                    HStack {
+        var rows: [AnyView] = []
+        if let profile {
+            rows.append(valueRow("settings_role", value: roleLabel(profile.role)))
+            // 显示名可改：姓名本就是可选信息
+            if profile.role == .student {
+                rows.append(AnyView(
+                    HStack(alignment: .firstTextBaseline, spacing: Theme.Space.m) {
                         Text(NSLocalizedString("settings_nickname", comment: ""))
-                        Spacer()
+                            .foregroundStyle(Theme.textPrimary)
                         TextField(NSLocalizedString("signup_nickname_hint", comment: ""),
                                   text: $nicknameDraft)
                             .multilineTextAlignment(.trailing)
                             .submitLabel(.done)
                             .onSubmit { commitNickname() }
                     }
-                } else if let nick = profile.nickname, !nick.isEmpty {
-                    LabeledContent(NSLocalizedString("settings_nickname", comment: ""), value: nick)
-                }
-                // 班级码与邮箱只有教师账号有；学生界面不出现班级码
-                if profile.role == .teacher, let code = profile.classCode {
-                    LabeledContent(NSLocalizedString("settings_classcode", comment: ""), value: code)
-                }
-                if let email = profile.teacherEmail {
-                    LabeledContent(NSLocalizedString("settings_email", comment: ""), value: email)
-                }
+                    .font(.body)
+                    .padding(.vertical, Theme.Space.m)
+                    .frame(minHeight: Theme.minTap + 4)
+                ))
+            } else if let nick = profile.nickname, !nick.isEmpty {
+                rows.append(valueRow("settings_nickname", value: nick))
+            }
+            // 班级码与邮箱只有教师账号有；学生界面不出现班级码
+            if profile.role == .teacher, let code = profile.classCode {
+                rows.append(valueRow("settings_classcode", value: code))
+            }
+            if let email = profile.teacherEmail {
+                rows.append(valueRow("settings_email", value: email))
             }
         }
+        return group("settings_account", rows: rows)
     }
 
     // MARK: - 语言与反馈
 
     private var languageSection: some View {
-        Section(NSLocalizedString("settings_language", comment: "")) {
-            ForEach(LocalizationManager.supported, id: \.code) { lang in
+        let rows = LocalizationManager.supported.map { lang -> AnyView in
+            let current = localization.language == lang.code
+            return AnyView(
                 Button {
                     localization.setLanguage(lang.code)
                 } label: {
                     HStack {
                         Text(lang.label)
+                            .font(.body.weight(current ? .semibold : .regular))
                             .foregroundStyle(Theme.textPrimary)
                         Spacer()
-                        if localization.language == lang.code {
+                        if current {
                             Image(systemName: "checkmark")
+                                .font(.body.weight(.semibold))
                                 .foregroundStyle(Theme.accent)
                                 .accessibilityHidden(true)
                         }
                     }
+                    .padding(.vertical, Theme.Space.m)
+                    .frame(minHeight: Theme.minTap + 4)
                     .contentShape(Rectangle())
                 }
-                .accessibilityAddTraits(localization.language == lang.code ? .isSelected : [])
+                .buttonStyle(.plain)
+                .accessibilityAddTraits(current ? .isSelected : [])
                 .accessibilityIdentifier("settings.language.\(lang.code)")
-            }
+            )
         }
+        return group("settings_language", rows: rows)
     }
 
     /// 反馈显示模式：学习者自选，随时可换，不影响评分标准。
     private var feedbackStyleSection: some View {
-        Section {
+        VStack(alignment: .leading, spacing: Theme.Space.s) {
+            SectionTitle(key: "settings_feedback_style")
             Picker(NSLocalizedString("settings_feedback_style", comment: ""),
                    selection: $feedbackStyle) {
                 ForEach([FeedbackStyle.staticColor, .dynamicF0], id: \.self) { style in
@@ -175,10 +262,10 @@ struct SettingsView: View {
                 }
             }
             .pickerStyle(.segmented)
-        } header: {
-            Text(NSLocalizedString("settings_feedback_style", comment: ""))
-        } footer: {
             Text(NSLocalizedString("settings_feedback_style_footer", comment: ""))
+                .font(.footnote)
+                .foregroundStyle(Theme.textSecondary)
+                .fixedSize(horizontal: false, vertical: true)
         }
     }
 
@@ -188,73 +275,51 @@ struct SettingsView: View {
     /// 不出现配置编号、窗口时间、接口错误之类的技术细节。
     private var researchSection: some View {
         let state = store.state
-        return Section {
-            LabeledContent(NSLocalizedString("research_status", comment: "")) {
-                Text(NSLocalizedString(researchStatusKey, comment: ""))
-                    .multilineTextAlignment(.trailing)
-            }
-            .accessibilityIdentifier("settings.researchStatus")
+        var rows: [AnyView] = [
+            valueRow("research_status", value: NSLocalizedString(researchStatusKey, comment: ""),
+                     valueID: "settings.researchStatus")
+        ]
 
-            switch state.participation {
-            case .notAsked, .declined, .consentedPending:
-                if ResearchEnrollment.canJoinNow() {
-                    Button {
-                        showResearchFlow = true
-                    } label: {
-                        Label(NSLocalizedString(state.participation == .consentedPending
-                                                ? "research_resume" : "research_join", comment: ""),
-                              systemImage: "person.badge.plus")
-                    }
-                    .accessibilityIdentifier("settings.researchJoin")
-                }
-            case .ineligible:
-                // 关键题当时没答、所以没法判定的人，可以主动回来重新填
-                if state.eligibility == "pending", config.isOpen() {
-                    Button {
-                        ResearchConsent.restart()
-                        showResearchFlow = true
-                    } label: {
-                        Label(NSLocalizedString("research_rejoin", comment: ""),
-                              systemImage: "arrow.counterclockwise")
-                    }
-                    .accessibilityIdentifier("settings.researchRejoin")
-                }
-            case .enrolled:
-                ForEach([SurveyCenter.preKey, SurveyCenter.postKey], id: \.self) { key in
-                    if let record = state.surveys[key] { surveyRow(record) }
-                }
-                if hasUnsyncedResearchData {
-                    Button {
-                        isSyncing = true
-                        Task {
-                            await ResearchUploader.shared.flush()
-                            isSyncing = false
-                        }
-                    } label: {
-                        HStack {
-                            Label(NSLocalizedString("research_sync_now", comment: ""),
-                                  systemImage: "arrow.triangle.2.circlepath")
-                            if isSyncing { Spacer(); ProgressView() }
-                        }
-                    }
-                    .disabled(isSyncing)
-                    .accessibilityIdentifier("settings.researchSync")
-                }
-                Button(role: .destructive) {
-                    showWithdrawConfirm = true
-                } label: {
-                    Label(NSLocalizedString("research_withdraw", comment: ""),
-                          systemImage: "rectangle.portrait.and.arrow.right")
-                }
-                .accessibilityIdentifier("settings.researchWithdraw")
-            case .withdrawn:
-                EmptyView()
+        switch state.participation {
+        case .notAsked, .declined, .consentedPending:
+            if ResearchEnrollment.canJoinNow() {
+                rows.append(actionRow(state.participation == .consentedPending
+                                      ? "research_resume" : "research_join",
+                                      icon: "person.badge.plus", id: "settings.researchJoin") {
+                    showResearchFlow = true
+                })
             }
-        } header: {
-            Text(NSLocalizedString("research_section", comment: ""))
-        } footer: {
-            Text(NSLocalizedString("research_section_footer", comment: ""))
+        case .ineligible:
+            // 关键题当时没答、所以没法判定的人，可以主动回来重新填
+            if state.eligibility == "pending", config.isOpen() {
+                rows.append(actionRow("research_rejoin", icon: "arrow.counterclockwise",
+                                      id: "settings.researchRejoin") {
+                    ResearchConsent.restart()
+                    showResearchFlow = true
+                })
+            }
+        case .enrolled:
+            for key in [SurveyCenter.preKey, SurveyCenter.postKey] {
+                if let record = state.surveys[key] { rows.append(AnyView(surveyRow(record))) }
+            }
+            if hasUnsyncedResearchData {
+                rows.append(actionRow("research_sync_now", icon: "arrow.triangle.2.circlepath",
+                                      id: "settings.researchSync", busy: isSyncing) {
+                    isSyncing = true
+                    Task {
+                        await ResearchUploader.shared.flush()
+                        isSyncing = false
+                    }
+                })
+            }
+            rows.append(actionRow("research_withdraw", icon: "rectangle.portrait.and.arrow.right",
+                                  id: "settings.researchWithdraw", destructive: true) {
+                showWithdrawConfirm = true
+            })
+        case .withdrawn:
+            break
         }
+        return group("research_section", footerKey: "research_section_footer", rows: rows)
     }
 
     private var researchStatusKey: String {
@@ -288,15 +353,17 @@ struct SettingsView: View {
         return Button {
             surveyToOpen = .init(formKey: record.formKey)
         } label: {
-            HStack {
+            HStack(alignment: .firstTextBaseline, spacing: Theme.Space.m) {
                 Text(NSLocalizedString(record.formKey == SurveyCenter.preKey
                                        ? "survey_pre_name" : "survey_post_name", comment: ""))
                     .foregroundStyle(Theme.textPrimary)
-                Spacer()
+                    .multilineTextAlignment(.leading)
+                Spacer(minLength: Theme.Space.s)
                 Text(NSLocalizedString(status.localizationKey, comment: ""))
                     .foregroundStyle(status == .savedWaitingForNetwork || status == .notAccepted
                                      ? Theme.warning : Theme.textSecondary)
                     .multilineTextAlignment(.trailing)
+                    .fixedSize(horizontal: false, vertical: true)
                 if openable {
                     Image(systemName: "chevron.forward")
                         .font(.footnote.weight(.semibold))
@@ -304,8 +371,12 @@ struct SettingsView: View {
                         .accessibilityHidden(true)
                 }
             }
+            .font(.body)
+            .padding(.vertical, Theme.Space.m)
+            .frame(minHeight: Theme.minTap + 4)
             .contentShape(Rectangle())
         }
+        .buttonStyle(.plain)
         .disabled(!openable)
         .accessibilityIdentifier("settings.survey.\(record.formKey)")
     }
@@ -315,53 +386,32 @@ struct SettingsView: View {
     /// 帮助对所有人可用。报告问题入口**始终可用**：录音起不来的人根本进不了结果页。
     /// 没有研究身份时走邮件，不假装反馈已进研究库（见 IssueReportView）。
     private var supportSection: some View {
-        Section(NSLocalizedString("settings_support", comment: "")) {
-            Button {
+        group("settings_support", rows: [
+            actionRow("help_title", icon: "questionmark.circle", id: "settings.help") {
                 showHelp = true
-            } label: {
-                Label(NSLocalizedString("help_title", comment: ""), systemImage: "questionmark.circle")
-            }
-            .accessibilityIdentifier("settings.help")
-            Button {
+            },
+            actionRow("issue_title", icon: "exclamationmark.bubble", id: "settings.issue") {
                 showIssueReport = true
-            } label: {
-                Label(NSLocalizedString("issue_title", comment: ""),
-                      systemImage: "exclamationmark.bubble")
-            }
-            .accessibilityIdentifier("settings.issue")
-        }
+            },
+        ])
     }
 
     // MARK: - 账号操作
 
     private var accountActionsSection: some View {
-        Section {
-            Button {
+        group(nil, footerKey: "settings_delete_footer", rows: [
+            actionRow("settings_switch_account", icon: "person.2", id: "settings.switchAccount") {
                 showSwitchConfirm = true
-            } label: {
-                Label(NSLocalizedString("settings_switch_account", comment: ""),
-                      systemImage: "person.crop.circle.badge.questionmark")
-            }
-            .accessibilityIdentifier("settings.switchAccount")
-
-            Button {
+            },
+            actionRow("settings_logout", icon: "rectangle.portrait.and.arrow.right",
+                      id: "settings.logout") {
                 showLogoutConfirm = true
-            } label: {
-                Label(NSLocalizedString("settings_logout", comment: ""),
-                      systemImage: "rectangle.portrait.and.arrow.right")
-            }
-            .accessibilityIdentifier("settings.logout")
-
-            Button(role: .destructive) {
+            },
+            actionRow("settings_delete_account", icon: "trash", id: "settings.deleteAccount",
+                      destructive: true) {
                 showDeleteConfirm = true
-            } label: {
-                Label(NSLocalizedString("settings_delete_account", comment: ""),
-                      systemImage: "trash")
-            }
-            .accessibilityIdentifier("settings.deleteAccount")
-        } footer: {
-            Text(NSLocalizedString("settings_delete_footer", comment: ""))
-        }
+            },
+        ])
     }
 
     // MARK: - 调试（仅 DEBUG 构建）
@@ -370,27 +420,30 @@ struct SettingsView: View {
     /// 验收与界面测试用：本机研究队列的实际状态。正式构建里不存在。
     private var debugSection: some View {
         let s = store.state
-        return Section {
-            LabeledContent("participation", value: s.participation.rawValue)
-                .accessibilityIdentifier("debug.participation")
-            LabeledContent("collecting", value: ResearchGate.shouldCollect() ? "yes" : "no")
-                .accessibilityIdentifier("debug.collecting")
-            LabeledContent("qualifying", value: "\(s.qualifyingCount)")
-                .accessibilityIdentifier("debug.qualifying")
-            LabeledContent("pending attempts", value: "\(ResearchAttemptLog.shared.pending.count)")
-                .accessibilityIdentifier("debug.pendingAttempts")
-            LabeledContent("pending events", value: "\(ResearchEventLog.shared.pending.count)")
-                .accessibilityIdentifier("debug.pendingEvents")
-            LabeledContent("pending surveys",
-                           value: "\(SurveyCenter.recordsNeedingUpload(in: s).count)")
-                .accessibilityIdentifier("debug.pendingSurveys")
-            LabeledContent("rejected by server",
-                           value: "\(store.deadLetterCount(queue: "attempts") + store.deadLetterCount(queue: "events") + store.deadLetterCount(queue: "advice"))")
-                .accessibilityIdentifier("debug.deadLetters")
-            LabeledContent("build", value: "\(AppEnvironment.appVersion) (\(AppEnvironment.buildNumber))")
-        } header: {
+        let rejected = store.deadLetterCount(queue: "attempts")
+            + store.deadLetterCount(queue: "events") + store.deadLetterCount(queue: "advice")
+        return VStack(alignment: .leading, spacing: Theme.Space.xs) {
             Text("调试（仅开发构建）")
+                .font(.footnote.weight(.semibold))
+                .foregroundStyle(Theme.textSecondary)
+            debugRow("participation", s.participation.rawValue)
+            debugRow("collecting", ResearchGate.shouldCollect() ? "yes" : "no")
+            debugRow("backgroundAcked", s.backgroundAcked ? "yes" : "no")
+            debugRow("qualifying", "\(s.qualifyingCount)")
+            debugRow("pendingAttempts", "\(ResearchAttemptLog.shared.pending.count)")
+            debugRow("pendingEvents", "\(ResearchEventLog.shared.pending.count)")
+            debugRow("pendingSurveys", "\(SurveyCenter.recordsNeedingUpload(in: s).count)")
+            debugRow("pendingWithdrawal", s.pendingWithdrawal == nil ? "no" : "yes")
+            debugRow("rejectedByServer", "\(rejected)")
+            debugRow("build", "\(AppEnvironment.appVersion) (\(AppEnvironment.buildNumber))")
         }
+    }
+
+    private func debugRow(_ name: String, _ value: String) -> some View {
+        Text("\(name)=\(value)")
+            .font(.footnote.monospaced())
+            .foregroundStyle(Theme.textSecondary)
+            .accessibilityIdentifier("debug.\(name)")
     }
     #endif
 
