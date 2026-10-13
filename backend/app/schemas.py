@@ -169,8 +169,16 @@ def _require_tz(v: datetime) -> datetime:
     return v
 
 
-def _as_utc_iso(v: datetime) -> str:
-    return (v if v.tzinfo else v.replace(tzinfo=timezone.utc)).isoformat()
+def _as_utc_iso(dt: datetime) -> str:
+    """一律输出 UTC（+00:00）。
+
+    SQLite 读回的时间不带时区（存的就是 UTC）；PostgreSQL 读回的带时区，
+    但偏移量跟着数据库会话的时区走——同一个时刻在不同部署上会写成不同的字符串。
+    统一换算成 UTC 再输出，客户端与核对脚本看到的格式就是确定的。
+    """
+    if dt.tzinfo is None:
+        dt = dt.replace(tzinfo=timezone.utc)
+    return dt.astimezone(timezone.utc).isoformat()
 
 
 IsoDatetime = Annotated[datetime, BeforeValidator(_reject_numeric_time),

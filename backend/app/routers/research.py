@@ -269,6 +269,10 @@ def enroll(body: schemas.ResearchEnrollRequest, db: Session = Depends(get_db)):
         is_test=bool(body.isTest or manifest.is_test),
         enrolled_manifest_id=manifest.manifest_id,
     ))
+    # 先把参与者这一行写下去，再写引用它的身份映射与同意记录。
+    # 模型里已声明 relationship() 让 ORM 自己按外键顺序插入；这里再显式 flush 一次，
+    # 因为纳入是整条链路的入口——顺序错了 PostgreSQL 上直接 500，谁也参加不了。
+    db.flush()
     db.add(research_models.ResearchIdentityMap(
         participant_id=pid,
         internal_user_id=account_id,

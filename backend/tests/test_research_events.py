@@ -8,7 +8,7 @@ from sqlalchemy.orm import sessionmaker
 from sqlalchemy.pool import StaticPool
 
 from app import research_models as models
-from app.database import Base, get_db
+from app.database import Base, enforce_sqlite_foreign_keys, get_db
 from app.main import app
 
 # StaticPool 必须有：内存 SQLite 每个连接都是独立的空库，
@@ -16,6 +16,8 @@ from app.main import app
 engine = create_engine("sqlite:///:memory:",
                        connect_args={"check_same_thread": False},
                        poolclass=StaticPool)
+# 测试库也检查外键：否则插入顺序的问题只会在线上 PostgreSQL 暴露
+enforce_sqlite_foreign_keys(engine)
 TestingSession = sessionmaker(bind=engine)
 
 

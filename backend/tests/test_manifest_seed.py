@@ -7,12 +7,14 @@ from sqlalchemy.orm import sessionmaker
 from sqlalchemy.pool import StaticPool
 
 from app import research_models as m
-from app.database import Base
+from app.database import Base, enforce_sqlite_foreign_keys
 from scripts.seed_manifest import (ManifestError, build_manifest, formal_blockers,
                                    load_survey_forms, parse_time)
 
 engine = create_engine("sqlite:///:memory:", connect_args={"check_same_thread": False},
                        poolclass=StaticPool)
+# 测试库也检查外键：否则插入顺序的问题只会在线上 PostgreSQL 暴露
+enforce_sqlite_foreign_keys(engine)
 Session = sessionmaker(bind=engine)
 START = datetime(2026, 10, 20, 7, tzinfo=timezone.utc)
 FORMS = {k: {"form_version": f"{k}-1.0", "translation_version": "i18n-1.0"}

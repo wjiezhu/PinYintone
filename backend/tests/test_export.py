@@ -9,12 +9,14 @@ from sqlalchemy.orm import sessionmaker
 from sqlalchemy.pool import StaticPool
 
 from app import research_models as m
-from app.database import Base
+from app.database import Base, enforce_sqlite_foreign_keys
 from scripts.export_research import export
 
 NOW = datetime.now(timezone.utc)
 engine = create_engine("sqlite:///:memory:", connect_args={"check_same_thread": False},
                        poolclass=StaticPool)
+# 测试库也检查外键：否则插入顺序的问题只会在线上 PostgreSQL 暴露
+enforce_sqlite_foreign_keys(engine)
 Session = sessionmaker(bind=engine)
 
 
