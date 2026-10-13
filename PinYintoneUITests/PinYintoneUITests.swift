@@ -218,3 +218,27 @@ final class ScreenTourUITests: PinYintoneUITestCase {
         shot("dark-04-settings")
     }
 }
+
+/// 横屏。App 声明支持横屏，所以至少要能登录、进首页、进练习页并录一次。
+@MainActor
+final class LandscapeUITests: PinYintoneUITestCase {
+
+    override func tearDown() async throws {
+        XCUIDevice.shared.orientation = .portrait
+        try await super.tearDown()
+    }
+
+    func testAppIsUsableInLandscape() {
+        launch(reset: true, baseURL: Self.offlineURL, language: "zh", login: newLoginID("landscape"))
+        XCUIDevice.shared.orientation = .landscapeLeft
+        Thread.sleep(forTimeInterval: 1.0)
+        shot("landscape-01-role")
+        signIn()
+        shot("landscape-02-home")
+        tap(app.buttons["home.tone"])
+        XCTAssertTrue(app.buttons["practice.record"].waitForExistence(timeout: 10))
+        shot("landscape-03-practice")
+        recordAndWaitForResult()
+        shot("landscape-04-result")
+    }
+}

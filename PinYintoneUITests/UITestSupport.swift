@@ -37,6 +37,22 @@ class PinYintoneUITestCase: XCTestCase {
         try await super.setUp()
         continueAfterFailure = false
         app = XCUIApplication()
+        // 别的用例（系统模板的启动截图）会把模拟器转成横屏留在那里
+        XCUIDevice.shared.orientation = .portrait
+    }
+
+    /// 每个用例结束后把 App 清回「全新安装、未登录」，并且**不留任何未同步的记录**。
+    ///
+    /// 这一步不是洁癖：离线用例会在本机留下没传出去的练习记录。之后只要有人不带测试地址
+    /// 启动这个 App（手动点开、跑单元测试、系统模板的启动截图），自动同步就会把它们
+    /// 传到 `APIConfig.plist` 里配置的线上后端。2026-10-13 实际发生过，所以在这里堵死。
+    override func tearDown() async throws {
+        app.terminate()
+        let cleaner = XCUIApplication()
+        cleaner.launchEnvironment = ["PT_API_BASE_URL": Self.offlineURL, "PT_UITEST_RESET": "1"]
+        cleaner.launch()
+        cleaner.terminate()
+        try await super.tearDown()
     }
 
     func requireBackend(file: StaticString = #filePath, line: UInt = #line) throws -> String {

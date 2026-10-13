@@ -21,6 +21,12 @@ final class APIClient {
         if let parsed = parse(ProcessInfo.processInfo.environment["PT_API_BASE_URL"]) {
             return parsed
         }
+        // 作为单元测试的宿主启动时，**绝不连线上**：指到一个不通的本地地址。
+        // 宿主启动会跑一遍自动同步；本机若留有测试产生的未同步记录，
+        // 默认地址会把它们传到线上业务表里（2026-10-13 实际发生过）。
+        if TestHost.isRunningUnitTests {
+            return URL(string: "http://127.0.0.1:9")!
+        }
         #endif
         if let url = Bundle.main.url(forResource: "APIConfig", withExtension: "plist"),
            let dict = NSDictionary(contentsOf: url),
@@ -431,3 +437,14 @@ enum ResearchAPIError: Error {
         return nil
     }
 }
+
+#if DEBUG
+/// 仅开发构建：当前进程是不是单元测试的宿主。正式构建里不存在。
+///
+/// 宿主进程会像正常启动一样跑自动同步，所以它必须与线上后端、与 App 的正式本机数据都隔开：
+/// 后端指到不通的地址（见 `APIClient`），本机记录用内存库（见 `CoreDataStack`）。
+enum TestHost {
+    static let isRunningUnitTests: Bool =
+        ProcessInfo.processInfo.environment["XCTestConfigurationFilePath"] != nil
+}
+#endif
