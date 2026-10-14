@@ -117,9 +117,10 @@ final class ResearchConsentFlowTests: XCTestCase {
         XCTAssertEqual(ResearchStore.shared.state.participation, .notAsked)
     }
 
-    /// 未审定的同意文本不能冒充正式版本
-    func testShippedConsentTextIsStillMarkedUnpublished() {
-        XCTAssertTrue(ResearchConsent.textVersion.contains("unpublished"),
-                      "研究者审定文本后才可去掉该标记，并须同步四语文案与配置")
+    /// 发布的同意文本是研究者审定过的版本（2026-10-14）。
+    /// 文案一改就要递增版本号，否则参与者签的和配置里记的不是同一份。
+    func testShippedConsentTextIsTheApprovedVersion() {
+        XCTAssertEqual(ResearchConsent.textVersion, "consent-1.0")
+        XCTAssertFalse(ResearchConsent.textVersion.contains("unpublished"))
     }
 }

@@ -29,26 +29,27 @@
 | 项 | 测试配置（已有） | 正式配置 |
 |---|---|---|
 | 研究编号 `study_id` | `pinyintone-uitest` 等，随测试而定 | 由研究者确定 |
-| App 版本 / 构建号 | 2.0 / 17 | 取**实际上架并可下载**的那个构建 |
-| 词库版本 | `lex-2026.09-draft`（20 词，**均未经教师核对**） | 须全部 `approved` |
+| App 版本 / 构建号 | 2.0 / 19 | 取**实际上架并可下载**的那个构建（17 登录会卡住、18 仍带草稿材料，均不上架） |
+| 词库版本 | `lex-2026.10`（20 词，研究者 2026-10-14 核对确认，出处：研究者根据 HSK1–3 课程内容自选） | 同左（已全部 `approved`） |
 | 评分规则版本 | `scoring-v5`（DTW ≤ 0.5 + 平调词走向闸门，归一化带下限） | 同左，不因改版调整 |
 | 反馈版本 | `fb-1.0` | 同左 |
 | 纳入规则版本 | `eligibility-2.0`（不含新旧用户条件） | 同左 |
-| 知情同意文本 | `consent-1.0-unpublished`（**待审稿**） | 须为审定后的版本号 |
-| 问卷与译文 | `*-1.0-draft` / `research-survey-i18n-1.0-draft`（**草稿**） | 须为定稿版本号 |
+| 知情同意文本 | `consent-1.0`（研究者 2026-10-14 审定；退出前资料匿名保留、可用于论文） | 同左 |
+| 问卷与译文 | `*-1.0` / `research-survey-i18n-1.0`（研究者 2026-10-14 定稿；译文由开发方翻译、研究者确认使用） | 同左 |
 | 使用后问卷触发次数 | 5 | 5（研究者已确认） |
 | 积分 | 关闭 | 关闭 |
 | 采集窗口 | 测试时临时指定 | **由研究者与导师确定**，开发不代选 |
 
 正式配置的三个前提——审定的同意文本、核对过的词条、确定的窗口——都由研究者提供。
+截至 2026-10-14，前两项已齐，**只差采集窗口与研究编号**。
 材料还是草稿时，`seed_manifest.py` **拒绝**冻结成正式配置，只能加 `--test`。
 
 ### A4. 冻结一份配置
 ```bash
 cd backend
 python scripts/seed_manifest.py \
-  --study-id <研究编号> --app-version 2.0 --build-number 17 \
-  --lexicon-version lex-2026.09-draft --scoring-version scoring-v5 \
+  --study-id <研究编号> --app-version 2.0 --build-number 19 \
+  --lexicon-version lex-2026.10 --scoring-version scoring-v5 \
   --feedback-version fb-1.0 --advice-policy-version <版本> \
   --survey-version <版本> --consent-version <版本> --eligibility-version eligibility-2.0 \
   --collection-start 2026-10-20T00:00:00+01:00 \
@@ -98,7 +99,7 @@ python scripts/export_research.py --manifest-ids <配置编号> --out-dir final/
 ### A8. 上线前的接口自检
 ```bash
 python scripts/verify_pipeline.py --base-url <后端地址> \
-  --app-version 2.0 --build 17 --lexeme-version <某个词条版本编号> --export-dir /tmp/verify
+  --app-version 2.0 --build 19 --lexeme-version <某个词条版本编号> --export-dir /tmp/verify
 ```
 它会用一个测试账号把纳入、上传、重复上传、退出拒收、导出都走一遍。
 **只对着有测试配置的环境跑**，不要对着正在正式采集的库跑。
@@ -115,7 +116,7 @@ python scripts/verify_pipeline.py --base-url <后端地址> \
 ## 1. 发版（每次更新）
 1. Xcode 选 **Any iOS Device** → **Product → Archive**。
 2. Organizer → **Distribute App → App Store Connect → Upload**。
-3. **每次上传前把 build 号 +1**（target → General → Build；本轮改版是 2.0 (17)——
+3. **每次上传前把 build 号 +1**（target → General → Build；本轮改版是 2.0 (19)——
    App Store 上在售的是 1.0，所以这次必须升营销版本号）。
    研究配置绑定构建号：换了构建号，要么新冻结一份配置，要么把新号加进 `--compatible-builds`。
 4. App Store Connect → **TestFlight**：等构建处理完 → 填测试信息 → 加测试组/被试邮箱。

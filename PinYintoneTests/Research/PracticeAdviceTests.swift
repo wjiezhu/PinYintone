@@ -36,9 +36,9 @@ final class PracticeAdviceTests: XCTestCase {
                       "快照混入了未获准的字段：\(a.evidenceSnapshot.keys)")
     }
 
-    /// 词条未经教师核对时**不显示提示**，也不套用别词的
-    func testNoTeacherHintWhenLexemeNotApproved() {
-        XCTAssertFalse(ResearchLexicon.isApproved("paobu"), "前提：当前词表全部 pending")
+    /// 词条没有经核对的教师提示时**不显示提示**，也不套用别词的
+    func testNoTeacherHintWhenLexemeHasNone() {
+        XCTAssertNil(ResearchLexicon.approvedHint(for: "paobu"), "前提：词表里没有教师提示语")
         XCTAssertNil(PracticeAdvice.make(result: result(0.3, .good), lexemeID: "paobu").teacherHint)
     }
 

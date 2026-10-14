@@ -120,13 +120,17 @@ def test_bundled_survey_versions_are_read_from_the_app_resources():
     assert all(v["form_version"] and v["translation_version"] for v in forms.values())
 
 
-def test_shipped_materials_are_still_drafts(db):
-    """现状护栏：仓库里的问卷与同意文本仍是草稿，正式配置现在冻结不出来。
+def test_shipped_materials_are_final(db):
+    """研究者 2026-10-14 审定后，仓库里随 App 发布的问卷都是定稿版本，
+    可以冻结成正式配置（此前这里是「仍是草稿、冻结不出来」的护栏）。
 
-    研究者审定材料、把版本号去掉 draft 之后，这条测试需要随之更新——
-    它存在的目的是防止有人不经审定就把正式采集打开。
+    以后若有人把问卷改回草稿或改了题目却没改版本号，这里会先失败。
     """
     from scripts.seed_manifest import DEFAULT_SURVEY_DIR
+    forms = load_survey_forms(DEFAULT_SURVEY_DIR)
+    for key, spec in forms.items():
+        assert "draft" not in spec["form_version"], key
+        assert "draft" not in spec["translation_version"], key
     _lexeme(db, "canjia")
-    with pytest.raises(ManifestError):
-        _build(db, survey_forms=load_survey_forms(DEFAULT_SURVEY_DIR))
+    man = _build(db, survey_forms=forms)
+    assert not man.is_test

@@ -1,7 +1,7 @@
 {
   "form_key": "usability_short_v1",
-  "form_version": "usability_short_v1-1.0-draft",
-  "translation_version": "research-survey-i18n-1.0-draft",
+  "form_version": "usability_short_v1-1.0",
+  "translation_version": "research-survey-i18n-1.0",
   "title": {
     "zh": "使用体验",
     "en": "Your experience with the app",
