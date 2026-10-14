@@ -46,7 +46,7 @@ struct IssueReportView: View {
                     TextEditor(text: $detail)
                         .frame(minHeight: 110)
                         // 按 Unicode 字符截断，不按字节——阿拉伯文按字节会被误判超长
-                        .onChange(of: detail) { _, new in
+                        .onChange(of: detail) { new in
                             if new.count > Self.maxChars { detail = String(new.prefix(Self.maxChars)) }
                         }
                 } header: {

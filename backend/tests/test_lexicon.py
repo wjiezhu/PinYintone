@@ -54,7 +54,10 @@ def test_approved_without_required_fields_rejected(tmp_path, monkeypatch):
     import scripts.seed_lexicon as seed
     with open(os.path.join(CORPUS, "research_lexicon.json"), encoding="utf-8") as f:
         lex = json.load(f)
-    lex["entries"][0]["reviewStatus"] = "approved"   # 但 sourceDetail 等仍为 null
+    # 标成 approved 却没有出处等核对信息
+    lex["entries"][0]["reviewStatus"] = "approved"
+    for k in ("sourceDetail", "targetRealization", "referenceAudioVersion", "reviewedAt"):
+        lex["entries"][0][k] = None
     fake = tmp_path / "Corpus"
     fake.mkdir()
     (fake / "research_lexicon.json").write_text(json.dumps(lex), encoding="utf-8")

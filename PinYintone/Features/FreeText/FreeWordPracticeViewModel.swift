@@ -98,9 +98,9 @@ final class FreeWordPracticeViewModel: ObservableObject {
 
     private func startRecording(targetWord: String) {
         // 麦克风权限在首次实际录音前申请（需求 R02），不在启动时
-        if AVAudioApplication.shared.recordPermission == .undetermined {
+        if MicPermission.state == .undetermined {
             Task { [weak self] in
-                _ = await AVAudioApplication.requestRecordPermission()
+                _ = await MicPermission.request()
                 self?.beginRecording(targetWord: targetWord)
             }
             return
@@ -143,7 +143,7 @@ final class FreeWordPracticeViewModel: ObservableObject {
 
     /// 与关卡 2 同一套映射：服务端按固定错误码白名单校验
     private static func researchErrorCode(for error: Error) -> ResearchErrorCode {
-        if AVAudioApplication.shared.recordPermission != .granted { return .permissionDenied }
+        if MicPermission.state != .granted { return .permissionDenied }
         guard let e = error as? AudioEngine.AudioEngineError else { return .unknown }
         switch e {
         case .engineStartFailed: return .analysisEngineError

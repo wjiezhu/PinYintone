@@ -43,12 +43,56 @@ final class UserManager: ObservableObject {
             spokenLanguages: spokenLanguages.map(\.rawValue),
             registeredAt: Date()
         )
-        // 注册到后端（失败不阻塞本地建档，下次同步补上；参加研究前也会再补一次）
-        _ = try? await APIClient.shared.registerUser(p)
         save(p)
         profile = p
         // 研究状态按账号隔离：切到这个账号自己的那一份
         ResearchStore.shared.activate(for: p)
+        // 后端建档放到后台，登录不等它（原因见 pushRegistration）
+        registerInBackground(p)
+    }
+
+    /// 回到前台时调用：本机档案还没送到后端的（离线登录、服务器没醒、改了名字），补送一次。
+    func syncRegistrationIfNeeded() {
+        guard let p = profile, p.role == .student,
+              UserDefaults.standard.string(forKey: Self.registeredKey) != Self.fingerprint(p)
+        else { return }
+        registerInBackground(p)
+    }
+
+    private func registerInBackground(_ p: UserProfile) {
+        Task { await Self.pushRegistration(p) }
+    }
+
+    /// 把档案送到后端。
+    ///
+    /// 登录**不能**等这一步：服务器慢或连不上时（免费版 Render 闲置会休眠；
+    /// 手机所在的网络也可能根本连不到它），请求要等到 60 秒超时才返回。
+    /// 此前登录要等它才进首页，真机 TestFlight 上表现为「登录一直在转」。
+    /// 建档本来就允许失败（本机先建好、之后补送），
+    /// 送达后记下这份档案的指纹，没送达的由 `syncRegistrationIfNeeded()` 下次补。
+    /// 参加研究前 `ResearchEnrollment` 还会再同步送一次，纳入不受影响。
+    private static func pushRegistration(_ p: UserProfile) async {
+        do {
+            try await sendRegistration(p)
+        } catch {
+            return
+        }
+        UserDefaults.standard.set(fingerprint(p), forKey: registeredKey)
+    }
+
+    /// 真正发出建档请求的那一步。单元测试会换成不经网络栈的假实现：
+    /// 用 URLProtocol 桩模拟「慢服务器」时，GitHub 上的模拟器会把等待拖上 30 多秒，结果不稳定。
+    static var sendRegistration: (UserProfile) async throws -> Void = { p in
+        _ = try await APIClient.shared.registerUser(p)
+    }
+
+    private static let registeredKey = "pt_registered_profile"
+
+    /// 后端关心的字段变了才需要重送
+    private static func fingerprint(_ p: UserProfile) -> String {
+        [p.deviceID, p.appleUserID ?? "", p.nickname ?? "",
+         (p.spokenLanguages ?? []).joined(separator: ","), p.nativeLanguage ?? ""]
+            .joined(separator: "|")
     }
 
     /// 修改显示名（升级需求 §4.1：姓名可选，首次授权后允许学习者自行修改）。
@@ -63,8 +107,8 @@ final class UserManager: ObservableObject {
         p.nickname = resolved
         save(p)
         profile = p
-        // 后端不可达时本地已改好，下次注册/同步会补上
-        _ = try? await APIClient.shared.registerUser(p)
+        // 后端不可达时本地已改好，回到前台时会补送
+        await Self.pushRegistration(p)
     }
 
     /// 教师注册；服务器返回 6 位班级码
@@ -97,6 +141,7 @@ final class UserManager: ObservableObject {
     func logout() {
         LearnerRecordingStore.shared.clear()
         UserDefaults.standard.removeObject(forKey: Self.storageKey)
+        UserDefaults.standard.removeObject(forKey: Self.registeredKey)
         profile = nil
         ResearchStore.shared.activate(for: nil)
     }
@@ -115,6 +160,8 @@ final class UserManager: ObservableObject {
         LocalDataPurger.purgeAll()
         ResearchStore.shared.purgeCurrentAccount()
         UserDefaults.standard.removeObject(forKey: Self.storageKey)
+        // 服务端那份已删：同一账号再登录时要重新建档
+        UserDefaults.standard.removeObject(forKey: Self.registeredKey)
         self.profile = nil
     }
 

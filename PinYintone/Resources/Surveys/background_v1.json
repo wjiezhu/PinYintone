@@ -1,7 +1,7 @@
 {
   "form_key": "background_v1",
-  "form_version": "background_v1-1.0-draft",
-  "translation_version": "research-survey-i18n-1.0-draft",
+  "form_version": "background_v1-1.1",
+  "translation_version": "research-survey-i18n-1.1",
   "title": {
     "zh": "学习背景",
     "en": "Learning background",
@@ -53,10 +53,10 @@
       "question_id": "B02",
       "type": "multi",
       "question": {
-        "zh": "你的国籍是什么？如有多个国籍，可以选择多个。",
-        "en": "What is your nationality? If you have more than one nationality, you can select more than one.",
-        "fr": "Quelle est votre nationalité ? Si vous avez plusieurs nationalités, vous pouvez en sélectionner plusieurs.",
-        "ar": "ما جنسيتك؟ إذا كنت تحمل أكثر من جنسية، يمكنك اختيار أكثر من واحدة."
+        "zh": "你的国籍是什么？如有多个国籍，可以选择多个；其他国籍请在「其他国籍」里直接填写。",
+        "en": "What is your nationality? If you have more than one, you can select more than one; for any other nationality, type it under \"Other nationality\".",
+        "fr": "Quelle est votre nationalité ? Si vous en avez plusieurs, vous pouvez en sélectionner plusieurs ; pour toute autre nationalité, saisissez-la dans « Autre nationalité ».",
+        "ar": "ما جنسيتك؟ إذا كنت تحمل أكثر من جنسية يمكنك اختيار أكثر من واحدة، ولأي جنسية أخرى اكتبها في خانة «جنسية أخرى»."
       },
       "options": [
         {
@@ -66,6 +66,24 @@
             "en": "Morocco",
             "fr": "Maroc",
             "ar": "المغرب"
+          }
+        },
+        {
+          "code": "other",
+          "label": {
+            "zh": "其他国籍",
+            "en": "Other nationality",
+            "fr": "Autre nationalité",
+            "ar": "جنسية أخرى"
+          },
+          "text_input": {
+            "max_chars": 100,
+            "hint": {
+              "zh": "请填写国籍",
+              "en": "Type your nationality",
+              "fr": "Saisissez votre nationalité",
+              "ar": "اكتب جنسيتك"
+            }
           }
         },
         {
@@ -79,8 +97,7 @@
           "exclusive": true
         }
       ],
-      "option_source": "iso3166_alpha2_platform_localized",
-      "note": "MA 仅为已展开的目标国家示例；完整列表用平台本地化名称，按 ISO 代码保存。不得以地区/界面语言/IP 代填。"
+      "note": "background_v1-1.1：国家列表改为「其他国籍」直接填写（研究者 2026-10-14 决定）。纳入判断只看是否选了 MA；「其他国籍」里填的文字原样保存在 text_value，不做归一化、不参与纳入判断——在其中写了「摩洛哥」的人不会被自动判为符合。不得以地区/界面语言/IP 代填。"
     },
     {
       "question_id": "B03",

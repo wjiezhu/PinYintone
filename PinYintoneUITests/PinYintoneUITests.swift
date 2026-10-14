@@ -242,3 +242,45 @@ final class LandscapeUITests: PinYintoneUITestCase {
         shot("landscape-04-result")
     }
 }
+
+/// App Store 截图：四种界面语言各一套，取自真实运行的界面。
+///
+/// 在 6.9 英寸机型的模拟器上跑（iPhone 17 Pro Max，1320 × 2868），文件写到 `PT_SHOT_DIR`，
+/// 名字是 `store-<语言>-<序号>-<页面>.png`。录音用合成信号，所以图里那条「本次」曲线
+/// 是 App 对合成音的真实分析结果，不是人声。
+@MainActor
+final class AppStoreScreenshotUITests: PinYintoneUITestCase {
+
+    func testCaptureAllLanguages() {
+        for language in ["en", "fr", "ar", "zh"] {
+            launch(reset: true, baseURL: Self.offlineURL, language: language,
+                   login: newLoginID("store-\(language)"))
+            signIn()
+            tap(app.buttons["home.tone"])
+            recordAndWaitForResult()
+            Thread.sleep(forTimeInterval: 0.6)
+            shot("store-\(language)-02-practice-curve")
+
+            app.buttons["practice.mode.colour"].tap()
+            Thread.sleep(forTimeInterval: 0.5)
+            shot("store-\(language)-03-practice-colour")
+            app.buttons["practice.mode.curve"].tap()
+
+            tap(app.buttons["practice.wordPicker"])
+            Thread.sleep(forTimeInterval: 0.8)
+            shot("store-\(language)-04-word-picker")
+            app.buttons["word.heshui"].tap()
+            Thread.sleep(forTimeInterval: 0.5)
+
+            app.navigationBars.buttons.element(boundBy: 0).tap()
+            XCTAssertTrue(app.buttons["home.tone"].waitForExistence(timeout: 10))
+            Thread.sleep(forTimeInterval: 0.6)
+            shot("store-\(language)-01-home")
+
+            tab(2)
+            Thread.sleep(forTimeInterval: 0.6)
+            shot("store-\(language)-05-settings")
+            app.terminate()
+        }
+    }
+}

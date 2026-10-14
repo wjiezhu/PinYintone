@@ -40,11 +40,13 @@ final class ResearchLexiconTests: XCTestCase {
         XCTAssertEqual(ids.count, Set(ids).count)
     }
 
-    /// 当前词表全部未核对——这条测试是个**提醒**：
-    /// 教师核对完成、词表转为 approved 后，本测试会失败，届时请改写为正向断言。
-    func testCurrentLexiconIsNotYetApprovedForFormalCollection() {
-        let approved = CorpusLoader.shared.loadLexemes().filter { ResearchLexicon.isApproved($0.id) }
-        XCTAssertTrue(approved.isEmpty,
-                      "当前词表应全部 pending；若已有 approved，说明核对已开始，请更新本测试")
+    /// 正式采集要求全部词条经核对（字典 §6）：lex-2026.10 由研究者 2026-10-14 确认。
+    /// 词表版本不得带 draft——服务端冻结正式配置时会拒绝。
+    func testShippedLexiconIsApprovedForFormalCollection() {
+        XCTAssertEqual(ResearchLexicon.lexiconVersion, "lex-2026.10")
+        XCTAssertFalse(ResearchLexicon.lexiconVersion?.contains("draft") ?? true)
+        for lex in CorpusLoader.shared.loadLexemes() {
+            XCTAssertTrue(ResearchLexicon.isApproved(lex.id), "\(lex.hanzi)(\(lex.id)) 未标记为已核对")
+        }
     }
 }

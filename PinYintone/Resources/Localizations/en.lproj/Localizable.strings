@@ -184,11 +184,11 @@
 "consent_purpose_title" = "Purpose";
 "consent_purpose_body" = "To understand how beginning learners of Chinese use a tone-practice tool, for a master's thesis on design and usability.";
 "consent_data_title" = "What is collected";
-"consent_data_body" = "Your practice activity (starting a task, playing the model, recording, viewing feedback), scoring results, and any questionnaire answers you choose to give.\n\nRecordings themselves are not uploaded, and neither is your name, email, or Apple account information.";
+"consent_data_body" = "Your practice activity (starting a task, playing the model, recording, viewing feedback), scoring results, and any questionnaire answers you choose to give.\n\nRecordings themselves are not uploaded. In the research data you are identified only by an anonymous number linked to your Apple account; it does not include your name, email or any other personal information.";
 "consent_use_title" = "How it is used";
 "consent_use_body" = "Only for analysis and writing in that thesis. Results are reported as group statistics, not about individuals.";
 "consent_withdraw_title" = "How to leave";
-"consent_withdraw_body" = "You can leave the study at any time in Settings. Collection of new data stops immediately. For how data collected before you leave is handled, please use the contact below.";
+"consent_withdraw_body" = "You can leave the study at any time in Settings. Collection of new data stops immediately. Data collected before you leave is kept in anonymous form and may be used in the statistical analysis for the thesis. If you have questions, please use the contact below.";
 "consent_contact" = "Questions, withdrawal, or data deletion: joyouo409@gmail.com, or via in-app feedback.";
 "consent_checkbox" = "I have read the information above and agree to take part";
 "consent_agree" = "Agree and take part";

@@ -28,7 +28,7 @@ struct PinyintoneApp: App {
                 .preferredColorScheme(UITestSupport.forcedColorScheme)
                 #endif
         }
-        .onChange(of: scenePhase) { _, phase in
+        .onChange(of: scenePhase) { phase in
             if phase == .active {
                 // 会话编号：后台超过 30 分钟即轮换（字典 §7 的操作定义，非真实课次）
                 ResearchSession.shared.willEnterForeground()
@@ -60,6 +60,8 @@ enum AppSync {
     }
 
     static func run() {
+        // 登录时没送到后端的档案，这里补送（后台进行，不等它）
+        UserManager.shared.syncRegistrationIfNeeded()
         Task {
             // 研究配置：决定「现在能不能参加研究」。取不到或不匹配时研究入口关闭，
             // 普通练习不受影响，学习者看不到任何配置层面的报错。
