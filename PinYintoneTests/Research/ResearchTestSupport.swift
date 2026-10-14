@@ -113,8 +113,10 @@ final class StubURLProtocol: URLProtocol {
     enum Reply {
         case json(Int, Any)
         case transportError(URLError.Code)
-        /// 一直不回：模拟没醒或连不上的服务器（请求要等到超时）
-        case hang
+        /// 过一会儿才回：模拟慢的服务器（没醒、网络差）。
+        /// 不用「一直不回」：挂着的请求要等系统超时才结束，会拖住后面的用例
+        /// （GitHub 上的 iOS 26.2 实测要 30 多秒）
+        case delayed(TimeInterval, Int, Any)
     }
 
     nonisolated(unsafe) private static var handlers: [(matches: (String, String) -> Bool, reply: () -> Reply)] = []
@@ -176,18 +178,24 @@ final class StubURLProtocol: URLProtocol {
                 ?? .transportError(.notConnectedToInternet)
         }
         switch reply {
-        case .hang:
-            return
         case .transportError(let code):
             client?.urlProtocol(self, didFailWithError: URLError(code))
         case .json(let status, let object):
-            let payload = (try? JSONSerialization.data(withJSONObject: object)) ?? Data()
-            let response = HTTPURLResponse(url: url, statusCode: status, httpVersion: nil,
-                                           headerFields: ["Content-Type": "application/json"])!
-            client?.urlProtocol(self, didReceive: response, cacheStoragePolicy: .notAllowed)
-            client?.urlProtocol(self, didLoad: payload)
-            client?.urlProtocolDidFinishLoading(self)
+            respond(url: url, status: status, object: object)
+        case .delayed(let seconds, let status, let object):
+            DispatchQueue.global().asyncAfter(deadline: .now() + seconds) {
+                self.respond(url: url, status: status, object: object)
+            }
         }
+    }
+
+    private func respond(url: URL, status: Int, object: Any) {
+        let payload = (try? JSONSerialization.data(withJSONObject: object)) ?? Data()
+        let response = HTTPURLResponse(url: url, statusCode: status, httpVersion: nil,
+                                       headerFields: ["Content-Type": "application/json"])!
+        client?.urlProtocol(self, didReceive: response, cacheStoragePolicy: .notAllowed)
+        client?.urlProtocol(self, didLoad: payload)
+        client?.urlProtocolDidFinishLoading(self)
     }
 
     override func stopLoading() {}
