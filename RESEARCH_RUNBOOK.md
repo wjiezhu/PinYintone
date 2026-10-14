@@ -29,7 +29,7 @@
 | 项 | 测试配置（已有） | 正式配置 |
 |---|---|---|
 | 研究编号 `study_id` | `pinyintone-uitest` 等，随测试而定 | 由研究者确定 |
-| App 版本 / 构建号 | 2.0 / 19 | 取**实际上架并可下载**的那个构建（17 登录会卡住、18 仍带草稿材料，均不上架） |
+| App 版本 / 构建号 | 2.0 / 20 | 取**实际上架并可下载**的那个构建（17 登录会卡住、18 带草稿材料、19 装不上 iOS 16，均不上架） |
 | 词库版本 | `lex-2026.10`（20 词，研究者 2026-10-14 核对确认，出处：研究者根据 HSK1–3 课程内容自选） | 同左（已全部 `approved`） |
 | 评分规则版本 | `scoring-v5`（DTW ≤ 0.5 + 平调词走向闸门，归一化带下限） | 同左，不因改版调整 |
 | 反馈版本 | `fb-1.0` | 同左 |
@@ -48,7 +48,7 @@
 ```bash
 cd backend
 python scripts/seed_manifest.py \
-  --study-id <研究编号> --app-version 2.0 --build-number 19 \
+  --study-id <研究编号> --app-version 2.0 --build-number 20 \
   --lexicon-version lex-2026.10 --scoring-version scoring-v5 \
   --feedback-version fb-1.0 --advice-policy-version <版本> \
   --survey-version <版本> --consent-version <版本> --eligibility-version eligibility-2.0 \
@@ -99,7 +99,7 @@ python scripts/export_research.py --manifest-ids <配置编号> --out-dir final/
 ### A8. 上线前的接口自检
 ```bash
 python scripts/verify_pipeline.py --base-url <后端地址> \
-  --app-version 2.0 --build 19 --lexeme-version <某个词条版本编号> --export-dir /tmp/verify
+  --app-version 2.0 --build 20 --lexeme-version <某个词条版本编号> --export-dir /tmp/verify
 ```
 它会用一个测试账号把纳入、上传、重复上传、退出拒收、导出都走一遍。
 **只对着有测试配置的环境跑**，不要对着正在正式采集的库跑。
@@ -116,7 +116,7 @@ python scripts/verify_pipeline.py --base-url <后端地址> \
 ## 1. 发版（每次更新）
 1. Xcode 选 **Any iOS Device** → **Product → Archive**。
 2. Organizer → **Distribute App → App Store Connect → Upload**。
-3. **每次上传前把 build 号 +1**（target → General → Build；本轮改版是 2.0 (19)——
+3. **每次上传前把 build 号 +1**（target → General → Build；本轮改版是 2.0 (20)——
    App Store 上在售的是 1.0，所以这次必须升营销版本号）。
    研究配置绑定构建号：换了构建号，要么新冻结一份配置，要么把新号加进 `--compatible-builds`。
 4. App Store Connect → **TestFlight**：等构建处理完 → 填测试信息 → 加测试组/被试邮箱。
