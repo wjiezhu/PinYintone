@@ -444,3 +444,15 @@ struct RowDivider: View {
         Theme.border.frame(height: 1)
     }
 }
+
+extension View {
+    /// 内容不满一屏时不回弹。`scrollBounceBehavior` 是 iOS 16.4 才有的，更早的系统保持默认回弹。
+    @ViewBuilder
+    func bounceOnlyWhenScrollable() -> some View {
+        if #available(iOS 16.4, *) {
+            scrollBounceBehavior(.basedOnSize)
+        } else {
+            self
+        }
+    }
+}

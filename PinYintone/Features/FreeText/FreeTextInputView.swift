@@ -22,7 +22,7 @@ struct FreeTextInputView: View {
                         TextEditor(text: $rawText)
                             .scrollContentBackground(.hidden)
                             .frame(minHeight: 160)
-                            .onChange(of: rawText) { _, new in
+                            .onChange(of: rawText) { new in
                                 if new.count > maxChars { rawText = String(new.prefix(maxChars)) }
                             }
                         if rawText.isEmpty {

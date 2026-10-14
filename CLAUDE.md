@@ -187,3 +187,9 @@
     点了「听示范」不等于播放成功，结果区重绘不等于又显示了一次
 27. **禁止把草稿材料冻结成正式研究配置，禁止代研究者选定正式采集日期**——
     `seed_manifest.py` 会拒绝，不要绕过
+28. **禁止把最低支持系统提高到 iOS 16 以上，禁止不加判断地使用 iOS 17 才有的接口**——
+    研究对象里有停在 iOS 16 的 iPhone 8 / 8 Plus / X。麦克风权限一律经 `MicPermission`
+    （不直接用 `AVAudioApplication`）；`onChange` 用单参数写法；其余 iOS 16.4 / 17 的接口
+    用 `if #available` 包住（见 `inked`、`bounceOnlyWhenScrollable`）。
+    验证须在 iPhone 8 / iOS 16.4 模拟器上跑，只在新系统上跑**测不出来**
+    （iOS 16 上切换账号后停在「设置」页，就是这样查出来的）

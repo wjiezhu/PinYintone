@@ -28,7 +28,7 @@ struct PinyintoneApp: App {
                 .preferredColorScheme(UITestSupport.forcedColorScheme)
                 #endif
         }
-        .onChange(of: scenePhase) { _, phase in
+        .onChange(of: scenePhase) { phase in
             if phase == .active {
                 // 会话编号：后台超过 30 分钟即轮换（字典 §7 的操作定义，非真实课次）
                 ResearchSession.shared.willEnterForeground()

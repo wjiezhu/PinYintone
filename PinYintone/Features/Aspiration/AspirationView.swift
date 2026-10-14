@@ -61,7 +61,7 @@ struct AspirationView: View {
             .padding(.vertical, Theme.Space.l)
             .frame(maxWidth: .infinity)
         }
-        .scrollBounceBehavior(.basedOnSize)
+        .bounceOnlyWhenScrollable()
         .background(Theme.background)
         .navigationTitle(NSLocalizedString("stage1_title", comment: ""))
         .navigationBarTitleDisplayMode(.inline)

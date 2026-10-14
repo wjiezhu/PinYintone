@@ -490,12 +490,12 @@ final class ToneTrainingViewModel: ObservableObject {
         guard canRecord, stage != .recording, currentLexeme != nil else { return }
         // 麦克风权限在**首次实际录音前**申请（需求 R02），不在启动时。
         if usesMicrophone {
-            switch AVAudioApplication.shared.recordPermission {
+            switch MicPermission.state {
             case .granted:
                 break
             case .undetermined:
                 Task { [weak self] in
-                    let granted = await AVAudioApplication.requestRecordPermission()
+                    let granted = await MicPermission.request()
                     guard let self else { return }
                     if granted { self.beginRecording() } else { self.stage = .failed(.microphoneDenied) }
                 }
@@ -512,7 +512,7 @@ final class ToneTrainingViewModel: ObservableObject {
     /// 从系统设置回来后重新检查麦克风权限（不需要重启 App）
     func recheckMicrophonePermission() {
         guard failure == .microphoneDenied else { return }
-        if AVAudioApplication.shared.recordPermission == .granted {
+        if MicPermission.state == .granted {
             stage = isReferenceReady ? .ready : .preparing
         }
     }
@@ -559,7 +559,7 @@ final class ToneTrainingViewModel: ObservableObject {
         } catch {
             // 启动失败必须给出可执行提示：否则学习者看到的是一个按了没反应的按钮
             let denied = usesMicrophone
-                && AVAudioApplication.shared.recordPermission != .granted
+                && MicPermission.state != .granted
             stage = .failed(denied ? .microphoneDenied : .microphoneUnavailable)
             persistTechnicalRetry(reason: failureReason(for: error), voicedFrameCount: 0)
             ResearchAttemptLog.shared.markFailed(
@@ -827,7 +827,7 @@ final class ToneTrainingViewModel: ObservableObject {
     /// 映射到字典 §8 的固定错误码（研究库的固定枚举，服务端按白名单校验）
     private func researchErrorCode(for error: Error) -> ResearchErrorCode {
         if usesMicrophone,
-           AVAudioApplication.shared.recordPermission != .granted { return .permissionDenied }
+           MicPermission.state != .granted { return .permissionDenied }
         guard let e = error as? AudioEngine.AudioEngineError else { return .unknown }
         switch e {
         case .engineStartFailed: return .analysisEngineError
@@ -839,7 +839,7 @@ final class ToneTrainingViewModel: ObservableObject {
     private func failureReason(for error: Error) -> FailureReason {
         // 权限被拒最常见，且会伪装成 invalidInputFormat，所以先单独判掉
         if usesMicrophone,
-           AVAudioApplication.shared.recordPermission != .granted {
+           MicPermission.state != .granted {
             return .permissionDenied
         }
         guard let engineError = error as? AudioEngine.AudioEngineError else {

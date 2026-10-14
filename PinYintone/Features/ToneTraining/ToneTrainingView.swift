@@ -61,7 +61,7 @@ struct ToneTrainingView: View {
             vm.presentPostInvitationIfDue()
         }
         .onDisappear { vm.leavePage() }
-        .onChange(of: vm.stage) { _, stage in announce(stage) }
+        .onChange(of: vm.stage) { stage in announce(stage) }
         .sheet(isPresented: $showWordPicker) {
             WordPickerSheet(currentID: vm.currentLexeme?.id) { vm.select(lexemeID: $0) }
         }
@@ -151,10 +151,10 @@ struct ToneTrainingView: View {
             .padding(.horizontal, Theme.pageMargin)
             .padding(.bottom, Theme.Space.l)
         }
-        .scrollBounceBehavior(.basedOnSize)
+        .bounceOnlyWhenScrollable()
         // 结果或失败说明出现时，把它滚进视野：小屏或放大文字时它可能在操作栏下面，
         // 不该让人自己去找。只滚正文，底部操作栏不动。
-        .onChange(of: vm.stage) { _, stage in
+        .onChange(of: vm.stage) { stage in
             switch stage {
             case .feedback, .failed:
                 withAnimation(reduceMotion ? nil : .easeOut(duration: 0.2)) {
@@ -179,9 +179,11 @@ struct ToneTrainingView: View {
              NSLocalizedString(FeedbackStyle.staticColor.localizationKey, comment: ""),
              "practice.mode.colour"),
         ], selection: $feedbackStyle)
-        .onChange(of: feedbackStyle) { old, new in
+        // 捕获列表里的 feedbackStyle 是闭包创建时（切换之前）的值，即旧值。
+        // 用单参数的 onChange 是为了 iOS 16 也能跑（两参数版本 iOS 17 才有）
+        .onChange(of: feedbackStyle) { [feedbackStyle] new in
             // 只在用户实际切换时记一次，视图重绘不记
-            vm.logFeedbackModeChanged(from: old, to: new)
+            vm.logFeedbackModeChanged(from: feedbackStyle, to: new)
         }
         // 录音、分析中换模式会让「看到的线 ≠ 评分的线」，直接禁掉
         .disabled(vm.isBusy)
@@ -471,7 +473,7 @@ struct ToneTrainingView: View {
     private func handleRecordTap() {
         // 麦克风权限在首次实际录音前申请。先用所选语言说明用途，再弹系统授权框。
         if !vm.isRecording, !RecordingSourceFactory.isSynthetic,
-           AVAudioApplication.shared.recordPermission == .undetermined {
+           MicPermission.state == .undetermined {
             showMicExplanation = true
             return
         }
@@ -570,7 +572,7 @@ struct SelfTestContent: View {
             .padding(.bottom, Theme.Space.xl)
             .frame(maxWidth: .infinity)
         }
-        .scrollBounceBehavior(.basedOnSize)
+        .bounceOnlyWhenScrollable()
     }
 
     /// 进度：一行「第 x / n 词」加一排小格。用中性灰，不用任何评价色——

@@ -51,9 +51,9 @@ final class AspirationViewModel: ObservableObject {
     func startCalibration() {
         // 麦克风权限在首次实际录音前申请（需求 R02），不在启动时。
         // 还没问过就先问；拒绝的话下面的启动会失败并给出提示。
-        if AVAudioApplication.shared.recordPermission == .undetermined {
+        if MicPermission.state == .undetermined {
             Task { [weak self] in
-                _ = await AVAudioApplication.requestRecordPermission()
+                _ = await MicPermission.request()
                 self?.beginCalibration()
             }
             return

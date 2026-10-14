@@ -115,9 +115,8 @@ struct ModuleIllustration: View {
         stroke(&ctx, right, Theme.textPrimary, line)
 
         // 左页一个「文」字
-        let glyph = ctx.resolve(Text("文")
-            .font(.system(size: f.h * 0.34, weight: .bold))
-            .foregroundStyle(Theme.textPrimary))
+        let glyph = ctx.resolve(inked(Text("文")
+            .font(.system(size: f.h * 0.34, weight: .bold)), Theme.textPrimary))
         ctx.draw(glyph, at: f.p(0.30, 0.56), anchor: .center)
 
         // 右页几行字
@@ -170,9 +169,8 @@ struct ModuleIllustration: View {
         let frontPath = Path(roundedRect: front, cornerRadius: line * 1.6)
         ctx.fill(frontPath, with: .color(backdrop))
         stroke(&ctx, frontPath, Theme.textPrimary, line)
-        let glyph = ctx.resolve(Text("词")
-            .font(.system(size: f.h * 0.30, weight: .bold))
-            .foregroundStyle(Theme.textPrimary))
+        let glyph = ctx.resolve(inked(Text("词")
+            .font(.system(size: f.h * 0.30, weight: .bold)), Theme.textPrimary))
         ctx.draw(glyph, at: CGPoint(x: front.midX, y: front.midY), anchor: .center)
     }
 }
@@ -211,4 +209,13 @@ struct BrandWordmark: View {
         .accessibilityLabel("PinYintone")
         .accessibilityAddTraits(.isHeader)
     }
+}
+
+/// 给画布里的文字上色。返回 `Text` 的 `foregroundStyle` 是 iOS 17 才有的，
+/// iOS 16（iPhone 8 / X 的最高系统）上用 `foregroundColor`。
+func inked(_ text: Text, _ color: Color) -> Text {
+    if #available(iOS 17.0, *) {
+        return text.foregroundStyle(color)
+    }
+    return text.foregroundColor(color)
 }
