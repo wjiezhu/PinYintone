@@ -72,8 +72,18 @@ final class UserManager: ObservableObject {
     /// 送达后记下这份档案的指纹，没送达的由 `syncRegistrationIfNeeded()` 下次补。
     /// 参加研究前 `ResearchEnrollment` 还会再同步送一次，纳入不受影响。
     private static func pushRegistration(_ p: UserProfile) async {
-        guard (try? await APIClient.shared.registerUser(p)) != nil else { return }
+        do {
+            try await sendRegistration(p)
+        } catch {
+            return
+        }
         UserDefaults.standard.set(fingerprint(p), forKey: registeredKey)
+    }
+
+    /// 真正发出建档请求的那一步。单元测试会换成不经网络栈的假实现：
+    /// 用 URLProtocol 桩模拟「慢服务器」时，GitHub 上的模拟器会把等待拖上 30 多秒，结果不稳定。
+    static var sendRegistration: (UserProfile) async throws -> Void = { p in
+        _ = try await APIClient.shared.registerUser(p)
     }
 
     private static let registeredKey = "pt_registered_profile"
