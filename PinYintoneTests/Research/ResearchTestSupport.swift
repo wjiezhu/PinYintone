@@ -113,6 +113,8 @@ final class StubURLProtocol: URLProtocol {
     enum Reply {
         case json(Int, Any)
         case transportError(URLError.Code)
+        /// 一直不回：模拟没醒或连不上的服务器（请求要等到超时）
+        case hang
     }
 
     nonisolated(unsafe) private static var handlers: [(matches: (String, String) -> Bool, reply: () -> Reply)] = []
@@ -174,6 +176,8 @@ final class StubURLProtocol: URLProtocol {
                 ?? .transportError(.notConnectedToInternet)
         }
         switch reply {
+        case .hang:
+            return
         case .transportError(let code):
             client?.urlProtocol(self, didFailWithError: URLError(code))
         case .json(let status, let object):
