@@ -1,6 +1,6 @@
 from datetime import datetime, timezone
 
-from sqlalchemy import ForeignKey, BigInteger, Boolean, Column, DateTime, Float, Integer, JSON, String
+from sqlalchemy import ForeignKey, BigInteger, Boolean, Column, DateTime, Float, Index, Integer, JSON, String
 
 from .database import Base
 
@@ -23,8 +23,19 @@ class User(Base):
     """设备级用户，不含 PII。游客 class_code 为空。"""
     __tablename__ = "users"
     device_id = Column(String, primary_key=True)
-    apple_user_id = Column(String, index=True, nullable=True)  # Sign in with Apple 稳定标识
-    # 业务账号的稳定内部编号：同一 Apple 账号在多台设备上共用一个值。
+    # 登录身份 = (登录方式, 该方式下的用户号)：apple → Apple 的 sub，google → Google 的 sub。
+    # 用户号取自服务端验过签的凭证（identity.py），过渡期的旧版 iOS 例外（见 legacy_login_at）。
+    auth_provider = Column(String, nullable=True)     # apple | google
+    auth_subject = Column(String, nullable=True)
+    # 最近一次用验过签的凭证绑定的时间；为空 = 这一行的身份从未被服务端验证过
+    auth_verified_at = Column(DateTime(timezone=True), nullable=True)
+    # 最近一次靠过渡开关（ALLOW_LEGACY_UNVERIFIED_APPLE）放行的未验证登录。
+    # 决定什么时候关开关时，看最近还有多少设备落在这里
+    legacy_login_at = Column(DateTime(timezone=True), nullable=True)
+    # 历史列：只支持 Apple 时的身份列。迁移时已抄进 auth_*；Apple 登录仍同步写一份，
+    # 便于回滚到旧后端。**新代码不按它判断身份。**
+    apple_user_id = Column(String, index=True, nullable=True)
+    # 业务账号的稳定内部编号：同一登录身份在多台设备上共用一个值。
     # 研究纳入按它（而不是 device_id）去重，否则同一人换设备会变成第二位参与者。
     # 服务端随机生成，不是 Apple 标识的派生值；旧行为空，注册或纳入时补上。
     account_id = Column(String, index=True, nullable=True)
@@ -40,21 +51,27 @@ class User(Base):
     spoken_languages = Column(JSON, nullable=True)   # 会说的语言列表（母语迁移分析）
     install_date = Column(DateTime, default=_utcnow)
 
+    __table_args__ = (Index("ix_users_auth_identity", "auth_provider", "auth_subject"),)
+
 
 class AccountLink(Base):
-    """Apple 账号 → 业务账号的稳定内部编号。
+    """登录身份 (provider, subject) → 业务账号的稳定内部编号。
 
-    `users` 表一台设备一行，设备换一个 Apple 账号登录时那一行会被改写——
-    所以「这个 Apple 账号是谁」不能只记在设备行上：
+    `users` 表一台设备一行，设备换一个账号登录时那一行会被改写——
+    所以「这个账号是谁」不能只记在设备行上：
     - 记在设备行上，新登录的人会**继承上一个人的编号**，在研究里被当成同一位参与者；
     - 上一个人再登录回来时，他原来的编号已经找不到了，会变成第二位参与者。
 
     这张表把对应关系单独存一份，不随设备行的改写而丢失。
-    它是业务表（Apple 标识本来就在 `users` 里），**不进研究导出**；
-    研究侧的 research_identity_map 只存这里的 `account_id`，不存 Apple 标识。
+    它是业务表，**不进研究导出**；研究侧的 research_identity_map 只存这里的 `account_id`，
+    不存登录方式的用户号。
+
+    表名：只支持 Apple 时叫 `account_links`（apple_user_id 主键），
+    启动迁移（migrations.py）把它整表搬到这里、provider 记为 apple，account_id 原样不动。
     """
-    __tablename__ = "account_links"
-    apple_user_id = Column(String, primary_key=True)
+    __tablename__ = "account_identities"
+    provider = Column(String, primary_key=True)     # apple | google
+    subject = Column(String, primary_key=True)
     account_id = Column(String, nullable=False, unique=True, index=True)
     created_at = Column(DateTime, default=_utcnow)
 

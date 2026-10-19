@@ -34,7 +34,12 @@ class TeacherLoginResponse(BaseModel):
 class StudentRegisterRequest(BaseModel):
     deviceID: str
     role: str
-    appleUserID: Optional[str] = None       # Sign in with Apple 稳定标识
+    # 登录方式：apple | google。缺省时按旧版 iOS 处理（有 appleUserID 即 apple）
+    provider: Optional[str] = None
+    # 登录凭证：Apple 的 identityToken / Google 的 ID token。用户号以它为准（identity.py）
+    identityToken: Optional[str] = None
+    # Sign in with Apple 用户号。旧版 iOS 只传这个；新版也传，须与凭证里的 sub 一致
+    appleUserID: Optional[str] = None
     spokenLanguages: Optional[list[str]] = None  # 会说的语言（多选，母语迁移分析）
     experimentGroup: Optional[str] = None   # 历史兼容字段，服务端分配，客户端值忽略
     nickname: Optional[str] = None

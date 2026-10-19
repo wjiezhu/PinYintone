@@ -96,7 +96,28 @@ App 默认连 `http://localhost:8000`。上线后在 **Info.plist 增加键 `PT_
 |------|------|------|
 | `DATABASE_URL` | 生产必填 | Neon Postgres 连接串；本地缺省 SQLite |
 | `JWT_SECRET` | 生产必填 | ≥32 字节随机串（Render 蓝图自动生成） |
+| `APPLE_BUNDLE_IDS` | 生产必填 | 逗号分隔；Apple identityToken 的 aud，即 iOS App 的 bundle id（`Joy.PinYintone`） |
+| `GOOGLE_CLIENT_IDS` | Android 上线前必填 | 逗号分隔；Google ID token 的 aud。Credential Manager 下是传给 `serverClientId` 的 **Web** client id（可同时列 Android client id） |
+| `ALLOW_LEGACY_UNVERIFIED_APPLE` | 选填，默认 `true` | 过渡开关：没带 identityToken 的 Apple 登录（线上旧版 iOS）是否放行。关掉的时机由人决定，见下 |
+| `JWKS_CACHE_SECONDS` | 选填，默认 21600 | Apple / Google 公钥缓存时长 |
 | `PORT` | 平台注入 | 监听端口 |
+
+### 学生登录身份
+账号身份是 (登录方式, 用户号)：`users.auth_provider / auth_subject`，`account_identities`
+存它到研究用 `account_id` 的对应。用户号取自服务端验过签的凭证（`app/identity.py`），
+不信客户端直接传的 ID。错误码在 `detail` 的「：」之前：`identity_token_required`、
+`identity_token_invalid`、`identity_token_expired`、`identity_token_audience`、
+`identity_subject_mismatch`（401）；`unsupported_provider`（400）；
+`identity_not_configured`、`identity_provider_unavailable`（503）。
+
+决定什么时候关 `ALLOW_LEGACY_UNVERIFIED_APPLE` 时，看最近还有多少设备靠它登录：
+
+```sql
+SELECT count(*) FROM users WHERE legacy_login_at > now() - interval '30 days';
+```
+
+启动时 `app/migrations.py` 会把旧表 `account_links`（只认 Apple）搬进
+`account_identities`（provider = apple，`account_id` 不变）后删除旧表，SQLite 与 PostgreSQL 都跑。
 
 ## 待完善（骨架未覆盖）
 - Alembic 数据库迁移（当前用 `create_all` 开发建表，生产首部署即建表）

@@ -17,3 +17,9 @@ services:
         generateValue: true       # Render 自动生成强随机值
       - key: DATABASE_URL
         sync: false               # 手动填 Neon Postgres 连接串
+      - key: APPLE_BUNDLE_IDS
+        value: Joy.PinYintone     # Apple identityToken 的 aud
+      - key: GOOGLE_CLIENT_IDS
+        sync: false               # 手动填 Google Cloud 里建的 Web client id
+      - key: ALLOW_LEGACY_UNVERIFIED_APPLE
+        value: "true"             # 过渡开关，关掉的时机由人决定
