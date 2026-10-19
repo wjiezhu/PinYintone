@@ -138,7 +138,9 @@ final class SpeechService {
     /// 逐帧提 F0 → clean → 去句调下倾 → normalize（512 帧长 / 128 帧移，CLAUDE.md 锁定）
     /// - Parameter tones: 目标声调序列。传入后可消除 TTS 的句调下倾并校验结果可信度；
     ///                    传空数组则跳过这两步（与旧行为一致）。
-    private func f0Track(from samples: [Float], tag: String, tones: [Int]) -> [Float] {
+    /// internal 而非 private：两端对照数据（`ScoringGoldenTests`）直接调用它。
+    /// Android 版 `ReferenceShaper.f0Track` 与此逐步对应，改动须两边同步。
+    func f0Track(from samples: [Float], tag: String, tones: [Int]) -> [Float] {
         var hz: [Float] = []
         var i = 0
         while i + 512 <= samples.count {
@@ -286,7 +288,8 @@ final class SpeechService {
 
     /// 校验矫正后的走向是否与目标声调**明显矛盾**（如二声却在下降）。
     /// 只在半数以上音节矛盾时才判定不可信，避免把可用的参照误杀。
-    private func contourContradictsTones(_ track: [Float], tones: [Int]) -> Bool {
+    /// internal 而非 private：同上，供对照数据导出。
+    func contourContradictsTones(_ track: [Float], tones: [Int]) -> Bool {
         let voiced = track.filter { $0 > 0 }
         let n = tones.count
         guard n > 0, voiced.count >= n * 3 else { return false }
