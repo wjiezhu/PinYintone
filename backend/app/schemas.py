@@ -51,6 +51,29 @@ class StudentRegisterRequest(BaseModel):
     registeredAt: Optional[float] = None
 
 
+class EmailCodeRequest(BaseModel):
+    email: str
+
+
+class EmailCodeResponse(BaseModel):
+    """不管邮箱有没有注册过，返回都一样。"""
+    sent: bool
+    expiresInSeconds: int
+    resendAfterSeconds: int
+
+
+class EmailLoginRequest(BaseModel):
+    """邮箱验证码登录。设备信息与 StudentRegisterRequest 相同。"""
+    email: str
+    code: str
+    deviceID: str
+    role: str = "student"
+    spokenLanguages: Optional[list[str]] = None
+    nickname: Optional[str] = None
+    nativeLanguage: Optional[str] = None
+    registeredAt: Optional[float] = None
+
+
 class StudentRegisterResponse(BaseModel):
     """空响应：后端已不再下发任何实验分组字段（A/B 已取消）。"""
 

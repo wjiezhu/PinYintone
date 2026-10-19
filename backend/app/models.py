@@ -23,9 +23,10 @@ class User(Base):
     """设备级用户，不含 PII。游客 class_code 为空。"""
     __tablename__ = "users"
     device_id = Column(String, primary_key=True)
-    # 登录身份 = (登录方式, 该方式下的用户号)：apple → Apple 的 sub，google → Google 的 sub。
+    # 登录身份 = (登录方式, 该方式下的用户号)：apple → Apple 的 sub，google → Google 的 sub，
+    # email → 规范化邮箱的 SHA-256（不存邮箱明文，见 email_login.py）。
     # 用户号取自服务端验过签的凭证（identity.py），过渡期的旧版 iOS 例外（见 legacy_login_at）。
-    auth_provider = Column(String, nullable=True)     # apple | google
+    auth_provider = Column(String, nullable=True)     # apple | google | email
     auth_subject = Column(String, nullable=True)
     # 最近一次用验过签的凭证绑定的时间；为空 = 这一行的身份从未被服务端验证过
     auth_verified_at = Column(DateTime(timezone=True), nullable=True)
@@ -71,10 +72,37 @@ class AccountLink(Base):
     旧表**保留在库里待人工清理，但已停用**：故意不给它建模型，代码不读也不写它。
     """
     __tablename__ = "account_identities"
-    provider = Column(String, primary_key=True)     # apple | google
+    provider = Column(String, primary_key=True)     # apple | google | email
     subject = Column(String, primary_key=True)
     account_id = Column(String, nullable=False, unique=True, index=True)
     created_at = Column(DateTime, default=_utcnow)
+
+
+class EmailLoginCode(Base):
+    """邮箱登录验证码（email_login.py）。不存邮箱明文，也不存验证码明文。
+
+    `email_hash` 即该邮箱登录身份的用户号（provider = email 时的 auth_subject），
+    删除账号时按它把验证码一并删掉。
+    """
+    __tablename__ = "email_login_codes"
+    id = Column(String, primary_key=True)
+    email_hash = Column(String, index=True, nullable=False)
+    code_hash = Column(String, nullable=False)     # HMAC(服务端密钥, 盐 + 邮箱 + 验证码)
+    salt = Column(String, nullable=False)
+    created_at = Column(DateTime(timezone=True), nullable=False)
+    expires_at = Column(DateTime(timezone=True), nullable=False)
+    attempts = Column(Integer, nullable=False, default=0)
+    # 用过、试满次数、被新验证码顶替，都记在这里；不为空 = 作废
+    consumed_at = Column(DateTime(timezone=True), nullable=True)
+
+
+class EmailCodeRequest(Base):
+    """发送验证码的流水，只用于频率限制。超过一天的行在每次请求时清掉。"""
+    __tablename__ = "email_code_requests"
+    id = Column(Integer, primary_key=True, autoincrement=True)
+    email_hash = Column(String, index=True, nullable=False)
+    ip_hash = Column(String, index=True, nullable=False)   # HMAC，不存 IP 明文
+    created_at = Column(DateTime(timezone=True), index=True, nullable=False)
 
 
 class TrainingSession(Base):
