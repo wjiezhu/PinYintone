@@ -116,8 +116,49 @@ App 默认连 `http://localhost:8000`。上线后在 **Info.plist 增加键 `PT_
 SELECT count(*) FROM users WHERE legacy_login_at > now() - interval '30 days';
 ```
 
-启动时 `app/migrations.py` 会把旧表 `account_links`（只认 Apple）搬进
-`account_identities`（provider = apple，`account_id` 不变）后删除旧表，SQLite 与 PostgreSQL 都跑。
+启动时 `app/migrations.py` 会把旧表 `account_links`（只认 Apple）抄进
+`account_identities`（provider = apple，`account_id` 不变），SQLite 与 PostgreSQL 都跑。
+这一步**只做一次**，做完在 `app_migrations` 表里记一行 `account_links_to_account_identities`。
+
+**旧表 `account_links` 保留，确认无误后手动清理。** 迁移之后代码不再读写它（没有它的模型）。
+注意：迁移之后删除的账号，其 Apple 用户号仍留在旧表里，直到手动清理——别拖太久。
+
+清理前核对（PostgreSQL；只读）：
+
+```sql
+-- 1. 迁移确实做过
+SELECT * FROM app_migrations WHERE name = 'account_links_to_account_identities';
+
+-- 2. 旧表每一行在新表里都有，且 account_id 一致。
+--    「新表里没有」只应是迁移之后删除的账号：对应的 users 行也应已不存在
+SELECT l.apple_user_id, l.account_id AS old_account_id, i.account_id AS new_account_id,
+       EXISTS (SELECT 1 FROM users u WHERE u.auth_provider = 'apple'
+               AND u.auth_subject = l.apple_user_id) AS still_has_devices
+FROM account_links l
+LEFT JOIN account_identities i ON i.provider = 'apple' AND i.subject = l.apple_user_id
+WHERE i.account_id IS DISTINCT FROM l.account_id;
+-- 期望：0 行；或只有 new_account_id 为空且 still_has_devices = false 的行（已删除的账号）。
+-- 出现 new_account_id 不为空却与 old_account_id 不同的行 = 研究身份变了，**停下排查，不要清理**
+
+-- 3. 行数对照：旧表行数 = 新表里来自旧表的 apple 行 + 迁移后删除的账号
+SELECT (SELECT count(*) FROM account_links) AS old_rows,
+       (SELECT count(*) FROM account_links l JOIN account_identities i
+          ON i.provider = 'apple' AND i.subject = l.apple_user_id
+          AND i.account_id = l.account_id) AS matched_rows;
+
+-- 4. 研究侧引用的编号都还在新表里（应为 0；account_id 只在设备行上的旧式档案除外）
+SELECT count(*) FROM research_identity_map m
+WHERE m.internal_user_id IN (SELECT account_id FROM account_links)
+  AND m.internal_user_id NOT IN (SELECT account_id FROM account_identities);
+```
+
+核对无误、并先做过数据库备份后，清理：
+
+```sql
+DROP TABLE account_links;
+```
+
+`app_migrations` 那一行不要删：删了之后旧表若还在，下次启动会再抄一遍。
 
 ## 待完善（骨架未覆盖）
 - Alembic 数据库迁移（当前用 `create_all` 开发建表，生产首部署即建表）

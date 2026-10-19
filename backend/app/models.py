@@ -67,7 +67,8 @@ class AccountLink(Base):
     不存登录方式的用户号。
 
     表名：只支持 Apple 时叫 `account_links`（apple_user_id 主键），
-    启动迁移（migrations.py）把它整表搬到这里、provider 记为 apple，account_id 原样不动。
+    启动迁移（migrations.py）把它整表抄到这里、provider 记为 apple，account_id 原样不动。
+    旧表**保留在库里待人工清理，但已停用**：故意不给它建模型，代码不读也不写它。
     """
     __tablename__ = "account_identities"
     provider = Column(String, primary_key=True)     # apple | google

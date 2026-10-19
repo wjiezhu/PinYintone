@@ -165,17 +165,30 @@ def _start_like_main(eng):
     migrate_account_identities(eng)
 
 
-def test_migration_keeps_account_ids_and_moves_links_to_apple(tmp_path):
-    eng = _old_schema_db(tmp_path)
-    _start_like_main(eng)
-    _start_like_main(eng)          # 每次启动都会跑：必须幂等
-    assert "account_links" not in inspect(eng).get_table_names()
+def _old_links(eng):
+    with eng.connect() as c:
+        return sorted(c.execute(text(
+            "SELECT apple_user_id, account_id, created_at FROM account_links")).all())
+
+
+def _new_state(eng):
     with eng.connect() as c:
         links = set(c.execute(text(
             "SELECT provider, subject, account_id FROM account_identities")).all())
         users = {r[0]: r[1:] for r in c.execute(text(
             "SELECT device_id, auth_provider, auth_subject, account_id, apple_user_id "
             "FROM users")).all()}
+    return links, users
+
+
+def test_migration_keeps_account_ids_and_copies_links_to_apple(tmp_path):
+    eng = _old_schema_db(tmp_path)
+    before = _old_links(eng)
+    _start_like_main(eng)
+    first = _new_state(eng)
+    _start_like_main(eng)          # 每次启动都会跑：必须幂等
+    assert _new_state(eng) == first
+    links, users = first
     assert links == {("apple", "apple-1", "acc-111"), ("apple", "apple-2", "acc-222")}
     assert users == {
         "dev-A": ("apple", "apple-1", "acc-111", "apple-1"),
@@ -183,12 +196,12 @@ def test_migration_keeps_account_ids_and_moves_links_to_apple(tmp_path):
         "dev-C": ("apple", "apple-2", "acc-222", "apple-2"),
         "dev-D": (None, None, "acc-333", None),
     }
+    # 旧表保留、数据原样，待人工清理
+    assert "account_links" in inspect(eng).get_table_names()
+    assert _old_links(eng) == before
 
 
-def test_migrated_account_keeps_its_id_through_verified_and_legacy_logins(tmp_path):
-    """迁移后，同一 Apple 账号无论旧版（无凭证）还是新版（验过签）登录，编号都不变。"""
-    eng = _old_schema_db(tmp_path)
-    _start_like_main(eng)
+def _use(eng):
     local = sessionmaker(bind=eng)
 
     def _db():
@@ -199,6 +212,42 @@ def test_migrated_account_keeps_its_id_through_verified_and_legacy_logins(tmp_pa
             db.close()
 
     app.dependency_overrides[get_db] = _db
+
+
+def test_new_code_paths_never_write_the_old_table(tmp_path):
+    eng = _old_schema_db(tmp_path)
+    before = _old_links(eng)
+    _start_like_main(eng)
+    _use(eng)
+    _register("dev-A", appleUserID="apple-1")                        # 旧版 iOS
+    _register("dev-X", identityToken=_token(sub="apple-new"))         # 新 Apple 账号
+    _register("dev-G", provider="google", identityToken=_google())    # Google
+    _register("dev-C", identityToken=_token(sub="apple-3"))           # 换账号
+    client.delete("/student/account", params={"deviceID": "dev-B"})   # 删除账号
+    assert _old_links(eng) == before
+    links, _ = _new_state(eng)
+    keys = {(p, s) for p, s, _ in links}
+    assert ("apple", "apple-new") in keys and ("google", "google-sub-1") in keys
+
+
+def test_deleted_account_is_not_copied_back_from_the_old_table_on_restart(tmp_path):
+    """旧表还在：若每次启动都按「新表没有就补」再抄，删掉的账号会被抄回来。"""
+    eng = _old_schema_db(tmp_path)
+    _start_like_main(eng)
+    _use(eng)
+    r = client.delete("/student/account", params={"deviceID": "dev-A"})
+    assert sorted(r.json()["deviceIDs"]) == ["dev-A", "dev-B"]
+    _start_like_main(eng)          # 重启
+    links, users = _new_state(eng)
+    assert links == {("apple", "apple-2", "acc-222")}
+    assert "dev-A" not in users and "dev-B" not in users
+
+
+def test_migrated_account_keeps_its_id_through_verified_and_legacy_logins(tmp_path):
+    """迁移后，同一 Apple 账号无论旧版（无凭证）还是新版（验过签）登录，编号都不变。"""
+    eng = _old_schema_db(tmp_path)
+    _start_like_main(eng)
+    _use(eng)
     assert _register("dev-A", appleUserID="apple-1").status_code == 200
     assert _register("dev-new", provider="apple", appleUserID="apple-1",
                      identityToken=_token(sub="apple-1")).status_code == 200
@@ -214,6 +263,8 @@ def test_migration_on_fresh_database_is_a_no_op(tmp_path):
     _start_like_main(eng)
     names = set(inspect(eng).get_table_names())
     assert "account_identities" in names and "account_links" not in names
+    with eng.connect() as c:
+        assert c.execute(text("SELECT count(*) FROM app_migrations")).scalar() == 1
 
 
 # ---------------- Apple 验签 ----------------
