@@ -99,7 +99,8 @@ enum ResearchEnrollment {
         let account = store.accountKey
 
         // 账号可能只建在了本机（注册时离线）。纳入要求服务端有这个账号，先补上。
-        _ = try? await APIClient.shared.registerUser(profile)
+        _ = try? await APIClient.shared.registerUser(
+            profile, identityToken: UserManager.shared.freshIdentityToken(for: profile))
 
         let resp: APIClient.EnrollResearchResponse
         do {
