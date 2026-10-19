@@ -26,6 +26,13 @@ Apple 账号到内部编号的对应关系。设备行会被换账号登录改�
 它是业务表，**不进研究导出**；`research_identity_map.internal_user_id` 存的是 `account_id`，
 不是设备号，更不是 Apple 标识。删除账号时这一行一并删除。
 
+> **2026-10 更新（为 Android 版准备）**：登录身份改为 (登录方式, 用户号)。
+> `account_links` 已由启动迁移整表搬进 **`account_identities`**（`provider` + `subject`
+> 联合主键、`account_id` 唯一、`created_at`），原有行 `provider = apple`，`account_id` **原样不变**，
+> 研究身份不受影响；旧表随后删除。`users` 新增 `auth_provider`、`auth_subject`、
+> `auth_verified_at`、`legacy_login_at`，`apple_user_id` 保留为历史列。
+> 这些都是业务表，不进研究导出。
+
 全部是增量迁移（`ADD COLUMN` 与新建表），旧行不改写。
 
 ## 2. 取值范围的变化

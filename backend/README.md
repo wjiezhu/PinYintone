@@ -96,7 +96,69 @@ App 默认连 `http://localhost:8000`。上线后在 **Info.plist 增加键 `PT_
 |------|------|------|
 | `DATABASE_URL` | 生产必填 | Neon Postgres 连接串；本地缺省 SQLite |
 | `JWT_SECRET` | 生产必填 | ≥32 字节随机串（Render 蓝图自动生成） |
+| `APPLE_BUNDLE_IDS` | 生产必填 | 逗号分隔；Apple identityToken 的 aud，即 iOS App 的 bundle id（`Joy.PinYintone`） |
+| `GOOGLE_CLIENT_IDS` | Android 上线前必填 | 逗号分隔；Google ID token 的 aud。Credential Manager 下是传给 `serverClientId` 的 **Web** client id（可同时列 Android client id） |
+| `ALLOW_LEGACY_UNVERIFIED_APPLE` | 选填，默认 `true` | 过渡开关：没带 identityToken 的 Apple 登录（线上旧版 iOS）是否放行。关掉的时机由人决定，见下 |
+| `JWKS_CACHE_SECONDS` | 选填，默认 21600 | Apple / Google 公钥缓存时长 |
 | `PORT` | 平台注入 | 监听端口 |
+
+### 学生登录身份
+账号身份是 (登录方式, 用户号)：`users.auth_provider / auth_subject`，`account_identities`
+存它到研究用 `account_id` 的对应。用户号取自服务端验过签的凭证（`app/identity.py`），
+不信客户端直接传的 ID。错误码在 `detail` 的「：」之前：`identity_token_required`、
+`identity_token_invalid`、`identity_token_expired`、`identity_token_audience`、
+`identity_subject_mismatch`（401）；`unsupported_provider`（400）；
+`identity_not_configured`、`identity_provider_unavailable`（503）。
+
+决定什么时候关 `ALLOW_LEGACY_UNVERIFIED_APPLE` 时，看最近还有多少设备靠它登录：
+
+```sql
+SELECT count(*) FROM users WHERE legacy_login_at > now() - interval '30 days';
+```
+
+启动时 `app/migrations.py` 会把旧表 `account_links`（只认 Apple）抄进
+`account_identities`（provider = apple，`account_id` 不变），SQLite 与 PostgreSQL 都跑。
+这一步**只做一次**，做完在 `app_migrations` 表里记一行 `account_links_to_account_identities`。
+
+**旧表 `account_links` 保留，确认无误后手动清理。** 迁移之后代码不再读写它（没有它的模型）。
+注意：迁移之后删除的账号，其 Apple 用户号仍留在旧表里，直到手动清理——别拖太久。
+
+清理前核对（PostgreSQL；只读）：
+
+```sql
+-- 1. 迁移确实做过
+SELECT * FROM app_migrations WHERE name = 'account_links_to_account_identities';
+
+-- 2. 旧表每一行在新表里都有，且 account_id 一致。
+--    「新表里没有」只应是迁移之后删除的账号：对应的 users 行也应已不存在
+SELECT l.apple_user_id, l.account_id AS old_account_id, i.account_id AS new_account_id,
+       EXISTS (SELECT 1 FROM users u WHERE u.auth_provider = 'apple'
+               AND u.auth_subject = l.apple_user_id) AS still_has_devices
+FROM account_links l
+LEFT JOIN account_identities i ON i.provider = 'apple' AND i.subject = l.apple_user_id
+WHERE i.account_id IS DISTINCT FROM l.account_id;
+-- 期望：0 行；或只有 new_account_id 为空且 still_has_devices = false 的行（已删除的账号）。
+-- 出现 new_account_id 不为空却与 old_account_id 不同的行 = 研究身份变了，**停下排查，不要清理**
+
+-- 3. 行数对照：旧表行数 = 新表里来自旧表的 apple 行 + 迁移后删除的账号
+SELECT (SELECT count(*) FROM account_links) AS old_rows,
+       (SELECT count(*) FROM account_links l JOIN account_identities i
+          ON i.provider = 'apple' AND i.subject = l.apple_user_id
+          AND i.account_id = l.account_id) AS matched_rows;
+
+-- 4. 研究侧引用的编号都还在新表里（应为 0；account_id 只在设备行上的旧式档案除外）
+SELECT count(*) FROM research_identity_map m
+WHERE m.internal_user_id IN (SELECT account_id FROM account_links)
+  AND m.internal_user_id NOT IN (SELECT account_id FROM account_identities);
+```
+
+核对无误、并先做过数据库备份后，清理：
+
+```sql
+DROP TABLE account_links;
+```
+
+`app_migrations` 那一行不要删：删了之后旧表若还在，下次启动会再抄一遍。
 
 ## 待完善（骨架未覆盖）
 - Alembic 数据库迁移（当前用 `create_all` 开发建表，生产首部署即建表）

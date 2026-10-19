@@ -135,9 +135,33 @@ final class APIClient {
     /// 学生注册（Sign in with Apple，无需班级码）。
     ///
     /// 幂等建档；不再返回任何实验分组信息。
+    ///
+    /// `identityToken`：Sign in with Apple 给的 JWT。服务端拿它验签，以其中的用户号为准，
+    /// 不再只信 `appleUserID`。约 10 分钟过期，过期的不要传（由 `UserManager` 判断）；
+    /// 不传时服务端只认这台设备之前已验证过的同一账号，或按过渡开关放行。
     @discardableResult
-    func registerUser(_ profile: UserProfile) async throws -> StudentRegistration {
-        try await request("student/register", method: "POST", body: profile)
+    func registerUser(_ profile: UserProfile,
+                      identityToken: String? = nil) async throws -> StudentRegistration {
+        try await request("student/register", method: "POST",
+                          body: StudentRegistrationBody(profile: profile,
+                                                        identityToken: identityToken))
+    }
+
+    /// 档案字段原样平铺，再加登录方式与凭证。凭证不进 `UserProfile`——它不落盘。
+    struct StudentRegistrationBody: Encodable {
+        let profile: UserProfile
+        let identityToken: String?
+
+        private enum Keys: String, CodingKey { case provider, identityToken }
+
+        func encode(to encoder: Encoder) throws {
+            try profile.encode(to: encoder)
+            var c = encoder.container(keyedBy: Keys.self)
+            if profile.appleUserID != nil {
+                try c.encode("apple", forKey: .provider)
+            }
+            try c.encodeIfPresent(identityToken, forKey: .identityToken)
+        }
     }
 
     // MARK: - Research
