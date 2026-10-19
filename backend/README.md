@@ -31,6 +31,8 @@ iOS 端 `APIClient.baseURL` 已指向 `http://localhost:8000`，模拟器可直�
 | POST | `/teacher/register` | 教师注册，服务端生成 6 位唯一班级码（禁全同位），返回 JWT |
 | POST | `/teacher/login` | 教师登录 |
 | POST | `/student/register` | 学生注册（设备级，只填名字）；服务端**均衡随机**分配 A/B 并返回 `{experimentGroup}`，幂等 |
+| POST | `/student/email/request-code` | 邮箱登录第 1 步：`{email}` → 发 6 位验证码。不论邮箱是否注册过，返回都一样 |
+| POST | `/student/email/login` | 邮箱登录第 2 步：`{email, code, deviceID, role, nickname?, nativeLanguage?, spokenLanguages?}`，成功后与 Apple / Google 同一套建档 |
 
 ### 数据同步（上行）
 | 方法 | 路径 | 说明 |
@@ -100,6 +102,14 @@ App 默认连 `http://localhost:8000`。上线后在 **Info.plist 增加键 `PT_
 | `GOOGLE_CLIENT_IDS` | Android 上线前必填 | 逗号分隔；Google ID token 的 aud。Credential Manager 下是传给 `serverClientId` 的 **Web** client id（可同时列 Android client id） |
 | `ALLOW_LEGACY_UNVERIFIED_APPLE` | 选填，默认 `true` | 过渡开关：没带 identityToken 的 Apple 登录（线上旧版 iOS）是否放行。关掉的时机由人决定，见下 |
 | `JWKS_CACHE_SECONDS` | 选填，默认 21600 | Apple / Google 公钥缓存时长 |
+| `APP_ENV` | 选填 | `development` / `production`。留空时 PostgreSQL = 生产、其余 = 开发。生产环境里发信器没配好，邮箱登录一律 503，不会退回 console |
+| `EMAIL_SENDER` | 邮箱登录上线前必填 | `console`（只写日志，开发默认，生产拒用）/ `resend` / `smtp` |
+| `EMAIL_FROM` | `resend` / `smtp` 必填 | 发件人，如 `Pinyintone <login@mail.你的域名>`；域名须已在服务商处验证 |
+| `RESEND_API_KEY` | `resend` 必填 | Resend 后台生成，只给 Sending access |
+| `SMTP_HOST` / `SMTP_PORT` / `SMTP_USERNAME` / `SMTP_PASSWORD` / `SMTP_SECURITY` | `smtp` 用 | 阿里云邮件推送、Amazon SES 等的 SMTP 接口；`SMTP_SECURITY` 为 `ssl`（默认，465）或 `starttls`（587） |
+| `EMAIL_CODE_PER_EMAIL_PER_HOUR` | 选填，默认 5 | 同一邮箱每小时最多发几次验证码 |
+| `EMAIL_CODE_PER_IP_PER_HOUR` | 选填，默认 30 | 同一 IP 每小时最多发几次。一个教室常共用出口 IP，别设太小 |
+| `TRUSTED_PROXY_HOPS` | 选填，默认 1 | 取客户端 IP 时信任几层反向代理（`X-Forwarded-For` 从右数）。Railway / Render 取 1，直接对外暴露取 0 |
 | `PORT` | 平台注入 | 监听端口 |
 
 ### 学生登录身份
@@ -109,6 +119,44 @@ App 默认连 `http://localhost:8000`。上线后在 **Info.plist 增加键 `PT_
 `identity_token_invalid`、`identity_token_expired`、`identity_token_audience`、
 `identity_subject_mismatch`（401）；`unsupported_provider`（400）；
 `identity_not_configured`、`identity_provider_unavailable`（503）。
+
+### 邮箱验证码登录（provider = email）
+给用不了 Google 的 Android 手机（中国大陆的参与者）用。实现见 `app/email_login.py`、`app/email_sender.py`。
+
+- 用户号 `auth_subject` = 规范化邮箱（去首尾空格、转小写；**不**做 Gmail 去点 / 去 `+tag`）的 SHA-256，
+  库里不存邮箱明文。同一邮箱换设备 = 同一个 `account_id`；同一设备换邮箱 = 另一位参与者。
+- 同一个人用 Google 和邮箱各登一次 = 两个账号，**不按邮箱自动合并**（已接受的局限）。
+- 验证码：6 位数字，10 分钟有效，只存 HMAC（密钥 `JWT_SECRET` + 每条随机盐），每个最多试 5 次，
+  用过即作废，新码发出时旧码作废。同一邮箱 60 秒冷却；同一邮箱、同一 IP 每小时各有上限。
+- 登录过的设备补送资料 / 改名字，仍可用 `/student/register`（`provider = email`，不带凭证）。
+- 删除账号时，该邮箱的身份、全部验证码和发送流水一起删掉。
+
+错误码（`detail` 的「：」之前）：
+| 状态 | code |
+|---|---|
+| 400 | `email_invalid`、`email_code_format` |
+| 401 | `email_code_invalid`（还剩几次在说明里）、`email_code_expired`、`email_code_attempts_exceeded`；`/student/register` 想直接认邮箱身份时 `email_login_required` |
+| 429 | `email_code_cooldown`、`email_code_rate_limited`（都带 `Retry-After`） |
+| 503 | `email_not_configured`（发信器没配好）、`email_send_failed`（服务商拒收 / 连不上；这次不占冷却和配额） |
+
+本地开发不用配任何东西：`EMAIL_SENDER` 留空即 `console`，验证码打印在后端日志里（`[console 发信器，未真正发送]`）。
+
+#### 接入 Resend（上线前人工做）
+1. 在 [resend.com](https://resend.com) 注册，**先买 / 准备一个自己的域名**。建议专门用一个子域发信（如 `mail.你的域名`），不影响主域的信誉。
+2. Resend → Domains → Add Domain，按它给出的记录在域名的 DNS 里添加：
+   - **SPF**：子域（Resend 用的是 `send.mail.你的域名`）的 TXT 与 MX 记录，按后台原样填；
+   - **DKIM**：`resend._domainkey...` 的 TXT 记录；
+   - **DMARC**：自己加一条 `_dmarc.你的域名` TXT，起步用 `v=DMARC1; p=none; rua=mailto:你的邮箱`，送达稳定后再收紧到 `quarantine`。
+   等 Resend 后台显示 Verified。
+3. API Keys → 新建一个只有 **Sending access**、限定该域名的 key。
+4. 在部署平台设置 `EMAIL_SENDER=resend`、`RESEND_API_KEY=…`、`EMAIL_FROM=Pinyintone <login@mail.你的域名>`（生产环境建议同时设 `APP_ENV=production`）。
+5. 上线前用 **Gmail、Outlook、QQ 邮箱、163 邮箱**各收一次验证码：看是否进收件箱（不是垃圾箱）、到达用了多久、三种语言是否显示正常。国内邮箱若进垃圾箱或延迟大，考虑换阿里云邮件推送（见下）。
+6. 注意 Resend 免费档的日 / 月发送上限，研究开始前确认够用。
+
+#### 换别的服务商
+阿里云邮件推送、Amazon SES 等都有 SMTP 接口，只改环境变量：`EMAIL_SENDER=smtp`、`SMTP_HOST`、`SMTP_PORT`、
+`SMTP_USERNAME`、`SMTP_PASSWORD`、`SMTP_SECURITY`、`EMAIL_FROM`（同样要先在该服务商处验证发信域名并配 SPF / DKIM / DMARC）。
+只有 HTTP API 的服务商：在 `app/email_sender.py` 写一个带 `send_code` 的类并登记到 `_FACTORIES`。
 
 决定什么时候关 `ALLOW_LEGACY_UNVERIFIED_APPLE` 时，看最近还有多少设备靠它登录：
 

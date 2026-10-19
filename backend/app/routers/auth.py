@@ -2,10 +2,10 @@ import logging
 import uuid
 from datetime import datetime, timezone
 
-from fastapi import APIRouter, Depends, HTTPException
+from fastapi import APIRouter, Depends, HTTPException, Request
 from sqlalchemy.orm import Session
 
-from .. import accounts, identity, models, research_models, schemas, security
+from .. import accounts, email_login, identity, models, research_models, schemas, security
 from ..config import settings
 from ..database import get_db
 from ..research_rules import latest_consent
@@ -61,6 +61,13 @@ def student_register(body: schemas.StudentRegisterRequest, db: Session = Depends
     user = db.get(models.User, body.deviceID)
     # 登录身份以服务端验过签的凭证为准，不信客户端直接传的用户号（identity.py）
     login = identity.authenticate(body.provider, body.identityToken, body.appleUserID, user)
+    _save_student(db, user, body, login)
+    return schemas.StudentRegisterResponse()
+
+
+def _save_student(db: Session, user: models.User | None, body,
+                  login: identity.LoginIdentity | None) -> None:
+    """建档或更新设备行，并把它挂到登录身份的稳定编号上。Apple / Google / 邮箱共用。"""
     if user is None:
         user = models.User(device_id=body.deviceID, install_date=datetime.now(timezone.utc))
         db.add(user)
@@ -89,6 +96,28 @@ def student_register(body: schemas.StudentRegisterRequest, db: Session = Depends
     db.flush()
     accounts.ensure_account_id(db, user)
     db.commit()
+
+
+@router.post("/student/email/request-code", response_model=schemas.EmailCodeResponse)
+def student_email_request_code(body: schemas.EmailCodeRequest, request: Request,
+                               db: Session = Depends(get_db)):
+    """给邮箱发 6 位登录验证码（email_login.py）。
+
+    不管这个邮箱有没有注册过，返回都一样——邮箱登录本身就是注册。
+    """
+    return email_login.request_code(db, body.email, email_login.client_ip(request))
+
+
+@router.post("/student/email/login", response_model=schemas.StudentRegisterResponse)
+def student_email_login(body: schemas.EmailLoginRequest, db: Session = Depends(get_db)):
+    """用邮箱验证码登录。成功后与 Apple / Google 登录走同一套建档流程。
+
+    之后补送资料、改名字仍可用 `/student/register`（provider = email，不带凭证），
+    前提是这台设备已经用同一邮箱身份登录过。
+    """
+    subject = email_login.verify_code(db, body.email, body.code)
+    user = db.get(models.User, body.deviceID)
+    _save_student(db, user, body, identity.LoginIdentity("email", subject, "verified"))
     return schemas.StudentRegisterResponse()
 
 
@@ -157,8 +186,10 @@ def student_delete_account(deviceID: str, appleUserID: str | None = None,
     ):
         deleted[key] = db.query(model).filter(
             model.device_id.in_(ids)).delete(synchronize_session=False)
-    # 账号没了，登录身份与内部编号的对应关系也一并删除
+    # 账号没了，登录身份与内部编号的对应关系也一并删除；邮箱身份连同验证码与发送流水
     for provider, subject in identities:
+        if provider == "email":
+            email_login.forget(db, subject)
         db.query(models.AccountLink).filter(
             models.AccountLink.provider == provider,
             models.AccountLink.subject == subject).delete(synchronize_session=False)

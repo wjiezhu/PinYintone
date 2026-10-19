@@ -27,6 +27,38 @@ class Settings(BaseSettings):
     # 公钥缓存时长（秒）。遇到不认识的 kid 会提前刷新（有最短间隔）
     jwks_cache_seconds: int = 6 * 3600
 
+    # ── 运行环境 ──
+    # development | production。留空时按数据库判断：PostgreSQL = 生产，其余 = 开发。
+    # 生产环境下发信器没配好时，邮箱登录直接 503，不会退回到只写日志的 console
+    app_env: str = ""
+
+    # ── 邮箱验证码登录（email_login.py / email_sender.py）──
+    # console（只写日志，开发与测试用）| resend | smtp。留空 = 开发环境用 console、生产环境 503
+    email_sender: str = ""
+    # 发件人，如 "Pinyintone <login@mail.example.com>"；域名须已在发信服务商处验证
+    email_from: str = ""
+    resend_api_key: str = ""
+    resend_api_url: str = "https://api.resend.com/emails"
+    # smtp：阿里云邮件推送、Amazon SES 等都提供 SMTP 接口，换服务商只改这几项
+    smtp_host: str = ""
+    smtp_port: int = 465
+    smtp_username: str = ""
+    smtp_password: str = ""
+    smtp_security: str = "ssl"          # ssl（465）| starttls（587）
+    # 频率限制（每小时）。同一 IP 的上限要留余量：一个教室的学生常共用一个出口 IP
+    email_code_per_email_per_hour: int = 5
+    email_code_per_ip_per_hour: int = 30
+    # 取客户端 IP 时信任几层反向代理（X-Forwarded-For 从右往左数）。
+    # Railway / Render 前面各有一层代理，取 1；直接对外暴露时取 0
+    trusted_proxy_hops: int = 1
+
+    @property
+    def is_production(self) -> bool:
+        env = self.app_env.strip().lower()
+        if env:
+            return env in ("production", "prod")
+        return self.database_url.startswith(("postgres://", "postgresql"))
+
     @property
     def apple_audiences(self) -> list[str]:
         return _split(self.apple_bundle_ids)

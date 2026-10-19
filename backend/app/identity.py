@@ -32,7 +32,10 @@ from .config import settings
 
 log = logging.getLogger("pinyintone.identity")
 
-PROVIDERS = ("apple", "google")
+PROVIDERS = ("apple", "google", "email")
+# 邮箱登录不走凭证：验证码在 /student/email/login 校验（email_login.py），
+# 这里只认「这台设备已经用该邮箱身份登录过」的沿用
+_EMAIL_LOGIN_REQUIRED = "email_login_required：邮箱登录须走 /student/email/login"
 _LEEWAY_SECONDS = 60
 _MIN_REFRESH_SECONDS = 60
 
@@ -172,6 +175,8 @@ def authenticate(provider: str | None, token: str | None, claimed_apple_id: str 
     if provider not in PROVIDERS:
         raise HTTPException(400, f"unsupported_provider：登录方式须为 {list(PROVIDERS)} 之一")
 
+    if provider == "email" and token:
+        raise HTTPException(401, _EMAIL_LOGIN_REQUIRED)
     if token:
         try:
             sub = verify_token(provider, token)
@@ -198,6 +203,8 @@ def authenticate(provider: str | None, token: str | None, claimed_apple_id: str 
     if provider == "apple" and claimed_apple_id and settings.allow_legacy_unverified_apple:
         log.warning("未验证的 Apple 登录按过渡开关放行（ALLOW_LEGACY_UNVERIFIED_APPLE）")
         return LoginIdentity("apple", claimed_apple_id, "legacy")
+    if provider == "email":
+        raise HTTPException(401, _EMAIL_LOGIN_REQUIRED)
     raise HTTPException(401, "identity_token_required：须上传登录凭证（identityToken）")
 
 
