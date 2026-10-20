@@ -1,6 +1,9 @@
 # 「读平也通关」研究：原因与修法对比
 
-> **状态：研究报告，供决定修法用。** 没有改任何正式评分代码（Swift `PinYintone/Core/Audio`、
+> **状态：已采用 C2（2 个半音），随记录 schemaVersion 7 上线**（两端 `ToneContourSpanGate`，关卡 2 / 3 都有；
+> 记录新增 `pitchSpanSemitones` / `platform`）。下文是决定前的研究报告，「推荐」「上线清单」即当时的方案。
+>
+> 原状态：研究报告，供决定修法用。 没有改任何正式评分代码（Swift `PinYintone/Core/Audio`、
 > Kotlin `android/core/src/main`）、`CLAUDE.md` 和 `testdata/scoring/golden.json`。
 > 实验代码在 `android/scoring-study/`（复用 `:core` 的正式实现作基线，候选修法只在实验里实现）；
 > 全部原始数字在 `android/scoring-study/results/results.md`，本文的数都引自那里。
