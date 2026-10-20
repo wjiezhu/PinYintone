@@ -106,6 +106,9 @@ class TrainingSessionDTO(BaseModel):
     failureReason: Optional[str] = None
     schemaVersion: Optional[int] = None
     appVersion: Optional[str] = None
+    # v7（旧客户端不带，故可选）
+    pitchSpanSemitones: Optional[float] = None
+    platform: Optional[str] = None
 
 
 class AspirationAttemptDTO(BaseModel):
@@ -120,6 +123,7 @@ class AspirationAttemptDTO(BaseModel):
     phase: Optional[str] = None
     schemaVersion: Optional[int] = None
     appVersion: Optional[str] = None
+    platform: Optional[str] = None             # v7：ios|android
 
 
 class FreeTextRecordDTO(BaseModel):
@@ -137,6 +141,7 @@ class FreeTextRecordDTO(BaseModel):
     phase: Optional[str] = None
     schemaVersion: Optional[int] = None
     appVersion: Optional[str] = None
+    platform: Optional[str] = None             # v7：ios|android
 
 
 # ───────────── Teacher Dashboard（下行响应）─────────────
@@ -361,6 +366,9 @@ class ResearchAttemptDTO(BaseModel):
     errorCode: str | None = None
     resultDisplayedAt: IsoDatetime | None = None
     timeQuality: str
+    # 字典 1.2 增补；旧版客户端不带
+    pitchSpanSemitones: float | None = None
+    platform: str | None = None
 
 
 class ResearchAttemptBatch(BaseModel):

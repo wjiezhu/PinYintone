@@ -7,6 +7,14 @@
 --     'training'（普通练习）或 'self_test'（学习者自选的自测）；下面涉及 pretest / posttest
 --     的段落只对更早的记录有内容。自选自测有自选择偏差，不是前后测。
 --
+--   · schema_version >= 7：新增**走势幅度闸门**——含二 / 三 / 四声的词，clean 后原始 Hz 的
+--     走势跨度（pitch_span_semitones，P90−P10，半音）不足 2.0 直接判 fail，不论 DTW。
+--     dtw_score 算法不变，与 v6 逐位一致；变的是 grade：v4–v6 这类词读平约 2/3 判通过，
+--     v1–v3 约一半——**那些版本这类词的 passed 偏宽，不可与 v7 合并**（见 docs/SCORING_FLAT_READING_STUDY.md）。
+--     pitch_span_semitones：有效结果对任何词都记；technical_retry、有声帧不足 6、v7 之前为 NULL。
+--     platform：ios / android；NULL = v7 之前（只有 iOS）。本文件没有词条声调，
+--     判定「这条是被哪道闸门拦下」请连词表（thesis.sql 第 2 段有 gated_flat_contour 列）。
+--
 -- ⚠ 设计变更：**已取消 A/B 分组**。训练阶段有两种反馈呈现方式
 --   （颜色块 / 动态 F0 曲线），由学习者自己在设置里切换，不再有随机分组。
 --   · schema_version >= 5：新增**平调词走向闸门**——全一声的词首末下滑 > 3 个半音
@@ -70,9 +78,12 @@ SELECT
     -- 用分数重算会与学习者实际看到的结果不一致（"所见 ≠ 所评"）。
     CASE WHEN COALESCE(result_status, 'valid_result') = 'technical_retry'
          THEN NULL ELSE (grade <> 'fail') END   AS passed,
-    -- 被走向闸门拦下的记录（v5 起）：分数够但掉调
+    -- 分数够但被闸门拦下的记录：v5 起全一声词的走向闸门；v7 起还有含二 / 三 / 四声词的幅度闸门
+    -- （列名沿用旧名。区分两道闸门要看词条声调：全一声 = 走向闸门，含二 / 三 / 四声 = 幅度闸门）
     (grade = 'fail' AND dtw_score <= 0.5
      AND COALESCE(result_status, 'valid_result') <> 'technical_retry') AS gated_level_tone,
+    pitch_span_semitones,                    -- v7：走势跨度（半音）；< 2.0 且词含二 / 三 / 四声 = 幅度闸门
+    platform,                                -- v7：ios / android
     grade,
     reference_type,                          -- real / tts / ideal
     voiced_frame_count,

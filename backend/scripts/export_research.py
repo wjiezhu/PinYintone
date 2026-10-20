@@ -256,6 +256,8 @@ def export(db, manifest_ids, out_dir, include_test=False, cutoff=None):
         "interpretation_limits": [
             "人数按独立研究编号（participant_id）去重，不是记录数，也不是词条配对数。",
             "通过与否以记录里的 passed 为准，不得用 metric_value <= 0.5 重算。",
+            "含二 / 三 / 四声的词：v7 起有走势幅度闸门（pitch_span_semitones < 2.0 判不通过），"
+            "此前的 passed 对读平偏宽，不可与 v7 合并；pitch_span_semitones 为空表示没有成绩或算不出。",
             "metric_value 是形成性反馈指标，不是语言能力测量；参照曲线由设备端 TTS "
             "现场合成，不保证跨设备一致。",
             "反馈显示模式是学习者自选的，不得据此做组间效果比较。",

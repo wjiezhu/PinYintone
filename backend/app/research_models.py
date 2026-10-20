@@ -228,6 +228,11 @@ class ResearchAttempt(Base):
     # 后置问卷计数只认 status=succeeded 且本列非空者。
     result_displayed_at = _ts(nullable=True)
     time_quality = Column(String(16), nullable=False)         # valid|suspect|unknown
+    # 走势跨度（半音，字典 1.2 增补）。**只有 status=succeeded 才可能有值**；
+    # 失败、取消、中断、算不出来（有声帧不足 6）以及旧版客户端一律 NULL，不写 0 也不写哨兵。
+    pitch_span_semitones = Column(Numeric, nullable=True)
+    # 产生记录的一端：ios|android。旧版客户端不带，为 NULL
+    platform = Column(String(16), nullable=True)
 
 
 class ResearchInteractionEvent(Base):

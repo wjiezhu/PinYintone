@@ -142,6 +142,11 @@ class TrainingSession(Base):
     failure_reason = Column(String, nullable=True)           # 仅技术失败记录有值
     schema_version = Column(Integer, nullable=True)          # 记录字段版本；NULL 视为 1
     app_version = Column(String, nullable=True)              # 产生该记录的 App 版本
+    # v7：走势跨度（半音，clean 后原始 Hz 的 P90−P10）。有效结果对任何词都记；
+    # 技术失败、有声帧不足 6、或 v7 之前的记录为 NULL（**不写占位值**）。
+    # 是否触发走势幅度闸门 = 词含二 / 三 / 四声且本列 < 2.0。
+    pitch_span_semitones = Column(Float, nullable=True)
+    platform = Column(String, nullable=True)                 # v7：ios|android；NULL = v7 之前（只有 iOS）
 
 
 class AspirationAttempt(Base):
@@ -158,6 +163,7 @@ class AspirationAttempt(Base):
     phase = Column(String, index=True, nullable=True)
     schema_version = Column(Integer, nullable=True)
     app_version = Column(String, nullable=True)
+    platform = Column(String, nullable=True)                 # v7：ios|android；NULL = v7 之前
 
 
 class FreeTextRecord(Base):
@@ -177,3 +183,4 @@ class FreeTextRecord(Base):
     phase = Column(String, index=True, nullable=True)
     schema_version = Column(Integer, nullable=True)
     app_version = Column(String, nullable=True)
+    platform = Column(String, nullable=True)                 # v7：ios|android；NULL = v7 之前
