@@ -102,6 +102,8 @@ final class ScoringGoldenTests: XCTestCase {
                 ("normalizationFloorRatio", .float(F0Extractor.normalizationFloorRatio)),
                 ("passThreshold", .float(0.5)),
                 ("gateMaxFallSemitones", .float(ToneDirectionGate.maxFallSemitones)),
+                ("contourGateMinSpanSemitones", .float(ToneContourSpanGate.minSpanSemitones)),
+                ("contourGateMinVoicedFrames", .int(ToneContourSpanGate.minVoicedFrames)),
                 ("minVoicedFrames", .int(Self.minVoicedFrames)),
                 ("qualityFlagThreshold", .float(Self.qualityFlagThreshold)),
                 ("aspirationChunk", .int(1600)), ("aspirationCalibrationChunks", .int(5)),
@@ -147,14 +149,16 @@ final class ScoringGoldenTests: XCTestCase {
             fields += [
                 ("resultStatus", .str("technical_retry")),
                 ("normalized", .null), ("dtwScore", .null), ("segmentScores", .null),
-                ("gate", .null), ("grade", .null), ("passed", .null),
+                ("gate", .null), ("contourGate", .null), ("grade", .null), ("passed", .null),
             ]
         } else {
             let normalized = f0.normalize(cleaned)
             let score = dtw.distance(reference: reference, candidate: normalized)
             let fall = ToneDirectionGate.fallSemitones(hzTrack: cleaned, tones: c.tones)
             let dropped = ToneDirectionGate.fails(hzTrack: cleaned, tones: c.tones)
-            let grade = dropped ? .fail : dtw.grade(dtwScore: score)
+            let span = ToneContourSpanGate.spanSemitones(hzTrack: cleaned)
+            let flat = ToneContourSpanGate.fails(hzTrack: cleaned, tones: c.tones)
+            let grade = (dropped || flat) ? .fail : dtw.grade(dtwScore: score)
             fields += [
                 ("resultStatus", .str(score >= Self.qualityFlagThreshold ? "quality_flagged" : "valid_result")),
                 ("normalized", .floats(normalized)),
@@ -165,6 +169,12 @@ final class ScoringGoldenTests: XCTestCase {
                     ("applies", .bool(ToneDirectionGate.applies(tones: c.tones))),
                     ("fallSemitones", fall.map(J.float) ?? .null),
                     ("fails", .bool(dropped)),
+                ])),
+                // v7 走势幅度闸门；spanSemitones 即记录里的 pitchSpanSemitones
+                ("contourGate", .obj([
+                    ("applies", .bool(ToneContourSpanGate.applies(tones: c.tones))),
+                    ("spanSemitones", span.map(J.float) ?? .null),
+                    ("fails", .bool(flat)),
                 ])),
                 ("grade", .str(grade.rawValue)),
                 ("passed", .bool(grade != .fail)),
@@ -407,6 +417,17 @@ extension ScoringGoldenTests {
                  pieces: [.silence(0.2), .voice(0.3, rising), .silence(0.12), .voice(0.3, falling), .silence(0.2)]),
         ToneCase(name: "t2t2_contradict", note: "目标二声 + 二声但整段下降：参照整形应判矛盾、f0Track 返回空",
                  tones: [2, 2], pieces: two({ t in 260 - 40 * t }, { t in 220 - 60 * t })),
+        // v7 走势幅度闸门的用例
+        ToneCase(name: "t4t4_flat_declining", note: "四声词读平带 1.5 半音自然下倾（220→201.6 Hz）：DTW 在线内，幅度闸门应拦下",
+                 tones: [4, 4], pieces: [.silence(0.15), .voice(0.7, { t in 220 * pow(2, -1.5 * t / 12) }), .silence(0.15)]),
+        ToneCase(name: "t2t4_read_flat", note: "二声 + 四声读平 200 Hz，两字间 60 ms 无声：幅度闸门应拦下",
+                 tones: [2, 4], pieces: two({ _ in 200 }, { _ in 199 })),
+        ToneCase(name: "t3t2_compressed", note: "三声 + 二声走势压缩到约 3–4 半音（205→180→225 Hz）：读得不到位但有起伏，幅度闸门应放行",
+                 tones: [3, 2], pieces: two({ t in 205 - 25 * t }, { t in 180 + 45 * pow(t, 1.4) })),
+        ToneCase(name: "t1t5_read_flat", note: "一声 + 轻声读平 250 Hz：两道闸门都不适用，只看 DTW",
+                 tones: [1, 5], pieces: two({ _ in 250 }, { _ in 249 })),
+        ToneCase(name: "t2t4_one_syllable", note: "二声 + 四声只录到一个字（180→196 Hz，约 1.5 半音）：跨度不足会被幅度闸门拦下——已知风险边界，记录在案",
+                 tones: [2, 4], pieces: [.silence(0.15), .voice(0.3, { t in 180 + 16 * t }), .silence(0.15)]),
         ToneCase(name: "short_blip", note: "只有约 30 ms 有声：有声帧不足，技术性重录",
                  tones: [1], pieces: [.silence(0.3), .voice(0.03, { _ in 200 }), .silence(0.3)]),
         ToneCase(name: "silence_only", note: "只有底噪：技术性重录",

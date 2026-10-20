@@ -37,7 +37,19 @@ enum RecordSchema {
     ///      训练词与自测词不再要求不重叠；`assessmentSetVersion` 仅自测记录有值。
     ///      送气与自由文本记录的 `phase` 恒为 `training`（此前会跟着声调阶段写成
     ///      `pretest` 等，那是错的——它们从不属于声调的前后测）。
-    static let version = 6
+    /// - 7：新增**走势幅度闸门**（`ToneContourSpanGate`）。词里含二 / 三 / 四声时，
+    ///      clean 后原始 Hz 的跨度（P90 − P10）不足 2 个半音即判 `fail`，不论 DTW 分数——
+    ///      归一化尺度不变，读平的录音照样能和参照形状对上（见
+    ///      `docs/SCORING_FLAT_READING_STUDY.md`）。`dtwScore` 的算法不变，与 v6 逐位一致；
+    ///      变的是 `grade` / `passed`：v4–v6 非一声词读平约 2/3 判通关，v1–v3 约一半，
+    ///      那些版本非一声词的 `passed` 偏宽，**不可与 v7 混合分析**。
+    ///      新增字段：`pitchSpanSemitones`（半音，可空：技术失败或有声帧不足 6 为 nil；
+    ///      有效结果对任何词都记）、`platform`（"ios" / "android"；v7 之前的记录为 nil，即 iOS）。
+    ///      关卡 3（自由文本）同样加了这道闸门。参考音频换成母语者录音另作 v8，不在本版。
+    static let version = 7
+
+    /// 记录来自哪一端（v7 起随每条记录上报）。Android 写 "android"
+    static let platform = "ios"
 
     /// 形如 "1.2 (9)"：短版本号 + 构建号，便于按构建定位数据
     static let appVersion: String = {

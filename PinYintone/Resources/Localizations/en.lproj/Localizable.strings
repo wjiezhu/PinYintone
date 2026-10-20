@@ -177,7 +177,9 @@
 "coach_all_good" = "Both syllables landed. Ready for the next word.";
 "coach_praise" = "\"%@\" is already steady.";
 "coach_keep_level" = "The whole word slides down. First tone stays high and level throughout — hold the pitch steady.";
+"coach_add_movement" = "Your pitch barely moved. This word's tones rise and fall — follow the model, make the movement clear, and try again.";
 "direction_word_dropping" = "Sliding down";
+"direction_word_flat" = "Pitch barely moves";
 
 /* Research consent. Draft translation, pending review. */
 "consent_title" = "Join the study (optional)";
@@ -229,6 +231,7 @@
 "advice_action_again" = "Practice again";
 "advice_retry_no_signal" = "That did not record clearly. Move closer to the microphone and try again.";
 "advice_keep_level" = "The whole word slides down. First tone stays high and level throughout — hold the pitch steady.";
+"advice_add_movement" = "Your pitch barely moved. This word's tones rise and fall — follow the model, make the movement clear, and try again.";
 "advice_close_to_model" = "Overall this is already close to the model.";
 "advice_listen_and_compare" = "Play the model, then listen back to your own recording and compare.";
 "advice_try_again_whole_word" = "Overall there is still a gap from the model. Practise this word once more.";

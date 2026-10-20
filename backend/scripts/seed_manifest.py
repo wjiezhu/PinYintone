@@ -149,7 +149,9 @@ def build_manifest(db, *, study_id, app_version, build_number, lexicon_version,
             "max_value": None,
             "pass_threshold": 0.5,
             "note": "passed 不是 metric 的纯函数：全一声词首末下滑 >3 半音会被"
-                    "走向闸门判不通过。判通过请用记录里的 passed，不要按阈值重算。"
+                    "走向闸门判不通过；App 记录 v7 起，含二 / 三 / 四声的词走势跨度"
+                    "（pitch_span_semitones）< 2 个半音会被幅度闸门判不通过。"
+                    "判通过请用记录里的 passed，不要按阈值重算。"
                     "参照曲线由设备端 TTS 现场合成，不保证跨设备一致。",
         },
         feedback_version=feedback_version,

@@ -1,0 +1,6 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="tts_missing_voice">手机的文字转语音里没有中文语音。请在系统的文字转语音设置中下载中文（普通话）语音，再回到这里。</string>
+    <string name="tts_unavailable">无法播放示范：这台手机没有可用的文字转语音引擎。录音和反馈不受影响。</string>
+    <string name="tts_open_settings">打开文字转语音设置</string>
+</resources>

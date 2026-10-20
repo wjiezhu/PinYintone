@@ -14,7 +14,7 @@ final class SyncDTOTests: XCTestCase {
             presentationOrder: "dynamicF0_first", assessmentSetVersion: nil,
             feedbackMode: nil, resultStatus: "valid_result",
             failureReason: nil, schemaVersion: RecordSchema.version,
-            appVersion: "1.2 (9)"
+            appVersion: "1.2 (9)", pitchSpanSemitones: 7.25, platform: RecordSchema.platform
         )
         let data = try JSONEncoder().encode(dto)
         let json = try XCTUnwrap(JSONSerialization.jsonObject(with: data) as? [String: Any])
@@ -34,6 +34,28 @@ final class SyncDTOTests: XCTestCase {
         XCTAssertEqual(json["resultStatus"] as? String, "valid_result")
         XCTAssertEqual(json["schemaVersion"] as? Int, RecordSchema.version)
         XCTAssertEqual(json["appVersion"] as? String, "1.2 (9)")
+        // v7：走势跨度与来源端
+        XCTAssertEqual(json["pitchSpanSemitones"] as? Double, 7.25)
+        XCTAssertEqual(json["platform"] as? String, "ios")
+        XCTAssertEqual(RecordSchema.version, 7)
+    }
+
+    /// 技术失败没有走势跨度：编码时不带该键（后端按 NULL 入库），**不写占位值**
+    func testTechnicalRetryHasNoPitchSpan() throws {
+        let dto = TrainingSessionDTO(
+            id: "t", deviceID: "dev", classCode: nil, role: "student",
+            groupAssignment: "n/a", lexemeID: "paobu", dtwScore: RecordSentinel.noScore,
+            grade: RecordSentinel.noGrade, attemptNumber: 1, timestamp: "2026-05-20T10:00:00Z",
+            referenceType: nil, voicedFrameCount: 2,
+            qualityFlag: false, referenceSwitchedDuringAttempt: false,
+            phase: "training", wordSetID: nil, presentationOrder: nil, assessmentSetVersion: nil,
+            feedbackMode: nil, resultStatus: "technical_retry",
+            failureReason: "insufficient_voiced_frames", schemaVersion: RecordSchema.version,
+            appVersion: "1.2 (9)", pitchSpanSemitones: nil, platform: RecordSchema.platform
+        )
+        let json = try XCTUnwrap(JSONSerialization.jsonObject(with: JSONEncoder().encode(dto)) as? [String: Any])
+        XCTAssertNil(json["pitchSpanSemitones"])
+        XCTAssertEqual(json["platform"] as? String, "ios")
     }
 
 
@@ -50,7 +72,7 @@ final class SyncDTOTests: XCTestCase {
             assessmentSetVersion: AssessmentSet.version,
             feedbackMode: nil, resultStatus: "quality_flagged",
             failureReason: nil, schemaVersion: RecordSchema.version,
-            appVersion: "1.2 (9)"
+            appVersion: "1.2 (9)", pitchSpanSemitones: nil, platform: "ios"
         )
         let back = try JSONDecoder().decode(
             TrainingSessionDTO.self, from: JSONEncoder().encode(dto))
@@ -65,7 +87,7 @@ final class SyncDTOTests: XCTestCase {
             id: "x", deviceID: "dev", classCode: nil, role: "guest",
             targetWord: "跑步", triggerRate: 0.7, passed: true,
             timestamp: "2026-05-20T10:00:00Z", phase: "training",
-            schemaVersion: RecordSchema.version, appVersion: "1.2 (9)"
+            schemaVersion: RecordSchema.version, appVersion: "1.2 (9)", platform: "ios"
         )
         let data = try JSONEncoder().encode(dto)
         let back = try JSONDecoder().decode(AspirationAttemptDTO.self, from: data)
@@ -80,7 +102,7 @@ final class SyncDTOTests: XCTestCase {
             originalText: "今天天气很好", tokenizedWord: "今天", pinyin: "jīn tiān",
             toneSequence: [1, 1], f0Track: [0, 120.5, 0], duration: 1.2,
             timestamp: "2026-05-20T10:00:00Z", phase: "training",
-            schemaVersion: RecordSchema.version, appVersion: "1.2 (9)"
+            schemaVersion: RecordSchema.version, appVersion: "1.2 (9)", platform: "ios"
         )
         let data = try JSONEncoder().encode(dto)
         let back = try JSONDecoder().decode(FreeTextRecordDTO.self, from: data)

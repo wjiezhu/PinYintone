@@ -32,6 +32,7 @@ final class FreeTextRepository {
         record.phase = phase
         record.schemaVersion = Int16(RecordSchema.version)
         record.appVersion = RecordSchema.appVersion
+        record.platform = RecordSchema.platform
         saveContext()
         return record
     }

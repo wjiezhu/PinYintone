@@ -28,6 +28,7 @@ final class AspirationRepository {
         attempt.phase = phase
         attempt.schemaVersion = Int16(RecordSchema.version)
         attempt.appVersion = RecordSchema.appVersion
+        attempt.platform = RecordSchema.platform
         saveContext()
         return attempt
     }

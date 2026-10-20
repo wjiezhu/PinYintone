@@ -2,32 +2,80 @@
 
 原生 Kotlin + Jetpack Compose。与 iOS 版同仓库；后端共用 `backend/`。
 
-当前阶段：**评分核心已移植并用 Swift 版的对照数据锁住**；App 只有一个占位页面。
-录音、界面、登录、同步、研究流程都还没做。
+当前阶段：**评分核心**（已用 Swift 版对照数据锁住）+ **声调普通练习与可选自测**（录音链路、界面、本地存储）。
+登录、上传同步、研究流程、送气练习、自由文本、教师端都还没做。
 
 ## 工程结构
 
 ```
 android/
-├── settings.gradle.kts      # 有 Android SDK 才纳入 :app；没有时只配置 :core
+├── settings.gradle.kts       # 有 Android SDK 才纳入 :app；没有时只配置 :core
 ├── gradle/libs.versions.toml # 依赖白名单（见下）
-├── core/                    # 纯 JVM 模块，不依赖 Android —— 评分核心
-│   └── src/main/kotlin/joy/pinyintone/core/audio/
-│       ├── AudioFramer.kt         ← PinYintone/Core/Audio/AudioFramer.swift（+ AudioEngine.floatSamples）
-│       ├── F0Extractor.kt         ← F0Extractor.swift（YIN / clean / 带下限的 normalize）
-│       ├── DTWAnalyzer.kt         ← DTWAnalyzer.swift（含 FeedbackGrade）
-│       ├── ToneDirectionGate.kt   ← ToneDirectionGate.swift
-│       ├── AspirationDetector.kt  ← AspirationDetector.swift（+ AspirationViewModel 里的 5 片校准 / 6 片窗口常量）
-│       ├── ToneContour.kt         ← ToneContour.swift
-│       ├── ReferenceShaper.kt     ← SpeechService.swift 的参照整形（f0Track / smoothReference / removeExcessDeclination /
-│       │                             blendTowardIdeal / contourContradictsTones）
-│       ├── ToneScorer.kt          ← ToneTrainingViewModel.stopRecordingAndEvaluate() 的计算部分
-│       └── Wav.kt                 # 读 16-bit / 单声道 / 16 kHz WAV
-└── app/                     # Compose，minSdk 26，applicationId joy.pinyintone（参照 iOS 的 Joy.PinYintone）
+├── build-logic/              # 构建期工具（纯 JVM）：iOS 字符串 → Android 资源；复制共用语料
+├── core/                     # 纯 JVM，不依赖 Android —— 评分与练习逻辑，测试几秒跑完
+│   └── src/main/kotlin/joy/pinyintone/core/
+│       ├── audio/
+│       │   ├── AudioFramer.kt        ← AudioFramer.swift（+ AudioEngine.floatSamples）
+│       │   ├── F0Extractor.kt        ← F0Extractor.swift（YIN / clean / 带下限的 normalize）
+│       │   ├── DTWAnalyzer.kt        ← DTWAnalyzer.swift（含 FeedbackGrade）
+│       │   ├── ToneDirectionGate.kt  ← ToneDirectionGate.swift
+│       │   ├── AspirationDetector.kt ← AspirationDetector.swift
+│       │   ├── ToneContour.kt        ← ToneContour.swift
+│       │   ├── ReferenceShaper.kt    ← SpeechService.swift 的参照整形
+│       │   ├── ToneScorer.kt         ← ToneTrainingViewModel.stopRecordingAndEvaluate() 的计算部分
+│       │   ├── Resampler.kt          # 硬件采样率 → 16 kHz（AudioRecord 16 kHz 起不来时用）
+│       │   ├── PcmChunker.kt         ← AudioEngine 的格式转换与 1600 采样分片
+│       │   └── Wav.kt
+│       ├── practice/
+│       │   ├── TonePracticeSession.kt ← ToneTrainingViewModel 的状态机与记录逻辑（普通练习 / 自测）
+│       │   ├── TrainingRecord.kt      ← SyncDTOs.swift 的 TrainingSessionDTO（键名有测试核对）
+│       │   ├── RecordSchema.kt        ← RecordSchema.swift / TrainingPhase / FeedbackStyle
+│       │   ├── FeedbackScore.kt       ← FeedbackResult.score（百分制显示分）
+│       │   └── ChartGeometry.kt       ← ModeB_F0WaveformView 的取点
+│       ├── corpus/Corpus.kt           ← CorpusLoader.swift / Lexeme.swift
+│       ├── theme/ThemeTokens.kt       ← Theme.swift 的色值（有测试逐个核对）+ 对比度计算
+│       └── json/Json.kt
+└── app/                      # Compose，minSdk 26，applicationId joy.pinyintone（参照 iOS 的 Joy.PinYintone）
+    ├── ios-strings.keys       # 从 iOS 取哪些界面文字
+    └── src/main/java/joy/pinyintone/app/
+        ├── audio/AudioRecorder.kt   # AudioRecord → PcmChunker → AudioFramer → YIN
+        ├── audio/SamplePlayer.kt    # 「听示范」（系统 TTS，只播放）
+        ├── data/Storage.kt          # Room（training_records）+ SharedPreferences
+        └── ui/…                     # 主题、练习页、自测、曲线、颜色模式
 ```
 
 命名、结构、注释尽量与 Swift 一一对应，每个文件头注明对应的 Swift 文件。**改评分要两边一起改**，
 然后按 `testdata/scoring/README.md` 重新生成对照数据。
+
+### 两端共用的源头（不另存一份）
+
+| 内容 | 源头 | Android 怎么拿 |
+|------|------|----------------|
+| 语料 | `PinYintone/Resources/Corpus/lexemes.json` | 构建时 `copySharedCorpus` 复制进 assets；core 测试直接读 |
+| 界面文字（中英法阿） | `PinYintone/Resources/Localizations/*/Localizable.strings` | 构建时 `generateIosStrings` 按 `app/ios-strings.keys` 生成 `strings_ios.xml`；缺译或占位符不一致即构建失败 |
+| 颜色 token | `PinYintone/Core/UI/Theme.swift` | 色值抄在 `ThemeTokens.kt`，测试解析 Theme.swift 逐个核对 |
+| 词序、记录字段、schemaVersion | `CorpusLoader.swift` / `SyncDTOs.swift` / `RecordSchema.swift` | 抄在 Kotlin 里，测试解析 Swift 文件核对 |
+
+Android 独有的文字（TTS 没有中文语音时的提示等）写在 `app/src/main/res/values*/strings.xml`，四种语言都要写。
+
+## 声调练习（本阶段）
+
+- **录音**：`AudioRecord`，单声道 PCM16，音源 `VOICE_RECOGNITION`。优先 16 kHz；初始化失败就用硬件采样率，
+  由 `Resampler` 降到 16 kHz。之后与 iOS 同一条路：1600 采样一片 → 帧化 512 / 128 → YIN。
+  点一下开始、再点一下停止；录音键在任何状态下位置不动。原始录音只在内存里流过。
+- **启动失败不静默**：权限没给、设备起不来、中途被打断（API 29+ 用录音静音回调识别来电 / 抢占）、切到后台，
+  都给出能照着做的提示，并落一条 `technical_retry` 记录（`dtwScore = -1`、`grade = "n/a"`，不增加尝试次数）。
+- **麦克风权限**：首次点录音时先用 App 语言说明用途，再弹系统框；拒绝后失败块里给「打开设置」；
+  被永久拒绝（系统不再弹框）同样给设置入口；从设置回来自动重查，不用重启。
+- **参照曲线**：词条有 `audioFilename` 时读 `assets/reference/<文件名>`（16 kHz WAV，`ReferenceShaper.f0Track`，
+  不做下倾矫正），记 `reference_type = real`；没有就用理想轮廓，记 `ideal`。**不用系统 TTS 生成评分参照**。
+- **听示范**：系统 TextToSpeech，只播放。没有中文语音时提示并给出系统设置入口。
+  「示范开始播放」只在引擎的 `onStart` 回调里报（研究事件以后挂在这里）。
+- **两种显示模式**：曲线（默认）/ 颜色，学习者随时切换，录音中禁用；通关标准一致，只影响记录里的 `feedbackMode`。
+- **自测**：右上角菜单里主动开始，可随时退出；录完不显示任何分数、等级、颜色、曲线、示范或建议，后台照常算分入库
+  （`phase = self_test`、`feedbackMode = null`、`assessmentSetVersion = assess-v1`）。
+- **本地存储**：Room 表 `training_records`，列与 iOS 上报的 `TrainingSessionDTO` 一一对应，`synced = false`。本阶段不上传。
+- **阿拉伯语界面**：汉字、拼音、曲线、颜色模式的音节格、操作栏、分数强制左到右，其余随系统镜像。
 
 ## 环境
 
@@ -43,13 +91,48 @@ android/
 cd android && ./gradlew :core:test
 ```
 
-纯 JVM，几秒跑完。每类比较的实际最大误差写在 `core/build/reports/golden-diff.txt`。
+```bash
+cd android && ./gradlew -p build-logic test
+```
+
+都是纯 JVM，不需要 Android SDK，几秒跑完。对照测试每类比较的实际最大误差写在 `core/build/reports/golden-diff.txt`。
 
 有 SDK 时编 App：
 
 ```bash
 cd android && ./gradlew :app:assembleDebug
 ```
+
+## 在模拟器上跑
+
+本机 SDK 在 `~/Library/Android/sdk`（`android/local.properties` 写 `sdk.dir`，该文件不入库）。
+两个模拟器：`pt_api26`（API 26，无 Google 服务，接近国内手机）、`pt_api37`（API 37，Google APIs）。
+
+```bash
+cd android && ./gradlew :app:assembleDebug
+```
+
+```bash
+~/Library/Android/sdk/emulator/emulator -avd pt_api26 -no-window -no-audio -gpu swiftshader_indirect
+```
+
+```bash
+~/Library/Android/sdk/platform-tools/adb install -r app/build/outputs/apk/debug/app-debug.apk
+```
+
+模拟器里没有人声。调试构建可以用**合成麦克风**走通整条链路（48 kHz 合成目标词的理想轮廓，
+经过与真实麦克风相同的重采样 → 分片 → 帧化 → YIN）：
+
+```bash
+~/Library/Android/sdk/platform-tools/adb shell am start -n joy.pinyintone/joy.pinyintone.app.MainActivity --es pt_mic tones
+```
+
+`pt_mic` 可取 `tones`（按目标声调读）、`flat`（读成平调）、`silent`（只有静音 → 技术失败）。
+发布构建不读这个参数。
+
+坑：本机在后台无窗口启动模拟器时，开着宿主音频会让模拟器启动即退出，所以用 `-no-audio`；
+这时真实麦克风录到的是静音（App 正确提示「没录到声音」）。手写的 AVD 配置要有 `hw.mainKeys=no`，
+否则 API 26 的 SystemUI 会反复崩溃。
 
 ## 对照测试与容差
 

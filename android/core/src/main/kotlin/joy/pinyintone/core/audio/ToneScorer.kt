@@ -2,12 +2,15 @@ package joy.pinyintone.core.audio
 
 /**
  * 一次声调录音的评分流程（平台无关部分）：
- * clean → 有声帧数检查 → normalize → DTW → 平调词走向闸门 → grade。
+ * clean → 有声帧数检查 → normalize → DTW → 平调词走向闸门 + 走势幅度闸门 → grade。
  *
  * 对应 Swift：`ToneTrainingViewModel.stopRecordingAndEvaluate()` 里的计算部分
  * （iOS 那边与界面、入库写在一起，没有独立的类）。两边要一起改。
  *
  * 普通练习与自测用的是同一套计算；差别只在呈现（CLAUDE.md），所以这里不区分。
+ *
+ * 关卡 3（自由文本逐词练习，Android 尚未实现）以后也直接调 [evaluate]：传入由拼音推出的声调、
+ * 该词的参照即可，两道闸门随之生效，与 iOS `FreeWordPracticeViewModel` 同口径。
  */
 class ToneScorer(
     private val f0Extractor: F0Extractor = F0Extractor(),
@@ -45,6 +48,13 @@ class ToneScorer(
             val dtwScore: Float,
             /** 是否被平调词走向闸门拦下；为 true 时 grade 恒为 FAIL，即便 dtwScore ≤ 0.5 */
             val levelToneDropped: Boolean,
+            /** 是否被走势幅度闸门拦下（含二 / 三 / 四声的词读平）；为 true 时 grade 恒为 FAIL */
+            val flatContour: Boolean,
+            /**
+             * 走势跨度（半音，[ToneContourSpanGate.spanSemitones]），随记录上报。
+             * 任何词都算（含全一声的词）；有声帧不足 6 时为 null。
+             */
+            val pitchSpanSemitones: Float?,
             val grade: FeedbackGrade,
             val segmentScores: FloatArray,
         ) : Outcome() {
@@ -70,12 +80,14 @@ class ToneScorer(
         // iOS 在这里还会拦 NaN / Infinity（按分析失败处理）。distance 的输出是有限值，
         // 防御留给调用方，与 iOS 一致地按技术失败处理。
 
-        // 闸门必须喂原始 Hz 的 cleaned，不能喂 normalized（CLAUDE.md 禁令 15）
+        // 两道闸门都必须喂原始 Hz 的 cleaned，不能喂 normalized（CLAUDE.md 禁令 15）
         val dropped = ToneDirectionGate.fails(cleaned, tones)
-        val grade = if (dropped) FeedbackGrade.FAIL else dtwAnalyzer.grade(score)
+        val span = ToneContourSpanGate.spanSemitones(cleaned)
+        val flat = ToneContourSpanGate.fails(cleaned, tones)
+        val grade = if (dropped || flat) FeedbackGrade.FAIL else dtwAnalyzer.grade(score)
         val segments = if (tones.isEmpty()) FloatArray(0)
                        else dtwAnalyzer.segmentScores(reference, normalized, tones.size)
-        return Outcome.Scored(cleaned, voicedFrames, normalized, score, dropped, grade, segments)
+        return Outcome.Scored(cleaned, voicedFrames, normalized, score, dropped, flat, span, grade, segments)
     }
 
     /** 理想轮廓参照（iOS 进词时的即时占位，也是兜底） */

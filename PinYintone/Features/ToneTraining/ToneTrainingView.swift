@@ -282,6 +282,14 @@ struct ToneTrainingView: View {
                         resultScore(result)
                     }
                 }
+                // 被闸门拦下（读平 / 一声词掉调）：分数说明不了原因，给一句整词提示
+                if let key = result.gateHintKey {
+                    Text(NSLocalizedString(key, comment: ""))
+                        .font(.subheadline)
+                        .foregroundStyle(Theme.textPrimary)
+                        .fixedSize(horizontal: false, vertical: true)
+                        .accessibilityIdentifier("practice.gateHint")
+                }
                 // 换词提示：连续几次没通过时给一个出口，不是评价
                 if vm.consecutiveFailures >= vm.skipHintThreshold {
                     Text(NSLocalizedString("feedback_skip_hint", comment: ""))

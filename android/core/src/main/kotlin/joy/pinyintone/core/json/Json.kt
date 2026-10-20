@@ -1,11 +1,11 @@
-package joy.pinyintone.core.audio
+package joy.pinyintone.core.json
 
 /**
- * 测试专用的极简 JSON 解析器（core 不引第三方库，JSON 库也不引）。
+ * 极简 JSON 解析器（core 不引第三方库，JSON 库也不引）。语料读取与对照测试共用。
  * 数字保留原文 [Num]，按需转 Int / Float——Float 直接从十进制原文解析，
  * 不经 Double 中转，避免二次舍入。
  */
-internal object MiniJson {
+object Json {
 
     data class Num(val raw: String) {
         fun toFloat(): Float = raw.toFloat()
@@ -99,10 +99,26 @@ internal object MiniJson {
 }
 
 @Suppress("UNCHECKED_CAST")
-internal fun Any?.obj(): Map<String, Any?> = this as Map<String, Any?>
+fun Any?.obj(): Map<String, Any?> = this as Map<String, Any?>
 @Suppress("UNCHECKED_CAST")
-internal fun Any?.list(): List<Any?> = this as List<Any?>
-internal fun Any?.f(): Float = (this as MiniJson.Num).toFloat()
-internal fun Any?.i(): Int = (this as MiniJson.Num).toInt()
-internal fun Any?.floats(): FloatArray = list().let { l -> FloatArray(l.size) { l[it].f() } }
-internal fun Any?.ints(): List<Int> = list().map { it.i() }
+fun Any?.list(): List<Any?> = this as List<Any?>
+fun Any?.f(): Float = (this as Json.Num).toFloat()
+fun Any?.i(): Int = (this as Json.Num).toInt()
+fun Any?.floats(): FloatArray = list().let { l -> FloatArray(l.size) { l[it].f() } }
+fun Any?.ints(): List<Int> = list().map { it.i() }
+fun Any?.str(): String? = this as String?
+
+/** 把字符串写成 JSON 字符串字面量 */
+fun jsonString(s: String): String {
+    val sb = StringBuilder("\"")
+    for (c in s) when {
+        c == '"' -> sb.append("\\\"")
+        c == '\\' -> sb.append("\\\\")
+        c == '\n' -> sb.append("\\n")
+        c == '\r' -> sb.append("\\r")
+        c == '\t' -> sb.append("\\t")
+        c < ' ' -> sb.append("\\u%04x".format(c.code))
+        else -> sb.append(c)
+    }
+    return sb.append('"').toString()
+}

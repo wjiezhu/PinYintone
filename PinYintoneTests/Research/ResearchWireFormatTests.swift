@@ -82,7 +82,9 @@ final class ResearchWireFormatTests: XCTestCase {
                                     "retryOfAttemptID", "priorPracticeCount", "startedAt", "status",
                                     "finishedAt", "recordingDurationMs", "analysisDurationMs",
                                     "signalStatus", "metricValue", "passed", "errorCode",
-                                    "resultDisplayedAt", "timeQuality"]
+                                    "resultDisplayedAt", "timeQuality",
+                                    // 字典 1.2 增补（v7）
+                                    "pitchSpanSemitones", "platform"]
         for a in attempts {
             XCTAssertTrue(Set(a.keys).isSubset(of: allowed), "多出字段：\(Set(a.keys).subtracting(allowed))")
             for required in ["attemptID", "sessionID", "taskType", "startedAt", "status",
@@ -93,6 +95,8 @@ final class ResearchWireFormatTests: XCTestCase {
         }
         let failed = try XCTUnwrap(attempts.first { $0["attemptID"] as? String == first.uuidString })
         XCTAssertEqual(failed["status"] as? String, "analysis_failed")
+        XCTAssertNil(failed["pitchSpanSemitones"], "失败的尝试没有跨度，键都不该出现")
+        XCTAssertEqual(failed["platform"] as? String, "ios")
         XCTAssertEqual(failed["errorCode"] as? String, "no_signal")
         // 技术失败：没有成绩。字段要么不出现，要么是 null——绝不是 0
         XCTAssertTrue(failed["metricValue"] == nil || failed["metricValue"] is NSNull)

@@ -1,0 +1,86 @@
+# Android 界面用到的 iOS 字符串键（每行一个）。
+# 构建时从 PinYintone/Resources/Localizations/*/Localizable.strings 生成 res/values*/strings_ios.xml。
+# 任何一种语言缺键、或占位符对不上，构建失败。Android 独有的文字写在 res/values*/strings.xml。
+
+# 页面
+stage2_title
+self_test_title
+self_test_start
+self_test_exit
+self_test_progress
+self_test_ready
+self_test_saving
+self_test_recorded
+self_test_done_title
+self_test_done_body
+self_test_back_to_practice
+common_more
+common_close
+cancel
+
+# 显示模式（学习者自选，不是实验分组）
+condition_dynamicF0
+condition_staticColor
+
+# 曲线
+legend_native
+legend_you
+chart_empty
+chart_a11y_reference_only
+chart_a11y_with_yours
+
+# 颜色模式
+tone_name_1
+tone_name_2
+tone_name_3
+tone_name_4
+tone_name_5
+tone_slot_a11y
+tone_slot_neutral_a11y
+
+# 录音状态与失败（失败都要说清下一步怎么做）
+tone_stage_preparing
+tone_stage_ready
+tone_stage_recording
+tone_stage_analyzing
+tone_fail_mic_denied
+tone_retry_mic_unavailable
+tone_retry_no_voice
+tone_fail_interrupted
+tone_fail_analysis
+
+# 结果
+result_title
+result_passed
+result_not_passed
+result_try_again
+result_score_a11y
+# 被闸门拦下时的整词提示（平调走向 / 走势幅度）
+advice_keep_level
+advice_add_movement
+feedback_skip_hint
+
+# 底部操作栏
+bar_listen
+bar_stop
+bar_next
+record_short
+record_start
+record_stop
+play_sample
+sample_stop
+tone_next_word
+
+# 选词
+word_picker_title
+word_picker_short
+word_picker_search
+word_picker_empty
+word_current
+
+# 麦克风说明
+mic_explain_title
+onboarding_mic_body
+onboarding_mic_privacy
+onboarding_mic_allow
+onboarding_open_settings
