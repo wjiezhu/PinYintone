@@ -19,6 +19,9 @@ rootProject.name = "PinYintone"
 // 评分核心：纯 JVM，不依赖 Android SDK，任何装了 JDK 17 的机器都能跑对照测试。
 include(":core")
 
+// 评分修法对比实验（docs/SCORING_FLAT_READING_STUDY.md）。只读 :core，不进 App。
+include(":scoring-study")
+
 // App 模块需要 Android SDK。没有 SDK 的机器（如只想跑评分对照的 CI / 开发机）
 // 不纳入 :app，避免配置阶段就因 "SDK location not found" 整个失败。
 val localProps = java.util.Properties().apply {
