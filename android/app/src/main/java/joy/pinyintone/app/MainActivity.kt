@@ -1,41 +1,39 @@
 package joy.pinyintone.app
 
+import android.Manifest
+import android.content.pm.PackageManager
 import android.os.Bundle
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
-import androidx.compose.foundation.layout.Box
-import androidx.compose.foundation.layout.fillMaxSize
-import androidx.compose.foundation.layout.padding
-import androidx.compose.material3.MaterialTheme
-import androidx.compose.material3.Surface
-import androidx.compose.material3.Text
-import androidx.compose.runtime.Composable
-import androidx.compose.ui.Alignment
-import androidx.compose.ui.Modifier
-import androidx.compose.ui.res.stringResource
-import androidx.compose.ui.unit.dp
-import joy.pinyintone.core.audio.F0Extractor
+import androidx.activity.enableEdgeToEdge
+import androidx.activity.viewModels
+import androidx.lifecycle.DefaultLifecycleObserver
+import androidx.lifecycle.LifecycleOwner
+import joy.pinyintone.app.ui.practice.TonePracticeScreen
+import joy.pinyintone.app.ui.practice.TonePracticeViewModel
+import joy.pinyintone.app.ui.theme.PinyintoneTheme
 
-/** 占位页：只证明 App 能启动、能链接到 :core。界面按需求 2.3 版另行实现。 */
+/**
+ * 这一阶段只有声调练习页（登录、首页、上传同步、研究流程都还没做）。
+ */
 class MainActivity : ComponentActivity() {
+
+    private val practice: TonePracticeViewModel by viewModels()
+
     override fun onCreate(savedInstanceState: Bundle?) {
+        enableEdgeToEdge()
         super.onCreate(savedInstanceState)
+        lifecycle.addObserver(object : DefaultLifecycleObserver {
+            // 不在后台录音：切走时正在录的这一次如实记为中断
+            override fun onStop(owner: LifecycleOwner) = practice.onBackgrounded()
+            // 从系统设置回来：重查麦克风权限与中文语音，不需要重启
+            override fun onResume(owner: LifecycleOwner) = practice.onResumed(
+                checkSelfPermission(Manifest.permission.RECORD_AUDIO) == PackageManager.PERMISSION_GRANTED)
+        })
         setContent {
-            MaterialTheme {
-                Surface(modifier = Modifier.fillMaxSize()) {
-                    Placeholder()
-                }
+            PinyintoneTheme {
+                TonePracticeScreen(practice)
             }
         }
-    }
-}
-
-@Composable
-private fun Placeholder() {
-    Box(modifier = Modifier.fillMaxSize().padding(24.dp), contentAlignment = Alignment.Center) {
-        Text(
-            text = stringResource(R.string.placeholder) +
-                "\n(${F0Extractor.SAMPLE_RATE.toInt()} Hz)",
-        )
     }
 }

@@ -1,5 +1,9 @@
 <?xml version="1.0" encoding="utf-8"?>
+<!-- Android 独有的界面文字（iOS 没有对应的键）。与 iOS 共用的文字由 build-logic 从
+     Localizable.strings 生成到 strings_ios.xml，不写在这里。 -->
 <resources>
     <string name="app_name">Pinyintone</string>
-    <string name="placeholder">Pinyintone Android — 评分核心已接入，界面待开发</string>
+    <string name="tts_missing_voice">No Chinese voice is installed for text-to-speech. Download a Chinese (Mandarin) voice in your phone\'s text-to-speech settings, then come back here.</string>
+    <string name="tts_unavailable">The model cannot be played: no text-to-speech engine is available on this phone. You can still record and get feedback.</string>
+    <string name="tts_open_settings">Open text-to-speech settings</string>
 </resources>
