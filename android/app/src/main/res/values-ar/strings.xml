@@ -1,0 +1,6 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="tts_missing_voice">لا يوجد صوت صيني مثبّت لتحويل النص إلى كلام. نزّل صوتًا صينيًا (الماندرين) من إعدادات تحويل النص إلى كلام في الهاتف، ثم عُد إلى هنا.</string>
+    <string name="tts_unavailable">لا يمكن تشغيل النموذج: لا يوجد محرك لتحويل النص إلى كلام على هذا الهاتف. يمكنك مع ذلك التسجيل والحصول على الملاحظات.</string>
+    <string name="tts_open_settings">فتح إعدادات تحويل النص إلى كلام</string>
+</resources>

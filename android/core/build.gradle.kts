@@ -18,6 +18,9 @@ tasks.test {
         rootProject.projectDir.resolve("../testdata/scoring").canonicalPath,
     )
     inputs.dir(rootProject.projectDir.resolve("../testdata/scoring"))
+    // 仓库根：语料、Theme.swift 等 iOS 源头文件，测试直接读来核对两端一致
+    systemProperty("pinyintone.repoRoot", rootProject.projectDir.resolve("..").canonicalPath)
+    inputs.file(rootProject.projectDir.resolve("../PinYintone/Resources/Corpus/lexemes.json"))
     testLogging {
         events("failed")
         exceptionFormat = org.gradle.api.tasks.testing.logging.TestExceptionFormat.FULL

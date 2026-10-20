@@ -1,0 +1,6 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="tts_missing_voice">Aucune voix chinoise n\'est installée pour la synthèse vocale. Téléchargez une voix chinoise (mandarin) dans les réglages de synthèse vocale du téléphone, puis revenez ici.</string>
+    <string name="tts_unavailable">Le modèle ne peut pas être lu : aucun moteur de synthèse vocale n\'est disponible sur ce téléphone. Vous pouvez quand même enregistrer et obtenir un retour.</string>
+    <string name="tts_open_settings">Ouvrir les réglages de synthèse vocale</string>
+</resources>
