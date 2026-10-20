@@ -103,6 +103,37 @@ cd android && ./gradlew -p build-logic test
 cd android && ./gradlew :app:assembleDebug
 ```
 
+## 在模拟器上跑
+
+本机 SDK 在 `~/Library/Android/sdk`（`android/local.properties` 写 `sdk.dir`，该文件不入库）。
+两个模拟器：`pt_api26`（API 26，无 Google 服务，接近国内手机）、`pt_api37`（API 37，Google APIs）。
+
+```bash
+cd android && ./gradlew :app:assembleDebug
+```
+
+```bash
+~/Library/Android/sdk/emulator/emulator -avd pt_api26 -no-window -no-audio -gpu swiftshader_indirect
+```
+
+```bash
+~/Library/Android/sdk/platform-tools/adb install -r app/build/outputs/apk/debug/app-debug.apk
+```
+
+模拟器里没有人声。调试构建可以用**合成麦克风**走通整条链路（48 kHz 合成目标词的理想轮廓，
+经过与真实麦克风相同的重采样 → 分片 → 帧化 → YIN）：
+
+```bash
+~/Library/Android/sdk/platform-tools/adb shell am start -n joy.pinyintone/joy.pinyintone.app.MainActivity --es pt_mic tones
+```
+
+`pt_mic` 可取 `tones`（按目标声调读）、`flat`（读成平调）、`silent`（只有静音 → 技术失败）。
+发布构建不读这个参数。
+
+坑：本机在后台无窗口启动模拟器时，开着宿主音频会让模拟器启动即退出，所以用 `-no-audio`；
+这时真实麦克风录到的是静音（App 正确提示「没录到声音」）。手写的 AVD 配置要有 `hw.mainKeys=no`，
+否则 API 26 的 SystemUI 会反复崩溃。
+
 ## 对照测试与容差
 
 `ScoringGoldenTest` 读 `testdata/scoring/` 里 Swift 生成的 WAV 与 `golden.json`，分两层比：

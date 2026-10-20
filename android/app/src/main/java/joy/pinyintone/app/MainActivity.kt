@@ -9,6 +9,7 @@ import androidx.activity.enableEdgeToEdge
 import androidx.activity.viewModels
 import androidx.lifecycle.DefaultLifecycleObserver
 import androidx.lifecycle.LifecycleOwner
+import joy.pinyintone.app.audio.SyntheticMic
 import joy.pinyintone.app.ui.practice.TonePracticeScreen
 import joy.pinyintone.app.ui.practice.TonePracticeViewModel
 import joy.pinyintone.app.ui.theme.PinyintoneTheme
@@ -22,6 +23,16 @@ class MainActivity : ComponentActivity() {
 
     override fun onCreate(savedInstanceState: Bundle?) {
         enableEdgeToEdge()
+        // 调试构建：adb shell am start -n joy.pinyintone/.MainActivity --es pt_mic tones|flat|silent
+        // 用合成信号代替麦克风，在模拟器上走通整条链路。发布构建不读这个参数
+        if (BuildConfig.DEBUG) {
+            TonePracticeViewModel.syntheticKind = when (intent.getStringExtra("pt_mic")) {
+                "tones" -> SyntheticMic.Kind.TONES
+                "flat" -> SyntheticMic.Kind.FLAT
+                "silent" -> SyntheticMic.Kind.SILENT
+                else -> null
+            }
+        }
         super.onCreate(savedInstanceState)
         lifecycle.addObserver(object : DefaultLifecycleObserver {
             // 不在后台录音：切走时正在录的这一次如实记为中断

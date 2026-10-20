@@ -28,7 +28,7 @@ import java.util.concurrent.Executor
  * VOICE_RECOGNITION 音源在多数机型上关掉了自动增益与降噪，F0 不被处理链扭曲。
  * 原始录音只在内存里流过，不落盘、不上传。
  */
-class AudioRecorder(context: Context) {
+class AudioRecorder(context: Context) : MicSource {
 
     interface Listener {
         /** 这一片（0.1 s）里逐帧的 F0（Hz，含 0 无声帧）。主线程 */
@@ -51,10 +51,10 @@ class AudioRecorder(context: Context) {
     var inputSampleRate: Int = 0
         private set
 
-    val isRunning: Boolean get() = running
+    override val isRunning: Boolean get() = running
 
     @SuppressLint("MissingPermission")   // 下面显式检查
-    fun start(listener: Listener) {
+    override fun start(listener: Listener) {
         check(!running) { "already recording" }
         if (ContextCompat.checkSelfPermission(appContext, Manifest.permission.RECORD_AUDIO)
             != PackageManager.PERMISSION_GRANTED) {
@@ -87,7 +87,7 @@ class AudioRecorder(context: Context) {
     }
 
     /** 停止（点第二下、离开页面、被打断后）。可重复调用 */
-    fun stop() {
+    override fun stop() {
         running = false
         thread?.let { if (it !== Thread.currentThread()) it.join(500) }
         thread = null
@@ -100,17 +100,7 @@ class AudioRecorder(context: Context) {
     }
 
     private fun loop(rec: AudioRecord, rate: Int, listener: Listener) {
-        val f0 = F0Extractor()
-        val framer = AudioFramer()
-        val chunker = PcmChunker(rate)
-        val pending = ArrayList<Float>(16)
-        framer.onFrame = { pending.add(f0.extract(it)) }
-        chunker.onChunk = { chunk ->
-            framer.feed(chunk)
-            val batch = pending.toFloatArray()
-            pending.clear()
-            main.post { if (running) listener.onF0(batch) }
-        }
+        val chunker = f0Pipeline(rate) { batch -> main.post { if (running) listener.onF0(batch) } }
         val buf = ShortArray(maxOf(rate / 50, 256))   // 20 ms
         while (running) {
             val n = rec.read(buf, 0, buf.size)
@@ -174,4 +164,31 @@ class AudioRecorder(context: Context) {
         record?.unregisterAudioRecordingCallback(cb)
         callback = null
     }
+}
+
+/** 录音来源：真实麦克风，或调试构建里的合成信号（界面验证用） */
+interface MicSource {
+    val isRunning: Boolean
+    /** 启动失败抛 [AudioRecorder.StartException] */
+    fun start(listener: AudioRecorder.Listener)
+    fun stop()
+}
+
+/**
+ * 录音线程里的处理链：原始 PCM16（任意采样率）→ 16 kHz 1600 采样一片 → 帧化 512 / 128 → YIN。
+ * 每片的 F0 交给 [onBatch]。真实麦克风与合成信号共用这一条。
+ */
+internal fun f0Pipeline(inputRate: Int, onBatch: (FloatArray) -> Unit): PcmChunker {
+    val f0 = F0Extractor()
+    val framer = AudioFramer()
+    val chunker = PcmChunker(inputRate)
+    val pending = ArrayList<Float>(16)
+    framer.onFrame = { pending.add(f0.extract(it)) }
+    chunker.onChunk = { chunk ->
+        framer.feed(chunk)
+        val batch = pending.toFloatArray()
+        pending.clear()
+        onBatch(batch)
+    }
+    return chunker
 }

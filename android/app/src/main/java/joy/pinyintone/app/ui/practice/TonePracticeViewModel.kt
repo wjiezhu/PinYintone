@@ -5,7 +5,10 @@ import android.os.SystemClock
 import androidx.lifecycle.AndroidViewModel
 import androidx.lifecycle.viewModelScope
 import joy.pinyintone.app.PinyintoneApp
+import joy.pinyintone.app.BuildConfig
 import joy.pinyintone.app.audio.AudioRecorder
+import joy.pinyintone.app.audio.MicSource
+import joy.pinyintone.app.audio.SyntheticMic
 import joy.pinyintone.app.audio.SamplePlayer
 import joy.pinyintone.core.audio.AudioFramer
 import joy.pinyintone.core.audio.ReferenceShaper
@@ -51,7 +54,10 @@ class TonePracticeViewModel(app: Application) : AndroidViewModel(app) {
 
     private val deps = app as PinyintoneApp
     private val session = TonePracticeSession(deps.corpus, deps.practiceStore, deps.recordSink, deps.recordContext)
-    private val recorder = AudioRecorder(app)
+    private val recorder: MicSource = syntheticKind
+        ?.takeIf { BuildConfig.DEBUG }
+        ?.let { kind -> SyntheticMic(kind) { session.lexeme?.tones ?: emptyList() } }
+        ?: AudioRecorder(app)
     val player = SamplePlayer(app)
 
     private val _ui = MutableStateFlow(snapshot())
@@ -212,7 +218,10 @@ class TonePracticeViewModel(app: Application) : AndroidViewModel(app) {
         player.shutdown()
     }
 
-    private companion object {
-        const val CURVE_REFRESH_MS = 80L
+    companion object {
+        private const val CURVE_REFRESH_MS = 80L
+
+        /** 调试构建：用合成信号代替麦克风（MainActivity 从启动参数 `pt_mic` 设置）。发布构建忽略 */
+        var syntheticKind: SyntheticMic.Kind? = null
     }
 }

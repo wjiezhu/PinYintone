@@ -57,6 +57,7 @@ import androidx.compose.material3.TopAppBar
 import androidx.compose.material3.TopAppBarDefaults
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.CompositionLocalProvider
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
@@ -189,8 +190,13 @@ fun TonePracticeScreen(vm: TonePracticeViewModel) {
                 if (lexeme == null) {
                     CircularProgressIndicator(Modifier.align(Alignment.Center))
                 } else {
+                    // 结果或失败说明出现时滚进视野：放大文字时它可能在操作栏下面，不该让人自己去找
+                    val scroll = rememberScrollState()
+                    LaunchedEffect(ui.stage) {
+                        if (ui.stage == Stage.Feedback || ui.stage is Stage.Failed) scroll.animateScrollTo(scroll.maxValue)
+                    }
                     Column(
-                        Modifier.fillMaxSize().verticalScroll(rememberScrollState())
+                        Modifier.fillMaxSize().verticalScroll(scroll)
                             .padding(horizontal = 20.dp).padding(bottom = 16.dp),
                         verticalArrangement = Arrangement.spacedBy(12.dp),
                     ) {
