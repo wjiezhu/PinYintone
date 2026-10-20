@@ -187,8 +187,9 @@ final class TonePracticeTests: XCTestCase {
 
     /// v7 走势幅度闸门：含二 / 三 / 四声的词读平 → 不通关、有整词提示、跨度入库与研究记录
     func testFlatReadingOfContourWordIsGatedAndSpanIsRecorded() async throws {
+        vm.select(lexemeID: "xianzai")   // 现在 4+4（首个词是一声词，不适用）
         let tones = try XCTUnwrap(vm.currentLexeme?.tones)
-        XCTAssertTrue(ToneContourSpanGate.applies(tones: tones), "前提：首个词含二 / 三 / 四声")
+        XCTAssertTrue(ToneContourSpanGate.applies(tones: tones), "前提：所选词含二 / 三 / 四声")
         vm.startRecording()
         recorder.speakFlat()
         await settle()
@@ -201,6 +202,7 @@ final class TonePracticeTests: XCTestCase {
         XCTAssertLessThan(result.score, 60)
         let span = try XCTUnwrap(result.pitchSpanSemitones)
         XCTAssertLessThan(span, ToneContourSpanGate.minSpanSemitones)
+        vm.feedbackDidAppear()   // 结果真正显示后，这次尝试才结账进待传队列
         let attempt = try XCTUnwrap(attempts.last)
         XCTAssertEqual(attempt.passed, false)
         XCTAssertEqual(attempt.pitchSpanSemitones ?? -1, Double(span), accuracy: 1e-6)
@@ -209,6 +211,7 @@ final class TonePracticeTests: XCTestCase {
 
     /// 正确读法照常通关，跨度远超下限
     func testCorrectReadingPassesTheContourGate() async throws {
+        vm.select(lexemeID: "xianzai")
         await record(matching: true)
         let result = try XCTUnwrap(vm.feedbackResult)
         XCTAssertFalse(result.flatContour)
