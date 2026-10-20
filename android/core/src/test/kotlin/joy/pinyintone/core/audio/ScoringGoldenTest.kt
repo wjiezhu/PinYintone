@@ -1,5 +1,12 @@
 package joy.pinyintone.core.audio
 
+import joy.pinyintone.core.json.Json
+import joy.pinyintone.core.json.f
+import joy.pinyintone.core.json.floats
+import joy.pinyintone.core.json.i
+import joy.pinyintone.core.json.ints
+import joy.pinyintone.core.json.list
+import joy.pinyintone.core.json.obj
 import org.junit.AfterClass
 import org.junit.Assert.assertArrayEquals
 import org.junit.Assert.assertEquals
@@ -66,7 +73,7 @@ class ScoringGoldenTest {
 
     // ---- 数据 ----
 
-    private val golden = MiniJson.parse(File(dataDir, "golden.json").readText()).obj()
+    private val golden = Json.parse(File(dataDir, "golden.json").readText()).obj()
 
     private fun pcm(case: Map<String, Any?>): ShortArray =
         Wav.readPcm16Mono16k(File(dataDir, case["wav"] as String))

@@ -1,4 +1,6 @@
 pluginManagement {
+    // 构建期工具（iOS 字符串 → Android 资源），纯 JVM
+    includeBuild("build-logic")
     repositories {
         google()
         mavenCentral()
