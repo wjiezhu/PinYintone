@@ -40,6 +40,9 @@ nonisolated struct TrainingSessionDTO: Codable {
     let failureReason: String?         // 技术失败原因；有效记录为 nil
     let schemaVersion: Int?            // 记录字段版本
     let appVersion: String?            // 产生该记录的 App 版本
+    // v7：走势跨度（半音）；技术失败 / 无法计算为 nil。platform = "ios" / "android"
+    let pitchSpanSemitones: Double?
+    let platform: String?
 }
 
 nonisolated struct AspirationAttemptDTO: Codable {
@@ -54,6 +57,7 @@ nonisolated struct AspirationAttemptDTO: Codable {
     let phase: String?                 // 研究阶段，供按阶段筛选（升级需求 §3.1）
     let schemaVersion: Int?
     let appVersion: String?
+    let platform: String?              // v7："ios" / "android"
 }
 
 nonisolated struct FreeTextRecordDTO: Codable {
@@ -71,6 +75,7 @@ nonisolated struct FreeTextRecordDTO: Codable {
     let phase: String?                 // 研究阶段，供按阶段筛选（升级需求 §3.1）
     let schemaVersion: Int?
     let appVersion: String?
+    let platform: String?              // v7："ios" / "android"
 }
 
 // MARK: - 实体 → DTO（在主线程/拥有上下文的线程调用）
@@ -100,7 +105,9 @@ extension TrainingSession {
             resultStatus: resultStatus,
             failureReason: failureReason,
             schemaVersion: Int(schemaVersion),
-            appVersion: appVersion
+            appVersion: appVersion,
+            pitchSpanSemitones: pitchSpanSemitones?.doubleValue,
+            platform: platform
         )
     }
 }
@@ -118,7 +125,8 @@ extension AspirationAttempt {
             timestamp: iso8601.string(from: timestamp),
             phase: phase,
             schemaVersion: Int(schemaVersion),
-            appVersion: appVersion
+            appVersion: appVersion,
+            platform: platform
         )
     }
 }
@@ -139,7 +147,8 @@ extension FreeTextRecord {
             timestamp: iso8601.string(from: timestamp),
             phase: phase,
             schemaVersion: Int(schemaVersion),
-            appVersion: appVersion
+            appVersion: appVersion,
+            platform: platform
         )
     }
 }

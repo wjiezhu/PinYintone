@@ -175,16 +175,23 @@ final class FreeWordPracticeViewModel: ObservableObject {
         studentF0 = normalized
         // 与理想声调形状比对，给出百分制评分
         let dtw = dtwAnalyzer.distance(reference: idealShape, candidate: normalized)
-        let grade = dtwAnalyzer.grade(dtwScore: dtw)
+        // 走势幅度闸门（与关卡 2 同一道）：含二 / 三 / 四声的词读平即不通关。
+        // **必须**喂原始 Hz 的 cleaned（CLAUDE.md 禁令 15）。声调来自 PinyinConverter。
+        let flatContour = ToneContourSpanGate.fails(hzTrack: cleaned, tones: currentTones)
+        let span = ToneContourSpanGate.spanSemitones(hzTrack: cleaned)
+        let grade = flatContour ? .fail : dtwAnalyzer.grade(dtwScore: dtw)
         feedbackResult = FeedbackResult(
             dtwScore: dtw,
+            flatContour: flatContour,
+            pitchSpanSemitones: span,
             grade: grade,
             attemptNumber: 1,
             segments: []
         )
         if let attemptID {
             ResearchAttemptLog.shared.markSucceeded(attemptID, metric: Double(dtw),
-                                                    passed: grade != .fail)
+                                                    passed: grade != .fail,
+                                                    pitchSpanSemitones: span)
             // 结果已渲染；但自由文本**不计入**使用后问卷的 5 次阈值
             ResearchAttemptLog.shared.markResultDisplayed(attemptID)
         }

@@ -55,6 +55,9 @@ result_passed
 result_not_passed
 result_try_again
 result_score_a11y
+# 被闸门拦下时的整词提示（平调走向 / 走势幅度）
+advice_keep_level
+advice_add_movement
 feedback_skip_hint
 
 # 底部操作栏

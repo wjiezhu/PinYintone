@@ -46,6 +46,37 @@ final class ResearchAttemptLogTests: XCTestCase {
         XCTAssertEqual(r?.metricValue, 0.21)
         XCTAssertEqual(r?.passed, true)
         XCTAssertNotNil(r?.resultDisplayedAt)
+        XCTAssertNil(r?.pitchSpanSemitones, "没传跨度就是 nil，不填占位值")
+        XCTAssertEqual(r?.platform, "ios")
+    }
+
+    func testSpanIsKeptOnSuccessAndClearedOnFailure() {
+        let ok = begin()
+        log.markAnalyzing(ok)
+        log.markSucceeded(ok, metric: 0.3, passed: false, pitchSpanSemitones: 0.42)
+        log.markResultDisplayed(ok)
+        XCTAssertEqual(log.pending.first { $0.attemptID == ok }?.pitchSpanSemitones ?? -1, 0.42, accuracy: 1e-6)
+
+        let bad = begin()
+        log.markAnalyzing(bad)
+        log.markFailed(bad, status: .analysisFailed, error: .noSignal)
+        XCTAssertNil(log.pending.first { $0.attemptID == bad }?.pitchSpanSemitones)
+    }
+
+    /// v7 之前落盘的记录没有新键：照常解码，新字段为 nil
+    func testOldQueuedRecordDecodesWithoutNewKeys() throws {
+        let id = begin()
+        log.markAnalyzing(id)
+        log.markSucceeded(id, metric: 0.2, passed: true)
+        log.markResultDisplayed(id)
+        let r = try XCTUnwrap(log.pending.first { $0.attemptID == id })
+        var obj = try XCTUnwrap(JSONSerialization.jsonObject(with: JSONEncoder().encode(r)) as? [String: Any])
+        obj.removeValue(forKey: "platform"); obj.removeValue(forKey: "pitchSpanSemitones")
+        let back = try JSONDecoder().decode(ResearchAttemptRecord.self,
+                                            from: JSONSerialization.data(withJSONObject: obj))
+        XCTAssertNil(back.platform)
+        XCTAssertNil(back.pitchSpanSemitones)
+        XCTAssertEqual(back.metricValue, 0.2)
     }
 
     // MARK: - result_displayed_at 的语义

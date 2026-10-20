@@ -93,6 +93,8 @@ class ScoringGoldenTest {
         assertEquals(DTWAnalyzer.PASS_THRESHOLD, p["passThreshold"].f())
         assertEquals(ToneDirectionGate.MAX_FALL_SEMITONES, p["gateMaxFallSemitones"].f())
         assertEquals(ToneScorer.MIN_VOICED_FRAMES, p["minVoicedFrames"].i())
+        assertEquals(ToneContourSpanGate.MIN_SPAN_SEMITONES, p["contourGateMinSpanSemitones"].f())
+        assertEquals(ToneContourSpanGate.MIN_VOICED_FRAMES, p["contourGateMinVoicedFrames"].i())
         assertEquals(ToneScorer.QUALITY_FLAG_THRESHOLD, p["qualityFlagThreshold"].f())
         assertEquals(AspirationDetector.CHUNK_SIZE, p["aspirationChunk"].i())
         assertEquals(AspirationDetector.CALIBRATION_CHUNKS, p["aspirationCalibrationChunks"].i())
@@ -137,6 +139,12 @@ class ScoringGoldenTest {
                 val fall = ToneDirectionGate.fallSemitones(swiftClean, tones)
                 if (gate["fallSemitones"] == null) assertNull("$name fallSemitones", fall)
                 else check("$name gate.fallSemitones", gate["fallSemitones"].f(), fall!!, ulps)
+                val cg = c["contourGate"].obj()
+                assertEquals("$name contourGate.applies", cg["applies"], ToneContourSpanGate.applies(tones))
+                val span = ToneContourSpanGate.spanSemitones(swiftClean)
+                if (cg["spanSemitones"] == null) assertNull("$name spanSemitones", span)
+                else check("$name contourGate.spanSemitones", cg["spanSemitones"].f(), span!!, ulps)
+                assertEquals("$name contourGate.fails", cg["fails"], ToneContourSpanGate.fails(swiftClean, tones))
             }
 
             val s = c["referenceShaping"].obj()
@@ -193,6 +201,11 @@ class ScoringGoldenTest {
                         check("$name gate.fallSemitones(e2e)", it.f(),
                               ToneDirectionGate.fallSemitones(out.cleanedHz, tones)!!, unitlessE2E)
                     }
+                    val cg = c["contourGate"].obj()
+                    assertEquals("$name contourGate.fails(e2e)", cg["fails"], out.flatContour)
+                    if (cg["spanSemitones"] == null) assertNull("$name span(e2e)", out.pitchSpanSemitones)
+                    else check("$name contourGate.spanSemitones(e2e)", cg["spanSemitones"].f(),
+                               out.pitchSpanSemitones!!, unitlessE2E)
                     assertEquals("$name grade", c["grade"], out.grade.rawValue)
                     assertEquals("$name passed", c["passed"], out.passed)
                 }

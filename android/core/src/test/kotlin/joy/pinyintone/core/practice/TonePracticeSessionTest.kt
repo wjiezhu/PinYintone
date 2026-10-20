@@ -125,6 +125,40 @@ class TonePracticeSessionTest {
     }
 
     @Test
+    fun flatReadingOfContourWordIsGatedAndSpanIsRecorded() {
+        session.select("xianzai")   // 现在 4+4
+        recordOnce(FloatArray(90) { 220f - 2f * it / 89f })   // 读平，带一点点下倾
+        val fb = session.feedback!!
+        assertTrue(fb.flatContour)
+        assertFalse(fb.levelToneDropped)
+        assertEquals("fail", fb.grade)
+        assertTrue("闸门拦下的分数不高于 59", fb.score <= 59)
+        val r = records.single()
+        assertEquals("fail", r.grade)
+        assertTrue(r.pitchSpanSemitones!! < 2.0)
+        assertEquals("android", r.platform)
+        assertEquals(7, r.schemaVersion)
+    }
+
+    @Test
+    fun correctReadingPassesContourGateAndRecordsSpan() {
+        session.select("xianzai")
+        recordOnce(read(listOf(4, 4)))
+        val fb = session.feedback!!
+        assertFalse(fb.flatContour)
+        assertTrue(fb.passed)
+        assertTrue(records.single().pitchSpanSemitones!! > 4.0)
+    }
+
+    @Test
+    fun technicalRetryHasNoSpan() {
+        session.select("xianzai")
+        recordOnce(FloatArray(40))
+        assertNull(records.single().pitchSpanSemitones)
+        assertEquals("android", records.single().platform)
+    }
+
+    @Test
     fun permissionAndDeviceFailuresAreNeverSilent() {
         session.onPermissionDenied()
         assertEquals(Stage.Failed(Failure.MICROPHONE_DENIED), session.stage)

@@ -6,14 +6,14 @@ import kotlin.math.roundToInt
 /**
  * 面向用户的百分制得分（0–100，越高越好），只用于普通练习的显示。
  * 对应 Swift `FeedbackResult.score`：由归一化 DTW 分段线性映射，60 分 = 通关线（DTW 0.5）。
- * 被闸门拦下时不得高于 59（否则会出现「85 分但不通关」）。
+ * 被任一闸门（平调走向 / 走势幅度）拦下时不得高于 59（否则会出现「85 分但不通关」）。
  *
  * 这是形成性反馈，**不是语言能力等级**（CLAUDE.md「结果解释边界」）。
  */
 object FeedbackScore {
-    fun of(dtwScore: Float, levelToneDropped: Boolean): Int {
+    fun of(dtwScore: Float, gated: Boolean): Int {
         val m = mapped(dtwScore)
-        return if (levelToneDropped) minOf(59, m) else m
+        return if (gated) minOf(59, m) else m
     }
 
     private fun mapped(dtwScore: Float): Int {

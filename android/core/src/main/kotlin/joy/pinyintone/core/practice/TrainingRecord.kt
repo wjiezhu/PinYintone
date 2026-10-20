@@ -40,6 +40,13 @@ data class TrainingRecord(
     val failureReason: String?,
     val schemaVersion: Int,
     val appVersion: String,
+    /**
+     * 走势跨度（半音，v7 起）。有效结果一律记（任何词，含全一声的词）；
+     * 技术失败、或有声帧不足 6 无法计算时为 null。是否触发幅度闸门 = 词含二 / 三 / 四声且本值 < 2.0。
+     */
+    val pitchSpanSemitones: Double? = null,
+    /** "ios" / "android"（v7 起） */
+    val platform: String = RecordSchema.PLATFORM,
     val synced: Boolean = false,
 ) {
     /** 是否计入发音成绩（技术失败一律不计，CLAUDE.md 禁令 9）。通关以 grade 为准 */
@@ -62,6 +69,7 @@ data class TrainingRecord(
             "assessmentSetVersion" to s(assessmentSetVersion), "feedbackMode" to s(feedbackMode),
             "resultStatus" to s(resultStatus), "failureReason" to s(failureReason),
             "schemaVersion" to "$schemaVersion", "appVersion" to s(appVersion),
+            "pitchSpanSemitones" to (pitchSpanSemitones?.toString() ?: "null"), "platform" to s(platform),
         ).joinToString(",", "{", "}") { (k, v) -> "${jsonString(k)}:$v" }
     }
 }

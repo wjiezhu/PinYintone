@@ -10,6 +10,8 @@ import androidx.room.PrimaryKey
 import androidx.room.Query
 import androidx.room.Room
 import androidx.room.RoomDatabase
+import androidx.room.migration.Migration
+import androidx.sqlite.db.SupportSQLiteDatabase
 import joy.pinyintone.core.practice.FeedbackStyle
 import joy.pinyintone.core.practice.PracticeStore
 import joy.pinyintone.core.practice.RecordSink
@@ -47,12 +49,17 @@ data class TrainingRecordEntity(
     val schemaVersion: Int,
     val appVersion: String,
     val synced: Boolean,
+    /** v7 起：走势跨度（半音）；技术失败或无法计算为 null。见 [TrainingRecord.pitchSpanSemitones] */
+    val pitchSpanSemitones: Double? = null,
+    /** v7 起："android"。数据库版本 1 的旧行由迁移补成 "android"（本端只会产生本端的记录） */
+    val platform: String = "android",
 ) {
     fun toRecord() = TrainingRecord(
         id, deviceID, classCode, role, groupAssignment, lexemeID, dtwScore, grade, attemptNumber,
         timestampMillis, referenceType, voicedFrameCount, qualityFlag, referenceSwitchedDuringAttempt,
         phase, wordSetID, presentationOrder, assessmentSetVersion, feedbackMode, resultStatus,
-        failureReason, schemaVersion, appVersion, synced,
+        failureReason, schemaVersion, appVersion,
+        pitchSpanSemitones = pitchSpanSemitones, platform = platform, synced = synced,
     )
 
     companion object {
@@ -61,7 +68,7 @@ data class TrainingRecordEntity(
             r.attemptNumber, r.timestampMillis, r.referenceType, r.voicedFrameCount, r.qualityFlag,
             r.referenceSwitchedDuringAttempt, r.phase, r.wordSetID, r.presentationOrder,
             r.assessmentSetVersion, r.feedbackMode, r.resultStatus, r.failureReason, r.schemaVersion,
-            r.appVersion, r.synced,
+            r.appVersion, r.synced, r.pitchSpanSemitones, r.platform,
         )
     }
 }
@@ -79,13 +86,26 @@ interface TrainingRecordDao {
     suspend fun markSynced(ids: List<String>)
 }
 
-@Database(entities = [TrainingRecordEntity::class], version = 1, exportSchema = false)
+@Database(entities = [TrainingRecordEntity::class], version = 2, exportSchema = false)
 abstract class AppDatabase : RoomDatabase() {
     abstract fun records(): TrainingRecordDao
 
     companion object {
+        /**
+         * 1 → 2（记录 schemaVersion 7）：加走势跨度与 platform 两列。旧行保持原样：
+         * 跨度为 NULL（当时没算），platform 补 "android"。不用破坏性重建——那会丢掉未上传的记录。
+         */
+        val MIGRATION_1_2 = object : Migration(1, 2) {
+            override fun migrate(db: SupportSQLiteDatabase) {
+                db.execSQL("ALTER TABLE training_records ADD COLUMN pitchSpanSemitones REAL")
+                db.execSQL("ALTER TABLE training_records ADD COLUMN platform TEXT NOT NULL DEFAULT 'android'")
+            }
+        }
+
         fun open(context: Context): AppDatabase =
-            Room.databaseBuilder(context, AppDatabase::class.java, "pinyintone.db").build()
+            Room.databaseBuilder(context, AppDatabase::class.java, "pinyintone.db")
+                .addMigrations(MIGRATION_1_2)
+                .build()
     }
 }
 

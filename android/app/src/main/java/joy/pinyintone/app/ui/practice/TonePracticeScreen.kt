@@ -65,6 +65,7 @@ import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.draw.alpha
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.platform.LocalLayoutDirection
@@ -339,6 +340,16 @@ private fun ResultBlock(fb: TonePracticeSession.Feedback, consecutiveFailures: I
                     Text(" / 100", style = MaterialTheme.typography.bodySmall, color = c.textSecondary)
                 }
             }
+        }
+        // 被闸门拦下时，逐字 / 分数都说明不了原因，给一句整词提示（与 iOS 结果区相同）
+        val gateHint = when {
+            fb.flatContour -> R.string.advice_add_movement
+            fb.levelToneDropped -> R.string.advice_keep_level
+            else -> null
+        }
+        if (gateHint != null) {
+            Text(stringResource(gateHint), Modifier.padding(bottom = 8.dp).testTag("practice.gateHint"),
+                 style = MaterialTheme.typography.bodyMedium, color = c.textPrimary)
         }
         if (consecutiveFailures >= TonePracticeSession.SKIP_HINT_THRESHOLD) {
             Text(stringResource(R.string.feedback_skip_hint), Modifier.padding(bottom = 8.dp),

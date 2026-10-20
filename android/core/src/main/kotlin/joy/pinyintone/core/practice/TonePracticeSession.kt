@@ -81,6 +81,8 @@ class TonePracticeSession(
         val dtwScore: Float,
         val grade: String,
         val levelToneDropped: Boolean,
+        /** 被走势幅度闸门拦下（含二 / 三 / 四声的词读平）：界面给「音高几乎没有变化」的提示 */
+        val flatContour: Boolean,
         /** 0–100 显示分（形成性反馈，不是能力等级） */
         val score: Int,
     ) {
@@ -366,6 +368,7 @@ class TonePracticeSession(
                         referenceSwitched = switched,
                         feedbackMode = if (mode == Mode.PRACTICE) style.rawValue else null,
                         resultStatus = out.resultStatus.rawValue, failureReason = null,
+                        pitchSpanSemitones = out.pitchSpanSemitones?.toDouble(),
                     ))
                     flushPendingReference()
                     if (mode == Mode.SELF_TEST) {
@@ -375,7 +378,8 @@ class TonePracticeSession(
                     } else {
                         learnerCurve = out.normalized
                         feedback = Feedback(out.dtwScore, out.grade.rawValue, out.levelToneDropped,
-                                            FeedbackScore.of(out.dtwScore, out.levelToneDropped))
+                                            out.flatContour,
+                                            FeedbackScore.of(out.dtwScore, out.levelToneDropped || out.flatContour))
                         consecutiveFailures = if (!out.passed) consecutiveFailures + 1 else 0
                         stage = Stage.Feedback
                     }
@@ -428,6 +432,7 @@ class TonePracticeSession(
             qualityFlag = false, referenceSwitched = false, feedbackMode = null,
             resultStatus = ToneScorer.ResultStatus.TECHNICAL_RETRY.rawValue,
             failureReason = reason.rawValue,
+            pitchSpanSemitones = null,   // 技术失败没有成绩，跨度也不记
         ))
     }
 
@@ -435,6 +440,7 @@ class TonePracticeSession(
         lex: Lexeme, dtwScore: Double, grade: String, attempt: Int, referenceType: String?,
         voicedFrames: Int, qualityFlag: Boolean, referenceSwitched: Boolean,
         feedbackMode: String?, resultStatus: String, failureReason: String?,
+        pitchSpanSemitones: Double?,
     ) = TrainingRecord(
         id = newID(), deviceID = context.deviceID, classCode = null, role = context.role,
         groupAssignment = "n/a", lexemeID = lex.id, dtwScore = dtwScore, grade = grade,
@@ -445,6 +451,7 @@ class TonePracticeSession(
         assessmentSetVersion = if (mode == Mode.SELF_TEST) ASSESSMENT_SET_VERSION else null,
         feedbackMode = feedbackMode, resultStatus = resultStatus, failureReason = failureReason,
         schemaVersion = RecordSchema.VERSION, appVersion = context.appVersion,
+        pitchSpanSemitones = pitchSpanSemitones, platform = RecordSchema.PLATFORM,
     )
 
     private fun changed() { onChange?.invoke() }

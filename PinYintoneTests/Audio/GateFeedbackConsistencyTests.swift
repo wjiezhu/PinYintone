@@ -47,4 +47,29 @@ final class GateFeedbackConsistencyTests: XCTestCase {
                        "整词提示没有可归咎的单字，模板不能带占位符：\(template)")
         XCTAssertNotEqual(template, DirectionHint.wordDropping.coachKey, "本地化键应已翻译")
     }
+
+    // MARK: - 走势幅度闸门（v7）
+
+    func testFlatContourGateGivesWholeWordHintAndCapsScore() {
+        let segs = (0..<2).map {
+            ToneSegmentResult(syllableIndex: $0, hanziChar: ["现", "在"][$0],
+                              expectedTone: 4, segmentScore: 0.2, directionHint: .ok)
+        }
+        let gated = FeedbackResult(dtwScore: 0.31, flatContour: true, pitchSpanSemitones: 0.4,
+                                   grade: .fail, attemptNumber: 1, segments: segs)
+        XCTAssertEqual(gated.coachAdvice.hint, .wordFlat)
+        XCTAssertNil(gated.coachAdvice.praiseChar)
+        XCTAssertLessThan(gated.score, 60)
+        XCTAssertTrue(gated.isGated)
+        XCTAssertEqual(gated.gateHintKey, "advice_add_movement")
+        let template = NSLocalizedString(DirectionHint.wordFlat.coachKey, comment: "")
+        XCTAssertFalse(template.contains("%@"))
+        XCTAssertNotEqual(template, DirectionHint.wordFlat.coachKey, "本地化键应已翻译")
+    }
+
+    func testUngatedResultHasNoGateHint() {
+        let normal = FeedbackResult(dtwScore: 0.2, grade: .excellent, attemptNumber: 1, segments: [])
+        XCTAssertNil(normal.gateHintKey)
+        XCTAssertFalse(normal.isGated)
+    }
 }

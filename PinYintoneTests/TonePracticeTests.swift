@@ -44,6 +44,18 @@ final class FakeRecorder: RecordingSource {
         push(samples)
     }
 
+    /// 读平：整段同一个音高（含二 / 三 / 四声的词应被走势幅度闸门拦下）
+    func speakFlat(hz: Double = 220, seconds: Double = 0.9) {
+        let total = Int(seconds * 16_000)
+        var phase = 0.0
+        var samples = [Int16](repeating: 0, count: total)
+        for n in 0..<total {
+            phase += 2 * Double.pi * hz / 16_000
+            samples[n] = Int16(sin(phase) * 9000)
+        }
+        push(samples)
+    }
+
     /// 一段静音：没有任何有声帧
     func silence(seconds: Double = 0.6) {
         push([Int16](repeating: 0, count: Int(seconds * 16_000)))
@@ -171,6 +183,38 @@ final class TonePracticeTests: XCTestCase {
         XCTAssertFalse(vm.studentF0.isEmpty, "有效录音应有可画的曲线")
         XCTAssertFalse(vm.isBusy)
         XCTAssertTrue(LearnerRecordingStore.shared.hasRecording, "录音应可回听")
+    }
+
+    /// v7 走势幅度闸门：含二 / 三 / 四声的词读平 → 不通关、有整词提示、跨度入库与研究记录
+    func testFlatReadingOfContourWordIsGatedAndSpanIsRecorded() async throws {
+        let tones = try XCTUnwrap(vm.currentLexeme?.tones)
+        XCTAssertTrue(ToneContourSpanGate.applies(tones: tones), "前提：首个词含二 / 三 / 四声")
+        vm.startRecording()
+        recorder.speakFlat()
+        await settle()
+        vm.stopRecordingAndEvaluate()
+
+        let result = try XCTUnwrap(vm.feedbackResult)
+        XCTAssertTrue(result.flatContour)
+        XCTAssertEqual(result.grade, .fail)
+        XCTAssertEqual(result.gateHintKey, "advice_add_movement")
+        XCTAssertLessThan(result.score, 60)
+        let span = try XCTUnwrap(result.pitchSpanSemitones)
+        XCTAssertLessThan(span, ToneContourSpanGate.minSpanSemitones)
+        let attempt = try XCTUnwrap(attempts.last)
+        XCTAssertEqual(attempt.passed, false)
+        XCTAssertEqual(attempt.pitchSpanSemitones ?? -1, Double(span), accuracy: 1e-6)
+        XCTAssertEqual(attempt.platform, "ios")
+    }
+
+    /// 正确读法照常通关，跨度远超下限
+    func testCorrectReadingPassesTheContourGate() async throws {
+        await record(matching: true)
+        let result = try XCTUnwrap(vm.feedbackResult)
+        XCTAssertFalse(result.flatContour)
+        XCTAssertNotEqual(result.grade, .fail)
+        XCTAssertGreaterThan(try XCTUnwrap(result.pitchSpanSemitones), 4)
+        XCTAssertNil(result.gateHintKey)
     }
 
     /// 「结果已显示」由界面在结果真正出现时报告；重绘多少次都只算一次（A09）
