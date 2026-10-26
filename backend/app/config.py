@@ -52,6 +52,21 @@ class Settings(BaseSettings):
     # Railway / Render 前面各有一层代理，取 1；直接对外暴露时取 0
     trusted_proxy_hops: int = 1
 
+    # ── Android 直接分发的新版本检查（routers/app_version.py）──
+    # 安装包不上 Google Play，由研究者把下载地址发给参与者。App 启动时查一次：
+    # 有新版本给可关闭的提示，低于最低支持版本提示必须更新。版本号用 versionCode（整数）比较。
+    # latest = 0 或下载地址留空 = 没有发布信息，App 什么也不提示
+    android_latest_version_code: int = 0
+    android_latest_version_name: str = ""
+    android_min_version_code: int = 0
+    # 必须是 https：App 只把它交给系统浏览器打开，App 内不下载、不安装
+    android_download_url: str = ""
+    # 更新说明，按界面语言各写一条（可只写一部分；App 依次退到 en、zh）
+    android_release_notes_zh: str = ""
+    android_release_notes_en: str = ""
+    android_release_notes_fr: str = ""
+    android_release_notes_ar: str = ""
+
     @property
     def is_production(self) -> bool:
         env = self.app_env.strip().lower()

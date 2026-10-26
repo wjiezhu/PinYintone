@@ -5,3 +5,10 @@ local.properties
 *.iml
 .kotlin/
 captures/
+# 正式签名：密钥库与密码一律放仓库之外（~/.pinyintone-release/），这里再兜一层
+*.jks
+*.keystore
+*.p12
+signing.properties
+keystore.properties
+release-signing/

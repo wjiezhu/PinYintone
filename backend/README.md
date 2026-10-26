@@ -41,6 +41,11 @@ iOS 端 `APIClient.baseURL` 已指向 `http://localhost:8000`，模拟器可直�
 | POST | `/api/sync/aspiration` | 送气训练记录 |
 | POST | `/api/sync/freetext` | 自由文本记录 |
 
+### 新版本检查（不需要登录）
+| 方法 | 路径 | 说明 |
+|------|------|------|
+| GET | `/api/app-version/android` | Android 直接分发：最新版本号、最低支持版本号、下载地址（只放行 https）、各语言更新说明。值全部来自 `ANDROID_*` 环境变量；没配好时 `published = false`，App 不提示 |
+
 ### 教师面板（需 `Authorization: Bearer <token>`）
 | 方法 | 路径 | 说明 |
 |------|------|------|
@@ -110,6 +115,10 @@ App 默认连 `http://localhost:8000`。上线后在 **Info.plist 增加键 `PT_
 | `EMAIL_CODE_PER_EMAIL_PER_HOUR` | 选填，默认 5 | 同一邮箱每小时最多发几次验证码 |
 | `EMAIL_CODE_PER_IP_PER_HOUR` | 选填，默认 30 | 同一 IP 每小时最多发几次。一个教室常共用出口 IP，别设太小 |
 | `TRUSTED_PROXY_HOPS` | 选填，默认 1 | 取客户端 IP 时信任几层反向代理（`X-Forwarded-For` 从右数）。Railway / Render 取 1，直接对外暴露取 0 |
+| `ANDROID_LATEST_VERSION_CODE` / `ANDROID_LATEST_VERSION_NAME` | 发 Android 新版时填 | 最新安装包的 versionCode（整数，比较用）与显示用的版本名；versionCode 为 0 = 不提示 |
+| `ANDROID_MIN_VERSION_CODE` | 选填，默认 0 | 低于它的 App 提示「必须更新」（提示不能关，但不拦练习）。不会高于最新版本 |
+| `ANDROID_DOWNLOAD_URL` | 发 Android 新版时填 | 安装包下载页，必须 `https://`；App 用系统浏览器打开，自己不下载 |
+| `ANDROID_RELEASE_NOTES_ZH` / `_EN` / `_FR` / `_AR` | 选填 | 更新说明，按界面语言显示，缺的语言依次退到 en、zh |
 | `PORT` | 平台注入 | 监听端口 |
 
 ### 学生登录身份

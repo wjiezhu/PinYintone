@@ -64,6 +64,9 @@ class SamplePlayer(context: Context) {
         checkChineseVoice()
     }
 
+    /** 系统默认的 TTS 引擎包名（诊断页用，如 com.google.android.tts）；还没初始化好为 null */
+    val engineName: String? get() = runCatching { tts?.defaultEngine }.getOrNull()?.takeIf { it.isNotBlank() }
+
     /** 从系统设置回来时重新检查（用户可能刚下载了中文语音） */
     fun checkChineseVoice() {
         val engine = tts ?: return

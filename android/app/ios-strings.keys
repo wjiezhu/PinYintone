@@ -84,3 +84,9 @@ onboarding_mic_body
 onboarding_mic_privacy
 onboarding_mic_allow
 onboarding_open_settings
+
+# 设置
+settings_title
+settings_feedback_style
+settings_feedback_style_footer
+common_dismiss

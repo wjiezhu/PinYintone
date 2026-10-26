@@ -82,6 +82,7 @@ import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import joy.pinyintone.app.PinyintoneApp
 import joy.pinyintone.app.R
 import joy.pinyintone.app.audio.SamplePlayer
+import joy.pinyintone.app.ui.settings.UpdateBanner
 import joy.pinyintone.app.ui.theme.Pt
 import joy.pinyintone.core.practice.FeedbackStyle
 import joy.pinyintone.core.practice.TonePracticeSession
@@ -98,7 +99,7 @@ import joy.pinyintone.core.practice.TonePracticeSession.Stage
  */
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
-fun TonePracticeScreen(vm: TonePracticeViewModel) {
+fun TonePracticeScreen(vm: TonePracticeViewModel, onOpenSettings: () -> Unit) {
     val ui by vm.ui.collectAsStateWithLifecycle()
     val style by vm.style.collectAsStateWithLifecycle()
     val sampleAvailability by vm.player.availability.collectAsStateWithLifecycle()
@@ -106,6 +107,7 @@ fun TonePracticeScreen(vm: TonePracticeViewModel) {
     val context = LocalContext.current
     val app = context.applicationContext as PinyintoneApp
     val c = Pt.colors
+    val updatePrompt by app.updates.prompt.collectAsStateWithLifecycle()
 
     var showWordPicker by rememberSaveable { mutableStateOf(false) }
     var showMicExplanation by rememberSaveable { mutableStateOf(false) }
@@ -162,6 +164,11 @@ fun TonePracticeScreen(vm: TonePracticeViewModel) {
                                     text = { Text(stringResource(R.string.self_test_start)) },
                                     onClick = { showMenu = false; vm.beginSelfTest() },
                                 )
+                                DropdownMenuItem(
+                                    text = { Text(stringResource(R.string.settings_title)) },
+                                    onClick = { showMenu = false; onOpenSettings() },
+                                    modifier = Modifier.testTag("menu.settings"),
+                                )
                             }
                         }
                     }
@@ -201,6 +208,10 @@ fun TonePracticeScreen(vm: TonePracticeViewModel) {
                             .padding(horizontal = 20.dp).padding(bottom = 16.dp),
                         verticalArrangement = Arrangement.spacedBy(12.dp),
                     ) {
+                        // 新版本提示：只在普通练习里、不在录音分析中出现；失败或没有新版本时什么也没有
+                        updatePrompt?.let { prompt ->
+                            UpdateBanner(prompt, onDismiss = { app.updates.dismiss() }, Modifier.padding(top = 8.dp))
+                        }
                         LexemeCard(lexeme, Modifier.padding(top = 8.dp))
                         ModeTabs(style, enabled = !ui.isBusy, onSelect = vm::setStyle)
                         Box(Modifier.fillMaxWidth().height(220.dp)) {

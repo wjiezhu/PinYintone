@@ -6,6 +6,7 @@ import android.content.SharedPreferences
 import joy.pinyintone.app.data.AppDatabase
 import joy.pinyintone.app.data.PrefsPracticeStore
 import joy.pinyintone.app.data.RoomRecordSink
+import joy.pinyintone.app.update.UpdateChecker
 import joy.pinyintone.core.corpus.Corpus
 import joy.pinyintone.core.practice.RecordContext
 import kotlinx.coroutines.CoroutineScope
@@ -29,6 +30,9 @@ class PinyintoneApp : Application() {
     val database: AppDatabase by lazy { AppDatabase.open(this) }
 
     val practiceStore by lazy { PrefsPracticeStore(prefs) }
+
+    /** 启动时查一次新版本（失败静默） */
+    val updates by lazy { UpdateChecker(practiceStore, appScope) }
 
     val recordSink by lazy { RoomRecordSink(database.records(), appScope) }
 

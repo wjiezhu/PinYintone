@@ -55,7 +55,7 @@ class TonePracticeViewModel(app: Application) : AndroidViewModel(app) {
     private val deps = app as PinyintoneApp
     private val session = TonePracticeSession(deps.corpus, deps.practiceStore, deps.recordSink, deps.recordContext)
     private val recorder: MicSource = syntheticKind
-        ?.takeIf { BuildConfig.DEBUG }
+        ?.takeIf { BuildConfig.SYNTHETIC_MIC_ALLOWED }
         ?.let { kind -> SyntheticMic(kind) { session.lexeme?.tones ?: emptyList() } }
         ?: AudioRecorder(app)
     val player = SamplePlayer(app)
@@ -148,6 +148,8 @@ class TonePracticeViewModel(app: Application) : AndroidViewModel(app) {
                     session.onInterrupted()
                 }
             })
+            deps.practiceStore.lastInputSampleRate = recorder.inputSampleRate
+            deps.practiceStore.lastAudioSource = recorder.sourceName
         } catch (e: AudioRecorder.StartException) {
             // 不得静默（禁令 11）：状态机给出可执行提示并落技术失败记录
             session.onRecordingStartFailed(e.permissionDenied)

@@ -3,4 +3,47 @@
     <string name="tts_missing_voice">لا يوجد صوت صيني مثبّت لتحويل النص إلى كلام. نزّل صوتًا صينيًا (الماندرين) من إعدادات تحويل النص إلى كلام في الهاتف، ثم عُد إلى هنا.</string>
     <string name="tts_unavailable">لا يمكن تشغيل النموذج: لا يوجد محرك لتحويل النص إلى كلام على هذا الهاتف. يمكنك مع ذلك التسجيل والحصول على الملاحظات.</string>
     <string name="tts_open_settings">فتح إعدادات تحويل النص إلى كلام</string>
+
+    <!-- 设置、诊断信息、新版本提示（Android 独有） -->
+    <string name="ui_language_code">ar</string>
+    <string name="settings_app_version">الإصدار %1$s</string>
+    <string name="diag_title">معلومات التشخيص</string>
+    <string name="diag_intro">معلومات تقنية عن هذا الهاتف والتطبيق. إذا واجهت مشكلة، انسخها وأرسلها إلى الباحث. لا تحتوي على أي تسجيل أو محتوى تمرين أو معلومات شخصية.</string>
+    <string name="diag_app_version">إصدار التطبيق</string>
+    <string name="diag_device">الشركة المصنّعة والطراز</string>
+    <string name="diag_android">إصدار أندرويد</string>
+    <string name="diag_sample_rate">معدل أخذ العينات للتسجيل</string>
+    <string name="diag_resampled">تحويل إلى 16 كيلوهرتز</string>
+    <string name="diag_audio_source">مصدر الصوت</string>
+    <string name="diag_last_voiced">آخر تسجيل: عدد الإطارات الصوتية</string>
+    <string name="diag_last_status">آخر تسجيل: النتيجة</string>
+    <string name="diag_chinese_tts">الصوت الصيني (الاستماع إلى النموذج)</string>
+    <string name="diag_ui_language">لغة التطبيق</string>
+    <string name="diag_font_scale">حجم الخط</string>
+    <string name="diag_not_yet">لا يوجد تسجيل بعد</string>
+    <string name="diag_yes">نعم</string>
+    <string name="diag_no">لا</string>
+    <string name="diag_status_valid">صالح</string>
+    <string name="diag_status_flagged">صالح (الجودة بحاجة إلى مراجعة)</string>
+    <string name="diag_status_retry">فشل تقني: %1$s</string>
+    <string name="diag_reason_insufficient_voiced_frames">لم يُلتقط أي صوت</string>
+    <string name="diag_reason_permission_denied">الميكروفون غير مسموح</string>
+    <string name="diag_reason_recording_interrupted">انقطع التسجيل</string>
+    <string name="diag_reason_low_signal_quality">الإشارة ضعيفة جدًا</string>
+    <string name="diag_reason_analysis_error">خطأ في التحليل</string>
+    <string name="diag_tts_ready">متوفر</string>
+    <string name="diag_tts_missing">لا يوجد صوت صيني مثبّت</string>
+    <string name="diag_tts_unavailable">لا يوجد محرك لتحويل النص إلى كلام</string>
+    <string name="diag_tts_checking">جارٍ التحقق…</string>
+    <string name="diag_copy">نسخ</string>
+    <string name="diag_copied">تم النسخ. الصقه في رسالة إلى الباحث.</string>
+    <string name="diag_share">إرسال…</string>
+    <string name="diag_share_chooser">إرسال معلومات التشخيص</string>
+    <string name="diag_copy_note">النص المنسوخ هو النص التقني أدناه باللغة الإنجليزية ليتمكن الباحث من قراءته.</string>
+    <string name="update_available_title">يتوفر إصدار جديد %1$s</string>
+    <string name="update_available_body">يمكنك متابعة التمرين والتحديث لاحقًا.</string>
+    <string name="update_required_title">يرجى تحديث التطبيق</string>
+    <string name="update_required_body">لم يعد هذا الإصدار مدعومًا. نزّل الإصدار %1$s. يمكنك متابعة التمرين حتى ذلك الحين.</string>
+    <string name="update_download">التنزيل عبر المتصفح</string>
+    <string name="update_open_failed">تعذّر فتح المتصفح. انسخ هذا العنوان في المتصفح: %1$s</string>
 </resources>

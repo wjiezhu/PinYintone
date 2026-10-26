@@ -48,8 +48,10 @@ class AudioRecorder(context: Context) : MicSource {
     private var callback: Any? = null   // AudioManager.AudioRecordingCallback（API 29+）
 
     /** 实际使用的硬件采样率（诊断用） */
-    var inputSampleRate: Int = 0
+    override var inputSampleRate: Int = 0
         private set
+
+    override val sourceName: String get() = "VOICE_RECOGNITION"
 
     override val isRunning: Boolean get() = running
 
@@ -169,6 +171,10 @@ class AudioRecorder(context: Context) : MicSource {
 /** 录音来源：真实麦克风，或调试构建里的合成信号（界面验证用） */
 interface MicSource {
     val isRunning: Boolean
+    /** 这次录音实际用的输入采样率（Hz）；不是 16 000 就说明走了降采样。诊断页用 */
+    val inputSampleRate: Int
+    /** 音源名称（诊断页用） */
+    val sourceName: String
     /** 启动失败抛 [AudioRecorder.StartException] */
     fun start(listener: AudioRecorder.Listener)
     fun stop()

@@ -84,7 +84,19 @@ interface TrainingRecordDao {
 
     @Query("UPDATE training_records SET synced = 1 WHERE id IN (:ids)")
     suspend fun markSynced(ids: List<String>)
+
+    /** 诊断页：最近一次录音的技术信息（不取词条、分数等内容） */
+    @Query("SELECT voicedFrameCount, resultStatus, failureReason, timestampMillis FROM training_records " +
+        "ORDER BY timestampMillis DESC LIMIT 1")
+    suspend fun latestAttempt(): LatestAttempt?
 }
+
+data class LatestAttempt(
+    val voicedFrameCount: Int,
+    val resultStatus: String?,
+    val failureReason: String?,
+    val timestampMillis: Long,
+)
 
 @Database(entities = [TrainingRecordEntity::class], version = 2, exportSchema = false)
 abstract class AppDatabase : RoomDatabase() {
@@ -141,7 +153,23 @@ class PrefsPracticeStore(private val prefs: SharedPreferences) : PracticeStore {
         get() = prefs.getBoolean(MIC_ASKED, false)
         set(value) { prefs.edit().putBoolean(MIC_ASKED, value).apply() }
 
+    /** 最近一次成功启动录音时的输入采样率与音源（诊断页用；没录过为 0 / null） */
+    var lastInputSampleRate: Int
+        get() = prefs.getInt(LAST_RATE, 0)
+        set(value) { prefs.edit().putInt(LAST_RATE, value).apply() }
+    var lastAudioSource: String?
+        get() = prefs.getString(LAST_SOURCE, null)
+        set(value) { prefs.edit().putString(LAST_SOURCE, value).apply() }
+
+    /** 学习者关掉过提示的那个新版本号（只对可选更新生效） */
+    var dismissedUpdateVersionCode: Int
+        get() = prefs.getInt(DISMISSED_UPDATE, 0)
+        set(value) { prefs.edit().putInt(DISMISSED_UPDATE, value).apply() }
+
     private companion object {
+        const val LAST_RATE = "diag_last_input_sample_rate"
+        const val LAST_SOURCE = "diag_last_audio_source"
+        const val DISMISSED_UPDATE = "update_dismissed_version_code"
         // 键名沿用 iOS 的 UserDefaults 键，方便对照
         const val ATTEMPTS = "pt_tone_attempts."
         const val CURSOR = "pt_tone_practice_cursor"

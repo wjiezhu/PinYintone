@@ -2,7 +2,8 @@
 
 原生 Kotlin + Jetpack Compose。与 iOS 版同仓库；后端共用 `backend/`。
 
-当前阶段：**评分核心**（已用 Swift 版对照数据锁住）+ **声调普通练习与可选自测**（录音链路、界面、本地存储）。
+当前阶段：**评分核心**（已用 Swift 版对照数据锁住）+ **声调普通练习与可选自测**（录音链路、界面、本地存储）
++ **直接分发准备**（正式签名、新版本提示、诊断信息页）。
 登录、上传同步、研究流程、送气练习、自由文本、教师端都还没做。
 
 ## 工程结构
@@ -128,11 +129,59 @@ cd android && ./gradlew :app:assembleDebug
 ```
 
 `pt_mic` 可取 `tones`（按目标声调读）、`flat`（读成平调）、`silent`（只有静音 → 技术失败）。
-发布构建不读这个参数。
+正式包（release）不读这个参数；`r8check` 包读（见「正式版安装包」）。
 
 坑：本机在后台无窗口启动模拟器时，开着宿主音频会让模拟器启动即退出，所以用 `-no-audio`；
 这时真实麦克风录到的是静音（App 正确提示「没录到声音」）。手写的 AVD 配置要有 `hw.mainKeys=no`，
 否则 API 26 的 SystemUI 会反复崩溃。
+
+## 正式版安装包（直接分发，不上 Google Play）
+
+摩洛哥与中国两路都用「下载链接 + 二维码」发安装包。安装说明给参与者看 `docs/ANDROID_INSTALL_GUIDE.md`，
+试用清单见 `docs/ANDROID_PILOT_CHECKLIST.md`。
+
+### 签名
+
+- 正式签名证书**在仓库之外**：`~/.pinyintone-release/pinyintone-release.jks`（PKCS12，RSA 4096，有效期到 2054 年，别名 `pinyintone`），
+  密码在同目录的 `signing.properties`（权限 600）。证书 SHA-256：
+  `78:4F:36:C9:5D:37:06:68:CF:6B:75:C9:06:F5:20:28:1C:C2:A5:F2:2B:0A:E0:81:48:27:1F:70:E5:6B:43:22`
+- **必须离线备份整个目录**（密码管理器 + 加密 U 盘各一份）。Android 只接受同一证书签名的更新：
+  证书或密码丢了，已装的学生就再也收不到更新，只能卸载重装——而卸载会删掉手机里没上传的记录。
+- Gradle 读签名配置的顺序：环境变量 `PT_RELEASE_STORE_FILE` / `PT_RELEASE_STORE_PASSWORD` / `PT_RELEASE_KEY_ALIAS` /
+  `PT_RELEASE_KEY_PASSWORD`；或 properties 文件，路径来自环境变量 `PT_SIGNING_PROPERTIES` 或
+  `android/local.properties` 里的 `pinyintone.signing.properties=<路径>`。都没有时 release 能配置、能 lint，
+  **打包那一步报错**，不会产出未签名的包。`*.jks`、`signing.properties` 等已在 `.gitignore` 里。
+
+### 打包
+
+```bash
+cd android && ./gradlew :app:assembleRelease
+```
+
+产物 `app/build/outputs/apk/release/app-release.apk`，R8 映射文件在 `app/build/outputs/mapping/release/`（每个发出去的版本都存一份）。
+发新版前改 `app/build.gradle.kts` 的 `versionCode`（必须递增）与 `versionName`。
+
+- **后端地址**：正式包固定连 `https://pinyintone-backend.onrender.com`，不连任何测试地址，也不允许明文 http。
+  本地验证可以 `-Ppt.apiBaseUrl=http://10.0.2.2:8765` 临时打一份（只有这时才放开明文 http）——这样的包**不得分发**，
+  验证完不带参数重新打包。
+- **R8**：开启压缩与混淆。评分不用反射，Room 用自带规则。`r8check` 构建类型与 release 走完全相同的 R8，
+  但用调试密钥签、允许合成麦克风，用来在模拟器上确认混淆后评分与 Room 照常：
+
+```bash
+cd android && ./gradlew :app:assembleR8check
+```
+
+### 新版本提示
+
+App 启动时请求一次 `GET /api/app-version/android`（值来自后端的 `ANDROID_*` 环境变量，见 `backend/README.md`）。
+失败静默；有新版本时练习页顶部出现可关闭的提示（关掉的那个版本不再提示）；低于最低支持版本时提示关不掉，
+但**练习照常**（CLAUDE.md 禁令 19）。下载链接只放行 https，交给系统浏览器打开，App 内不下载、不安装。
+
+### 诊断信息
+
+设置 → 诊断信息：App 版本、厂商型号、Android 版本、录音实际采样率与是否降采样、音源、最近一次录音的有声帧数与结果状态、
+中文 TTS、界面语言、字号缩放、上次新版本检查的结果。可复制、可调系统分享。复制出去的是固定英文键名的文本，
+不含录音、词条、分数、deviceID 或任何身份信息。
 
 ## 对照测试与容差
 

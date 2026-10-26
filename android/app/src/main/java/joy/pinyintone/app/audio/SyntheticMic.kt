@@ -8,7 +8,7 @@ import kotlin.math.roundToInt
 import kotlin.math.sin
 
 /**
- * **只在调试构建里用**的合成麦克风（对应 iOS 的 `SyntheticRecordingSource`）：
+ * **只在调试构建与 r8check 里用**的合成麦克风（对应 iOS 的 `SyntheticRecordingSource`）：
  * 模拟器没有人声，用它在模拟器上走通「录音 → 分析 → 结果」整条链路。
  *
  * 以 48 kHz 合成当前词的理想声调轮廓（带谐波的元音），按实时节奏送进与真实麦克风
@@ -27,6 +27,8 @@ class SyntheticMic(private val kind: Kind, private val tones: () -> List<Int>) :
     private var thread: Thread? = null
 
     override val isRunning: Boolean get() = running
+    override val inputSampleRate: Int get() = RATE
+    override val sourceName: String get() = "synthetic-${kind.name.lowercase()}"
 
     override fun start(listener: AudioRecorder.Listener) {
         check(!running)

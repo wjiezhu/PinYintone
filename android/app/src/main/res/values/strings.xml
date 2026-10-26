@@ -6,4 +6,47 @@
     <string name="tts_missing_voice">No Chinese voice is installed for text-to-speech. Download a Chinese (Mandarin) voice in your phone\'s text-to-speech settings, then come back here.</string>
     <string name="tts_unavailable">The model cannot be played: no text-to-speech engine is available on this phone. You can still record and get feedback.</string>
     <string name="tts_open_settings">Open text-to-speech settings</string>
+
+    <!-- 设置、诊断信息、新版本提示（Android 独有） -->
+    <string name="ui_language_code">en</string>
+    <string name="settings_app_version">Version %1$s</string>
+    <string name="diag_title">Diagnostic information</string>
+    <string name="diag_intro">Technical information about this phone and the app. If something does not work, copy it and send it to the researcher. It contains no recordings, no practice content and no personal information.</string>
+    <string name="diag_app_version">App version</string>
+    <string name="diag_device">Phone maker and model</string>
+    <string name="diag_android">Android version</string>
+    <string name="diag_sample_rate">Recording sample rate</string>
+    <string name="diag_resampled">Converted down to 16 kHz</string>
+    <string name="diag_audio_source">Audio source</string>
+    <string name="diag_last_voiced">Last recording: voiced frames</string>
+    <string name="diag_last_status">Last recording: result</string>
+    <string name="diag_chinese_tts">Chinese voice (listen to model)</string>
+    <string name="diag_ui_language">App language</string>
+    <string name="diag_font_scale">Text size</string>
+    <string name="diag_not_yet">No recording yet</string>
+    <string name="diag_yes">Yes</string>
+    <string name="diag_no">No</string>
+    <string name="diag_status_valid">Valid</string>
+    <string name="diag_status_flagged">Valid (quality to check)</string>
+    <string name="diag_status_retry">Technical failure: %1$s</string>
+    <string name="diag_reason_insufficient_voiced_frames">no voice detected</string>
+    <string name="diag_reason_permission_denied">microphone not allowed</string>
+    <string name="diag_reason_recording_interrupted">recording interrupted</string>
+    <string name="diag_reason_low_signal_quality">signal too weak</string>
+    <string name="diag_reason_analysis_error">analysis error</string>
+    <string name="diag_tts_ready">Available</string>
+    <string name="diag_tts_missing">No Chinese voice installed</string>
+    <string name="diag_tts_unavailable">No text-to-speech engine</string>
+    <string name="diag_tts_checking">Checking…</string>
+    <string name="diag_copy">Copy</string>
+    <string name="diag_copied">Copied. Paste it into a message to the researcher.</string>
+    <string name="diag_share">Send…</string>
+    <string name="diag_share_chooser">Send diagnostic information</string>
+    <string name="diag_copy_note">What is copied is the technical text below, in English, so the researcher can read it.</string>
+    <string name="update_available_title">New version %1$s available</string>
+    <string name="update_available_body">You can keep practising and update later.</string>
+    <string name="update_required_title">Please update the app</string>
+    <string name="update_required_body">This version is no longer supported. Download version %1$s. You can still practise until then.</string>
+    <string name="update_download">Download in browser</string>
+    <string name="update_open_failed">No browser could be opened. Copy this address into a browser: %1$s</string>
 </resources>
