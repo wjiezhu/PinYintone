@@ -27,6 +27,7 @@
 "lang_french" = "法语";
 "lang_english" = "英语";
 "lang_spanish" = "西班牙语";
+"lang_italian" = "意大利语";
 "lang_amazigh" = "塔马齐格特语";
 "lang_other" = "其他";
 
@@ -101,10 +102,9 @@
 "replay_failed" = "没能播放刚才的录音，请再试一次。";
 "record_start" = "开始录音";
 "record_stop" = "停止录音";
-"aspiration_prompt" = "对着麦克风用力送气，发出爆破声";
-"aspiration_calibrating" = "正在校准环境噪声...";
-"aspiration_success" = "✓ 送气成功！";
-"aspiration_keep_going" = "继续加油！";
+"aspiration_calibrating" = "正在校准环境噪声，请先别出声…";
+"aspiration_success" = "送气成功，气流冲出来了。";
+"aspiration_keep_going" = "气流还不够，再用力送气试一次。";
 
 // 按字诊断
 "diagnostic_title" = "按字分析";
@@ -136,11 +136,11 @@
 
 // 使用说明
 "help_title" = "使用说明";
-"help_stage1_body" = "对着麦克风用力送气吹散蒲公英 —— 练习送气音（p / t / k）。";
+"help_stage1_body" = "送气音（p / t / k）要让气流冲出来吹散蒲公英；不送气音（b / d / g）不要喷气，蒲公英应该不动。点一下开始，再点一下停止。";
 "help_stage2_body" = "点「听示范」听参考读音，再录音念出来。每次录音得到一个 0–100 的本次结果（60 及以上为通过）。";
 "help_stage3_body" = "粘贴或输入中文，自动分词，逐词练习。点书签收藏词条，之后在「我的词条」复习。";
 "help_tip" = "在安静环境练习，麦克风对准嘴。";
-"help_privacy" = "不上传录音，只上传分析结果（分数），用于研究。";
+"help_privacy" = "日常练习的录音不上传，只上传分析结果（分数），用于研究。只有参加研究、并在同意书里同意上传录音的人，现场实测的录音才会上传。";
 
 // ── 研究阶段（升级需求 §3.1）──────────────────────────
 "tone_next_word" = "下一个词";
@@ -154,7 +154,7 @@
 "tone_name_4" = "去声";
 
 // 麦克风与数据用途说明（升级需求 §4.1）
-"onboarding_mic_privacy" = "录音只在你的手机上分析音高，原始音频不会上传、不会保存到服务器；只有分析结果（分数与音高曲线）匿名上传，用于本项目的教学研究。你可以随时在设置里删除账号和全部数据。";
+"onboarding_mic_privacy" = "练习时，录音只在你的手机上分析音高，原始音频不会上传、不会保存到服务器；只有分析结果匿名上传，用于本项目的教学研究。唯一的例外：参加研究、且在同意书里明确同意上传录音的人，现场实测的录音会上传。你可以随时在设置里删除账号和全部数据。";
 "onboarding_mic_denied_title" = "还没有麦克风权限";
 "onboarding_mic_denied_body" = "声调训练需要录音。请到「设置 → Pinyintone → 麦克风」打开权限，再回到本页继续。";
 "onboarding_open_settings" = "打开系统设置";
@@ -182,15 +182,15 @@
 /* 研究授权（需求 §2）。译稿待核校，不得标记为正式施测版本。 */
 "consent_title" = "参与研究（可选）";
 "consent_purpose_title" = "研究目的";
-"consent_purpose_body" = "了解初级汉语学习者如何使用声调练习工具，用于一篇硕士学位论文的设计与可用性研究。";
+"consent_purpose_body" = "了解汉语学习者如何使用声调练习工具，用于一篇硕士学位论文的设计与可用性研究。\n\n参加后，你可以在研究者在场时做一次「现场实测」，大约 15–20 分钟：先读一组词（不显示结果），再练习另一组词（有反馈），最后把第一组词再读一遍（不显示结果）。实测随时可以中途退出。";
 "consent_data_title" = "采集内容";
-"consent_data_body" = "你的练习操作记录（开始练习、播放示范、录音、查看反馈等）、评分结果，以及你自愿填写的问卷答案。\n\n录音本身不会上传。研究数据里只用一个与你的 Apple 账号对应的匿名编号来区分参与者，不包含你的姓名、邮箱或其他个人信息。";
+"consent_data_body" = "你的练习操作记录（开始练习、播放示范、录音、查看反馈等）、评分结果，以及你自愿填写的问卷答案（包括年龄段、国籍、汉语水平等背景信息）。\n\n录音本身不会上传。研究数据里只用一个与你的 Apple 账号对应的匿名编号来区分参与者，不包含你的姓名、邮箱或其他个人信息。";
 "consent_use_title" = "用途";
 "consent_use_body" = "仅用于该论文的统计分析与撰写。分析结果以群体统计呈现，不针对个人。";
 "consent_withdraw_title" = "如何退出";
 "consent_withdraw_body" = "你可以随时在「设置」中退出研究。退出后立即停止采集新数据；退出前已收集的资料会以匿名形式保留，可能用于论文的统计分析。如有疑问，请通过下方联系方式咨询。";
 "consent_contact" = "研究咨询、退出或删除资料：joyouo409@gmail.com，或通过 App 内反馈。";
-"consent_checkbox" = "我已阅读以上说明，自愿参与本研究";
+"consent_checkbox" = "我已阅读说明，自愿参加，并同意收集上述数据";
 "consent_agree" = "同意并参与";
 "consent_decline" = "暂不参与";
 "consent_decline_hint" = "不参与研究不影响使用任何功能。";
@@ -324,7 +324,7 @@
 "research_enroll_refused" = "目前无法加入本轮研究。你可以继续正常使用全部功能。";
 "research_continue_later" = "稍后再说，先去练习";
 "research_enrolled_title" = "已加入研究";
-"research_enrolled_body" = "谢谢。你可以随时在「设置 → 研究参与」里退出。";
+"research_enrolled_body" = "谢谢。有汉语问题或想要学习资料，可以加微信 herecomes_zhuozhuo。你可以随时在「设置 → 研究参与」里退出。";
 "research_enrolled_pending_body" = "已加入。你的背景信息已保存在本机，联网后会自动提交。";
 "research_start_practice" = "开始练习";
 "research_ineligible_title" = "谢谢你的回答";
@@ -369,3 +369,53 @@
 "home_start" = "开始练习";
 "record_short" = "录音";
 "word_picker_short" = "选词";
+
+/* 现场实测（2026-10-28） */
+"consent_data_body_audio" = "你的练习操作记录（开始练习、播放示范、录音、查看反馈等）、评分结果，以及你自愿填写的问卷答案（包括年龄段、国籍、汉语水平等背景信息）。\n\n现场实测中的录音会上传，用于研究者人工复核评分。录音能听出是谁的声音，因此只保存在研究服务器上，只供研究者本人使用，不公开、不出现在论文附件里。日常练习的录音不上传。\n\n研究数据里只用一个与你的 Apple 账号对应的匿名编号来区分参与者，不包含你的姓名、邮箱或其他个人信息。";
+"consent_withdraw_body_audio" = "你可以随时在「设置」中退出研究。退出后立即停止采集新数据，你的全部录音会从手机和研究服务器上删除；退出前已收集的其他资料（分数、操作记录、问卷答案）会以匿名形式保留，可能用于论文的统计分析。如有疑问，请通过下方联系方式咨询。";
+"home_field_session" = "开始现场实测（研究者在场时）";
+"field_title" = "现场实测";
+"field_exit" = "退出";
+"field_exit_confirm_title" = "退出这次实测？";
+"field_exit_confirm" = "退出实测";
+"field_exit_confirm_message" = "已经录好的内容会保存。下次再做是新的一次，从第一组词重新开始。";
+"field_intro_title" = "这次实测分三步，大约 15–20 分钟";
+"field_intro_pretest" = "读 %1$d 个词。录完不显示结果，自动进入下一个词。";
+"field_intro_training" = "练习另外 %1$d 个词，有反馈。每个词得到 %2$d 次有效结果后进入下一个。";
+"field_intro_posttest" = "把第一步的 %1$d 个词再读一遍，同样不显示结果。";
+"field_intro_note" = "按平时的读法念就好。随时可以点左上角「退出」。";
+"field_start" = "开始第一步";
+"field_test_ready" = "点下方的麦克风录音。这一步不显示结果。";
+"field_pretest_progress" = "第一步 · 第 %1$d / %2$d 词";
+"field_posttest_progress" = "第三步 · 第 %1$d / %2$d 词";
+"field_training_progress" = "第二步 · 第 %1$d / %2$d 词";
+"field_training_count" = "本词有效录音 %1$d / %2$d";
+"field_word_done_hint" = "这个词练够了，点下方的「下一个」继续。";
+"field_pretest_done" = "第一步完成";
+"field_next_training" = "接下来练习 %1$d 个新词，有反馈。每个词得到 %2$d 次有效结果后进入下一个。";
+"field_training_done" = "第二步完成";
+"field_next_posttest" = "最后，把第一步的 %1$d 个词再读一遍，不显示结果。";
+"field_continue" = "继续";
+"field_done_title" = "全部完成，谢谢你";
+"field_done_body" = "这次实测的三步都已录完。你可以继续自由练习。";
+"field_back_to_practice" = "回到练习";
+
+/* 送气练习：开始 / 停止按钮，区分送气与不送气 */
+"aspiration_prompt_aspirated" = "这是送气音 %1$@：念「%2$@」时让气流冲出来（要爆破）。";
+"aspiration_prompt_unaspirated" = "这是不送气音 %1$@：轻轻念「%2$@」，不要喷气（不要爆破）。";
+"aspiration_tag_aspirated" = "送气音 · %@";
+"aspiration_tag_unaspirated" = "不送气音 · %@";
+"aspiration_ready" = "点下方的麦克风开始，只念第一个字，念完再点一次停止。";
+"aspiration_recording" = "现在念，念完点停止。";
+"aspiration_unaspirated_success" = "没有喷气，这个音就该这样。";
+"aspiration_unaspirated_too_strong" = "气流太强了。这个音不需要爆破，再轻一点。";
+"aspiration_stopped_early" = "校准还没结束，这次没有录。请等提示后再念。";
+
+/* 注册后的知情同意与微信入口 */
+"consent_summary" = "这个 App 用于一篇硕士论文的研究。同意后，我们会收集你的练习记录、分数和问卷答案，用来做统计分析；不包含你的姓名、邮箱。你可以随时退出。不同意也能使用全部功能。";
+"consent_benefit_title" = "参加研究的人可以";
+"consent_benefit_body" = "通过微信联系研究者，询问汉语问题或获取学习资料。微信号：herecomes_zhuozhuo";
+"consent_read_full" = "阅读完整说明";
+"consent_full_title" = "完整说明";
+"research_wechat_copy" = "复制微信号（汉语问题、学习资料）";
+"research_wechat_copied" = "微信号已复制：herecomes_zhuozhuo";

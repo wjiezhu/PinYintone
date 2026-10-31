@@ -15,15 +15,18 @@ nonisolated enum ResearchEligibility {
     /// - 1.0-draft：成年、国籍含 MA、课程 hsk1–3，且**仅新用户**。
     /// - 2.0：去掉新用户门槛。研究者已确认本轮不区分新旧用户
     ///   （docs/V2_DECISIONS.md 第 15 条、2026-10-13 需求 R01）。
-    static let version = "eligibility-2.0"
+    /// - 3.0：现场实测轮，**不限国籍**（研究者 2026-10-28 决定）。国籍题照常作答、照常上传，
+    ///   只是不再参与判定。与服务端 seed_manifest.ELIGIBILITY_SPECS 一一对应。
+    static let version = "eligibility-3.0"
 
     /// 课程阶段白名单。
     /// ⚠ 以三份研究文档的 `eligibility_spec` 为准（hsk1/hsk2/hsk3）——
     /// 最初需求文档写的是 HSK2/HSK3，已确认以文档为准。
     static let allowedCourseStages: Set<String> = ["hsk1", "hsk2", "hsk3"]
 
-    /// 国籍白名单（ISO 3166-1 alpha-2）
-    static let requiredNationalities: Set<String> = ["MA"]
+    /// 国籍白名单（ISO 3166-1 alpha-2）。**空集 = 不限国籍**（eligibility-3.0）。
+    /// 第一轮是 ["MA"]，那一轮的人在服务端按当时的规则复核，不受这里影响。
+    static let requiredNationalities: Set<String> = []
 
     /// 不合格原因，对应 `research_participants.exclusion_reason`
     enum Exclusion: String {
@@ -57,11 +60,14 @@ nonisolated enum ResearchEligibility {
         // 而是根本不产生参与者记录（字典 §5：拒绝时不必创建参与者）。
         guard consentGranted else { return .pending }
 
-        // 背景表未答完 → pending，等答完再判，不猜测
-        guard let isAdult, let nationalities, let courseStage else { return .pending }
+        // 背景表未答完 → pending，等答完再判，不猜测。
+        // 不限国籍时国籍题没答也不影响判定（它本来就不参与判定）
+        guard let isAdult, let courseStage else { return .pending }
+        if !requiredNationalities.isEmpty, nationalities == nil { return .pending }
 
         guard isAdult else { return .excluded(.age) }
-        guard !nationalities.isDisjoint(with: requiredNationalities) else {
+        if !requiredNationalities.isEmpty,
+           let nationalities, nationalities.isDisjoint(with: requiredNationalities) {
             return .excluded(.nationality)
         }
         guard allowedCourseStages.contains(courseStage) else {

@@ -32,6 +32,13 @@ final class AspirationDetector {
         return decibels(of: frame) > thresholdDB
     }
 
+    /// 这一帧是否听得到声音（高于底噪 6 dB）。只用来区分「根本没出声」（技术失败）
+    /// 与「出声了但没有喷气」（不送气音就该这样），**不参与送气判定**。
+    func isAudible(frame: [Float]) -> Bool {
+        guard frame.isEmpty == false else { return false }
+        return decibels(of: frame) > baselineDB + 6
+    }
+
     /// 计算一段帧序列的触发率（触发帧占比，0–1）
     func triggerRate(frames: [[Float]]) -> Float {
         guard !frames.isEmpty else { return 0 }

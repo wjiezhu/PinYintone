@@ -11,7 +11,13 @@
     "focus": "P(送气) vs B(不送气)",
     "french": "Courir",
     "darija": "Jri (جري)",
-    "audioFilename": null
+    "audioFilename": null,
+    "aspirationTarget": {
+      "initial": "p",
+      "aspirated": true
+    },
+    "spanish": "Correr",
+    "italian": "Correre"
   },
   {
     "id": "bangzhu",
@@ -25,7 +31,13 @@
     "focus": "B(不送气对照组)",
     "french": "Aider",
     "darija": "3awen (عاون)",
-    "audioFilename": null
+    "audioFilename": null,
+    "aspirationTarget": {
+      "initial": "b",
+      "aspirated": false
+    },
+    "spanish": "Ayudar",
+    "italian": "Aiutare"
   },
   {
     "id": "tingdong",
@@ -39,7 +51,13 @@
     "focus": "T(送气) vs D(不送气)",
     "french": "Comprendre",
     "darija": "Fhem (فهم)",
-    "audioFilename": null
+    "audioFilename": null,
+    "aspirationTarget": {
+      "initial": "t",
+      "aspirated": true
+    },
+    "spanish": "Entender (al oír)",
+    "italian": "Capire (ascoltando)"
   },
   {
     "id": "dengdai",
@@ -53,7 +71,13 @@
     "focus": "D(不送气对照组)",
     "french": "Attendre",
     "darija": "Tsna (تسنى)",
-    "audioFilename": null
+    "audioFilename": null,
+    "aspirationTarget": {
+      "initial": "d",
+      "aspirated": false
+    },
+    "spanish": "Esperar",
+    "italian": "Aspettare"
   },
   {
     "id": "kaoshi",
@@ -67,7 +91,13 @@
     "focus": "K(送气)",
     "french": "Examen",
     "darija": "Imtihan (امتحان)",
-    "audioFilename": null
+    "audioFilename": null,
+    "aspirationTarget": {
+      "initial": "k",
+      "aspirated": true
+    },
+    "spanish": "Examen",
+    "italian": "Esame"
   },
   {
     "id": "gaosu",
@@ -81,7 +111,13 @@
     "focus": "G(不送气对照组)",
     "french": "Dire",
     "darija": "Goul (گول)",
-    "audioFilename": null
+    "audioFilename": null,
+    "aspirationTarget": {
+      "initial": "g",
+      "aspirated": false
+    },
+    "spanish": "Decir",
+    "italian": "Dire"
   },
   {
     "id": "xianzai",
@@ -96,7 +132,9 @@
     "french": "Maintenant",
     "darija": "Daba (دابا)",
     "audioFilename": null,
-    "wordSet": "set1"
+    "wordSet": "set1",
+    "spanish": "Ahora",
+    "italian": "Adesso"
   },
   {
     "id": "dianshi",
@@ -111,7 +149,9 @@
     "french": "Télévision",
     "darija": "Talfaza (تلفزة)",
     "audioFilename": null,
-    "wordSet": "set2"
+    "wordSet": "set2",
+    "spanish": "Televisión",
+    "italian": "Televisione"
   },
   {
     "id": "sushe",
@@ -126,7 +166,9 @@
     "french": "Dortoir",
     "darija": "Dakhiliya (داخلية)",
     "audioFilename": null,
-    "wordSet": "assessment"
+    "wordSet": "assessment",
+    "spanish": "Residencia de estudiantes",
+    "italian": "Dormitorio"
   },
   {
     "id": "hanzi",
@@ -141,7 +183,9 @@
     "french": "Caractère chinois",
     "darija": "7arf sini (حرف صيني)",
     "audioFilename": null,
-    "wordSet": "assessment"
+    "wordSet": "assessment",
+    "spanish": "Carácter chino",
+    "italian": "Carattere cinese"
   },
   {
     "id": "heshui",
@@ -156,7 +200,9 @@
     "french": "Boire de l'eau",
     "darija": "Chreb lma (شرب الما)",
     "audioFilename": null,
-    "wordSet": "assessment"
+    "wordSet": "assessment",
+    "spanish": "Beber agua",
+    "italian": "Bere acqua"
   },
   {
     "id": "shenti",
@@ -171,7 +217,9 @@
     "french": "Corps",
     "darija": "Jassad (جسد)",
     "audioFilename": null,
-    "wordSet": "set1"
+    "wordSet": "set1",
+    "spanish": "Cuerpo",
+    "italian": "Corpo"
   },
   {
     "id": "jingli",
@@ -186,7 +234,9 @@
     "french": "Directeur",
     "darija": "Modir (مدير)",
     "audioFilename": null,
-    "wordSet": "set2"
+    "wordSet": "set2",
+    "spanish": "Gerente",
+    "italian": "Direttore"
   },
   {
     "id": "yisheng",
@@ -201,7 +251,9 @@
     "french": "Médecin",
     "darija": "Tbib (طبيب)",
     "audioFilename": null,
-    "wordSet": "set1"
+    "wordSet": "set1",
+    "spanish": "Médico",
+    "italian": "Medico"
   },
   {
     "id": "qingchu",
@@ -216,7 +268,9 @@
     "french": "Clair",
     "darija": "Wade7 (واضح)",
     "audioFilename": null,
-    "wordSet": "set1"
+    "wordSet": "set1",
+    "spanish": "Claro",
+    "italian": "Chiaro"
   },
   {
     "id": "xiuxi",
@@ -231,7 +285,9 @@
     "french": "Se reposer",
     "darija": "Rta7 (رتاح)",
     "audioFilename": null,
-    "wordSet": "set2"
+    "wordSet": "set2",
+    "spanish": "Descansar",
+    "italian": "Riposare"
   },
   {
     "id": "ziji",
@@ -246,7 +302,9 @@
     "french": "Soi-même",
     "darija": "Rassi (راسي)",
     "audioFilename": null,
-    "wordSet": "set1"
+    "wordSet": "set1",
+    "spanish": "Uno mismo",
+    "italian": "Se stesso"
   },
   {
     "id": "canjia",
@@ -261,7 +319,9 @@
     "french": "Participer",
     "darija": "Charek (شارك)",
     "audioFilename": null,
-    "wordSet": "set2"
+    "wordSet": "set2",
+    "spanish": "Participar",
+    "italian": "Partecipare"
   },
   {
     "id": "zaocan",
@@ -276,7 +336,9 @@
     "french": "Petit-déjeuner",
     "darija": "Ftour (فطور)",
     "audioFilename": null,
-    "wordSet": "set2"
+    "wordSet": "set2",
+    "spanish": "Desayuno",
+    "italian": "Colazione"
   },
   {
     "id": "xiangxin",
@@ -291,6 +353,8 @@
     "french": "Croire",
     "darija": "Tiyeq (تيق)",
     "audioFilename": null,
-    "wordSet": "assessment"
+    "wordSet": "assessment",
+    "spanish": "Creer",
+    "italian": "Credere"
   }
 ]

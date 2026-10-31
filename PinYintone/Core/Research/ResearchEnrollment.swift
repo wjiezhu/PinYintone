@@ -39,6 +39,15 @@ enum ResearchEnrollment {
         return ResearchConsent.canOfferInvitation(store.state)
     }
 
+    /// 登录后要不要弹参加研究的说明。要等配置取到：没有开放的研究就不弹，开放后再弹。
+    /// 只问一次；调用后清掉标记，之后入口在首页与设置里。
+    static func consumeSignupConsent(now: Date = Date()) -> Bool {
+        guard store.state.signupConsentDue, store.state.participation == .notAsked,
+              canJoinNow(now: now) else { return false }
+        store.update { $0.signupConsentDue = false }
+        return true
+    }
+
     /// 背景表答完。端侧判资格；合格则去服务端纳入。
     ///
     /// - Returns: 资格判定结果。`.eligible` 表示已成功纳入。
@@ -131,6 +140,8 @@ enum ResearchEnrollment {
             s.windowStart = manifest.collectionStartAt
             s.windowEnd = manifest.collectionEndAt
             s.postTriggerCount = manifest.postTriggerCount
+            s.roundStudyID = resp.studyID
+            s.audioUpload = manifest.audioUpload
             // 背景表进入可靠上传队列，带着**作答时**的时间与语言
             s.surveys[SurveyCenter.backgroundKey] = SurveyRecord(
                 instanceID: UUID(),
@@ -180,6 +191,8 @@ enum ResearchEnrollment {
         AdviceRequestLog.shared.clearPendingOnWithdrawal()
         // 只停**研究采集**：业务积分不清零（本轮积分功能本就关闭）
         RewardEventLog.shared.clearPendingOnWithdrawal()
+        // 录音能认出人：退出即从本机删掉（服务端收到退出指令也会删）
+        ResearchRecordingQueue.shared.removeAll()
         SurveyCenter.reset()
         store.update { s in
             s.participation = participation
@@ -193,6 +206,7 @@ enum ResearchEnrollment {
             s.backgroundStartedAt = nil
             s.backgroundLanguage = nil
             s.eligibility = participation == .ineligible ? "excluded:other" : nil
+            s.audioUpload = nil
         }
     }
 }

@@ -16,6 +16,8 @@ import UIKit
 struct ToneTrainingView: View {
     /// 从首页词表点进来时要直接练的词；nil 表示接着上次停留的词
     var initialLexemeID: String?
+    /// 从研究入口进来：直接开始一次现场实测（前测 → 训练 → 后测）
+    var startsFieldSession = false
 
     @StateObject private var vm = ToneTrainingViewModel()
     /// 反馈显示模式（学习者自选，非实验分组）。与设置页共用同一个键。
@@ -28,11 +30,16 @@ struct ToneTrainingView: View {
     @State private var showWordPicker = false
     @State private var showMicExplanation = false
     @State private var didApplyInitialWord = false
+    @State private var didStartFieldSession = false
+    @State private var confirmFieldExit = false
 
     var body: some View {
         Group {
             if vm.mode == .selfTest {
                 SelfTestContent(vm: vm)
+            } else if vm.mode == .field, vm.isBareTest || vm.currentLexeme == nil {
+                // 实测的说明页、段落之间、完成页，以及前测 / 后测（裸测，不显示任何结果）
+                FieldSessionContent(vm: vm)
             } else if let lexeme = vm.currentLexeme {
                 practiceContent(lexeme)
             } else {
@@ -45,8 +52,8 @@ struct ToneTrainingView: View {
         // 放大文字时导航栏放不下长标题（系统会截成「…」），标题改放到内容区顶部并允许换行
         .navigationTitle(typeSize.isAccessibilitySize ? "" : pageTitle)
         .navigationBarTitleDisplayMode(.inline)
-        // 自测中不能用系统返回直接离开：先明确退出自测，回到普通练习
-        .navigationBarBackButtonHidden(vm.mode == .selfTest)
+        // 自测、实测中不能用系统返回直接离开：先明确退出，回到普通练习
+        .navigationBarBackButtonHidden(vm.mode != .practice)
         .toolbar { toolbar }
         // 返回键只留箭头：标题长、屏幕窄时系统会把返回文字换成**系统语言**的「Back」，
         // 与 App 里选的语言对不上。箭头在哪种语言里都一样。
@@ -56,7 +63,14 @@ struct ToneTrainingView: View {
                 didApplyInitialWord = true
                 ToneSequencer.shared.select(lexemeID: initialLexemeID)
             }
-            if vm.currentLexeme == nil { vm.loadCurrent() }
+            if startsFieldSession, !didStartFieldSession {
+                didStartFieldSession = true
+                if ResearchConfig.shared.fieldSessionAvailable(),
+                   let fieldProtocol = FieldProtocol.bundled {
+                    vm.beginFieldSession(fieldProtocol)
+                }
+            }
+            if vm.currentLexeme == nil, vm.mode == .practice { vm.loadCurrent() }
             // 上次达到条件但没来得及邀请的使用后问卷（如 App 被杀），现在补上
             vm.presentPostInvitationIfDue()
         }
@@ -81,10 +95,24 @@ struct ToneTrainingView: View {
                 .presentationDetents([.medium, .large])
         }
         .sheet(isPresented: $showMicExplanation) { micExplanation }
+        // 实测中途退出要确认一下：退出就结束这一次，下次从前测重新开始
+        .confirmationDialog(NSLocalizedString("field_exit_confirm_title", comment: ""),
+                            isPresented: $confirmFieldExit, titleVisibility: .visible) {
+            Button(NSLocalizedString("field_exit_confirm", comment: ""), role: .destructive) {
+                vm.endFieldSession()
+            }
+            Button(NSLocalizedString("cancel", comment: ""), role: .cancel) {}
+        } message: {
+            Text(NSLocalizedString("field_exit_confirm_message", comment: ""))
+        }
     }
 
     private var pageTitle: String {
-        NSLocalizedString(vm.mode == .selfTest ? "self_test_title" : "stage2_title", comment: "")
+        switch vm.mode {
+        case .practice: return NSLocalizedString("stage2_title", comment: "")
+        case .selfTest: return NSLocalizedString("self_test_title", comment: "")
+        case .field: return NSLocalizedString("field_title", comment: "")
+        }
     }
 
     // MARK: - 工具栏
@@ -95,6 +123,18 @@ struct ToneTrainingView: View {
             ToolbarItem(placement: .cancellationAction) {
                 Button(NSLocalizedString("self_test_exit", comment: "")) { vm.endSelfTest() }
                     .accessibilityIdentifier("selfTest.exit")
+            }
+        } else if vm.mode == .field {
+            ToolbarItem(placement: .cancellationAction) {
+                Button(NSLocalizedString("field_exit", comment: "")) {
+                    // 说明页和完成页直接离开；做到一半先确认
+                    if vm.field?.started == true, vm.field?.isComplete == false {
+                        confirmFieldExit = true
+                    } else {
+                        vm.endFieldSession()
+                    }
+                }
+                .accessibilityIdentifier("field.exit")
             }
         } else {
             ToolbarItemGroup(placement: .topBarTrailing) {
@@ -137,6 +177,10 @@ struct ToneTrainingView: View {
                         .multilineTextAlignment(.center)
                         .fixedSize(horizontal: false, vertical: true)
                         .accessibilityAddTraits(.isHeader)
+                }
+                if vm.mode == .field, let field = vm.field {
+                    FieldTrainingHeader(field: field)
+                        .padding(.top, Theme.Space.s)
                 }
                 LexemeCardView(lexeme: lexeme)
                     .padding(.top, Theme.Space.s)
@@ -282,8 +326,23 @@ struct ToneTrainingView: View {
                         resultScore(result)
                     }
                 }
-                // 换词提示：连续几次没通过时给一个出口，不是评价
-                if vm.consecutiveFailures >= vm.skipHintThreshold {
+                // 实测训练：这个词练够了，提示去下一个；没练够就显示还差几次（不是评价，只是进度）。
+                // 结果出来时页面会滚到这里，顶部的进度看不到，所以在这里再说一次
+                if vm.mode == .field, !vm.fieldTrainingWordDone, let field = vm.field {
+                    Text(String(format: NSLocalizedString("field_training_count", comment: ""),
+                                field.validCount, field.validAttemptsPerWord))
+                        .font(.subheadline.monospacedDigit())
+                        .foregroundStyle(Theme.textSecondary)
+                        .accessibilityIdentifier("field.wordCount")
+                } else if vm.fieldTrainingWordDone {
+                    Text(NSLocalizedString("field_word_done_hint", comment: ""))
+                        .font(.subheadline)
+                        .foregroundStyle(Theme.textSecondary)
+                        .fixedSize(horizontal: false, vertical: true)
+                        .accessibilityIdentifier("field.wordDone")
+                } else if vm.mode == .practice,
+                          vm.consecutiveFailures >= vm.skipHintThreshold {
+                    // 换词提示：连续几次没通过时给一个出口，不是评价
                     Text(NSLocalizedString("feedback_skip_hint", comment: ""))
                         .font(.subheadline)
                         .foregroundStyle(Theme.textSecondary)
@@ -425,7 +484,7 @@ struct ToneTrainingView: View {
     /// 用不上的格子（自测里没有示范和换词）留空占位，不移除——否则录音键会横跳。
     private var actionBar: some View {
         PracticeActionBar {
-            if vm.mode == .practice {
+            if vm.showsFeedback, vm.currentLexeme != nil {
                 BarButton(icon: vm.playing == .sample ? "stop.circle" : "speaker.wave.2",
                           caption: NSLocalizedString(vm.playing == .sample ? "bar_stop" : "bar_listen",
                                                      comment: ""),
@@ -451,6 +510,13 @@ struct ToneTrainingView: View {
                           id: "practice.next") { vm.loadNext() }
                     // 录音时不能切词
                     .disabled(vm.isBusy)
+            } else if vm.mode == .field, vm.showsFeedback, vm.currentLexeme != nil {
+                // 实测训练：练够规定次数才能换词（词与次数由协议定，不能跳过）
+                BarButton(icon: "forward.end",
+                          caption: NSLocalizedString("bar_next", comment: ""),
+                          label: NSLocalizedString("tone_next_word", comment: ""),
+                          id: "field.next") { vm.nextFieldTrainingWord() }
+                    .disabled(vm.isBusy || !vm.fieldTrainingWordDone)
             } else {
                 BarPlaceholder()
             }
@@ -557,8 +623,8 @@ struct SelfTestContent: View {
             VStack(spacing: Theme.Space.xl) {
                 if vm.selfTestFinished {
                     finished
-                } else if let lexeme = vm.currentLexeme, let session = vm.selfTest {
-                    progress(session)
+                } else if let lexeme = vm.currentLexeme, let info = progressInfo {
+                    progress(info)
                         .padding(.top, Theme.Space.l)
 
                     LexemeCardView(lexeme: lexeme)
@@ -575,19 +641,32 @@ struct SelfTestContent: View {
         .bounceOnlyWhenScrollable()
     }
 
+    /// 自测与实测的前测 / 后测共用这一页，只是进度那行的说法不同
+    private var progressInfo: (text: String, position: Int, total: Int)? {
+        if let session = vm.selfTest {
+            return (String(format: NSLocalizedString("self_test_progress", comment: ""),
+                           session.position, session.total), session.position, session.total)
+        }
+        if let field = vm.field, field.isBareTest {
+            let key = field.step == .pretest ? "field_pretest_progress" : "field_posttest_progress"
+            return (String(format: NSLocalizedString(key, comment: ""),
+                           field.position, field.total), field.position, field.total)
+        }
+        return nil
+    }
+
     /// 进度：一行「第 x / n 词」加一排小格。用中性灰，不用任何评价色——
     /// 它只表示录到第几个，不表示录得怎么样。
-    private func progress(_ session: SelfTestSession) -> some View {
+    private func progress(_ info: (text: String, position: Int, total: Int)) -> some View {
         VStack(spacing: Theme.Space.s) {
-            Text(String(format: NSLocalizedString("self_test_progress", comment: ""),
-                        session.position, session.total))
+            Text(info.text)
                 .font(.subheadline.weight(.semibold).monospacedDigit())
                 .foregroundStyle(Theme.textSecondary)
                 .accessibilityIdentifier("selfTest.progress")
             HStack(spacing: Theme.Space.xs) {
-                ForEach(0..<max(session.total, 1), id: \.self) { index in
+                ForEach(0..<max(info.total, 1), id: \.self) { index in
                     Capsule()
-                        .fill(index < session.position ? Theme.textSecondary : Theme.border)
+                        .fill(index < info.position ? Theme.textSecondary : Theme.border)
                         .frame(height: 4)
                 }
             }
@@ -648,7 +727,7 @@ struct SelfTestContent: View {
         case .recording: return "tone_stage_recording"
         case .analyzing: return "self_test_saving"
         case .selfTestRecorded: return "self_test_recorded"
-        default: return "self_test_ready"
+        default: return vm.mode == .field ? "field_test_ready" : "self_test_ready"
         }
     }
 

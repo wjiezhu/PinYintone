@@ -126,7 +126,37 @@ Apple 账号到内部编号的对应关系。设备行会被换账号登录改�
 
 ## 5. 本机（iOS）记录
 
-- `RecordSchema.version = 6`。旧业务表的 `phase`：普通练习写 `training`，自测写 `self_test`；
-  `pretest` / `posttest` 不再产生。
+- `RecordSchema.version = 7`。旧业务表的 `phase`：普通练习与实测训练段写 `training`，
+  自测写 `self_test`，现场实测的前测 / 后测写 `pretest` / `posttest`（与 ≤ 5 的强制前后测语义不同）。
 - 研究状态按账号分开保存（身份、计数、问卷草稿、待传队列），切换账号互不可见。
 - 待传队列持久化在本机；被服务端明确拒收的条目移出队列并计数，不无限重试。
+
+## 6. 现场实测改版（2026-10-28，App 2.1 / 构建 21）
+
+**新增的列**
+| 表 | 列 | 含义 |
+|----|----|------|
+| `research_manifests` | `field_protocol_version` | 实测协议版本（如 `field-1.0`）；为空 = 不提供实测 |
+| `research_manifests` | `field_protocol` | `{lexicon_version, test_lexeme_version_ids, training_lexeme_version_ids, training_valid_attempts_per_word}` |
+| `research_manifests` | `audio_upload` | 是否接收录音；只能与写明录音的同意文本（`consent-2.0`）同时出现 |
+| `research_attempts` | `field_session_id` | 一次实测的编号，前测、训练、后测三段共用；普通练习与自测为 NULL |
+
+**新表** `research_recordings`（受限数据，不进论文导出）：`attempt_id`（主键，外键到尝试）、
+`participant_id`、`manifest_id`、`audio_format`（`aac_adts`）、`sample_rate`（16000）、
+`duration_ms`、`byte_size`、`sha256`、`content`、`received_at`。参与者退出时整行删除。
+
+**取值范围**
+- `research_attempts.task_type` 新增 `pretest` / `posttest`：只出现在实测里，必须带 `field_session_id`，
+  不得带 `result_displayed_at`，词条必须属于协议的测试词；实测训练段是 `fixed_word` + `field_session_id`，
+  词条必须属于协议的训练词（否则按 `lexeme_not_in_field_protocol` 拒收）。
+- 事件新增 `field_session_started`（`field_session_id`, `protocol_version`）、
+  `field_step_completed`（`field_session_id`, `step` ∈ pretest/training/posttest）、
+  `field_session_ended`（`field_session_id`, `outcome` ∈ completed/abandoned, `last_step`）。
+- `eligibility_spec.nationality_any` 为空数组 = 不限国籍（`eligibility-3.0`）。资格按参与者
+  **纳入时**那份配置的规则复核。
+
+**接口**：`POST /research/recordings`（JSON，音频 base64）。配置未开录音 → 409
+`audio_upload_disabled`；参与者同意的文本不是该配置的（含录音的）文本 → 403 `audio_consent_required`；
+尝试尚未上传 → 409 `attempt_not_uploaded`（客户端稍后重试）；取消的尝试 → 409 `attempt_cancelled`。
+`POST /research/withdraw` 的回执多了 `recordingsDeleted`。
+

@@ -1,0 +1,13 @@
+{
+  "note": "研究者审定记录。值为审定日期（YYYY-MM-DD）与审定人说明；null 表示尚未审定。seed_manifest.py 冻结正式配置时逐项检查，未审定的只能冻结成测试配置（--test）。只有研究者本人确认后才能填写，开发方不得代填。文本有任何改动都必须换新版本号，旧的审定不延续。",
+  "consent": {
+    "consent-1.1": null,
+    "consent-2.0": null
+  },
+  "eligibility": {
+    "eligibility-3.0": null
+  },
+  "field_protocol": {
+    "field-1.0": null
+  }
+}

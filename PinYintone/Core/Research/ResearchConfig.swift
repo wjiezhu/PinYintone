@@ -29,6 +29,11 @@ final class ResearchConfig: ObservableObject {
         let consentVersion: String
         let rewardRuleVersion: String?
         let isTest: Bool
+        /// 现场实测协议（与本机携带的协议核对过才保留；不一致时为 nil）
+        var fieldProtocolVersion: String? = nil
+        var fieldProtocol: APIClient.FieldProtocolSpec? = nil
+        /// 配置是否接收录音
+        var audioUpload: Bool = false
 
         var window: ResearchGate.CollectionWindow {
             .init(start: collectionStartAt, end: collectionEndAt)
@@ -60,6 +65,16 @@ final class ResearchConfig: ObservableObject {
         return available.window.contains(now)
     }
 
+    /// 已纳入的这位参与者此刻能不能做现场实测：正在采集、纳入所用的就是当前配置、
+    /// 配置带了实测协议，且协议与本机携带的一致。
+    func fieldSessionAvailable(now: Date = Date()) -> Bool {
+        let state = ResearchStore.shared.state
+        guard ResearchGate.shouldCollect(now: now),
+              let m = available, m.manifestID == state.manifestID,
+              m.fieldProtocol != nil else { return false }
+        return true
+    }
+
     /// 联网刷新。
     ///
     /// - 服务端明确回答「没有匹配的配置」（404）：清掉缓存，研究路径关闭。
@@ -78,13 +93,21 @@ final class ResearchConfig: ObservableObject {
                 #endif
                 store(nil)
             } else {
+                // 协议对不上本机携带的那份：不提供现场实测，其余研究功能照常
+                let protocolMatches = m.fieldProtocol.map {
+                    FieldProtocol.bundled?.matches($0, version: m.fieldProtocolVersion) ?? false
+                } ?? false
                 store(Manifest(manifestID: m.manifestID, studyID: m.studyID,
                                collectionStartAt: m.collectionStartAt,
                                collectionEndAt: m.collectionEndAt,
                                postTriggerCount: m.postTriggerCount,
                                consentVersion: m.consentVersion,
                                rewardRuleVersion: m.rewardRuleVersion,
-                               isTest: m.isTest ?? false))
+                               isTest: m.isTest ?? false,
+                               fieldProtocolVersion: protocolMatches ? m.fieldProtocolVersion : nil,
+                               fieldProtocol: protocolMatches ? m.fieldProtocol : nil,
+                               audioUpload: m.audioUpload ?? false))
+                ResearchStore.shared.rollOverToNewStudyIfNeeded(m.studyID)
                 syncEnrolledWindow()
             }
         } catch let error as ResearchAPIError {
@@ -101,14 +124,19 @@ final class ResearchConfig: ObservableObject {
     /// 说明这台设备拿到的不是为它准备的配置——带着不匹配的材料去采集，
     /// 数据会被归到错误的版本名下。
     nonisolated static func incompatibility(of m: APIClient.ActiveManifest,
-                                            consentVersion: String = ResearchConsent.textVersion,
+                                            consentVersions: Set<String> = ResearchConsent.supportedVersions,
                                             eligibilityVersion: String = ResearchEligibility.version,
                                             lexiconVersion: String? = ResearchLexicon.lexiconVersion,
                                             forms: [String: SurveyForm] = SurveyFormLoader.bundled,
                                             appVersion: String = AppEnvironment.appVersion,
                                             isTestClient: Bool = AppEnvironment.isTestAccount) -> String? {
         if m.collectionEndAt <= m.collectionStartAt { return "window" }
-        if m.consentVersion != consentVersion { return "consent_version" }
+        if !consentVersions.contains(m.consentVersion) { return "consent_version" }
+        // 收录音的配置必须配写明录音的同意文本，反之亦然（服务端冻结时也查过，这里再挡一次）
+        if (m.audioUpload ?? false)
+            != ResearchConsent.allowsAudioUpload(consentVersion: m.consentVersion) {
+            return "audio_consent"
+        }
         if let v = m.eligibilityVersion, v != eligibilityVersion { return "eligibility_version" }
         if let v = m.lexiconVersion, v != lexiconVersion { return "lexicon_version" }
         if let v = m.appVersion, v != appVersion { return "app_version" }
@@ -135,6 +163,7 @@ final class ResearchConfig: ObservableObject {
         store.update { s in
             s.windowStart = m.collectionStartAt
             s.windowEnd = m.collectionEndAt
+            s.audioUpload = m.audioUpload
         }
     }
 

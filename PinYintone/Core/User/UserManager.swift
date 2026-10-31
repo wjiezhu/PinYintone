@@ -47,6 +47,10 @@ final class UserManager: ObservableObject {
         profile = p
         // 研究状态按账号隔离：切到这个账号自己的那一份
         ResearchStore.shared.activate(for: p)
+        // 登录后弹一次参加研究的说明。已经答复过的账号（换机、重新登录）不再问
+        ResearchStore.shared.update { s in
+            if s.participation == .notAsked { s.signupConsentDue = true }
+        }
         // 后端建档放到后台，登录不等它（原因见 pushRegistration）
         registerInBackground(p)
     }

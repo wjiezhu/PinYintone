@@ -23,13 +23,13 @@ final class ResearchEligibilityTests: XCTestCase {
         XCTAssertEqual(evaluate(adult: false), .excluded(.age))
     }
 
-    func testNonMoroccanExcluded() {
-        XCTAssertEqual(evaluate(nations: ["FR"]), .excluded(.nationality))
-    }
-
-    func testMultipleNationalitiesIncludingMoroccoIsEligible() {
-        // B02 允许多选；含 MA 即符合国籍条件
+    /// 现场实测轮（eligibility-3.0）不限国籍：国籍照常作答、照常上传，只是不参与判定。
+    /// 第一轮（只收摩洛哥籍）的人在服务端按当时的规则复核，见 backend research_rules。
+    func testAnyNationalityIsEligible() {
+        XCTAssertTrue(ResearchEligibility.requiredNationalities.isEmpty)
+        XCTAssertEqual(evaluate(nations: ["FR"]), .eligible)
         XCTAssertEqual(evaluate(nations: ["FR", "MA"]), .eligible)
+        XCTAssertEqual(evaluate(nations: ["other"]), .eligible)
     }
 
     func testCourseStageWhitelistFollowsResearchDocs() {
@@ -46,7 +46,7 @@ final class ResearchEligibilityTests: XCTestCase {
     /// 使用史这个输入——旧用户、新用户、识别不了的，走同一个口径。
     func testPriorUseIsNotAnInputToEligibility() {
         XCTAssertEqual(evaluate(), .eligible)
-        XCTAssertEqual(ResearchEligibility.version, "eligibility-2.0",
+        XCTAssertEqual(ResearchEligibility.version, "eligibility-3.0",
                        "规则变了版本号必须跟着变")
     }
 
@@ -60,13 +60,13 @@ final class ResearchEligibilityTests: XCTestCase {
 
     func testMissingBackgroundIsPendingNotExcluded() {
         XCTAssertEqual(evaluate(adult: nil), .pending)
-        XCTAssertEqual(evaluate(nations: nil), .pending)
         XCTAssertEqual(evaluate(stage: nil), .pending)
     }
 
-    func testPreferNotToAnswerNationalityIsNotEligible() {
-        // prefer_not 视为空集：没有 MA 证据，不得推定满足
-        XCTAssertEqual(evaluate(nations: []), .excluded(.nationality))
+    /// 国籍不参与判定：没答、选「不愿回答」都不影响纳入（关键题仍是年龄与课程阶段）
+    func testNationalityAnswerDoesNotGateInclusion() {
+        XCTAssertEqual(evaluate(nations: nil), .eligible)
+        XCTAssertEqual(evaluate(nations: []), .eligible)
     }
 
     // MARK: - 同意是前提

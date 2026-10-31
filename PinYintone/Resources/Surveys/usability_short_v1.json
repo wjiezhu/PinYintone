@@ -1,18 +1,22 @@
 {
   "form_key": "usability_short_v1",
   "form_version": "usability_short_v1-1.0",
-  "translation_version": "research-survey-i18n-1.0",
+  "translation_version": "research-survey-i18n-1.2",
   "title": {
     "zh": "使用体验",
     "en": "Your experience with the app",
     "fr": "Votre expérience de l’application",
-    "ar": "تجربتك مع التطبيق"
+    "ar": "تجربتك مع التطبيق",
+    "es": "Tu experiencia con la app",
+    "it": "La tua esperienza con l'app"
   },
   "intro": {
     "zh": "请根据刚才使用Pinyintone的实际经历回答。没有对错，你的回答不会影响积分或继续练习。没有使用过或无法判断的内容，可以选择相应选项。",
     "en": "Please answer based on your recent experience using Pinyintone. There are no right or wrong answers. Your answers will not affect your points or your ability to keep practicing. For anything you have not used or cannot judge, you can select the corresponding answer.",
     "fr": "Répondez selon votre expérience récente de Pinyintone. Il n’y a pas de bonnes ou de mauvaises réponses. Vos réponses n’auront aucun effet sur vos points ni sur la possibilité de poursuivre les exercices. Pour les éléments que vous n’avez pas utilisés ou que vous ne pouvez pas évaluer, vous pouvez choisir la réponse correspondante.",
-    "ar": "يرجى الإجابة بناءً على تجربتك الفعلية الأخيرة مع Pinyintone. لا توجد إجابات صحيحة أو خاطئة، ولن تؤثر إجاباتك في نقاطك أو في إمكانية متابعة التدريب. بالنسبة إلى ما لم تستخدمه أو لا تستطيع تقييمه، يمكنك اختيار الإجابة المناسبة."
+    "ar": "يرجى الإجابة بناءً على تجربتك الفعلية الأخيرة مع Pinyintone. لا توجد إجابات صحيحة أو خاطئة، ولن تؤثر إجاباتك في نقاطك أو في إمكانية متابعة التدريب. بالنسبة إلى ما لم تستخدمه أو لا تستطيع تقييمه، يمكنك اختيار الإجابة المناسبة.",
+    "es": "Responde según tu experiencia reciente con Pinyintone. No hay respuestas correctas ni incorrectas. Tus respuestas no afectan a tus puntos ni a que puedas seguir practicando. Para lo que no hayas usado o no puedas valorar, puedes seleccionar la respuesta correspondiente.",
+    "it": "Rispondi in base alla tua esperienza recente con Pinyintone. Non ci sono risposte giuste o sbagliate. Le risposte non influiscono sui tuoi punti né sulla possibilità di continuare a esercitarti. Per ciò che non hai usato o non puoi valutare, puoi selezionare la risposta corrispondente."
   },
   "scoring_note": "POST01—03 的 1–5 由选项 value 派生；cannot_judge 不计分且不得存为 0。逐题描述，不合成 SUS 或声调能力分。",
   "questions": [
@@ -23,7 +27,9 @@
         "zh": "我能顺利完成一次声调练习的操作。",
         "en": "I can complete the steps of a tone-practice exercise without difficulty.",
         "fr": "Je peux effectuer les étapes d’un exercice sur les tons sans difficulté.",
-        "ar": "أستطيع إتمام خطوات تمرين على النغمات دون صعوبة."
+        "ar": "أستطيع إتمام خطوات تمرين على النغمات دون صعوبة.",
+        "es": "Puedo completar sin dificultad los pasos de un ejercicio de tonos.",
+        "it": "Riesco a completare senza difficoltà i passaggi di un esercizio sui toni."
       },
       "options": [
         {
@@ -32,7 +38,9 @@
             "zh": "非常不同意",
             "en": "Strongly disagree",
             "fr": "Pas du tout d’accord",
-            "ar": "لا أوافق إطلاقًا"
+            "ar": "لا أوافق إطلاقًا",
+            "es": "Totalmente en desacuerdo",
+            "it": "Per niente d'accordo"
           },
           "value": 1
         },
@@ -42,7 +50,9 @@
             "zh": "不同意",
             "en": "Disagree",
             "fr": "Pas d’accord",
-            "ar": "لا أوافق"
+            "ar": "لا أوافق",
+            "es": "En desacuerdo",
+            "it": "In disaccordo"
           },
           "value": 2
         },
@@ -52,7 +62,9 @@
             "zh": "既不同意也不赞同",
             "en": "Neither agree nor disagree",
             "fr": "Ni d’accord ni pas d’accord",
-            "ar": "لا أوافق ولا أعارض"
+            "ar": "لا أوافق ولا أعارض",
+            "es": "Ni de acuerdo ni en desacuerdo",
+            "it": "Né d'accordo né in disaccordo"
           },
           "value": 3
         },
@@ -62,7 +74,9 @@
             "zh": "同意",
             "en": "Agree",
             "fr": "D’accord",
-            "ar": "أوافق"
+            "ar": "أوافق",
+            "es": "De acuerdo",
+            "it": "D'accordo"
           },
           "value": 4
         },
@@ -72,7 +86,9 @@
             "zh": "非常同意",
             "en": "Strongly agree",
             "fr": "Tout à fait d’accord",
-            "ar": "أوافق بشدة"
+            "ar": "أوافق بشدة",
+            "es": "Totalmente de acuerdo",
+            "it": "Del tutto d'accordo"
           },
           "value": 5
         },
@@ -82,7 +98,9 @@
             "zh": "无法判断",
             "en": "Unable to judge",
             "fr": "Je ne peux pas me prononcer",
-            "ar": "لا أستطيع الحكم"
+            "ar": "لا أستطيع الحكم",
+            "es": "No puedo valorarlo",
+            "it": "Non so valutare"
           }
         }
       ],
@@ -95,13 +113,17 @@
         "zh": "我能理解刚才实际看到的声调反馈。",
         "en": "I can understand the tone feedback I actually saw during my recent use of the app.",
         "fr": "Je comprends les retours sur les tons que j’ai effectivement vus lors de ma récente utilisation de l’application.",
-        "ar": "أستطيع فهم الملاحظات حول النغمات التي رأيتها بالفعل أثناء استخدامي الأخير للتطبيق."
+        "ar": "أستطيع فهم الملاحظات حول النغمات التي رأيتها بالفعل أثناء استخدامي الأخير للتطبيق.",
+        "es": "Entiendo los comentarios sobre los tonos que he visto al usar la app recientemente.",
+        "it": "Capisco il riscontro sui toni che ho effettivamente visto usando di recente l'app."
       },
       "hint": {
         "zh": "请只评价你已经看过的内容，不需要评价未使用的反馈形式。",
         "en": "Please rate only what you have already seen. You do not need to rate feedback formats you have not used.",
         "fr": "Évaluez uniquement ce que vous avez déjà vu. Vous n’avez pas à évaluer les formes de retour que vous n’avez pas utilisées.",
-        "ar": "يرجى تقييم ما رأيته بالفعل فقط. لا تحتاج إلى تقييم أشكال الملاحظات التي لم تستخدمها."
+        "ar": "يرجى تقييم ما رأيته بالفعل فقط. لا تحتاج إلى تقييم أشكال الملاحظات التي لم تستخدمها.",
+        "es": "Valora solo lo que ya has visto. No hace falta valorar formatos de comentarios que no has usado.",
+        "it": "Valuta solo ciò che hai già visto. Non serve valutare formati di riscontro che non hai usato."
       },
       "options": [
         {
@@ -110,7 +132,9 @@
             "zh": "非常不同意",
             "en": "Strongly disagree",
             "fr": "Pas du tout d’accord",
-            "ar": "لا أوافق إطلاقًا"
+            "ar": "لا أوافق إطلاقًا",
+            "es": "Totalmente en desacuerdo",
+            "it": "Per niente d'accordo"
           },
           "value": 1
         },
@@ -120,7 +144,9 @@
             "zh": "不同意",
             "en": "Disagree",
             "fr": "Pas d’accord",
-            "ar": "لا أوافق"
+            "ar": "لا أوافق",
+            "es": "En desacuerdo",
+            "it": "In disaccordo"
           },
           "value": 2
         },
@@ -130,7 +156,9 @@
             "zh": "既不同意也不赞同",
             "en": "Neither agree nor disagree",
             "fr": "Ni d’accord ni pas d’accord",
-            "ar": "لا أوافق ولا أعارض"
+            "ar": "لا أوافق ولا أعارض",
+            "es": "Ni de acuerdo ni en desacuerdo",
+            "it": "Né d'accordo né in disaccordo"
           },
           "value": 3
         },
@@ -140,7 +168,9 @@
             "zh": "同意",
             "en": "Agree",
             "fr": "D’accord",
-            "ar": "أوافق"
+            "ar": "أوافق",
+            "es": "De acuerdo",
+            "it": "D'accordo"
           },
           "value": 4
         },
@@ -150,7 +180,9 @@
             "zh": "非常同意",
             "en": "Strongly agree",
             "fr": "Tout à fait d’accord",
-            "ar": "أوافق بشدة"
+            "ar": "أوافق بشدة",
+            "es": "Totalmente de acuerdo",
+            "it": "Del tutto d'accordo"
           },
           "value": 5
         },
@@ -160,7 +192,9 @@
             "zh": "无法判断",
             "en": "Unable to judge",
             "fr": "Je ne peux pas me prononcer",
-            "ar": "لا أستطيع الحكم"
+            "ar": "لا أستطيع الحكم",
+            "es": "No puedo valorarlo",
+            "it": "Non so valutare"
           }
         }
       ],
@@ -173,7 +207,9 @@
         "zh": "看过反馈后，我知道下一次可以怎样调整发音。",
         "en": "After looking at the feedback, I know how I can adjust my pronunciation next time.",
         "fr": "Après avoir consulté les retours, je sais comment ajuster ma prononciation la prochaine fois.",
-        "ar": "بعد الاطّلاع على الملاحظات، أعرف كيف يمكنني تعديل نطقي في المحاولة التالية."
+        "ar": "بعد الاطّلاع على الملاحظات، أعرف كيف يمكنني تعديل نطقي في المحاولة التالية.",
+        "es": "Después de ver los comentarios, sé cómo ajustar mi pronunciación la próxima vez.",
+        "it": "Dopo aver visto il riscontro, so come correggere la pronuncia la prossima volta."
       },
       "options": [
         {
@@ -182,7 +218,9 @@
             "zh": "非常不同意",
             "en": "Strongly disagree",
             "fr": "Pas du tout d’accord",
-            "ar": "لا أوافق إطلاقًا"
+            "ar": "لا أوافق إطلاقًا",
+            "es": "Totalmente en desacuerdo",
+            "it": "Per niente d'accordo"
           },
           "value": 1
         },
@@ -192,7 +230,9 @@
             "zh": "不同意",
             "en": "Disagree",
             "fr": "Pas d’accord",
-            "ar": "لا أوافق"
+            "ar": "لا أوافق",
+            "es": "En desacuerdo",
+            "it": "In disaccordo"
           },
           "value": 2
         },
@@ -202,7 +242,9 @@
             "zh": "既不同意也不赞同",
             "en": "Neither agree nor disagree",
             "fr": "Ni d’accord ni pas d’accord",
-            "ar": "لا أوافق ولا أعارض"
+            "ar": "لا أوافق ولا أعارض",
+            "es": "Ni de acuerdo ni en desacuerdo",
+            "it": "Né d'accordo né in disaccordo"
           },
           "value": 3
         },
@@ -212,7 +254,9 @@
             "zh": "同意",
             "en": "Agree",
             "fr": "D’accord",
-            "ar": "أوافق"
+            "ar": "أوافق",
+            "es": "De acuerdo",
+            "it": "D'accordo"
           },
           "value": 4
         },
@@ -222,7 +266,9 @@
             "zh": "非常同意",
             "en": "Strongly agree",
             "fr": "Tout à fait d’accord",
-            "ar": "أوافق بشدة"
+            "ar": "أوافق بشدة",
+            "es": "Totalmente de acuerdo",
+            "it": "Del tutto d'accordo"
           },
           "value": 5
         },
@@ -232,7 +278,9 @@
             "zh": "无法判断",
             "en": "Unable to judge",
             "fr": "Je ne peux pas me prononcer",
-            "ar": "لا أستطيع الحكم"
+            "ar": "لا أستطيع الحكم",
+            "es": "No puedo valorarlo",
+            "it": "Non so valutare"
           }
         }
       ],
@@ -245,7 +293,9 @@
         "zh": "到目前为止，使用Pinyintone时，你遇到过哪些问题？可多选。",
         "en": "So far, what problems have you experienced while using Pinyintone? Select all that apply.",
         "fr": "Jusqu’à présent, quels problèmes avez-vous rencontrés en utilisant Pinyintone ? Plusieurs réponses possibles.",
-        "ar": "حتى الآن، ما المشكلات التي واجهتها أثناء استخدام Pinyintone؟ يمكنك اختيار أكثر من إجابة."
+        "ar": "حتى الآن، ما المشكلات التي واجهتها أثناء استخدام Pinyintone؟ يمكنك اختيار أكثر من إجابة.",
+        "es": "Hasta ahora, ¿qué problemas has tenido al usar Pinyintone? Selecciona todos los que correspondan.",
+        "it": "Finora, quali problemi hai avuto usando Pinyintone? Seleziona tutti quelli pertinenti."
       },
       "options": [
         {
@@ -254,7 +304,9 @@
             "zh": "找不到需要的操作入口",
             "en": "I could not find where to perform the action I needed",
             "fr": "Je n’ai pas trouvé où effectuer l’action souhaitée",
-            "ar": "لم أجد المكان الذي يمكنني منه تنفيذ الإجراء المطلوب"
+            "ar": "لم أجد المكان الذي يمكنني منه تنفيذ الإجراء المطلوب",
+            "es": "No encontré dónde hacer lo que necesitaba",
+            "it": "Non ho trovato dove fare ciò che mi serviva"
           }
         },
         {
@@ -263,7 +315,9 @@
             "zh": "无法完成录音",
             "en": "I could not complete a recording",
             "fr": "Je n’ai pas pu terminer un enregistrement",
-            "ar": "لم أتمكن من إتمام التسجيل"
+            "ar": "لم أتمكن من إتمام التسجيل",
+            "es": "No pude completar una grabación",
+            "it": "Non sono riuscito/a a completare una registrazione"
           }
         },
         {
@@ -272,7 +326,9 @@
             "zh": "录音后未能得到分析结果",
             "en": "I did not receive an analysis result after recording",
             "fr": "Je n’ai pas obtenu de résultat d’analyse après l’enregistrement",
-            "ar": "لم أحصل على نتيجة التحليل بعد التسجيل"
+            "ar": "لم أحصل على نتيجة التحليل بعد التسجيل",
+            "es": "No recibí un resultado después de grabar",
+            "it": "Non ho ricevuto un risultato dopo la registrazione"
           }
         },
         {
@@ -281,7 +337,9 @@
             "zh": "应用突然关闭或闪退",
             "en": "The app closed unexpectedly or crashed",
             "fr": "L’application s’est fermée de façon inattendue ou a planté",
-            "ar": "أُغلق التطبيق فجأة أو تعطّل"
+            "ar": "أُغلق التطبيق فجأة أو تعطّل",
+            "es": "La app se cerró de forma inesperada o falló",
+            "it": "L'app si è chiusa all'improvviso o si è bloccata"
           }
         },
         {
@@ -290,7 +348,9 @@
             "zh": "看不懂反馈内容",
             "en": "I could not understand the feedback",
             "fr": "Je n’ai pas compris les retours",
-            "ar": "لم أفهم الملاحظات"
+            "ar": "لم أفهم الملاحظات",
+            "es": "No entendí los comentarios",
+            "it": "Non ho capito il riscontro"
           }
         },
         {
@@ -299,7 +359,9 @@
             "zh": "其他问题",
             "en": "Other problems",
             "fr": "Autres problèmes",
-            "ar": "مشكلات أخرى"
+            "ar": "مشكلات أخرى",
+            "es": "Otros problemas",
+            "it": "Altri problemi"
           },
           "text_input": {
             "max_chars": 200
@@ -311,7 +373,9 @@
             "zh": "没有遇到问题",
             "en": "I have not experienced any problems",
             "fr": "Je n’ai rencontré aucun problème",
-            "ar": "لم أواجه أي مشكلات"
+            "ar": "لم أواجه أي مشكلات",
+            "es": "No he tenido ningún problema",
+            "it": "Non ho avuto alcun problema"
           },
           "exclusive": true
         },
@@ -321,7 +385,9 @@
             "zh": "记不清",
             "en": "I cannot remember",
             "fr": "Je ne me souviens pas",
-            "ar": "لا أتذكر"
+            "ar": "لا أتذكر",
+            "es": "No lo recuerdo",
+            "it": "Non ricordo"
           },
           "exclusive": true
         }
@@ -336,13 +402,17 @@
         "zh": "你最希望Pinyintone改进什么？",
         "en": "What would you most like Pinyintone to improve?",
         "fr": "Qu’aimeriez-vous surtout améliorer dans Pinyintone ?",
-        "ar": "ما أكثر ما ترغب في تحسينه في Pinyintone؟"
+        "ar": "ما أكثر ما ترغب في تحسينه في Pinyintone؟",
+        "es": "¿Qué te gustaría sobre todo que Pinyintone mejorara?",
+        "it": "Che cosa vorresti soprattutto che Pinyintone migliorasse?"
       },
       "hint": {
         "zh": "可以谈操作、反馈、练习内容或其他方面。请不要填写姓名、联系方式或其他可识别个人身份的信息。",
         "en": "You can comment on the controls, feedback, practice content, or anything else. Please do not enter names, contact details, or other information that could identify someone.",
         "fr": "Vous pouvez parler des manipulations, des retours, du contenu des exercices ou d’autres aspects. Veuillez ne pas indiquer de noms, de coordonnées ou d’autres informations permettant d’identifier une personne.",
-        "ar": "يمكنك الحديث عن خطوات الاستخدام أو الملاحظات أو محتوى التدريبات أو جوانب أخرى. يرجى عدم إدخال أسماء أو معلومات اتصال أو أي معلومات أخرى قد تكشف هوية شخص."
+        "ar": "يمكنك الحديث عن خطوات الاستخدام أو الملاحظات أو محتوى التدريبات أو جوانب أخرى. يرجى عدم إدخال أسماء أو معلومات اتصال أو أي معلومات أخرى قد تكشف هوية شخص.",
+        "es": "Puedes comentar los controles, los comentarios, el contenido de práctica o cualquier otra cosa. No escribas nombres, datos de contacto ni otra información que pueda identificar a alguien.",
+        "it": "Puoi commentare i comandi, il riscontro, i contenuti degli esercizi o altro. Non inserire nomi, recapiti o altre informazioni che possano identificare qualcuno."
       },
       "text_input": {
         "max_chars": 500,
