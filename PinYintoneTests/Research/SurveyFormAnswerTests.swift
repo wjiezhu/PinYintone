@@ -112,11 +112,11 @@ final class SurveyFormAnswerTests: XCTestCase {
     }
 
     /// 问卷界面的固定文案跟着问卷自己的语言走，四种语言都有
-    func testFormChromeIsAvailableInAllFourLanguages() {
+    func testFormChromeIsAvailableInAllLanguages() {
         for key in ["previous", "next", "skip_question", "later", "submit", "decline_survey",
                     "select_one", "select_multiple", "privacy_hint", "search_country"] {
-            let texts = ["zh", "en", "fr", "ar"].map { SurveyUIStrings.text(key, $0) }
-            XCTAssertEqual(Set(texts).count, 4, "\(key) 在四种语言下应各不相同")
+            let texts = ["zh", "en", "fr", "ar", "es", "it"].map { SurveyUIStrings.text(key, $0) }
+            XCTAssertEqual(Set(texts).count, 6, "\(key) 在六种语言下应各不相同")
             XCTAssertFalse(texts.contains(key), "\(key) 缺译文")
         }
     }

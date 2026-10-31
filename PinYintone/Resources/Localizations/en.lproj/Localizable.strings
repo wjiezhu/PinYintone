@@ -27,6 +27,7 @@
 "lang_french" = "French";
 "lang_english" = "English";
 "lang_spanish" = "Spanish";
+"lang_italian" = "Italian";
 "lang_amazigh" = "Tamazight";
 "lang_other" = "Other";
 
@@ -101,10 +102,9 @@
 "replay_failed" = "Could not play your recording. Please try again.";
 "record_start" = "Start recording";
 "record_stop" = "Stop recording";
-"aspiration_prompt" = "Blow hard into the mic to make the aspirated burst";
-"aspiration_calibrating" = "Calibrating ambient noise...";
-"aspiration_success" = "✓ Great burst!";
-"aspiration_keep_going" = "Keep going!";
+"aspiration_calibrating" = "Measuring background noise. Please stay quiet…";
+"aspiration_success" = "Aspirated: the burst of air came through.";
+"aspiration_keep_going" = "Not enough air yet. Try again with a stronger burst.";
 
 // Per-character diagnostic
 "diagnostic_title" = "Per-character feedback";
@@ -136,11 +136,11 @@
 
 // Help / instructions
 "help_title" = "How to use";
-"help_stage1_body" = "Blow hard into the mic to scatter the dandelion — practices aspirated sounds (p / t / k).";
+"help_stage1_body" = "Aspirated sounds (p / t / k) need a burst of air that blows the dandelion apart. Unaspirated sounds (b / d / g) need no burst, so the dandelion should stay still. Tap once to start and again to stop.";
 "help_stage2_body" = "Tap Listen to hear the model, then record yourself. Each recording gets a result out of 100 (60 or more passes).";
 "help_stage3_body" = "Paste or type Chinese, it splits into words, practice each one. Bookmark words to review later in My words.";
 "help_tip" = "Practice in a quiet place with the mic near your mouth.";
-"help_privacy" = "Your audio is never uploaded — only analysis results (scores), for research.";
+"help_privacy" = "Recordings from everyday practice are never uploaded — only analysis results (scores), for research. Field-session recordings are uploaded only for study participants who agreed to it in the consent form.";
 
 // ── Research phases (upgrade spec §3.1) ──────────────
 "tone_next_word" = "Next word";
@@ -154,7 +154,7 @@
 "tone_name_4" = "Falling";
 
 // Microphone and data use (upgrade spec §4.1)
-"onboarding_mic_privacy" = "Your recording is analysed for pitch on your phone. The raw audio is never uploaded or stored on a server; only the analysis results (score and pitch curve) are uploaded anonymously for this teaching-research project. You can delete your account and all your data at any time in Settings.";
+"onboarding_mic_privacy" = "When you practise, your recording is analysed for pitch on your phone. The raw audio is never uploaded or stored on a server; only the analysis results are uploaded anonymously for this teaching-research project. The one exception: if you join the study and explicitly agree to audio upload in the consent form, your field-session recordings are uploaded. You can delete your account and all your data at any time in Settings.";
 "onboarding_mic_denied_title" = "Microphone access is off";
 "onboarding_mic_denied_body" = "Tone practice needs to record you. Open Settings → Pinyintone → Microphone, turn it on, then come back here.";
 "onboarding_open_settings" = "Open Settings";
@@ -182,15 +182,15 @@
 /* Research consent. Draft translation, pending review. */
 "consent_title" = "Join the study (optional)";
 "consent_purpose_title" = "Purpose";
-"consent_purpose_body" = "To understand how beginning learners of Chinese use a tone-practice tool, for a master's thesis on design and usability.";
+"consent_purpose_body" = "To understand how learners of Chinese use a tone-practice tool, for a master's thesis on design and usability.\n\nAfter joining, you can do one \"field session\" while the researcher is present, about 15–20 minutes: first read a set of words (no results shown), then practise a different set of words (with feedback), and finally read the first set again (no results shown). You can stop the session at any point.";
 "consent_data_title" = "What is collected";
-"consent_data_body" = "Your practice activity (starting a task, playing the model, recording, viewing feedback), scoring results, and any questionnaire answers you choose to give.\n\nRecordings themselves are not uploaded. In the research data you are identified only by an anonymous number linked to your Apple account; it does not include your name, email or any other personal information.";
+"consent_data_body" = "Your practice activity (starting a task, playing the model, recording, viewing feedback), scoring results, and any questionnaire answers you choose to give (including background such as age group, nationality and Chinese level).\n\nRecordings themselves are not uploaded. In the research data you are identified only by an anonymous number linked to your Apple account; it does not include your name, email or any other personal information.";
 "consent_use_title" = "How it is used";
 "consent_use_body" = "Only for analysis and writing in that thesis. Results are reported as group statistics, not about individuals.";
 "consent_withdraw_title" = "How to leave";
 "consent_withdraw_body" = "You can leave the study at any time in Settings. Collection of new data stops immediately. Data collected before you leave is kept in anonymous form and may be used in the statistical analysis for the thesis. If you have questions, please use the contact below.";
 "consent_contact" = "Questions, withdrawal, or data deletion: joyouo409@gmail.com, or via in-app feedback.";
-"consent_checkbox" = "I have read the information above and agree to take part";
+"consent_checkbox" = "I have read the information, I agree to take part, and I agree to the collection of this data";
 "consent_agree" = "Agree and take part";
 "consent_decline" = "Not now";
 "consent_decline_hint" = "Declining does not affect any app feature.";
@@ -324,7 +324,7 @@
 "research_enroll_refused" = "You cannot join this round of the study at the moment. You can keep using every feature as usual.";
 "research_continue_later" = "Later — go to practice";
 "research_enrolled_title" = "You have joined the study";
-"research_enrolled_body" = "Thank you. You can leave at any time under Settings → Study participation.";
+"research_enrolled_body" = "Thank you. For questions about Chinese or study materials, add herecomes_zhuozhuo on WeChat. You can leave at any time under Settings → Study participation.";
 "research_enrolled_pending_body" = "You have joined. Your background answers are saved on this device and will be submitted automatically when you are online.";
 "research_start_practice" = "Start practising";
 "research_ineligible_title" = "Thank you for your answers";
@@ -369,3 +369,53 @@
 "home_start" = "Start practising";
 "record_short" = "Record";
 "word_picker_short" = "Words";
+
+/* 现场实测（2026-10-28） */
+"consent_data_body_audio" = "Your practice activity (starting a task, playing the model, recording, viewing feedback), scoring results, and any questionnaire answers you choose to give (including background such as age group, nationality and Chinese level).\n\nRecordings made during the field session are uploaded so that the researcher can check the scores by ear. Because a voice can identify a person, these recordings are kept only on the research server, used only by the researcher, never published and never included in thesis appendices. Recordings from everyday practice are not uploaded.\n\nIn the research data you are identified only by an anonymous number linked to your Apple account; it does not include your name, email or any other personal information.";
+"consent_withdraw_body_audio" = "You can leave the study at any time in Settings. Collection of new data stops immediately and all your recordings are deleted from your phone and from the research server. Other data collected before you leave (scores, activity records, questionnaire answers) is kept in anonymous form and may be used in the statistical analysis for the thesis. If you have questions, please use the contact below.";
+"home_field_session" = "Start the field session (with the researcher)";
+"field_title" = "Field session";
+"field_exit" = "Exit";
+"field_exit_confirm_title" = "Exit this session?";
+"field_exit_confirm" = "Exit session";
+"field_exit_confirm_message" = "What you have recorded so far is kept. Next time will be a new session, starting again from the first set of words.";
+"field_intro_title" = "This session has three steps and takes about 15–20 minutes";
+"field_intro_pretest" = "Read %1$d words. No result is shown; the next word comes up automatically.";
+"field_intro_training" = "Practise %1$d other words, with feedback. Move on after %2$d valid results for each word.";
+"field_intro_posttest" = "Read the %1$d words from step 1 again. No result is shown.";
+"field_intro_note" = "Just say them the way you normally would. You can tap Exit at the top at any time.";
+"field_start" = "Start step 1";
+"field_test_ready" = "Tap the microphone below to record. No result is shown in this step.";
+"field_pretest_progress" = "Step 1 · word %1$d of %2$d";
+"field_posttest_progress" = "Step 3 · word %1$d of %2$d";
+"field_training_progress" = "Step 2 · word %1$d of %2$d";
+"field_training_count" = "Valid recordings for this word: %1$d of %2$d";
+"field_word_done_hint" = "That's enough for this word. Tap Next below to continue.";
+"field_pretest_done" = "Step 1 done";
+"field_next_training" = "Next, practise %1$d new words with feedback. Move on after %2$d valid results for each word.";
+"field_training_done" = "Step 2 done";
+"field_next_posttest" = "Finally, read the %1$d words from step 1 again. No result is shown.";
+"field_continue" = "Continue";
+"field_done_title" = "All done — thank you";
+"field_done_body" = "All three steps of this session are recorded. You can keep practising freely.";
+"field_back_to_practice" = "Back to practice";
+
+/* 送气练习：开始 / 停止按钮，区分送气与不送气 */
+"aspiration_prompt_aspirated" = "Aspirated %1$@: say “%2$@” with a burst of air.";
+"aspiration_prompt_unaspirated" = "Unaspirated %1$@: say “%2$@” softly, with no burst of air.";
+"aspiration_tag_aspirated" = "Aspirated · %@";
+"aspiration_tag_unaspirated" = "Unaspirated · %@";
+"aspiration_ready" = "Tap the microphone, say only the first character, then tap again to stop.";
+"aspiration_recording" = "Say it now, then tap stop.";
+"aspiration_unaspirated_success" = "No burst of air, which is right for this sound.";
+"aspiration_unaspirated_too_strong" = "Too much air. This sound needs no burst, so try it more softly.";
+"aspiration_stopped_early" = "Stopped during the noise check, so nothing was recorded. Wait for the prompt, then speak.";
+
+/* 注册后的知情同意与微信入口 */
+"consent_summary" = "This app is part of research for a master's thesis. If you agree, we collect your practice records, scores and questionnaire answers for statistical analysis, without your name or email. You can leave at any time. You can use every feature even if you do not agree.";
+"consent_benefit_title" = "If you take part";
+"consent_benefit_body" = "You can contact the researcher on WeChat with questions about Chinese or to get study materials. WeChat ID: herecomes_zhuozhuo";
+"consent_read_full" = "Read the full information sheet";
+"consent_full_title" = "Full information sheet";
+"research_wechat_copy" = "Copy WeChat ID (Chinese questions, study materials)";
+"research_wechat_copied" = "WeChat ID copied: herecomes_zhuozhuo";

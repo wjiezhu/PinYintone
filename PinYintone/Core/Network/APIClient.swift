@@ -211,6 +211,26 @@ final class APIClient {
         let eligibilityVersion: String?
         let surveyForms: [String: [String: String]]?
         let isTest: Bool?
+        /// 现场实测协议；为空 = 这份配置不提供现场实测
+        var fieldProtocolVersion: String? = nil
+        var fieldProtocol: FieldProtocolSpec? = nil
+        /// 是否接收录音。还要参与者同意的文本含录音，才真的上传
+        var audioUpload: Bool? = nil
+    }
+
+    /// 配置里绑定的实测协议（服务端字段名是 snake_case）
+    nonisolated struct FieldProtocolSpec: Codable, Equatable {
+        let lexiconVersion: String
+        let testLexemeVersionIDs: [String]
+        let trainingLexemeVersionIDs: [String]
+        let trainingValidAttemptsPerWord: Int
+
+        enum CodingKeys: String, CodingKey {
+            case lexiconVersion = "lexicon_version"
+            case testLexemeVersionIDs = "test_lexeme_version_ids"
+            case trainingLexemeVersionIDs = "training_lexeme_version_ids"
+            case trainingValidAttemptsPerWord = "training_valid_attempts_per_word"
+        }
     }
 
     /// 取与本构建匹配的当前生效研究配置。404 表示暂无——
@@ -243,6 +263,13 @@ final class APIClient {
     /// **不得**在这里吞掉错误，否则离线期间的事件会静默丢失。
     func uploadResearchEvents(_ batch: any Encodable) async throws -> BatchAck {
         try await researchRequest("research/events", method: "POST", body: batch)
+    }
+
+    struct RecordingAck: Decodable { let status: String }
+
+    /// 上传一次尝试的录音（AAC ADTS，base64 放在 JSON 里）。
+    func uploadResearchRecording(_ body: any Encodable) async throws -> RecordingAck {
+        try await researchRequest("research/recordings", method: "POST", body: body)
     }
 
     /// 上报「练习建议」点击记录。

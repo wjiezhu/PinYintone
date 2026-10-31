@@ -5,6 +5,7 @@
 --   3) 按声调组合汇总                4) 按词汇总              5) 重复练习曲线
 --   6) 每日使用情况                  7) 技术失败与数据质量    8) 送气练习
 --   9) 自由文本（9a 按人 / 9b 按词）  10) 自测
+--  11) 现场实测前后测（研究表 research_*，2.1 起）
 --
 -- 怎么用：
 --   · Neon 控制台 → SQL Editor。**一次只复制一段**（两条 ==== 分隔线之间），
@@ -1029,3 +1030,94 @@ FROM t2
 WHERE phase = 'self_test' AND valid
 GROUP BY participant
 ORDER BY participant;
+
+
+-- =====================================================================
+-- 11) 现场实测前后测（研究表，App 2.1 / 构建 21 起）—— 每次实测一行
+--
+-- 与上面各段不同：数据在 research_* 表里，按研究编号（participant_id）而不是设备。
+-- 只算：正式参与者（is_test = false）、当前同意有效（最新一条同意事件是 granted）、
+--       属于【参数】指定的 study_id。退出者整行排除（与导出脚本一致）。
+-- 每个测试词在前测、后测里各取**第一次有效录音**（status = succeeded）：
+--   技术失败重录的那几次不算，取消的不算。
+-- paired_words = 前后测都有有效录音的测试词数。只有它 = 测试词总数的那几行才是完整的前后测。
+-- 指标是 normalized DTW（越小越好）与是否通过（passed，已含平调闸门，不要按阈值重算）。
+--
+-- ⚠ 解释边界：这是**自愿参加者的单组前后测**，没有对照组，测试词与训练词不同（迁移）。
+--   可以描述前后变化，不能写成「训练导致了提高」，也不是语言能力等级。
+-- =====================================================================
+WITH
+cfg AS (
+    SELECT 'pinyintone-2026-field'::text AS study_id         -- 【参数】现场实测轮的 study_id
+),
+active AS (           -- 当前同意有效的正式参与者
+    SELECT p.participant_id
+    FROM research_participants p, cfg
+    WHERE p.study_id = cfg.study_id AND NOT p.is_test
+      AND (SELECT c.action FROM research_consent_events c
+           WHERE c.participant_id = p.participant_id
+           ORDER BY c.received_at DESC, c.occurred_at DESC LIMIT 1) = 'granted'
+),
+firsts AS (           -- 每次实测、每段、每个词的第一次有效录音
+    SELECT DISTINCT ON (a.field_session_id, a.task_type, a.lexeme_version_id)
+           a.participant_id, a.field_session_id, a.task_type, a.lexeme_version_id,
+           a.metric_value::float AS metric, a.passed, a.started_at
+    FROM research_attempts a
+    JOIN active USING (participant_id)
+    WHERE a.field_session_id IS NOT NULL
+      AND a.task_type IN ('pretest', 'posttest')
+      AND a.status = 'succeeded'
+    ORDER BY a.field_session_id, a.task_type, a.lexeme_version_id, a.started_at
+),
+paired AS (
+    SELECT pre.participant_id, pre.field_session_id, pre.lexeme_version_id,
+           pre.metric AS pre_metric, post.metric AS post_metric,
+           pre.passed AS pre_passed, post.passed AS post_passed
+    FROM firsts pre
+    JOIN firsts post ON post.field_session_id = pre.field_session_id
+                    AND post.lexeme_version_id = pre.lexeme_version_id
+                    AND post.task_type = 'posttest'
+    WHERE pre.task_type = 'pretest'
+),
+training AS (
+    SELECT a.field_session_id,
+           COUNT(*) FILTER (WHERE a.status = 'succeeded') AS training_valid,
+           COUNT(*) FILTER (WHERE a.status IN ('recording_failed', 'analysis_failed'))
+               AS training_technical_fail
+    FROM research_attempts a
+    JOIN active USING (participant_id)
+    WHERE a.field_session_id IS NOT NULL AND a.task_type = 'fixed_word'
+    GROUP BY a.field_session_id
+),
+ended AS (
+    SELECT DISTINCT ON (e.payload->>'field_session_id')
+           e.payload->>'field_session_id' AS field_session_id,
+           e.payload->>'outcome' AS outcome, e.payload->>'last_step' AS last_step
+    FROM research_interaction_events e
+    JOIN active USING (participant_id)
+    WHERE e.event_name = 'field_session_ended'
+    ORDER BY e.payload->>'field_session_id', e.occurred_at DESC
+)
+SELECT
+    p.participant_id,
+    p.field_session_id,
+    MIN(f.started_at) AT TIME ZONE 'Africa/Casablanca' AS local_started_at,
+    COALESCE(en.outcome, 'unknown')              AS outcome,     -- completed / abandoned / unknown
+    en.last_step,
+    COUNT(*)                                     AS paired_words,
+    ROUND(AVG(p.pre_metric)::numeric, 3)         AS pre_mean_dtw,
+    ROUND(AVG(p.post_metric)::numeric, 3)        AS post_mean_dtw,
+    ROUND(AVG(p.post_metric - p.pre_metric)::numeric, 3) AS mean_change_dtw,  -- 负数 = 变好
+    ROUND(AVG(p.pre_passed::int)::numeric, 3)    AS pre_pass_rate,
+    ROUND(AVG(p.post_passed::int)::numeric, 3)   AS post_pass_rate,
+    t.training_valid,
+    t.training_technical_fail
+FROM paired p
+JOIN firsts f ON f.field_session_id = p.field_session_id AND f.task_type = 'pretest'
+             AND f.lexeme_version_id = p.lexeme_version_id
+LEFT JOIN training t ON t.field_session_id = p.field_session_id
+LEFT JOIN ended en ON en.field_session_id = p.field_session_id
+GROUP BY p.participant_id, p.field_session_id, en.outcome, en.last_step,
+         t.training_valid, t.training_technical_fail
+ORDER BY local_started_at;
+

@@ -20,7 +20,7 @@
 from datetime import datetime, timezone
 
 from sqlalchemy import (Boolean, Column, DateTime, ForeignKey, Integer, JSON,
-                        Numeric, String, UniqueConstraint, false)
+                        LargeBinary, Numeric, String, UniqueConstraint, false)
 
 from sqlalchemy.orm import relationship
 
@@ -84,6 +84,14 @@ class ResearchManifest(Base):
     # {form_key: {"form_version": ..., "translation_version": ...}}。
     # 为空（旧配置）时不校验问卷版本。
     survey_forms = Column(JSON, nullable=True)
+    # 现场实测（前测 → 训练 → 后测）的协议版本与内容：
+    # {"test_lexeme_version_ids": [...], "training_lexeme_version_ids": [...],
+    #  "training_valid_attempts_per_word": n}。为空（旧配置）= 不提供现场实测。
+    field_protocol_version = Column(String(64), nullable=True)
+    field_protocol = Column(JSON, nullable=True)
+    # 是否接收录音文件。只有同意文本写明上传录音的配置才能为 true（种子脚本强制）。
+    # 之前的配置一律 false：那时的同意书写的是「录音不会上传」。
+    audio_upload = Column(Boolean, nullable=False, default=False, server_default=false())
 
 
 class ResearchParticipant(Base):
@@ -200,9 +208,13 @@ class ResearchAttempt(Base):
     # 前台使用会话：冷启动或后台超过 30 分钟创建新编号。
     # 这是**操作定义**，不等于真实学习课次。
     session_id = Column(String, nullable=False, index=True)
-    # fixed_word|free_text|self_test
-    # self_test 为本工程扩展（可选自测，纯裸测），字典 v1 未含，见 docs/V2_DECISIONS.md
+    # fixed_word|free_text|self_test|pretest|posttest
+    # self_test 为本工程扩展（可选自测，纯裸测），字典 v1 未含，见 docs/V2_DECISIONS.md。
+    # pretest / posttest 只出现在现场实测里（研究者在场、无反馈），与自选的 self_test 不同。
     task_type = Column(String(16), nullable=False, index=True)
+    # 现场实测的一次完整流程编号。前测、训练、后测三段共用；普通练习与自测为 NULL。
+    # 训练段的尝试 task_type 仍是 fixed_word，靠本列与普通练习区分。
+    field_session_id = Column(String, nullable=True, index=True)
     lexeme_version_id = Column(String, ForeignKey("research_lexemes.lexeme_version_id"),
                                nullable=True)   # free_text 为 NULL，**不存用户原文**
     _lexeme = relationship("ResearchLexeme")
@@ -398,3 +410,31 @@ class ResearchRewardEvent(Base):
     awarded_at = _ts(nullable=False)
     __table_args__ = (UniqueConstraint("attempt_id", "reward_rule_version",
                                        name="uq_reward_idempotent"),)
+
+
+class ResearchRecording(Base):
+    """一次尝试的录音文件（现场实测改版新增）。一行 = 一次尝试的一段录音。
+
+    **只在配置开了 audio_upload 时接收**，且参与者同意的文本版本必须是写明上传录音的那一版。
+    之前的配置与同意书写的是「录音不会上传」，那些参与者的录音一条都不收。
+
+    - 主键就是 attempt_id：一次尝试最多一段录音，重传幂等。
+    - 格式固定：AAC（ADTS 裸流）、16 kHz、单声道——与评分用的采样率一致。
+    - 参与者退出研究时**删除其全部录音**（声音可识别个人，不按「匿名保留」处理）。
+    - 录音属于受限数据：论文导出默认不带音频，需要时单独导出到本机，不进公开材料。
+    """
+    __tablename__ = "research_recordings"
+    attempt_id = Column(String, ForeignKey("research_attempts.attempt_id"), primary_key=True)
+    _attempt = relationship("ResearchAttempt")
+    participant_id = Column(String, ForeignKey("research_participants.participant_id"),
+                            nullable=False, index=True)
+    _participant = relationship("ResearchParticipant")
+    manifest_id = Column(String, ForeignKey("research_manifests.manifest_id"), nullable=False)
+    _manifest = relationship("ResearchManifest")
+    audio_format = Column(String(32), nullable=False)      # aac_adts
+    sample_rate = Column(Integer, nullable=False)          # 16000
+    duration_ms = Column(Integer, nullable=False)
+    byte_size = Column(Integer, nullable=False)
+    sha256 = Column(String(64), nullable=False)            # 客户端算、服务端复核
+    content = Column(LargeBinary, nullable=False)
+    received_at = _ts(nullable=False)

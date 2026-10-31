@@ -18,6 +18,8 @@ final class LocalizationManager: ObservableObject {
         ("zh", "🇨🇳", "中文"),
         ("en", "🇬🇧", "English"),
         ("ar", "🇸🇦", "العربية"),
+        ("es", "🇪🇸", "Español"),
+        ("it", "🇮🇹", "Italiano"),
     ]
 
     static let storageKey = "pt_app_language"

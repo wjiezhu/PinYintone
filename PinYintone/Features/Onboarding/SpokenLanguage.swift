@@ -13,6 +13,7 @@ enum SpokenLanguage: String, CaseIterable, Identifiable, Codable {
     case french
     case english
     case spanish
+    case italian
     case amazigh     // 塔马齐格特（柏柏尔语）
     case other
 
@@ -28,6 +29,7 @@ enum SpokenLanguage: String, CaseIterable, Identifiable, Codable {
         case .french:  return "🇫🇷"
         case .english: return "🇬🇧"
         case .spanish: return "🇪🇸"
+        case .italian: return "🇮🇹"
         case .amazigh: return "ⵣ"
         case .other:   return "🌐"
         }
@@ -35,6 +37,6 @@ enum SpokenLanguage: String, CaseIterable, Identifiable, Codable {
 
     /// 展示顺序：摩洛哥被试的常见语言优先
     static var displayOrder: [SpokenLanguage] {
-        [.darija, .french, .arabic, .amazigh, .english, .spanish, .other]
+        [.darija, .french, .arabic, .amazigh, .english, .spanish, .italian, .other]
     }
 }

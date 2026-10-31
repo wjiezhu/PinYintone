@@ -290,6 +290,11 @@ class ActiveManifestResponse(BaseModel):
     eligibilityVersion: str | None = None
     surveyForms: dict[str, dict[str, str]] | None = None
     isTest: bool = False
+    # 现场实测协议。客户端核对本机携带的协议版本，不一致则不提供现场实测
+    fieldProtocolVersion: str | None = None
+    fieldProtocol: dict | None = None
+    # 是否接收录音。客户端还要核对参与者同意的文本版本，两者都满足才上传
+    audioUpload: bool = False
 
 
 class AdviceRequestDTO(BaseModel):
@@ -333,6 +338,8 @@ class ResearchAttemptDTO(BaseModel):
     errorCode: str | None = None
     resultDisplayedAt: IsoDatetime | None = None
     timeQuality: str
+    # 现场实测的流程编号；普通练习与自测不带
+    fieldSessionID: str | None = None
 
 
 class ResearchAttemptBatch(BaseModel):
@@ -350,3 +357,16 @@ class IssueReportRequest(BaseModel):
     category: str
     detail: str | None = None
     relatedEventID: str | None = None
+
+
+class ResearchRecordingUpload(BaseModel):
+    """一次尝试的录音。音频按 base64 放在 JSON 里：一个词的录音约 5–10 KB，
+    不值得为此引入 multipart 依赖。"""
+    participantID: str
+    manifestID: str
+    attemptID: str
+    audioFormat: str
+    sampleRate: int
+    durationMs: int
+    sha256: str
+    audioBase64: str

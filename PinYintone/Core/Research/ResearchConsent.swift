@@ -14,23 +14,65 @@ import Foundation
 @MainActor
 enum ResearchConsent {
 
-    /// 知情同意文本版本。
+    /// 本构建携带的知情同意文本。**文案有任何改动都必须换新版本号**，并重新冻结研究配置。
     ///
-    /// `consent-1.0`：研究者 2026-10-14 审定。相对审稿稿改了两处——
-    /// 「采集内容」改为「研究数据里只用一个与 Apple 账号对应的匿名编号」（与隐私政策一致），
-    /// 「如何退出」写明退出前已收集的资料匿名保留、可能用于论文分析。
-    /// 法语、阿拉伯语、英语译文由开发方翻译，研究者确认使用。
-    /// **文案有任何改动都必须递增本版本号**，并重新冻结研究配置。
-    nonisolated static let textVersion = "consent-1.0"
+    /// 历史：`consent-1.0`（研究者 2026-10-14 审定，第一轮自然使用研究）不再随 App 携带。
+    ///
+    /// - `consent-1.1`：现场实测轮。说明前测 → 训练 → 后测，**录音不上传**。
+    /// - `consent-2.0`：同上，另写明**上传录音**、退出即删除录音。
+    ///   只有开了录音上传的配置才会下发这一版（种子脚本强制两者一致）。
+    ///
+    /// 两版都是开发方起草、待研究者与导师审定的稿子；审定记在
+    /// `backend/research_materials_approval.json`，未审定只能冻结成测试配置。
+    nonisolated enum Text: String, CaseIterable {
+        case fieldSession = "consent-1.1"
+        case fieldSessionWithAudio = "consent-2.0"
+
+        /// 这一版是否写明了上传录音
+        var includesAudioUpload: Bool { self == .fieldSessionWithAudio }
+
+        /// 依次显示的段落（标题键, 正文键）
+        var sections: [(title: String, body: String)] {
+            [("consent_purpose_title", "consent_purpose_body"),
+             ("consent_data_title", includesAudioUpload ? "consent_data_body_audio"
+                                                         : "consent_data_body"),
+             ("consent_use_title", "consent_use_body"),
+             ("consent_benefit_title", "consent_benefit_body"),
+             ("consent_withdraw_title", includesAudioUpload ? "consent_withdraw_body_audio"
+                                                             : "consent_withdraw_body")]
+        }
+    }
+
+    /// 参与者可以联系的微信号（汉语问题、学习资料）
+    nonisolated static let wechatID = "herecomes_zhuozhuo"
+
+    nonisolated static let supportedVersions = Set(Text.allCases.map(\.rawValue))
+
+    /// 现在应当给用户看的那一版：配置下发的版本（本构建携带才算），否则不含录音的那一版。
+    /// 研究入口只在配置可用时出现，所以实际看到的总是配置要求的那一版。
+    static var current: Text {
+        ResearchConfig.shared.available.flatMap { Text(rawValue: $0.consentVersion) }
+            ?? .fieldSession
+    }
+
+    /// 当前应显示的文本版本号
+    static var textVersion: String { current.rawValue }
+
+    /// 某个已同意的版本是否包含上传录音。只认本构建携带且写明了录音的版本
+    nonisolated static func allowsAudioUpload(consentVersion: String?) -> Bool {
+        consentVersion.flatMap(Text.init(rawValue:))?.includesAudioUpload ?? false
+    }
 
     /// 用户主动同意。记录其**实际看到**的文本版本与界面语言。
     ///
     /// 语言取 App 内选择的语言，不是 `Locale.current`——后者是系统区域
     /// （如 en_US、fr_MA），与用户在 App 里看到的同意文本用什么语言无关。
-    static func grant(now: Date = Date()) {
+    static func grant(_ text: Text? = nil, now: Date = Date()) {
+        let shown = text ?? current
         ResearchStore.shared.update { s in
             s.participation = .consentedPending
-            s.consentVersion = textVersion
+            s.roundStudyID = ResearchConfig.shared.available?.studyID
+            s.consentVersion = shown.rawValue
             s.consentLanguage = LocalizationManager.shared.language
             s.consentAt = now
             s.eligibility = nil
@@ -43,6 +85,8 @@ enum ResearchConsent {
     static func decline() {
         ResearchStore.shared.update { s in
             s.participation = .declined
+            // 记下是哪一轮拒绝的：不记的话下次刷新配置就被当成「上一轮」翻篇，邀请又冒出来
+            s.roundStudyID = ResearchConfig.shared.available?.studyID
             s.consentVersion = nil
             s.consentLanguage = nil
             s.consentAt = nil

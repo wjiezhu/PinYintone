@@ -16,6 +16,9 @@
 - **200 + rejected 列表**：这一批里个别记录不该入库（窗口外、同意前、归属不符）。
   其余照常入库。客户端据此丢弃被拒记录，而不是让一条坏记录堵死整个队列。
 """
+import base64
+import binascii
+import hashlib
 import math
 import uuid
 from datetime import datetime, timezone
@@ -26,7 +29,7 @@ from sqlalchemy.orm import Session
 from .. import accounts, models, research_models, schemas
 from ..database import get_db
 from ..research_rules import (UI_LANGUAGES, aware, has_active_consent, judge_background,
-                              latest_consent)
+                              latest_consent, spec_of)
 
 router = APIRouter(tags=["research"])
 
@@ -35,6 +38,8 @@ EVENT_NAMES = {
     "task_opened", "model_audio_started", "learner_audio_started",
     "feedback_displayed", "feedback_mode_changed", "history_opened",
     "operation_error", "crash_report_received",
+    # 现场实测（2026-10-28）：流程开始、某一段走完、流程结束（完成或中途离开）
+    "field_session_started", "field_step_completed", "field_session_ended",
 }
 
 # 必须携带 attempt_id 的事件
@@ -52,7 +57,13 @@ ALLOWED_PAYLOAD_KEYS = {
     "model_audio_started": set(),
     "learner_audio_started": set(),
     "history_opened": set(),
+    "field_session_started": {"field_session_id", "protocol_version"},
+    "field_step_completed": {"field_session_id", "step"},
+    "field_session_ended": {"field_session_id", "outcome", "last_step"},
 }
+
+FIELD_STEPS = {"pretest", "training", "posttest"}
+FIELD_OUTCOMES = {"completed", "abandoned"}
 
 ERROR_CODES = {
     "permission_denied", "no_signal", "signal_unusable", "network_unavailable",
@@ -80,6 +91,17 @@ def _validate_event(e: schemas.ResearchEventDTO) -> None:
             raise HTTPException(400, f"未定义的错误码：{code}")
     if e.sessionElapsedMs is not None and e.sessionElapsedMs < 0:
         raise HTTPException(400, "sessionElapsedMs 不得为负")
+    if e.eventName.startswith("field_"):
+        payload = e.payload or {}
+        if not payload.get("field_session_id"):
+            raise HTTPException(400, f"{e.eventName} 必须带 field_session_id")
+        if e.eventName == "field_step_completed" and payload.get("step") not in FIELD_STEPS:
+            raise HTTPException(400, f"未知的实测步骤：{payload.get('step')}")
+        if e.eventName == "field_session_ended":
+            if payload.get("outcome") not in FIELD_OUTCOMES:
+                raise HTTPException(400, f"未知的实测结局：{payload.get('outcome')}")
+            if payload.get("last_step") not in FIELD_STEPS:
+                raise HTTPException(400, f"未知的实测步骤：{payload.get('last_step')}")
 
 
 def _participant_or_404(db: Session, participant_id: str) -> research_models.ResearchParticipant:
@@ -304,9 +326,14 @@ def withdraw(body: schemas.ResearchWithdrawRequest, db: Session = Depends(get_db
       本接口只如实记录状态变更。
     """
     _participant_or_404(db, body.participantID)
+    # 录音是能认出人的数据，不按「匿名保留」处理：退出即删，重复退出也再删一遍
+    removed = (db.query(research_models.ResearchRecording)
+               .filter_by(participant_id=body.participantID)
+               .delete(synchronize_session=False))
     latest = latest_consent(db, body.participantID)
     if latest is not None and latest.action == "withdrawn":
-        return {"status": "withdrawn", "alreadyWithdrawn": True}
+        db.commit()
+        return {"status": "withdrawn", "alreadyWithdrawn": True, "recordingsDeleted": removed}
     db.add(research_models.ResearchConsentEvent(
         consent_event_id=str(uuid.uuid4()),
         participant_id=body.participantID,
@@ -317,7 +344,7 @@ def withdraw(body: schemas.ResearchWithdrawRequest, db: Session = Depends(get_db
         received_at=_now(),
     ))
     db.commit()
-    return {"status": "withdrawn", "alreadyWithdrawn": False}
+    return {"status": "withdrawn", "alreadyWithdrawn": False, "recordingsDeleted": removed}
 
 
 FORM_KEYS = {"background_v1", "tone_needs_v1", "usability_short_v1"}
@@ -473,7 +500,11 @@ def upload_survey(body: schemas.SurveyUploadRequest, db: Session = Depends(get_d
         class _A:   # 与 research_rules.judge_background 期望的形状一致
             def __init__(self, a):
                 self.option_codes, self.answer_state = a.optionCodes, a.state
-        ok, why = judge_background({a.questionID: _A(a) for a in o.answers})
+        # 按参与者**纳入时**那份配置的规则判：同一研究里换了配置，规则不跟着变
+        enrolled = (db.get(research_models.ResearchManifest, participant.enrolled_manifest_id)
+                    if participant.enrolled_manifest_id else None)
+        ok, why = judge_background({a.questionID: _A(a) for a in o.answers},
+                                   spec_of(enrolled or manifest))
         if not ok:
             participant.eligibility_status = "excluded"
             participant.exclusion_reason = why
@@ -537,12 +568,19 @@ def active_manifest(appVersion: str | None = None, build: str | None = None,
         eligibilityVersion=m.eligibility_version,
         surveyForms=m.survey_forms,
         isTest=bool(m.is_test),
+        fieldProtocolVersion=m.field_protocol_version,
+        fieldProtocol=m.field_protocol,
+        audioUpload=bool(m.audio_upload),
     )
 
 
 ATTEMPT_STATUSES = {"recording", "cancelled", "recording_failed", "analyzing",
                     "analysis_failed", "succeeded", "interrupted_unknown"}
-TASK_TYPES = {"fixed_word", "free_text", "self_test"}
+TASK_TYPES = {"fixed_word", "free_text", "self_test", "pretest", "posttest"}
+# 不呈现结果的裸测：不得带结果显示时间
+BARE_TASK_TYPES = {"self_test", "pretest", "posttest"}
+# 只在现场实测里出现、必须带流程编号的任务
+FIELD_ONLY_TASK_TYPES = {"pretest", "posttest"}
 SIGNAL_STATUSES = {"unknown", "usable", "unusable"}
 TIME_QUALITIES = {"valid", "suspect", "unknown"}
 # 这些状态下必须有 finished_at（字典 §7）
@@ -565,7 +603,8 @@ def _validate_attempt(a: schemas.ResearchAttemptDTO) -> None:
         raise HTTPException(400, f"未知时间质量：{a.timeQuality}")
     if a.status in STATUSES_REQUIRING_FINISH and a.finishedAt is None:
         raise HTTPException(400, f"{a.status} 必须有 finishedAt")
-    if a.taskType in {"fixed_word", "self_test"} and not a.lexemeVersionID:
+    if a.taskType in {"fixed_word", "self_test", "pretest", "posttest"} \
+            and not a.lexemeVersionID:
         raise HTTPException(400, f"{a.taskType} 必须带 lexemeVersionID")
     if a.taskType == "free_text" and a.lexemeVersionID:
         raise HTTPException(400, "free_text 不得带词条编号")
@@ -584,14 +623,33 @@ def _validate_attempt(a: schemas.ResearchAttemptDTO) -> None:
             raise HTTPException(400, "metricValue 必须是有限数值")
         if a.metricValue < 0:
             raise HTTPException(400, "metricValue 为负：疑似旧表哨兵值，无有效指标应为空")
-    # 自测不呈现结果，不该带结果显示时间；带了说明客户端把自测当成了有反馈的练习
-    if a.taskType == "self_test" and a.resultDisplayedAt is not None:
-        raise HTTPException(400, "self_test 不呈现结果，不得带 resultDisplayedAt")
+    # 裸测不呈现结果，不该带结果显示时间；带了说明客户端把它当成了有反馈的练习
+    if a.taskType in BARE_TASK_TYPES and a.resultDisplayedAt is not None:
+        raise HTTPException(400, f"{a.taskType} 不呈现结果，不得带 resultDisplayedAt")
+    if a.taskType in FIELD_ONLY_TASK_TYPES and not a.fieldSessionID:
+        raise HTTPException(400, f"{a.taskType} 只出现在现场实测里，必须带 fieldSessionID")
+    if a.fieldSessionID and a.taskType not in {"fixed_word", "pretest", "posttest"}:
+        raise HTTPException(400, f"{a.taskType} 不属于现场实测，不得带 fieldSessionID")
     if a.priorPracticeCount is not None and a.priorPracticeCount < 0:
         raise HTTPException(400, "priorPracticeCount 不得为负")
     for ms in (a.recordingDurationMs, a.analysisDurationMs):
         if ms is not None and ms < 0:
             raise HTTPException(400, "时长不得为负")
+
+
+def _field_reason(manifest: research_models.ResearchManifest,
+                  a: schemas.ResearchAttemptDTO) -> str | None:
+    """现场实测的尝试必须落在配置绑定的协议里：前测、后测只能是测试词，训练只能是训练词。
+    词对不上说明客户端带的不是这份协议，成绩没法与别人比较。"""
+    protocol = manifest.field_protocol
+    if not protocol:
+        return "no_field_protocol"
+    words = (protocol.get("test_lexeme_version_ids") or []) \
+        if a.taskType in FIELD_ONLY_TASK_TYPES \
+        else (protocol.get("training_lexeme_version_ids") or [])
+    if a.lexemeVersionID not in words:
+        return "lexeme_not_in_field_protocol"
+    return None
 
 
 @router.post("/research/attempts")
@@ -629,6 +687,8 @@ def upload_attempts(body: schemas.ResearchAttemptBatch, db: Session = Depends(ge
             elif lex.lexicon_version != manifest.lexicon_version:
                 # 词条版本必须属于该配置绑定的词库；否则成绩对应的是别的材料
                 reason = "lexeme_not_in_manifest_lexicon"
+        if reason is None and a.fieldSessionID:
+            reason = _field_reason(manifest, a)
         if reason is None and a.retryOfAttemptID:
             prev = db.get(research_models.ResearchAttempt, a.retryOfAttemptID)
             if prev is not None and prev.participant_id != body.participantID:
@@ -645,6 +705,7 @@ def upload_attempts(body: schemas.ResearchAttemptBatch, db: Session = Depends(ge
             lexeme_version_id=a.lexemeVersionID,
             retry_of_attempt_id=a.retryOfAttemptID,
             prior_practice_count=a.priorPracticeCount,
+            field_session_id=a.fieldSessionID,
             started_at=a.startedAt,
             received_at=now,
             status=a.status,
@@ -804,3 +865,72 @@ def report_issue(body: schemas.IssueReportRequest, db: Session = Depends(get_db)
     ))
     db.commit()
     return {"reportID": body.reportID, "alreadyReceived": False}
+
+
+# ---- 录音（现场实测改版，2026-10-28）----
+AUDIO_FORMATS = {"aac_adts"}       # AAC 裸流（ADTS），不带 m4a 容器
+AUDIO_SAMPLE_RATE = 16000          # 与评分采样率一致（CLAUDE.md）
+MAX_AUDIO_BYTES = 512 * 1024       # 一个词约 8 KB；给长录音留足余量，挡住误传的大文件
+MAX_AUDIO_MS = 60_000
+
+
+@router.post("/research/recordings")
+def upload_recording(body: schemas.ResearchRecordingUpload, db: Session = Depends(get_db)):
+    """上传一次尝试的录音。
+
+    三道门缺一不可：
+    1. 常规写入门禁（同意有效、合格、同一研究）。
+    2. 配置开了 audio_upload。之前的配置写的是「录音不会上传」，一律拒收。
+    3. 参与者**当前有效的同意**就是这份配置的同意文本——只同意过旧文本的人，
+       即便配置后来换成收录音的版本，也没有同意过上传录音。
+
+    录音挂在已上传的尝试上（先传尝试、再传录音）；尝试必须属于同一参与者与同一配置。
+    重传幂等：同一 attempt_id 已有录音时直接返回，不覆盖。
+    """
+    participant, manifest, _ = _write_context(db, body.participantID, body.manifestID)
+    if not manifest.audio_upload:
+        raise HTTPException(409, "audio_upload_disabled：该配置不接收录音")
+    latest = latest_consent(db, body.participantID)
+    if latest.consent_version != manifest.consent_version:
+        raise HTTPException(403, "audio_consent_required：参与者同意的文本不含上传录音")
+    if body.audioFormat not in AUDIO_FORMATS:
+        raise HTTPException(400, f"不支持的音频格式：{body.audioFormat}")
+    if body.sampleRate != AUDIO_SAMPLE_RATE:
+        raise HTTPException(400, f"采样率必须是 {AUDIO_SAMPLE_RATE}")
+    if not (0 < body.durationMs <= MAX_AUDIO_MS):
+        raise HTTPException(400, "durationMs 超出范围")
+    try:
+        data = base64.b64decode(body.audioBase64, validate=True)
+    except (binascii.Error, ValueError):
+        raise HTTPException(400, "audioBase64 不是合法的 base64")
+    if not data or len(data) > MAX_AUDIO_BYTES:
+        raise HTTPException(400, "音频为空或过大")
+    if hashlib.sha256(data).hexdigest() != body.sha256.lower():
+        raise HTTPException(400, "sha256 不符：传输中损坏，请重传")
+
+    attempt = db.get(research_models.ResearchAttempt, body.attemptID)
+    if attempt is None:
+        # 尝试还没到：客户端稍后重试，不是错误数据
+        raise HTTPException(409, "attempt_not_uploaded：先上传尝试记录")
+    if attempt.participant_id != participant.participant_id \
+            or attempt.manifest_id != manifest.manifest_id:
+        raise HTTPException(409, "attempt_owner_mismatch")
+    if attempt.status == "cancelled":
+        # 学习者自己放弃的那一次，不留声音
+        raise HTTPException(409, "attempt_cancelled：取消的尝试不保存录音")
+    if db.get(research_models.ResearchRecording, body.attemptID) is not None:
+        return {"status": "duplicate"}
+    db.add(research_models.ResearchRecording(
+        attempt_id=body.attemptID,
+        participant_id=participant.participant_id,
+        manifest_id=manifest.manifest_id,
+        audio_format=body.audioFormat,
+        sample_rate=body.sampleRate,
+        duration_ms=body.durationMs,
+        byte_size=len(data),
+        sha256=body.sha256.lower(),
+        content=data,
+        received_at=_now(),
+    ))
+    db.commit()
+    return {"status": "stored"}

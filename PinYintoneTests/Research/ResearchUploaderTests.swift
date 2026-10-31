@@ -389,4 +389,61 @@ final class ResearchUploaderTests: XCTestCase {
         await uploader.flush()
         XCTAssertEqual(StubURLProtocol.requests(to: "research/surveys").count, before)
     }
+
+    // MARK: - 录音（现场实测改版）
+
+    private func queueRecording() async -> UUID {
+        let id = queueAttempt(cancelled: false)
+        let pcm = (0..<8_000).map { Int16(sin(Double($0) * 0.05) * 8000) }
+        ResearchRecordingQueue.shared.enqueue(pcm: pcm, attemptID: id)
+        for _ in 0..<60 where ResearchRecordingQueue.shared.pending.isEmpty {
+            try? await Task.sleep(nanoseconds: 50_000_000)
+        }
+        return id
+    }
+
+    func testRecordingUploadedAfterItsAttempt() async throws {
+        ResearchTestSupport.enrolledAccount(consentVersion: "consent-2.0", audioUpload: true)
+        acceptEverything()
+        StubURLProtocol.on("POST", "research/recordings") { .json(200, ["status": "stored"]) }
+        let id = await queueRecording()
+        XCTAssertEqual(ResearchRecordingQueue.shared.pending.count, 1)
+
+        await uploader.flush()
+        let paths = researchPaths()
+        let a = try XCTUnwrap(paths.firstIndex(of: "research/attempts"))
+        let r = try XCTUnwrap(paths.firstIndex(of: "research/recordings"))
+        XCTAssertLessThan(a, r, "录音挂在尝试上：先传尝试")
+        let body = try XCTUnwrap(StubURLProtocol.requests(to: "research/recordings").first?.body)
+        XCTAssertEqual(body["attemptID"] as? String, id.uuidString)
+        XCTAssertEqual(body["sampleRate"] as? Int, 16_000)
+        XCTAssertEqual(body["audioFormat"] as? String, "aac_adts")
+        XCTAssertFalse((body["audioBase64"] as? String ?? "").isEmpty)
+        XCTAssertTrue(ResearchRecordingQueue.shared.pending.isEmpty, "传完即删")
+    }
+
+    func testAttemptNotYetUploadedKeepsTheRecordingForLater() async {
+        ResearchTestSupport.enrolledAccount(consentVersion: "consent-2.0", audioUpload: true)
+        acceptEverything()
+        StubURLProtocol.on("POST", "research/recordings") {
+            .json(409, ["detail": "attempt_not_uploaded：先上传尝试记录"])
+        }
+        _ = await queueRecording()
+        await uploader.flush()
+        XCTAssertEqual(ResearchRecordingQueue.shared.pending.count, 1, "下一轮再传，不丢")
+    }
+
+    /// 服务端说「这段录音不收」只针对录音：删掉录音，**不**当成退出研究
+    func testRecordingRefusalDoesNotStopTheStudy() async {
+        ResearchTestSupport.enrolledAccount(consentVersion: "consent-2.0", audioUpload: true)
+        acceptEverything()
+        StubURLProtocol.on("POST", "research/recordings") {
+            .json(403, ["detail": "audio_consent_required：参与者同意的文本不含上传录音"])
+        }
+        _ = await queueRecording()
+        await uploader.flush()
+        XCTAssertTrue(ResearchRecordingQueue.shared.pending.isEmpty)
+        XCTAssertEqual(store.state.participation, .enrolled)
+        XCTAssertTrue(ResearchGate.shouldCollect())
+    }
 }

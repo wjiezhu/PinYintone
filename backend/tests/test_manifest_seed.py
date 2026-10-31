@@ -134,3 +134,88 @@ def test_shipped_materials_are_final(db):
     _lexeme(db, "canjia")
     man = _build(db, survey_forms=forms)
     assert not man.is_test
+
+
+# ---- 现场实测轮（2026-10-28）----
+
+from scripts.seed_manifest import (DEFAULT_FIELD_PROTOCOL, OPEN_END,  # noqa: E402
+                                   load_approvals, load_field_protocol)
+
+PENDING = {"consent": {"consent-1.1": None, "consent-2.0": None},
+           "eligibility": {"eligibility-3.0": None},
+           "field_protocol": {"field-1.0": None}}
+APPROVED = {k: {v: "2026-11-01 研究者确认" for v in d} for k, d in PENDING.items()}
+PROTOCOL = ("field-1.0", {"lexicon_version": "lex-1.0",
+                          "test_lexeme_version_ids": ["v-canjia"],
+                          "training_lexeme_version_ids": ["v-xianzai"],
+                          "training_valid_attempts_per_word": 3}, "draft")
+
+
+def _field(db, **kw):
+    if db.get(m.ResearchLexeme, "v-canjia") is None:
+        _lexeme(db, "canjia")
+    args = dict(consent_version="consent-1.1", eligibility_version="eligibility-3.0",
+                field_protocol=PROTOCOL, approvals=APPROVED)
+    args.update(kw)
+    return _build(db, **args)
+
+
+def test_unapproved_field_materials_only_freeze_as_test(db):
+    """同意文本、纳入规则、实测协议没经研究者审定：正式配置冻结不出来，测试配置可以。"""
+    with pytest.raises(ManifestError) as e:
+        _field(db, approvals=PENDING)
+    msg = str(e.value)
+    for item in ("consent-1.1", "eligibility-3.0", "field-1.0"):
+        assert item in msg
+    assert _field(db, approvals=PENDING, is_test=True).is_test
+
+
+def test_approved_field_manifest_carries_protocol_and_open_nationality(db):
+    man = _field(db)
+    assert not man.is_test
+    assert man.field_protocol_version == "field-1.0"
+    assert man.field_protocol["training_valid_attempts_per_word"] == 3
+    assert man.eligibility_spec["nationality_any"] == [], "不限国籍"
+    assert man.audio_upload is False
+
+
+def test_audio_upload_only_with_the_audio_consent_text(db):
+    """同意书写了上传录音才能收；用了那份同意书就必须收——两边说法一致。"""
+    with pytest.raises(ManifestError):
+        _field(db, audio_upload=True)                      # consent-1.1 不含录音
+    with pytest.raises(ManifestError):
+        _field(db, consent_version="consent-2.0")          # 同意书说上传，配置却不收
+    assert _field(db, consent_version="consent-2.0", audio_upload=True).audio_upload
+
+
+def test_open_ended_window_is_allowed(db):
+    man = _field(db, collection_end=OPEN_END)
+    assert man.collection_end_at == OPEN_END
+
+
+def test_unknown_eligibility_version_is_rejected(db):
+    with pytest.raises(ManifestError):
+        _field(db, eligibility_version="eligibility-9.9")
+
+
+def test_field_protocol_lexicon_must_match(db):
+    other = (PROTOCOL[0], {**PROTOCOL[1], "lexicon_version": "lex-0.9"}, "draft")
+    with pytest.raises(ManifestError):
+        _field(db, field_protocol=other)
+
+
+def test_shipped_field_protocol_is_consistent():
+    """仓库里随 App 发布的协议：测试词与训练词不重叠、都在研究词库里。"""
+    version, protocol, _ = load_field_protocol(DEFAULT_FIELD_PROTOCOL)
+    assert version == "field-1.0"
+    test, train = protocol["test_lexeme_version_ids"], protocol["training_lexeme_version_ids"]
+    assert test and train and not set(test) & set(train)
+
+
+def test_shipped_field_materials_await_the_researcher():
+    """审定只能由研究者本人确认后填写。这条测试守住「开发方没有代填」：
+    研究者审定之后，连同这条断言一起改。"""
+    approvals = load_approvals()
+    for kind, version in (("consent", "consent-1.1"), ("consent", "consent-2.0"),
+                          ("eligibility", "eligibility-3.0"), ("field_protocol", "field-1.0")):
+        assert approvals[kind][version] is None, f"{version} 的审定须由研究者确认后再填"

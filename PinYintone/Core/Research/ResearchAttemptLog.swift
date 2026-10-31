@@ -15,6 +15,13 @@ nonisolated struct ResearchAttemptRecord: Codable, Equatable {
         case freeText = "free_text"
         /// 本工程扩展：可选自测（纯裸测）。字典 v1 未含，见 docs/V2_DECISIONS.md
         case selfTest = "self_test"
+        /// 现场实测的前测 / 后测（研究者在场、无反馈、同一组测试词）。
+        /// 只出现在现场实测里，必须带 `fieldSessionID`
+        case pretest
+        case posttest
+
+        /// 不向学习者呈现结果的裸测
+        var isBareTest: Bool { self == .selfTest || self == .pretest || self == .posttest }
     }
     enum SignalStatus: String, Codable { case unknown, usable, unusable }
     enum TimeQuality: String, Codable { case valid, suspect, unknown }
@@ -27,6 +34,8 @@ nonisolated struct ResearchAttemptRecord: Codable, Equatable {
     let retryOfAttemptID: UUID?
     /// 自测时记该词此前已练过几次（决定 5：接受词集重叠，改为如实记录）
     let priorPracticeCount: Int?
+    /// 现场实测的流程编号。前测、训练、后测共用；普通练习与自测为 nil
+    var fieldSessionID: UUID? = nil
     let startedAt: Date
     var status: Status
     var finishedAt: Date?
@@ -99,7 +108,8 @@ final class ResearchAttemptLog {
     @discardableResult
     func begin(attemptID: UUID, taskType: ResearchAttemptRecord.TaskType,
                lexemeVersionID: String?, priorPracticeCount: Int?,
-               retryOf: UUID? = nil, now: Date = Date()) -> Bool {
+               retryOf: UUID? = nil, fieldSessionID: UUID? = nil,
+               now: Date = Date()) -> Bool {
         guard ResearchGate.shouldCollect(now: now) else { return false }
         inFlight[attemptID] = ResearchAttemptRecord(
             attemptID: attemptID,
@@ -108,6 +118,7 @@ final class ResearchAttemptLog {
             lexemeVersionID: lexemeVersionID,
             retryOfAttemptID: retryOf,
             priorPracticeCount: priorPracticeCount,
+            fieldSessionID: fieldSessionID,
             startedAt: now,
             status: .recording,
             finishedAt: nil,

@@ -5,10 +5,13 @@ import UIKit
 
 /// 声调练习的核心业务逻辑：录音 → 帧化 → F0 → DTW，并保存记录。
 ///
-/// 两种用法（需求 R06）：
+/// 三种用法：
 /// - **普通练习**（默认）：有反馈，可选词、换词、重复录音，随时退出。没有任何前置门槛。
 /// - **自测**（学习者从次级菜单主动开始）：只推进录音，不呈现分数、等级、颜色、
 ///   参考曲线、示范或建议；可随时取消，取消与完成都回到普通练习。
+/// - **现场实测**（已参加研究者，研究者在场时从研究入口开始，2026-10-28 起）：
+///   前测（同自测，裸测）→ 训练（同普通练习的反馈，词与次数由协议定）→ 后测（裸测）。
+///   随时可以退出；退出即结束这一次，不锁住任何功能。见 `FieldSession`。
 ///
 /// 评分管线两种用法完全相同，本类型**不改动**任何评分参数（CLAUDE.md）。
 @MainActor
@@ -30,7 +33,7 @@ final class ToneTrainingViewModel: ObservableObject {
         case analyzing
         /// 有效结果已出（普通练习）
         case feedback
-        /// 自测：这一词已录到，稍后自动进入下一词
+        /// 自测、前测、后测：这一词已录到，稍后自动进入下一词
         case selfTestRecorded
         /// 技术原因没成，可恢复。**不是低分**，也没有成绩。
         case failed(Failure)
@@ -65,7 +68,7 @@ final class ToneTrainingViewModel: ObservableObject {
         var offersSettings: Bool { self == .microphoneDenied }
     }
 
-    enum Mode: Equatable { case practice, selfTest }
+    enum Mode: Equatable { case practice, selfTest, field }
 
     @Published private(set) var stage: Stage = .preparing
     @Published private(set) var mode: Mode = .practice
@@ -81,6 +84,8 @@ final class ToneTrainingViewModel: ObservableObject {
     @Published private(set) var selfTest: SelfTestSession?
     /// 自测刚刚走完（界面显示完成页）
     @Published private(set) var selfTestFinished = false
+    /// 现场实测进度；不在实测时为 nil
+    @Published private(set) var field: FieldSession?
     /// 建议面板是否展开。**只由用户点击触发**，任何代码路径都不得自动置 true。
     @Published var showAdvice = false
     /// 有一份使用后问卷的邀请该展示了。只在用户结束当前反馈之后才置位。
@@ -91,7 +96,22 @@ final class ToneTrainingViewModel: ObservableObject {
     var isRecording: Bool { stage == .recording }
     /// 录音、分析期间不能切词、切模式或播放（需求 U03）
     var isBusy: Bool { stage == .recording || stage == .analyzing }
+    /// 此刻是否向学习者呈现结果：普通练习，和现场实测的训练段
+    var showsFeedback: Bool {
+        mode == .practice || (mode == .field && field?.step == .training)
+    }
+    /// 此刻是不是裸测（自测、前测、后测）：录完不显示任何结果，自动进下一词
+    var isBareTest: Bool {
+        mode == .selfTest || (mode == .field && field?.isBareTest == true)
+    }
+    /// 现场实测训练段：当前词已练够，可以换下一个
+    var fieldTrainingWordDone: Bool {
+        guard let field, field.step == .training else { return false }
+        return field.validCount >= field.validAttemptsPerWord
+    }
+
     var canRecord: Bool {
+        if mode == .field, field?.currentID == nil { return false }
         switch stage {
         case .ready, .feedback, .failed, .recording: return true
         case .preparing, .analyzing, .selfTestRecorded: return false
@@ -102,7 +122,7 @@ final class ToneTrainingViewModel: ObservableObject {
         return nil
     }
     /// 是否有可回听的录音
-    var canReplay: Bool { LearnerRecordingStore.shared.hasRecording && mode == .practice }
+    var canReplay: Bool { LearnerRecordingStore.shared.hasRecording && showsFeedback }
     /// 视图层应绘制的参照：录音中用锁定值，其余用当前值
     var displayReference: [Float] { isRecording ? lockedReference : referenceF0 }
     /// 词表进度（普通练习）
@@ -151,6 +171,9 @@ final class ToneTrainingViewModel: ObservableObject {
     private(set) var currentAttemptID: UUID?
     /// 同一个词上一次录音的编号。重录时写进新尝试的 `retry_of_attempt_id`。
     private var previousAttemptID: UUID?
+    /// 刚录完、录音要留下上传的那一次尝试（只在现场实测里设置）。
+    /// 录音机在停止后才把整段 PCM 交回来，到时按这个编号入队。取消或打断时清掉。
+    private var audioAttemptToKeep: UUID?
     /// 已经报过「反馈已呈现」的尝试。视图重绘不重复计。
     private var displayedAttemptIDs: Set<UUID> = []
     private var cancellables: Set<AnyCancellable> = []
@@ -170,8 +193,8 @@ final class ToneTrainingViewModel: ObservableObject {
             Task { @MainActor in
                 guard self.stage == .recording else { return }
                 self.accumulatedF0.append(hz)
-                // 自测不画任何曲线
-                guard self.mode == .practice else { return }
+                // 裸测不画任何曲线
+                guard self.showsFeedback else { return }
                 if Date().timeIntervalSince(self.lastCurveRefresh) >= self.curveRefreshInterval {
                     self.lastCurveRefresh = Date()
                     // clean：八度纠错 + 去尖峰，避免曲线出现 2× 跳变毛刺
@@ -180,9 +203,16 @@ final class ToneTrainingViewModel: ObservableObject {
                 }
             }
         }
-        // 接住整段 PCM 供回听。只存内存、只留当前一条，原始录音不上传。
+        // 接住整段 PCM：
+        // - 现场实测里、参与者同意上传录音时，压缩后进上传队列（是否真的入队由队列再查一遍）；
+        // - 有反馈时存进内存供回听（只留当前一条）。普通练习与自测的录音从不上传。
         self.recorder.onFinish = { [weak self] pcm in
-            guard let self, self.mode == .practice else { return }
+            guard let self else { return }
+            if let id = self.audioAttemptToKeep {
+                self.audioAttemptToKeep = nil
+                ResearchRecordingQueue.shared.enqueue(pcm: pcm, attemptID: id)
+            }
+            guard self.showsFeedback else { return }
             LearnerRecordingStore.shared.store(pcm: pcm, lexemeID: self.currentLexeme?.id)
         }
         self.recorder.onChunk = { [weak self] pcm in
@@ -301,7 +331,16 @@ final class ToneTrainingViewModel: ObservableObject {
     }
 
     private var taskType: ResearchAttemptRecord.TaskType {
-        mode == .selfTest ? .selfTest : .fixedWord
+        switch mode {
+        case .practice: return .fixedWord
+        case .selfTest: return .selfTest
+        case .field:
+            switch field?.step {
+            case .pretest: return .pretest
+            case .posttest: return .posttest
+            default: return .fixedWord
+            }
+        }
     }
 
     private var lexemeVersionID: String? { ResearchLexicon.versionID(for: currentLexeme?.id) }
@@ -343,11 +382,96 @@ final class ToneTrainingViewModel: ObservableObject {
         loadLexeme(lexeme)
     }
 
+    // MARK: - 现场实测
+
+    /// 研究入口开始一次现场实测。先显示说明页，学习者点「开始」才进前测。
+    @discardableResult
+    func beginFieldSession(_ fieldProtocol: FieldProtocol) -> Bool {
+        guard !isBusy, !fieldProtocol.testWords.isEmpty,
+              !fieldProtocol.trainingWords.isEmpty else { return false }
+        finishViewingFeedback()
+        stopAllPlayback()
+        let session = FieldSession(protocol: fieldProtocol)
+        mode = .field
+        field = session
+        currentLexeme = nil
+        LearnerRecordingStore.shared.clear()
+        ResearchEventLog.shared.log(.fieldSessionStarted, payload: [
+            "field_session_id": session.id.uuidString,
+            "protocol_version": session.protocolVersion])
+        stage = .ready
+        return true
+    }
+
+    /// 说明页或段落之间点了「继续」：进入下一段（第一次是进入前测）
+    func continueFieldSession() {
+        guard mode == .field, var session = field, !isBusy else { return }
+        if session.started { session.beginNextStep() } else { session.start() }
+        field = session
+        loadFieldWord()
+    }
+
+    /// 训练段：当前词练够了，换下一个
+    func nextFieldTrainingWord() {
+        guard mode == .field, !isBusy, fieldTrainingWordDone, var session = field else { return }
+        stopAllPlayback()
+        session.nextTrainingWord()
+        field = session
+        noteFieldStepIfFinished()
+        loadFieldWord()
+    }
+
+    /// 结束现场实测：做完了，或中途离开。都回到普通练习，不锁住任何东西。
+    func endFieldSession() {
+        guard mode == .field else { return }
+        if stage == .recording { cancelRecording() }
+        stopAllPlayback()
+        if let session = field {
+            ResearchEventLog.shared.log(.fieldSessionEnded, payload: [
+                "field_session_id": session.id.uuidString,
+                "outcome": session.isComplete ? "completed" : "abandoned",
+                "last_step": session.step.rawValue])
+        }
+        mode = .practice
+        field = nil
+        feedbackResult = nil
+        LearnerRecordingStore.shared.clear()
+        loadCurrent()
+    }
+
+    /// 实测做完后邀请使用后问卷（只邀请一次；已经填过或拒绝过的不再问）
+    func offerPostSurveyAfterFieldSession() {
+        guard field?.isComplete == true else { return }
+        let record = SurveyCenter.consumePostInvitationIfDue()
+            ?? SurveyCenter.invite(SurveyCenter.postKey)
+        if let record, record.isResumable { postSurveyInvitation = record }
+    }
+
+    private func loadFieldWord() {
+        guard let id = field?.currentID, let lexeme = CorpusLoader.shared.lexeme(id: id) else {
+            // 这一段走完了（或全部走完）：停在段落之间，等学习者点「继续」
+            currentLexeme = nil
+            feedbackResult = nil
+            studentF0 = []
+            stage = .ready
+            return
+        }
+        loadLexeme(lexeme)
+    }
+
+    /// 某一段刚走完：如实记一条事件（发生时记，不在点「继续」时补记）
+    private func noteFieldStepIfFinished() {
+        guard let session = field, session.stepFinished else { return }
+        ResearchEventLog.shared.log(.fieldStepCompleted, payload: [
+            "field_session_id": session.id.uuidString,
+            "step": session.step.rawValue])
+    }
+
     // MARK: - 示范与回听（与录音三者互斥）
 
-    /// 朗读示范。自测不提供示范。
+    /// 朗读示范。裸测不提供示范。
     func playSample() {
-        guard mode == .practice, !isBusy, let lexeme = currentLexeme else { return }
+        guard showsFeedback, !isBusy, let lexeme = currentLexeme else { return }
         if playing == .sample {          // 再点一次 = 停止
             stopAllPlayback()
             return
@@ -366,7 +490,7 @@ final class ToneTrainingViewModel: ObservableObject {
     /// 回听本次录音。返回**是否真的开始播放**——埋点看它，不看按钮点击。
     @discardableResult
     func replayOwnRecording() -> Bool {
-        guard mode == .practice, !isBusy else { return false }
+        guard showsFeedback, !isBusy else { return false }
         if playing == .ownRecording {
             stopAllPlayback()
             return false
@@ -411,7 +535,7 @@ final class ToneTrainingViewModel: ObservableObject {
 
     /// 用户点击「练习建议」。**未点击不自动生成、也不计作已使用**（字典 §9）。
     func openAdvice() {
-        guard mode == .practice else { return }
+        guard showsFeedback else { return }
         currentAdvice = .make(result: feedbackResult, lexemeID: currentLexeme?.id)
         showAdvice = true
         AdviceRequestLog.shared.record(advice: currentAdvice, attemptID: currentAttemptID,
@@ -437,7 +561,7 @@ final class ToneTrainingViewModel: ObservableObject {
     /// 这一步才完成三件事：给尝试记下结果显示时间、记 `feedback_displayed` 事件、
     /// 累计一次合格练习。按尝试编号去重——视图重绘、旋转屏幕都不会重复计。
     func feedbackDidAppear() {
-        guard mode == .practice, feedbackResult != nil, let id = currentAttemptID,
+        guard showsFeedback, feedbackResult != nil, let id = currentAttemptID,
               !displayedAttemptIDs.contains(id) else { return }
         displayedAttemptIDs.insert(id)
         let tracked = ResearchAttemptLog.shared.isTracking(id)
@@ -544,10 +668,11 @@ final class ToneTrainingViewModel: ObservableObject {
             attemptID: attemptID,
             taskType: taskType,
             lexemeVersionID: ResearchLexicon.versionID(for: lexeme.id),
-            // 自测时记该词此前练过几次（本机计数；换设备后的次数无从得知，
+            // 裸测时记该词此前练过几次（本机计数；换设备后的次数无从得知，
             // 所以这是「本机已知的既往练习次数」，不是该学习者的全部次数）
-            priorPracticeCount: mode == .selfTest ? ToneAttemptStore.attempts(for: lexeme.id) : nil,
-            retryOf: previousAttemptID)
+            priorPracticeCount: isBareTest ? ToneAttemptStore.attempts(for: lexeme.id) : nil,
+            retryOf: previousAttemptID,
+            fieldSessionID: mode == .field ? field?.id : nil)
         previousAttemptID = attemptID
 
         #if DEBUG
@@ -581,6 +706,7 @@ final class ToneTrainingViewModel: ObservableObject {
     /// 用户主动放弃这次录音（离开页面、取消自测）。不分析、不出结果、没有成绩。
     func cancelRecording() {
         guard stage == .recording else { return }
+        audioAttemptToKeep = nil          // 学习者放弃的那一次不留声音
         recorder.stop()
         accumulatedF0 = []
         studentF0 = []
@@ -593,6 +719,7 @@ final class ToneTrainingViewModel: ObservableObject {
     /// 录音被系统打断（来电、音频会话被占、切到后台）。安全停下并如实记为中断。
     func handleInterruption() {
         guard stage == .recording else { return }
+        audioAttemptToKeep = nil
         recorder.stop()
         accumulatedF0 = []
         studentF0 = []
@@ -612,9 +739,12 @@ final class ToneTrainingViewModel: ObservableObject {
 
     func stopRecordingAndEvaluate() {
         guard stage == .recording else { return }
+        let attemptID = currentAttemptID
+        // 现场实测的录音留下来（交给队列再判断参与者是否同意上传）。
+        // 必须在 stop() 之前设：录音机停止后才把整段 PCM 交回来
+        audioAttemptToKeep = mode == .field ? attemptID : nil
         recorder.stop()
         stage = .analyzing
-        let attemptID = currentAttemptID
 
         let cleaned = f0Extractor.clean(accumulatedF0)
         let voicedFrames = cleaned.filter { $0 != 0 }.count
@@ -669,7 +799,7 @@ final class ToneTrainingViewModel: ObservableObject {
         if let attemptID {
             ResearchAttemptLog.shared.markSucceeded(
                 attemptID, metric: Double(score), passed: grade != .fail)
-            // 积分由 manifest.reward_rule_version 开关，本轮保持关闭；自测从不发积分
+            // 积分由 manifest.reward_rule_version 开关，本轮保持关闭；自测与实测从不发积分
             if mode == .practice {
                 RewardLedger.shared.settle(attemptID: attemptID, lexemeID: lexemeID,
                                            passed: grade != .fail)
@@ -694,14 +824,20 @@ final class ToneTrainingViewModel: ObservableObject {
 
         flushPendingReference()
 
-        // 自测：照常算分入库，但**不向学习者呈现**任何评价；录完自动进下一词。
-        guard mode == .practice else {
+        // 裸测（自测、前测、后测）：照常算分入库，但**不向学习者呈现**任何评价；录完自动进下一词。
+        guard showsFeedback else {
             studentF0 = []
             // 不呈现结果，故不填 resultDisplayedAt——使用后问卷的次数只认结果已显示者
             if let attemptID { ResearchAttemptLog.shared.finishWithoutDisplay(attemptID) }
             stage = .selfTestRecorded
-            scheduleSelfTestAdvance()
+            scheduleBareTestAdvance()
             return
+        }
+
+        // 实测训练段：有效结果计一次（不要求通过——低分的有效结果同样算练过）
+        if mode == .field, var session = field {
+            session.recordTrainingResult()
+            field = session
         }
 
         studentF0 = normalized
@@ -711,13 +847,26 @@ final class ToneTrainingViewModel: ObservableObject {
         // 「结果已显示」与合格计次由视图在结果真正出现时触发，见 feedbackDidAppear()
     }
 
-    /// 自测自动进入下一词。留出一拍让「已录到」可见，避免像是没录上。
-    private func scheduleSelfTestAdvance() {
+    /// 裸测自动进入下一词。留出一拍让「已录到」可见，避免像是没录上。
+    private func scheduleBareTestAdvance() {
+        let fieldID = field?.id
         Task { [weak self] in
             try? await Task.sleep(nanoseconds: 700_000_000)
-            guard let self, self.mode == .selfTest, self.stage == .selfTestRecorded else { return }
-            self.selfTest?.completeCurrent()
-            self.loadSelfTestWord()
+            guard let self, self.stage == .selfTestRecorded else { return }
+            switch self.mode {
+            case .selfTest:
+                self.selfTest?.completeCurrent()
+                self.loadSelfTestWord()
+            case .field:
+                // 等待期间退出了实测、又开了新的一次：不能把上一次的进度推到新的一次上
+                guard var session = self.field, session.id == fieldID else { return }
+                session.completeTestWord()
+                self.field = session
+                self.noteFieldStepIfFinished()
+                self.loadFieldWord()
+            case .practice:
+                break
+            }
         }
     }
 
@@ -820,9 +969,26 @@ final class ToneTrainingViewModel: ObservableObject {
 
     // MARK: - 持久化（旧业务表）
 
-    /// 写进旧业务表 `phase` 列的值：普通练习 training，自测 self_test。
-    /// 新版不再写 pretest / posttest。
-    private var legacyPhase: TrainingPhase { mode == .selfTest ? .selfTest : .training }
+    /// 写进旧业务表 `phase` 列的值：普通练习与实测训练段 training，自测 self_test，
+    /// 现场实测的前测 / 后测 pretest / posttest（schemaVersion ≥ 7 起重新出现，
+    /// 语义是「研究者在场的裸测」，与 schemaVersion < 6 时强制流程里的前后测不同）。
+    private var legacyPhase: TrainingPhase {
+        switch taskType {
+        case .selfTest: return .selfTest
+        case .pretest: return .pretest
+        case .posttest: return .posttest
+        case .fixedWord, .freeText: return .training
+        }
+    }
+
+    /// 旧业务表的测试词集版本：自测记 AssessmentSet，实测的前后测记协议版本
+    private var legacyAssessmentVersion: String? {
+        switch taskType {
+        case .selfTest: return AssessmentSet.version
+        case .pretest, .posttest: return field?.protocolVersion
+        default: return nil
+        }
+    }
 
     /// 映射到字典 §8 的固定错误码（研究库的固定枚举，服务端按白名单校验）
     private func researchErrorCode(for error: Error) -> ResearchErrorCode {
@@ -867,7 +1033,7 @@ final class ToneTrainingViewModel: ObservableObject {
             timestamp: Date(),
             phase: legacyPhase.rawValue,
             wordSetID: lexeme.wordSet?.rawValue,
-            assessmentSetVersion: mode == .selfTest ? AssessmentSet.version : nil,
+            assessmentSetVersion: legacyAssessmentVersion,
             voicedFrameCount: voicedFrameCount,
             reason: reason
         )
@@ -881,9 +1047,9 @@ final class ToneTrainingViewModel: ObservableObject {
         guard let profile = UserManager.shared.profile,
               let lexeme = currentLexeme else { return }
         // feedbackMode 记的是「这条记录当时用的哪种显示模式」，学习者自选，
-        // **不是实验条件**——自选数据不得做组间比较。自测不显示任何反馈，故为 nil。
+        // **不是实验条件**——自选数据不得做组间比较。裸测不显示任何反馈，故为 nil。
         // groupAssignment 是历史必填列，恒写 "n/a"。
-        let shownStyle = mode == .practice ? FeedbackStyle.current.rawValue : nil
+        let shownStyle = showsFeedback ? FeedbackStyle.current.rawValue : nil
         SessionRepository.shared.save(
             deviceID: profile.deviceID,
             classCode: profile.classCode,
@@ -900,7 +1066,7 @@ final class ToneTrainingViewModel: ObservableObject {
             referenceSwitchedDuringAttempt: referenceSwitched,
             phase: legacyPhase.rawValue,
             wordSetID: lexeme.wordSet?.rawValue,
-            assessmentSetVersion: mode == .selfTest ? AssessmentSet.version : nil,
+            assessmentSetVersion: legacyAssessmentVersion,
             feedbackMode: shownStyle,
             resultStatus: qualityFlag ? .qualityFlagged : .validResult
         )

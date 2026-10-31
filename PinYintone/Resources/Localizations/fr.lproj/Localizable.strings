@@ -27,6 +27,7 @@
 "lang_french" = "Français";
 "lang_english" = "Anglais";
 "lang_spanish" = "Espagnol";
+"lang_italian" = "Italien";
 "lang_amazigh" = "Tamazight";
 "lang_other" = "Autre";
 
@@ -101,10 +102,9 @@
 "replay_failed" = "Impossible de lire votre enregistrement. Veuillez réessayer.";
 "record_start" = "Démarrer l'enregistrement";
 "record_stop" = "Arrêter l'enregistrement";
-"aspiration_prompt" = "Souffle fort dans le micro pour produire l'explosion aspirée";
-"aspiration_calibrating" = "Calibration du bruit ambiant...";
-"aspiration_success" = "✓ Bien soufflé !";
-"aspiration_keep_going" = "Continue !";
+"aspiration_calibrating" = "Mesure du bruit ambiant. Restez silencieux un instant…";
+"aspiration_success" = "Aspiré : le souffle d'air est bien passé.";
+"aspiration_keep_going" = "Pas encore assez d'air. Réessayez avec un souffle plus fort.";
 
 // Diagnostic par caractère
 "diagnostic_title" = "Détails par caractère";
@@ -136,11 +136,11 @@
 
 // Aide / instructions
 "help_title" = "Comment utiliser";
-"help_stage1_body" = "Soufflez fort dans le micro pour disperser le pissenlit — entraîne les sons aspirés (p / t / k).";
+"help_stage1_body" = "Les sons aspirés (p / t / k) demandent un souffle d'air qui disperse le pissenlit. Les sons non aspirés (b / d / g) n'en demandent pas : le pissenlit doit rester immobile. Touchez une fois pour commencer, une autre fois pour arrêter.";
 "help_stage2_body" = "Touchez Écouter pour entendre le modèle, puis enregistrez-vous. Chaque enregistrement reçoit un résultat sur 100 (≥ 60 = réussi).";
 "help_stage3_body" = "Collez ou saisissez du chinois, il se découpe en mots, entraînez chaque mot. Marquez des mots pour les revoir dans Mes mots.";
 "help_tip" = "Pratiquez dans un endroit calme, micro près de la bouche.";
-"help_privacy" = "Aucun enregistrement n'est envoyé — seulement les résultats d'analyse (scores), à des fins de recherche.";
+"help_privacy" = "Les enregistrements de l'entraînement habituel ne sont jamais envoyés — seulement les résultats d'analyse (scores), à des fins de recherche. Les enregistrements de la séance sur place ne sont envoyés que pour les participants qui l'ont accepté dans le formulaire de consentement.";
 
 // ── Phases de recherche (spec §3.1) ──────────────────
 "tone_next_word" = "Mot suivant";
@@ -154,7 +154,7 @@
 "tone_name_4" = "Descendant";
 
 // Microphone et usage des données (spec §4.1)
-"onboarding_mic_privacy" = "Votre enregistrement est analysé sur votre téléphone. L'audio brut n'est jamais envoyé ni conservé sur un serveur ; seuls les résultats (note et courbe de hauteur) sont transmis de façon anonyme pour ce projet de recherche pédagogique. Vous pouvez supprimer votre compte et toutes vos données à tout moment dans les réglages.";
+"onboarding_mic_privacy" = "Pendant l'entraînement, votre enregistrement est analysé sur votre téléphone. L'audio brut n'est jamais envoyé ni conservé sur un serveur ; seuls les résultats d'analyse sont transmis de façon anonyme pour ce projet de recherche pédagogique. Seule exception : si vous participez à l'étude et acceptez explicitement l'envoi des enregistrements dans le formulaire de consentement, les enregistrements de la séance sur place sont envoyés. Vous pouvez supprimer votre compte et toutes vos données à tout moment dans les réglages.";
 "onboarding_mic_denied_title" = "Micro non autorisé";
 "onboarding_mic_denied_body" = "L'entraînement aux tons a besoin du micro. Ouvrez Réglages → Pinyintone → Microphone, activez-le, puis revenez ici.";
 "onboarding_open_settings" = "Ouvrir les réglages";
@@ -182,15 +182,15 @@
 /* Consentement à l'étude. Traduction provisoire, en attente de relecture. */
 "consent_title" = "Participer à l'étude (facultatif)";
 "consent_purpose_title" = "Objectif";
-"consent_purpose_body" = "Comprendre comment les débutants en chinois utilisent un outil d'entraînement aux tons, dans le cadre d'un mémoire de master sur la conception et l'utilisabilité.";
+"consent_purpose_body" = "Comprendre comment les apprenants de chinois utilisent un outil d'entraînement aux tons, dans le cadre d'un mémoire de master sur la conception et l'utilisabilité.\n\nAprès avoir rejoint l'étude, vous pouvez faire une « séance sur place » en présence de l'équipe de recherche, d'environ 15 à 20 minutes : lire d'abord une série de mots (sans résultat affiché), puis vous entraîner sur une autre série (avec retour), et enfin relire la première série (sans résultat affiché). Vous pouvez arrêter la séance à tout moment.";
 "consent_data_title" = "Données collectées";
-"consent_data_body" = "Vos actions d'entraînement (début d'un exercice, lecture du modèle, enregistrement, consultation des retours), les résultats d'évaluation et les réponses aux questionnaires que vous choisissez de donner.\n\nLes enregistrements eux-mêmes ne sont pas transmis. Dans les données de recherche, vous n'êtes identifié(e) que par un numéro anonyme associé à votre compte Apple ; elles ne contiennent ni votre nom, ni votre e-mail, ni aucune autre information personnelle.";
+"consent_data_body" = "Vos actions d'entraînement (début d'un exercice, lecture du modèle, enregistrement, consultation des retours), les résultats d'évaluation et les réponses aux questionnaires que vous choisissez de donner (y compris des informations de profil comme la tranche d'âge, la nationalité et le niveau de chinois).\n\nLes enregistrements eux-mêmes ne sont pas transmis. Dans les données de recherche, vous n'êtes identifié(e) que par un numéro anonyme associé à votre compte Apple ; elles ne contiennent ni votre nom, ni votre e-mail, ni aucune autre information personnelle.";
 "consent_use_title" = "Utilisation";
 "consent_use_body" = "Uniquement pour l'analyse et la rédaction de ce mémoire. Les résultats sont présentés sous forme de statistiques de groupe, pas individuelles.";
 "consent_withdraw_title" = "Comment se retirer";
 "consent_withdraw_body" = "Vous pouvez quitter l'étude à tout moment dans les Réglages. La collecte de nouvelles données cesse immédiatement. Les données recueillies avant votre départ sont conservées sous forme anonyme et peuvent être utilisées dans l'analyse statistique du mémoire. Pour toute question, utilisez le contact ci-dessous.";
 "consent_contact" = "Questions, retrait ou suppression des données : joyouo409@gmail.com, ou via le retour dans l'application.";
-"consent_checkbox" = "J'ai lu les informations ci-dessus et j'accepte de participer";
+"consent_checkbox" = "J'ai lu la notice, j'accepte de participer et j'accepte la collecte de ces données";
 "consent_agree" = "Accepter et participer";
 "consent_decline" = "Pas maintenant";
 "consent_decline_hint" = "Refuser n'affecte aucune fonctionnalité.";
@@ -324,7 +324,7 @@
 "research_enroll_refused" = "Vous ne pouvez pas rejoindre l’étude pour le moment. Vous pouvez continuer à utiliser toutes les fonctionnalités.";
 "research_continue_later" = "Plus tard — aller pratiquer";
 "research_enrolled_title" = "Vous participez à l’étude";
-"research_enrolled_body" = "Merci. Vous pouvez quitter l’étude à tout moment dans Réglages → Participation à l’étude.";
+"research_enrolled_body" = "Merci. Pour vos questions sur le chinois ou des ressources d'apprentissage, ajoutez herecomes_zhuozhuo sur WeChat. Vous pouvez quitter l'étude à tout moment dans Réglages → Participation à l'étude.";
 "research_enrolled_pending_body" = "Vous participez à l’étude. Vos réponses de profil sont enregistrées sur cet appareil et seront envoyées automatiquement dès que vous serez en ligne.";
 "research_start_practice" = "Commencer à pratiquer";
 "research_ineligible_title" = "Merci pour vos réponses";
@@ -369,3 +369,53 @@
 "home_start" = "Commencer";
 "record_short" = "Démarrer";
 "word_picker_short" = "Mots";
+
+/* 现场实测（2026-10-28） */
+"consent_data_body_audio" = "Vos actions d'entraînement (début d'un exercice, lecture du modèle, enregistrement, consultation des retours), les résultats d'évaluation et les réponses aux questionnaires que vous choisissez de donner (y compris des informations de profil comme la tranche d'âge, la nationalité et le niveau de chinois).\n\nLes enregistrements faits pendant la séance sur place sont envoyés afin que l'équipe de recherche puisse vérifier les scores à l'oreille. Comme une voix permet de reconnaître une personne, ces enregistrements sont conservés uniquement sur le serveur de recherche, utilisés uniquement par l'équipe de recherche, jamais publiés ni joints au mémoire. Les enregistrements de l'entraînement habituel ne sont pas envoyés.\n\nDans les données de recherche, vous n'êtes identifié(e) que par un numéro anonyme associé à votre compte Apple ; elles ne contiennent ni votre nom, ni votre e-mail, ni aucune autre information personnelle.";
+"consent_withdraw_body_audio" = "Vous pouvez quitter l'étude à tout moment dans les Réglages. La collecte de nouvelles données cesse immédiatement et tous vos enregistrements sont supprimés de votre téléphone et du serveur de recherche. Les autres données recueillies avant votre départ (scores, actions, réponses aux questionnaires) sont conservées sous forme anonyme et peuvent être utilisées dans l'analyse statistique du mémoire. Pour toute question, utilisez le contact ci-dessous.";
+"home_field_session" = "Commencer la séance sur place (avec l'équipe de recherche)";
+"field_title" = "Séance sur place";
+"field_exit" = "Quitter";
+"field_exit_confirm_title" = "Quitter cette séance ?";
+"field_exit_confirm" = "Quitter la séance";
+"field_exit_confirm_message" = "Ce que vous avez déjà enregistré est conservé. La prochaine fois sera une nouvelle séance, qui reprendra depuis la première série de mots.";
+"field_intro_title" = "Cette séance comporte trois étapes et dure environ 15 à 20 minutes";
+"field_intro_pretest" = "Lisez %1$d mots. Aucun résultat n'est affiché ; le mot suivant arrive automatiquement.";
+"field_intro_training" = "Entraînez-vous sur %1$d autres mots, avec retour. Passez au suivant après %2$d résultats valides pour chaque mot.";
+"field_intro_posttest" = "Relisez les %1$d mots de l'étape 1. Aucun résultat n'est affiché.";
+"field_intro_note" = "Prononcez-les comme d'habitude. Vous pouvez toucher « Quitter » en haut à tout moment.";
+"field_start" = "Commencer l'étape 1";
+"field_test_ready" = "Touchez le micro ci-dessous pour enregistrer. Aucun résultat n'est affiché à cette étape.";
+"field_pretest_progress" = "Étape 1 · mot %1$d sur %2$d";
+"field_posttest_progress" = "Étape 3 · mot %1$d sur %2$d";
+"field_training_progress" = "Étape 2 · mot %1$d sur %2$d";
+"field_training_count" = "Enregistrements valides pour ce mot : %1$d sur %2$d";
+"field_word_done_hint" = "C'est suffisant pour ce mot. Touchez « Suivant » en bas pour continuer.";
+"field_pretest_done" = "Étape 1 terminée";
+"field_next_training" = "Ensuite, entraînez-vous sur %1$d nouveaux mots avec retour. Passez au suivant après %2$d résultats valides pour chaque mot.";
+"field_training_done" = "Étape 2 terminée";
+"field_next_posttest" = "Pour finir, relisez les %1$d mots de l'étape 1. Aucun résultat n'est affiché.";
+"field_continue" = "Continuer";
+"field_done_title" = "Terminé — merci";
+"field_done_body" = "Les trois étapes de cette séance sont enregistrées. Vous pouvez continuer à vous entraîner librement.";
+"field_back_to_practice" = "Retour à l'entraînement";
+
+/* 送气练习：开始 / 停止按钮，区分送气与不送气 */
+"aspiration_prompt_aspirated" = "Son aspiré %1$@ : dites « %2$@ » avec un souffle d'air.";
+"aspiration_prompt_unaspirated" = "Son non aspiré %1$@ : dites « %2$@ » doucement, sans souffle d'air.";
+"aspiration_tag_aspirated" = "Aspiré · %@";
+"aspiration_tag_unaspirated" = "Non aspiré · %@";
+"aspiration_ready" = "Touchez le micro, dites seulement le premier caractère, puis touchez à nouveau pour arrêter.";
+"aspiration_recording" = "Parlez maintenant, puis touchez Arrêter.";
+"aspiration_unaspirated_success" = "Pas de souffle d'air : c'est juste pour ce son.";
+"aspiration_unaspirated_too_strong" = "Trop d'air. Ce son n'a pas besoin de souffle : essayez plus doucement.";
+"aspiration_stopped_early" = "Arrêté pendant la mesure du bruit : rien n'a été enregistré. Attendez l'invite, puis parlez.";
+
+/* 注册后的知情同意与微信入口 */
+"consent_summary" = "Cette application sert à la recherche d'un mémoire de master. Si vous acceptez, nous recueillons vos enregistrements d'activité, vos scores et vos réponses aux questionnaires pour une analyse statistique, sans votre nom ni votre e-mail. Vous pouvez quitter l'étude à tout moment. Vous pouvez utiliser toutes les fonctions même sans accepter.";
+"consent_benefit_title" = "Si vous participez";
+"consent_benefit_body" = "Vous pouvez contacter l'équipe de recherche sur WeChat pour poser des questions sur le chinois ou obtenir des ressources d'apprentissage. Identifiant WeChat : herecomes_zhuozhuo";
+"consent_read_full" = "Lire la notice complète";
+"consent_full_title" = "Notice complète";
+"research_wechat_copy" = "Copier l'identifiant WeChat (questions, ressources)";
+"research_wechat_copied" = "Identifiant WeChat copié : herecomes_zhuozhuo";

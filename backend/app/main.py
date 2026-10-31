@@ -68,6 +68,15 @@ if engine.dialect.name == "postgresql":
             "ADD COLUMN IF NOT EXISTS received_at TIMESTAMPTZ",
             "ALTER TABLE research_survey_instances "
             "ADD COLUMN IF NOT EXISTS updated_at TIMESTAMPTZ",
+            # 现场实测改版（2026-10-28）：同样只加列。research_recordings 是新表，由 create_all 建。
+            "ALTER TABLE research_manifests "
+            "ADD COLUMN IF NOT EXISTS field_protocol_version VARCHAR(64)",
+            "ALTER TABLE research_manifests ADD COLUMN IF NOT EXISTS field_protocol JSON",
+            "ALTER TABLE research_manifests "
+            "ADD COLUMN IF NOT EXISTS audio_upload BOOLEAN NOT NULL DEFAULT FALSE",
+            "ALTER TABLE research_attempts ADD COLUMN IF NOT EXISTS field_session_id VARCHAR",
+            "CREATE INDEX IF NOT EXISTS ix_research_attempts_field_session_id "
+            "ON research_attempts (field_session_id)",
         ):
             _conn.execute(text(_ddl))
         _conn.commit()

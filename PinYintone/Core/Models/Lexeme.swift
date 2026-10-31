@@ -19,4 +19,15 @@ struct Lexeme: Codable, Identifiable {
     /// 关卡 2 词集归属（升级需求 §3.2）。反馈条件绑定在词集上，不绑定学习者。
     /// 关卡 1（送气）词条无此字段，解码为 nil。
     let wordSet: WordSet?
+    /// 关卡 1（送气）考察的声母，都在词的第一个字上。声调词条为 nil。
+    var aspirationTarget: AspirationTarget? = nil
+    /// 西班牙语、意大利语释义（界面选这两种语言时显示）
+    var spanish: String? = nil
+    var italian: String? = nil
+}
+
+/// 这个词考察的声母，以及它是不是送气音。写在语料里，不从 `focus` 的说明文字里猜。
+struct AspirationTarget: Codable, Equatable {
+    let initial: String         // p / t / k（送气）或 b / d / g（不送气）
+    let aspirated: Bool
 }

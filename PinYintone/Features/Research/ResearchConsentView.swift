@@ -12,26 +12,35 @@ struct ResearchConsentView: View {
     let onFinish: (Bool) -> Void
 
     @State private var hasReadAndAgreed = false
+    /// 打开时定下要显示的那一版；读的过程中配置刷新也不换——同意的必须是看到的那一版
+    @State private var text = ResearchConsent.current
+    @State private var showFullText = false
 
     var body: some View {
         ScrollView {
             VStack(alignment: .leading, spacing: Theme.Space.l) {
-                section("consent_purpose_title", "consent_purpose_body")
-                section("consent_data_title", "consent_data_body")
-                section("consent_use_title", "consent_use_body")
-                section("consent_withdraw_title", "consent_withdraw_body")
-
-                Text(NSLocalizedString("consent_contact", comment: ""))
-                    .font(.subheadline)
-                    .foregroundStyle(Theme.textSecondary)
+                Text(NSLocalizedString("consent_summary", comment: ""))
+                    .font(.body)
+                    .foregroundStyle(Theme.textPrimary)
                     .fixedSize(horizontal: false, vertical: true)
+                section("consent_benefit_title", "consent_benefit_body")
+
+                Button {
+                    showFullText = true
+                } label: {
+                    Label(NSLocalizedString("consent_read_full", comment: ""),
+                          systemImage: "doc.text")
+                }
+                .accessibilityIdentifier("consent.readFull")
 
                 // 用户实际看到的是哪一版说明。尚未审定的稿子如实标出来。
                 Text(String(format: NSLocalizedString("consent_version_line", comment: ""),
-                            ResearchConsent.textVersion))
+                            text.rawValue))
                     .font(.footnote)
                     .foregroundStyle(Theme.textSecondary)
-                if ResearchConsent.textVersion.contains("unpublished") {
+                    .accessibilityIdentifier("consent.version")
+                // 测试配置下发的是未审定的稿子：如实标出来
+                if ResearchConfig.shared.available?.isTest == true {
                     StatusLabel(kind: .warning,
                                 text: NSLocalizedString("consent_draft_notice", comment: ""))
                         .font(.footnote)
@@ -62,7 +71,7 @@ struct ResearchConsentView: View {
         .safeAreaInset(edge: .bottom, spacing: 0) {
             VStack(spacing: Theme.Space.s) {
                 Button {
-                    ResearchConsent.grant()
+                    ResearchConsent.grant(text)
                     onFinish(true)
                 } label: {
                     Text(NSLocalizedString("consent_agree", comment: ""))
@@ -86,6 +95,37 @@ struct ResearchConsentView: View {
         }
         .navigationTitle(NSLocalizedString("consent_title", comment: ""))
         .navigationBarTitleDisplayMode(.inline)
+        .sheet(isPresented: $showFullText) { fullText }
+    }
+
+    /// 同意书全文。放在 App 内，保证看到的就是同意记录里写的那一版
+    private var fullText: some View {
+        NavigationStack {
+            ScrollView {
+                VStack(alignment: .leading, spacing: Theme.Space.l) {
+                    ForEach(text.sections, id: \.body) { item in
+                        section(item.title, item.body)
+                    }
+                    Text(NSLocalizedString("consent_contact", comment: ""))
+                        .font(.subheadline)
+                        .foregroundStyle(Theme.textSecondary)
+                        .fixedSize(horizontal: false, vertical: true)
+                }
+                .padding(Theme.pageMargin)
+                .frame(maxWidth: .infinity, alignment: .leading)
+            }
+            .background(Theme.background)
+            .navigationTitle(NSLocalizedString("consent_full_title", comment: ""))
+            .navigationBarTitleDisplayMode(.inline)
+            .toolbar {
+                ToolbarItem(placement: .cancellationAction) {
+                    Button(NSLocalizedString("common_close", comment: "")) { showFullText = false }
+                        .accessibilityIdentifier("consent.fullClose")
+                }
+            }
+        }
+        .tint(Theme.primary)
+        .accessibilityIdentifier("consent.fullText")
     }
 
     private func section(_ titleKey: String, _ bodyKey: String) -> some View {

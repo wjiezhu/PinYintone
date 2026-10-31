@@ -9,14 +9,20 @@ from datetime import datetime, timezone
 
 from . import research_models as m
 
-# 纳入条件（需求 R01，研究者已确认）：成年、国籍含 MA、课程阶段 hsk1–3。
-# 语言背景只作描述，不作排除条件；本轮**不区分新旧用户**。
+# 纳入条件以**参与者纳入时所用配置**的 eligibility_spec 为准，不在这里写死：
+# - 第一轮（eligibility-2.0）：成年、国籍含 MA、课程阶段 hsk1–3。
+# - 现场实测轮（eligibility-3.0，2026-10-28）：去掉国籍限制，国籍照常记录。
+# 语言背景只作描述，不作排除条件；**不区分新旧用户**。
+# 旧配置没有 spec 时按第一轮的规则判（那时规则就是这样）。
 ELIGIBLE_NATIONALITY = "MA"
 ELIGIBLE_STAGES = {"hsk1", "hsk2", "hsk3"}
+FIRST_ROUND_SPEC = {"adult_required": True,
+                    "nationality_any": [ELIGIBLE_NATIONALITY],
+                    "course_stage_any": sorted(ELIGIBLE_STAGES)}
 
 # App 内可选的界面语言。研究记录里的语言必须是用户**在 App 内选择并实际看到**的
 # 这四种之一——收到 en_US、ar-MA 之类说明客户端把系统区域当成了界面语言。
-UI_LANGUAGES = {"zh", "en", "fr", "ar"}
+UI_LANGUAGES = {"zh", "en", "fr", "ar", "es", "it"}
 
 
 def aware(dt: datetime) -> datetime:
@@ -57,25 +63,51 @@ def background_answers(db, participant_id: str):
     return inst, answers
 
 
-def judge_background(answers: dict) -> tuple[bool, str]:
+def spec_of(manifest) -> dict:
+    """配置里的纳入规则；旧配置没有时按第一轮规则。"""
+    spec = getattr(manifest, "eligibility_spec", None) if manifest is not None else None
+    return spec or FIRST_ROUND_SPEC
+
+
+def judge_background(answers: dict, spec: dict | None = None) -> tuple[bool, str]:
     """按答案判纳入。**缺失或未知不推定满足**：没答、跳过、prefer_not 一律不满足。
+
+    `spec` 是配置的 eligibility_spec。`nationality_any` 为空或缺省 = 不限国籍
+    （国籍题照常作答、照常保存，只是不参与判定）。
 
     返回 (是否合格, 不合格原因)。原因取值与 participants.exclusion_reason 一致。
     """
+    spec = spec or FIRST_ROUND_SPEC
+
     def codes(q):
         a = answers.get(q)
         return set(a.option_codes or []) if a and a.answer_state == "answered" else set()
 
-    if "adult" not in codes("B01"):
+    if spec.get("adult_required", True) and "adult" not in codes("B01"):
         return False, "age"
-    if ELIGIBLE_NATIONALITY not in codes("B02"):
+    nationalities = set(spec.get("nationality_any") or [])
+    if nationalities and not (codes("B02") & nationalities):
         return False, "nationality"
-    if not (codes("B03") & ELIGIBLE_STAGES):
+    stages = set(spec.get("course_stage_any") or [])
+    if stages and not (codes("B03") & stages):
         return False, "course_stage"
     return True, ""
 
 
-def background_eligible(db, participant_id: str) -> tuple[bool, str]:
+def describe_spec(spec: dict) -> str:
+    """纳入规则的一句话描述，写进导出说明。"""
+    parts = []
+    if spec.get("adult_required", True):
+        parts.append("成年")
+    nat = spec.get("nationality_any") or []
+    parts.append(f"国籍含 {'/'.join(nat)}" if nat else "不限国籍（国籍照常记录）")
+    stages = spec.get("course_stage_any") or []
+    if stages:
+        parts.append(f"课程阶段 {'/'.join(sorted(stages))}")
+    return "、".join(parts)
+
+
+def background_eligible(db, participant_id: str, spec: dict | None = None) -> tuple[bool, str]:
     """该参与者的背景表是否已**最终提交**且符合纳入条件。
 
     只认最终状态（complete / partial）：仅「已邀请」「稍后填写」的实例没有答案，
@@ -84,4 +116,4 @@ def background_eligible(db, participant_id: str) -> tuple[bool, str]:
     inst, answers = background_answers(db, participant_id)
     if inst is None or inst.status not in ("complete", "partial"):
         return False, "no_background"
-    return judge_background(answers)
+    return judge_background(answers, spec)
