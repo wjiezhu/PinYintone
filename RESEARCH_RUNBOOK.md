@@ -107,28 +107,29 @@ python scripts/verify_pipeline.py --base-url <后端地址> \
 
 ---
 
-### A9. 现场实测轮（App 2.1 / 构建 21 起，2026-10-28 研究者决定）
+### A9. 现场实测轮（App 2.1 / 构建 21 起，正式发布用构建 22，2026-10-28 研究者决定）
 
 **改了什么**
 - 已参加研究的人，在研究者在场时从首页「开始现场实测」进入：
   第一步读 6 个测试词（不显示结果）→ 第二步练 8 个训练词（有反馈，每词 3 次有效结果）→
   第三步把 6 个测试词再读一遍（不显示结果）。约 15–20 分钟，随时可退出，不拦普通练习。
 - 纳入不限国籍（eligibility-3.0），国籍照常记录。成年与 HSK 1–3 不变。
-- 录音上传：代码已就绪，**等导师确认**。确认前用 consent-1.1（不含录音）冻结配置，录音一条都不留；
-  确认后用 consent-2.0 + `--audio-upload` 再冻结一份配置，**不需要重新提审 App**（文本不改的前提下）。
-- 新一轮用**新的 study_id**，与第一轮（pinyintone-2026-ma）分开。
+- 录音上传：代码已就绪，**这一轮不收**（研究者 2026-10-31 决定）。用 consent-1.1（不含录音）冻结配置，
+  录音一条都不留；以后要收，研究者审定 consent-2.0 后加 `--audio-upload` 再冻结一份配置，
+  **不需要重新提审 App**（文本不改的前提下）。
+- 新一轮的 study_id 是 `pinyintone-2026-field`，与第一轮（pinyintone-2026-ma）分开。
 
-**上线前必须由研究者 / 导师定的**（开发方只起草，不代填）
-1. 实测协议 `PinYintone/Resources/Corpus/field_protocol.json`：测试词、训练词、每词次数。
-   现在是草稿：按声调组合拆成测试 6（汉字 喝水 参加 休息 相信 早餐）、训练 8（现在 电视 宿舍
-   身体 经理 医生 清楚 自己）。改词就改这个文件，并重新出构建。
-2. 同意文本 consent-1.1 / consent-2.0（四种语言，在 Localizable.strings 的 `consent_*` 键）。
-3. 审定后在 `backend/research_materials_approval.json` 填日期——**只能研究者本人确认后填**。
+**研究者已审定**（2026-10-31，记在 `backend/research_materials_approval.json`）
+1. 实测协议 field-1.0（`PinYintone/Resources/Corpus/field_protocol.json`）：测试 6（汉字 喝水 参加
+   休息 相信 早餐）、训练 8（现在 电视 宿舍 身体 经理 医生 清楚 自己），每词 3 次有效结果。
+   测试词里 4 个以一声开头，声调组合不均衡，论文里如实写。改词要换版本号、重新审定并重新出构建。
+2. 同意文本 consent-1.1 与纳入规则 eligibility-3.0。文本改了就换新版本号，旧的审定不延续。
+3. consent-2.0（含录音）**未审定**；审定**只能研究者本人确认后填**。
 
 **冻结配置**（App 上架之后，连线上库，须研究者当场同意）
 ```
 python3 scripts/seed_manifest.py \
-  --study-id <新的 study_id> --app-version 2.1 --build-number 21 \
+  --study-id pinyintone-2026-field --app-version 2.1 --build-number 22 \
   --lexicon-version lex-2026.10 --scoring-version scoring-v5 \
   --feedback-version fb-1.0 --advice-policy-version advice-1.0 \
   --survey-version survey-1.2 --consent-version consent-1.1 \
@@ -136,7 +137,7 @@ python3 scripts/seed_manifest.py \
   --collection-start <上架时刻，带时区> \
   --field-protocol
 ```
-导师确认录音后：同样的命令，把 `--consent-version` 换成 `consent-2.0` 并加 `--audio-upload`。
+以后要收录音：研究者审定 consent-2.0 后，同样的命令，把 `--consent-version` 换成 `consent-2.0` 并加 `--audio-upload`。
 新配置更新，App 下次刷新就拿到它；已经按 1.1 同意的人**不会**被上传录音（他们没同意过）。
 
 研究参与默认不设时限；**要结束时**（研究者决定）：`python3 scripts/close_manifest.py <manifest_id>`

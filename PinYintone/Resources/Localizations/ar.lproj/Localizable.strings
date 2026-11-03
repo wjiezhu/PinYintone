@@ -39,8 +39,8 @@
 "teacher_signup_email" = "البريد الإلكتروني";
 "teacher_signup_password" = "كلمة المرور";
 "teacher_classcode_title" = "رمز فصلك";
-"teacher_classcode_body" = "شارك هذا الرمز مع طلابك حتى ينضموا إلى فصلك.";
-"teacher_classcode_share" = "انضم إلى فصل Pinyintone الخاص بي برمز %@";
+"teacher_classcode_body" = "هذا هو رمز الفصل الخاص بك كمعلم. احتفظ به؛ لا يحتاج الطلاب إلى إدخاله.";
+"teacher_classcode_share" = "رمز فصلي كمعلم في Pinyintone: %@";
 "teacher_classcode_share_btn" = "مشاركة الرمز";
 "teacher_classcode_go_dashboard" = "الذهاب إلى لوحة التحكم";
 

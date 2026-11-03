@@ -41,6 +41,7 @@ enum RecordingSourceFactory {
 /// 由启动环境变量 `PT_SYNTHETIC_AUDIO` 开启：
 /// - `match`：基频按目标声调的理想轮廓变化，能得到一次有效分析
 /// - `silent`：全零，用来走「没录到声音」的技术失败路径
+/// - `delayed`：先静音再出声，让送气页前 500 ms 的底噪校准采到安静的环境
 ///
 /// 它产生的是**测试数据**：开发构建下纳入的参与者一律 is_test=true，
 /// 正式导出默认排除。本类型不存在于正式构建。
@@ -50,7 +51,7 @@ final class SyntheticRecordingSource: RecordingSource {
     nonisolated deinit {}
 
     enum Mode: String {
-        case match, silent
+        case match, silent, delayed
         static var fromEnvironment: Mode? {
             ProcessInfo.processInfo.environment["PT_SYNTHETIC_AUDIO"].flatMap(Mode.init(rawValue:))
         }
@@ -87,9 +88,11 @@ final class SyntheticRecordingSource: RecordingSource {
     private func emit(contour: [Double]) {
         var chunk = [Int16](repeating: 0, count: chunkSize)
         let voicedSamples = Int(voicedSeconds * sampleRate)
-        if mode == .match, !contour.isEmpty {
+        let leadIn = mode == .delayed ? Int(0.7 * sampleRate) : 0
+        if mode != .silent, !contour.isEmpty {
             for i in 0..<chunkSize {
-                let n = sampleIndex + i
+                let n = sampleIndex + i - leadIn
+                guard n >= 0 else { continue }
                 guard n < voicedSamples else { break }
                 let pos = Double(n) / Double(voicedSamples) * Double(contour.count - 1)
                 let lo = Int(pos), hi = min(lo + 1, contour.count - 1)
