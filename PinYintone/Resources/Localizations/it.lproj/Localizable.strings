@@ -28,8 +28,8 @@
 "teacher_signup_email" = "Indirizzo e-mail";
 "teacher_signup_password" = "Password";
 "teacher_classcode_title" = "Il tuo codice classe";
-"teacher_classcode_body" = "Condividi questo codice per far entrare gli studenti nella tua classe.";
-"teacher_classcode_share" = "Entra nella mia classe di Pinyintone con il codice %@";
+"teacher_classcode_body" = "Questo è il tuo codice classe da docente. Conservalo; gli studenti non devono inserirlo.";
+"teacher_classcode_share" = "Il mio codice classe da docente su Pinyintone: %@";
 "teacher_classcode_share_btn" = "Condividi il codice";
 "teacher_classcode_go_dashboard" = "Vai alla dashboard";
 "home_greeting" = "Ciao!";

@@ -37,8 +37,8 @@
 "teacher_signup_email" = "Adresse e-mail";
 "teacher_signup_password" = "Mot de passe";
 "teacher_classcode_title" = "Votre code de classe";
-"teacher_classcode_body" = "Partagez ce code avec vos étudiants pour qu'ils rejoignent votre classe.";
-"teacher_classcode_share" = "Rejoignez ma classe Pinyintone avec le code %@";
+"teacher_classcode_body" = "Voici votre code de classe enseignant. Conservez-le ; les étudiants n'ont pas besoin de le saisir.";
+"teacher_classcode_share" = "Mon code de classe enseignant Pinyintone : %@";
 "teacher_classcode_share_btn" = "Partager le code";
 "teacher_classcode_go_dashboard" = "Accéder au tableau de bord";
 

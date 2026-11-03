@@ -11,6 +11,7 @@ final class UserManager: ObservableObject {
     static let shared = UserManager()
 
     @Published private(set) var profile: UserProfile?
+    private var pendingTeacherProfile: UserProfile?
 
     private static let storageKey = "pt_user_profile"
 
@@ -132,9 +133,18 @@ final class UserManager: ObservableObject {
             registeredAt: Date()
         )
         save(p)
+        // 先不发布 profile：一发布 ContentView 就切走，注册页上的班级码永远显示不出来。
+        // 已经存盘，万一在班级码页面退出，下次启动照样是这个教师账号。
+        pendingTeacherProfile = p
+        return resp.classCode
+    }
+
+    /// 教师看过班级码之后调用，这时才切到主界面
+    func finishTeacherRegistration() {
+        guard let p = pendingTeacherProfile else { return }
+        pendingTeacherProfile = nil
         profile = p
         ResearchStore.shared.activate(for: p)     // 教师账号没有研究状态
-        return resp.classCode
     }
 
     /// 退出登录 / 切换账号：清除本地档案，回到登录流程。不清除语言偏好。

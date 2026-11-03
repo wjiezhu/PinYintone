@@ -30,7 +30,7 @@ struct TeacherSignupView: View {
         .sheet(item: Binding(
             get: { generatedClassCode.map { ClassCodeResult(code: $0) } },
             set: { _ in }   // 不允许手动关闭
-        )) { result in
+        ), onDismiss: { userManager.finishTeacherRegistration() }) { result in
             classCodeRevealSheet(code: result.code)
                 .interactiveDismissDisabled(true)
         }
@@ -103,7 +103,7 @@ struct TeacherSignupView: View {
             .buttonStyle(SecondaryButtonStyle())
             .padding(.horizontal, Theme.pageMargin)
             Button(NSLocalizedString("teacher_classcode_go_dashboard", comment: "")) {
-                // ContentView 检测到 profile.role == .teacher 后自动切换到 TeacherDashboardView
+                // 关闭后 onDismiss 才发布 profile，ContentView 随之切到主界面View
                 generatedClassCode = nil
             }
             .buttonStyle(PrimaryButtonStyle())
@@ -166,6 +166,6 @@ struct TeacherSignupView: View {
 
 // MARK: - Identifiable wrapper for sheet binding
 private struct ClassCodeResult: Identifiable {
-    let id = UUID()
+    var id: String { code }     // 每次取值都不变，否则页面一刷新弹层就重开
     let code: String
 }

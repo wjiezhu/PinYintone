@@ -212,10 +212,11 @@ def test_shipped_field_protocol_is_consistent():
     assert test and train and not set(test) & set(train)
 
 
-def test_shipped_field_materials_await_the_researcher():
-    """审定只能由研究者本人确认后填写。这条测试守住「开发方没有代填」：
-    研究者审定之后，连同这条断言一起改。"""
+def test_audio_consent_still_awaits_the_researcher():
+    """审定只能由研究者本人确认后填写。研究者 2026-10-31 审定了不含录音的这一轮；
+    含录音的 consent-2.0 没有审定，这条测试守住「开发方没有代填」。"""
     approvals = load_approvals()
-    for kind, version in (("consent", "consent-1.1"), ("consent", "consent-2.0"),
-                          ("eligibility", "eligibility-3.0"), ("field_protocol", "field-1.0")):
-        assert approvals[kind][version] is None, f"{version} 的审定须由研究者确认后再填"
+    assert approvals["consent"]["consent-2.0"] is None, "consent-2.0 的审定须由研究者确认后再填"
+    for kind, version in (("consent", "consent-1.1"), ("eligibility", "eligibility-3.0"),
+                          ("field_protocol", "field-1.0")):
+        assert approvals[kind][version], f"{version} 研究者已于 2026-10-31 审定"
