@@ -36,8 +36,6 @@ import androidx.compose.material3.OutlinedButton
 import androidx.compose.material3.RadioButton
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
-import androidx.compose.material3.TopAppBar
-import androidx.compose.material3.TopAppBarDefaults
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.CompositionLocalProvider
 import androidx.compose.runtime.LaunchedEffect
@@ -63,6 +61,7 @@ import joy.pinyintone.app.R
 import joy.pinyintone.app.audio.SamplePlayer
 import joy.pinyintone.app.diagnostics.Diagnostics
 import joy.pinyintone.app.ui.practice.Divider
+import joy.pinyintone.app.ui.practice.PtTopBar
 import joy.pinyintone.app.ui.practice.TonePracticeViewModel
 import joy.pinyintone.app.ui.theme.Pt
 import joy.pinyintone.core.practice.FeedbackStyle
@@ -218,13 +217,11 @@ private fun Row(label: String, value: String) {
     Divider()
 }
 
-@OptIn(ExperimentalMaterial3Api::class)
 @Composable
 private fun BackTopBar(title: String, onBack: () -> Unit) {
     val c = Pt.colors
-    TopAppBar(
-        title = { Text(title, color = c.textPrimary) },
-        colors = TopAppBarDefaults.topAppBarColors(containerColor = c.background),
+    PtTopBar(
+        title = title,
         navigationIcon = {
             IconButton(onClick = onBack) {
                 // 返回箭头随阅读方向镜像

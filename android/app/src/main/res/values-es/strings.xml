@@ -1,0 +1,49 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="tts_missing_voice">No hay ninguna voz china instalada para la conversión de texto a voz. Descarga una voz china (mandarín) en los ajustes de texto a voz del teléfono y vuelve aquí.</string>
+    <string name="tts_unavailable">No se puede reproducir el modelo: este teléfono no tiene ningún motor de texto a voz. Aun así puedes grabar y recibir una respuesta.</string>
+    <string name="tts_open_settings">Abrir los ajustes de texto a voz</string>
+
+    <!-- 设置、诊断信息、新版本提示（Android 独有） -->
+    <string name="ui_language_code">es</string>
+    <string name="settings_app_version">Versión %1$s</string>
+    <string name="diag_title">Información de diagnóstico</string>
+    <string name="diag_intro">Información técnica sobre este teléfono y la app. Si algo no funciona, cópiala y envíasela al investigador. No contiene grabaciones, ni contenido de práctica, ni información personal.</string>
+    <string name="diag_app_version">Versión de la app</string>
+    <string name="diag_device">Fabricante y modelo</string>
+    <string name="diag_android">Versión de Android</string>
+    <string name="diag_sample_rate">Frecuencia de muestreo de la grabación</string>
+    <string name="diag_resampled">Convertido a 16 kHz</string>
+    <string name="diag_audio_source">Fuente de audio</string>
+    <string name="diag_last_voiced">Última grabación: tramas con voz</string>
+    <string name="diag_last_status">Última grabación: resultado</string>
+    <string name="diag_chinese_tts">Voz china (escuchar el modelo)</string>
+    <string name="diag_ui_language">Idioma de la app</string>
+    <string name="diag_font_scale">Tamaño del texto</string>
+    <string name="diag_not_yet">Todavía no hay grabaciones</string>
+    <string name="diag_yes">Sí</string>
+    <string name="diag_no">No</string>
+    <string name="diag_status_valid">Válido</string>
+    <string name="diag_status_flagged">Válido (calidad por revisar)</string>
+    <string name="diag_status_retry">Fallo técnico: %1$s</string>
+    <string name="diag_reason_insufficient_voiced_frames">no se detectó voz</string>
+    <string name="diag_reason_permission_denied">micrófono no permitido</string>
+    <string name="diag_reason_recording_interrupted">grabación interrumpida</string>
+    <string name="diag_reason_low_signal_quality">señal demasiado débil</string>
+    <string name="diag_reason_analysis_error">error de análisis</string>
+    <string name="diag_tts_ready">Disponible</string>
+    <string name="diag_tts_missing">No hay voz china instalada</string>
+    <string name="diag_tts_unavailable">No hay motor de texto a voz</string>
+    <string name="diag_tts_checking">Comprobando…</string>
+    <string name="diag_copy">Copiar</string>
+    <string name="diag_copied">Copiado. Pégalo en un mensaje para el investigador.</string>
+    <string name="diag_share">Enviar…</string>
+    <string name="diag_share_chooser">Enviar información de diagnóstico</string>
+    <string name="diag_copy_note">Lo que se copia es el texto técnico de abajo, en inglés, para que el investigador pueda leerlo.</string>
+    <string name="update_available_title">Nueva versión %1$s disponible</string>
+    <string name="update_available_body">Puedes seguir practicando y actualizar más tarde.</string>
+    <string name="update_required_title">Actualiza la app</string>
+    <string name="update_required_body">Esta versión ya no tiene soporte. Descarga la versión %1$s. Mientras tanto puedes seguir practicando.</string>
+    <string name="update_download">Descargar en el navegador</string>
+    <string name="update_open_failed">No se pudo abrir ningún navegador. Copia esta dirección en un navegador: %1$s</string>
+</resources>

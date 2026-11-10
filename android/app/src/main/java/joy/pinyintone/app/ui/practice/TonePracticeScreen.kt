@@ -53,8 +53,6 @@ import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
-import androidx.compose.material3.TopAppBar
-import androidx.compose.material3.TopAppBarDefaults
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.CompositionLocalProvider
 import androidx.compose.runtime.LaunchedEffect
@@ -140,9 +138,8 @@ fun TonePracticeScreen(vm: TonePracticeViewModel, onOpenSettings: () -> Unit) {
     Scaffold(
         containerColor = c.background,
         topBar = {
-            TopAppBar(
-                title = { Text(title, color = c.textPrimary) },
-                colors = TopAppBarDefaults.topAppBarColors(containerColor = c.background),
+            PtTopBar(
+                title = title,
                 navigationIcon = {
                     if (ui.mode == Mode.SELF_TEST) {
                         IconButton(onClick = { vm.endSelfTest() }) {

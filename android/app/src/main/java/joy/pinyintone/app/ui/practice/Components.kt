@@ -8,6 +8,13 @@ import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
+import androidx.compose.foundation.layout.WindowInsets
+import androidx.compose.foundation.layout.WindowInsetsSides
+import androidx.compose.foundation.layout.displayCutout
+import androidx.compose.foundation.layout.only
+import androidx.compose.foundation.layout.statusBars
+import androidx.compose.foundation.layout.union
+import androidx.compose.foundation.layout.windowInsetsPadding
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.heightIn
 import androidx.compose.foundation.layout.padding
@@ -187,5 +194,32 @@ fun BarButton(icon: @Composable () -> Unit, caption: String, label: String, enab
         icon()
         Text(caption, Modifier.padding(top = 4.dp), style = MaterialTheme.typography.labelMedium,
              color = Pt.colors.textPrimary, textAlign = TextAlign.Center)
+    }
+}
+
+/**
+ * 顶栏。不用 Material 的 TopAppBar：它高度固定，放大字号时较长的标题（如西班牙语
+ * 「Práctica de tonos」「Información de diagnóstico」）会被截掉一半。这里标题换行、顶栏随之长高，不缩字。
+ */
+@Composable
+fun PtTopBar(
+    title: String,
+    navigationIcon: @Composable () -> Unit = {},
+    actions: @Composable androidx.compose.foundation.layout.RowScope.() -> Unit = {},
+) {
+    val c = Pt.colors
+    Row(
+        Modifier.fillMaxWidth().background(c.background)
+            .windowInsetsPadding(WindowInsets.statusBars.union(WindowInsets.displayCutout).only(WindowInsetsSides.Top + WindowInsetsSides.Horizontal))
+            .heightIn(min = 64.dp).padding(horizontal = 4.dp),
+        verticalAlignment = Alignment.CenterVertically,
+    ) {
+        navigationIcon()
+        Text(
+            title,
+            Modifier.weight(1f).padding(horizontal = 12.dp, vertical = 8.dp).semantics { heading() },
+            style = MaterialTheme.typography.titleLarge, color = c.textPrimary,
+        )
+        actions()
     }
 }

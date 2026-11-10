@@ -1,4 +1,4 @@
-# Pinyintone Android 试用检查清单 · Liste de vérification pour l'essai
+# Pinyintone Android 试用检查清单 · Liste de vérification pour l'essai · Lista de comprobación de la prueba
 
 > 给研究者：发给 2–3 位试用者，每人用自己的手机照着做一遍，做完把第 9 步复制的诊断信息和每一步的「是 / 否」一起发回来。
 > 安装方法见 `docs/ANDROID_INSTALL_GUIDE.md`。试用者遇到「否」时，请他们写一句看到了什么（截图更好），不必自己想办法解决。
@@ -149,3 +149,77 @@ Après chaque étape, entourez **Oui / Non** ; si c'est « Non », écrivez en u
 
 - Qu'est-ce qui vous a semblé confus, ou qu'est-ce qui ne marchait pas ? ________
 - Envoyez cette liste (les « Oui / Non » de chaque étape) avec les informations de diagnostic de l'étape 9 au chercheur. Merci !
+
+---
+
+## Español
+
+¡Gracias por ayudarnos a probar la app! Se tarda unos 15 minutos. Hazlo en un lugar tranquilo.
+Después de cada paso, rodea **Sí / No**; si es «No», escribe en una frase lo que viste.
+
+**Tu teléfono:** marca y modelo ________ (el paso 9 añade los detalles automáticamente)
+
+### 1. Instalación
+
+- Escanea el código QR, descarga e instala siguiendo la guía de instalación.
+- ¿Aparece el icono de Pinyintone en la pantalla de inicio? **Sí / No**
+- ¿Viste algún aviso de seguridad durante la instalación? Si lo viste, copia la frase: ________
+
+### 2. Abrir la app y permitir el micrófono
+
+- Abre Pinyintone: ves una palabra china (por ejemplo «医生»), su pinyin y una curva. **Sí / No**
+- Toca el botón redondo del micrófono, abajo en el centro. La app explica para qué necesita el micrófono: toca «Continuar»;
+  luego el teléfono pide permiso: elige «Permitir» (o «Mientras se usa la app»).
+- ¿Funciona el botón después? **Sí / No**
+
+### 3. Grabar una palabra
+
+- Vuelve a tocar el botón del micrófono para empezar (se convierte en un cuadrado rojo, «Parar»).
+- Lee la palabra en voz normal y toca **otra vez** el botón para parar.
+- ¿Aparece debajo el resultado «Este intento» («Superado» o «No superado» y una nota)? **Sí / No**
+- Si aparece «No se grabó ninguna voz…», acércate al teléfono y vuelve a grabar. Si sigue sin funcionar, anótalo: ________
+- Mientras lees, ¿la línea roja discontinua (tu voz) se mueve con tu voz? **Sí / No**
+
+### 4. Escuchar el modelo
+
+- Toca «Escuchar», abajo a la izquierda.
+- ¿Oyes la pronunciación en chino? **Sí / No**
+- Si un mensaje dice que no hay ninguna voz china instalada: toca el botón del mensaje, intenta descargar una voz china en los ajustes del teléfono, vuelve y prueba otra vez. Resultado: ________
+
+### 5. Cambiar el modo de visualización
+
+- Toca «Color» debajo de la palabra: la curva se sustituye por una casilla de color con el tono para cada sílaba. **Sí / No**
+- Graba otra vez en modo «Color»: ¿el resultado aparece con normalidad? **Sí / No**
+- Toca «Curva» para volver. (Los dos modos usan el mismo umbral para superar: cambiar de modo no cambia la nota.)
+
+### 6. Cambiar de palabra
+
+- Toca «Siguiente», abajo a la derecha: ¿aparece una palabra nueva? **Sí / No**
+- Toca «Palabras» arriba, busca una palabra (por ejemplo escribe `ma`) y tócala: ¿cambia la palabra? **Sí / No**
+
+### 7. Autoevaluación
+
+- Toca «⋮» (Más) arriba → «Empezar una autoevaluación».
+- Graba algunas palabras siguiendo la pantalla. **Durante la autoevaluación no hay nota, ni colores, ni curva: es normal.**
+- Después de cada grabación, ¿la app pasa sola a la palabra siguiente? **Sí / No**
+- Toca «×» arriba a la izquierda (Salir de la autoevaluación): ¿vuelves a la práctica normal? **Sí / No**
+
+### 8. Texto grande
+
+- Abre **Ajustes → Pantalla → Tamaño de fuente** del teléfono, pon el tamaño más grande y vuelve a Pinyintone.
+- ¿Se puede leer todo el texto? (Se puede desplazar, pero ningún texto debe quedar cortado ni superpuesto.) **Sí / No**
+- ¿Los tres botones de abajo (Escuchar · micrófono · Siguiente) siguen en su sitio y se pueden usar? **Sí / No**
+- Si hay algún problema, haz una captura de pantalla. Luego vuelve a poner tu tamaño de letra habitual.
+
+### 9. Copiar la información de diagnóstico y enviarla
+
+- Toca «⋮» arriba → «Ajustes» → «Información de diagnóstico».
+- Esta página solo tiene información técnica del teléfono y de la app: **ninguna grabación, ni tu nombre, ni ninguna información personal**.
+- Toca «Copiar» y pega el texto en WhatsApp, un correo u otro mensaje para el investigador.
+  También puedes tocar «Enviar…» y elegir una app de mensajería.
+- ¿Se envió bien? **Sí / No**
+
+### 10. Para terminar
+
+- ¿Qué te resultó confuso o qué no funcionaba? ________
+- Envía al investigador esta lista (el «Sí / No» de cada paso) junto con la información de diagnóstico del paso 9. ¡Gracias!

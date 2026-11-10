@@ -15,7 +15,15 @@ object IosStrings {
         "zh-Hans" to "values-zh",
         "fr" to "values-fr",
         "ar" to "values-ar",
+        "es" to "values-es",
     )
+
+    /**
+     * 只有 Android 有的语言：源文件放在 `android/app/localizations/<lang>.lproj/`，不放进 iOS 的
+     * Localizations——那里的东西都会打进 iOS 包，App Store 会据此把它列成 iOS 支持的语言。
+     * 文件只需含白名单（`ios-strings.keys`）里的键。
+     */
+    val ANDROID_ONLY = setOf("es")
 
     /** 解析 .strings：`"key" = "value";`，支持 /* */ 与 // 注释、\" \\ \n 转义 */
     fun parse(text: String): Map<String, String> {

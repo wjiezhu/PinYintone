@@ -1,4 +1,4 @@
-# Pinyintone Android 安装说明 · Guide d'installation · دليل التثبيت
+# Pinyintone Android 安装说明 · Guide d'installation · Guía de instalación · دليل التثبيت
 
 > 给研究者的说明（参与者不用看这一段）：
 > - Android 版不经过应用商店，参与者扫码下载安装包（`.apk`）自己安装。下载地址与二维码由研究者另行确定。
@@ -174,6 +174,89 @@ L'application n'est pas sur un magasin d'applications : le téléphone signale d
 - **Installez par-dessus l'ancienne version, sans la désinstaller.** Désinstaller effacerait les exercices pas encore envoyés.
 - Message « Veuillez mettre à jour l'application » : cette version n'est plus prise en charge, mettez à jour dès que possible ; vous pouvez continuer à vous entraîner en attendant.
 - Message « Application non installée » ou « conflit de signature » : la version installée ne vient pas du chercheur. Contactez-le, ne désinstallez rien vous-même.
+
+---
+
+## Español
+
+### 1. Comprueba que el teléfono es compatible
+
+- Hace falta **Android 8.0 o más reciente** (Ajustes → Información del teléfono).
+- **Huawei con HarmonyOS NEXT (HarmonyOS 5; en «Información del teléfono» aparece «HarmonyOS 5.x»): no se puede instalar.**
+  Esta versión ya no acepta archivos de instalación de Android. Ponte en contacto con el investigador. HarmonyOS 2, 3 y 4 sí funcionan.
+- El archivo pesa unos 2 MB; puedes descargarlo con wifi o con datos móviles.
+
+### 2. Escanea el código QR y descarga
+
+1. Escanea el código QR que te dio el investigador con la **cámara** o el **navegador** del teléfono
+   (si lo abres dentro de WhatsApp o WeChat, elige «Abrir en el navegador»: esas apps no permiten instalar el archivo).
+2. En la página que se abre, toca «Descargar». El archivo se llama `pinyintone-versión.apk`.
+3. Si el navegador avisa «Este tipo de archivo puede dañar tu dispositivo», elige «Descargar de todos modos».
+4. Cuando termine la descarga, toca la notificación o abre el archivo desde la lista de descargas del navegador.
+
+[Captura pendiente: página de descarga y aviso «Descargar de todos modos» — hacerla en un teléfono real]
+
+### 3. Permite «Instalar aplicaciones desconocidas»
+
+Desde Android 8, este permiso se da **app por app**: se concede a la app que abre el archivo (el navegador o el gestor de archivos).
+La mayoría de los teléfonos muestran un aviso la primera vez: toca «Ajustes», activa «Permitir de esta fuente» y vuelve atrás para seguir instalando.
+Si no aparece ningún aviso, sigue los pasos de tu marca.
+
+#### Xiaomi / Redmi: HyperOS
+
+1. Si aparece «La instalación de apps de fuentes desconocidas está bloqueada», toca «Ajustes» y activa el permiso.
+2. O a mano: Ajustes → Aplicaciones → Permisos especiales → Instalar aplicaciones desconocidas → tu navegador → activar.
+3. Si aparece una comprobación de seguridad, espera unos segundos y toca «Continuar con la instalación».
+
+[Captura pendiente: interruptor «Instalar aplicaciones desconocidas» en HyperOS — hacerla en un teléfono real]
+
+#### Xiaomi / Redmi: MIUI (MIUI 12 a 14)
+
+1. Ajustes → Aplicaciones → Administrar aplicaciones → «⋮» o «Permisos» → Instalar aplicaciones desconocidas → tu navegador → «Permitir de esta fuente».
+2. MIUI analiza el archivo antes de instalarlo; puede tardar unos segundos. Después toca «Continuar con la instalación».
+
+[Captura pendiente: pantalla de análisis de MIUI y botón «Continuar con la instalación» — hacerla en un teléfono real]
+
+#### Samsung: One UI
+
+1. Ajustes → Aplicaciones → «⋮» arriba a la derecha → Acceso especial → Instalar aplicaciones desconocidas → tu navegador (Chrome, Samsung Internet) o «Mis archivos» → «Permitir desde esta fuente».
+2. En One UI 6 o posterior, si está activado el **«Bloqueador automático»** (Ajustes → Seguridad y privacidad → Bloqueador automático), bloquea este tipo de instalación.
+   Desactívalo mientras instalas la app; luego puedes volver a activarlo.
+
+[Captura pendiente: «Instalar aplicaciones desconocidas» y «Bloqueador automático» en Samsung — hacerla en un teléfono real]
+
+#### Huawei: EMUI y HarmonyOS 2 / 3 / 4
+
+1. Ajustes → Seguridad → Más ajustes → Instalar aplicaciones de fuentes externas → tu navegador o «Archivos» → activar.
+2. Si está activado el **«Modo puro»** (Ajustes → Sistema y actualizaciones → Modo puro), mostrará un aviso: toca «Instalar de todos modos»,
+   o sal del modo puro un momento y vuelve a activarlo después de instalar.
+3. **HarmonyOS NEXT (HarmonyOS 5): no se puede instalar**, ver el paso 1.
+
+[Captura pendiente: «Fuentes externas» y aviso del «Modo puro» en Huawei — hacerla en un teléfono real]
+
+### 4. Qué hacer si aparece un aviso de seguridad
+
+La app no está en ninguna tienda de aplicaciones, por eso el teléfono avisa de que el «origen es desconocido». Es normal.
+
+- Si **Google Play Protect** muestra «App no segura bloqueada» o «App desconocida»: toca «Más detalles» → «Instalar de todos modos».
+  Si te pregunta si quieres «enviar la app para analizarla», puedes decir que no.
+- **Comprobación de seguridad de Xiaomi / Huawei**: lee el mensaje y toca «Instalar de todos modos» o «Continuar con la instalación».
+- Instala **solo el archivo descargado desde el código QR del investigador**; nunca uno que te haya pasado otra persona.
+- Si aparece «Archivo dañado» o «Error al analizar el paquete»: vuelve a descargarlo. Si sigue fallando, envía al investigador el modelo del teléfono y la versión de Android.
+
+[Captura pendiente: Google Play Protect «Instalar de todos modos» — hacerla en un teléfono real]
+
+### 5. La primera vez que abres la app
+
+- La primera vez que tocas el botón del micrófono («Grabar»), la app explica para qué necesita el micrófono y luego el teléfono te pide permiso: elige «Permitir» o «Mientras se usa la app».
+- Si lo rechazaste por error: la app muestra el botón «Abrir Ajustes» → Permisos → Micrófono → Permitir.
+
+### 6. Actualizar
+
+- Cuando haya una versión nueva, aparecerá un aviso arriba en la pantalla de práctica. Toca «Descargar en el navegador» e instálala igual que la primera vez.
+- **Instala encima de la versión anterior, sin desinstalarla.** Desinstalar borraría las prácticas que aún no se han enviado.
+- Aviso «Actualiza la app»: esta versión ya no tiene soporte; actualiza cuanto antes. Mientras tanto puedes seguir practicando.
+- Aviso «App no instalada» o «conflicto de firma»: la versión instalada no viene del investigador. Ponte en contacto con él y no desinstales nada por tu cuenta.
 
 ---
 

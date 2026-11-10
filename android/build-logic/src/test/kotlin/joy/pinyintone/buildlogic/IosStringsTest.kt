@@ -54,15 +54,21 @@ class IosStringsTest {
         }
     }
 
-    /** 真实的 iOS 字符串 + Android 的键名单：能生成、四种语言齐全 */
+    /** 真实的 iOS 字符串 + Android 的键名单：能生成、五种语言齐全 */
     @Test
     fun realLocalizationsConvertCleanly() {
         val dir = File(repo, "PinYintone/Resources/Localizations")
-        val sources = IosStrings.LANGUAGES.keys.associateWith { File(dir, "$it.lproj/Localizable.strings").readText() }
+        val androidOnly = File(repo, "android/app/localizations")
+        val sources = IosStrings.LANGUAGES.keys.associateWith {
+            File(if (it in IosStrings.ANDROID_ONLY) androidOnly else dir, "$it.lproj/Localizable.strings").readText()
+        }
         val keys = IosStrings.parseKeys(File(repo, "android/app/ios-strings.keys").readText())
         val out = IosStrings.generate(sources, keys)
-        assertEquals(setOf("values", "values-zh", "values-fr", "values-ar"), out.keys)
+        assertEquals(setOf("values", "values-zh", "values-fr", "values-ar", "values-es"), out.keys)
         assertTrue(out.getValue("values-zh").contains("<string name=\"stage2_title\">声调练习</string>"))
         assertTrue(out.getValue("values").contains("Word %1\$d of %2\$d"))
+        assertTrue(out.getValue("values-es").contains("Palabra %1\$d de %2\$d"))
+        // 只有 Android 有的语言不得出现在 iOS 的 Localizations 里（会打进 iOS 包、被 App Store 列为支持的语言）
+        for (lang in IosStrings.ANDROID_ONLY) assertTrue(!File(dir, "$lang.lproj").exists())
     }
 }
