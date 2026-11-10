@@ -37,8 +37,8 @@
 "teacher_signup_email" = "Email address";
 "teacher_signup_password" = "Password";
 "teacher_classcode_title" = "Your Class Code";
-"teacher_classcode_body" = "Share this code with your students so they can join your class.";
-"teacher_classcode_share" = "Join my Pinyintone class with code %@";
+"teacher_classcode_body" = "This is your teacher class code. Keep it for your records; students do not need to enter it.";
+"teacher_classcode_share" = "My Pinyintone teacher class code: %@";
 "teacher_classcode_share_btn" = "Share code";
 "teacher_classcode_go_dashboard" = "Go to Dashboard";
 

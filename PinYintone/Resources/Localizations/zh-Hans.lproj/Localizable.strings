@@ -37,8 +37,8 @@
 "teacher_signup_email" = "电子邮箱";
 "teacher_signup_password" = "密码";
 "teacher_classcode_title" = "您的班级码";
-"teacher_classcode_body" = "将此码告知学生，他们即可加入您的班级。";
-"teacher_classcode_share" = "使用班级码 %@ 加入我的 Pinyintone 班级";
+"teacher_classcode_body" = "这是您的教师班级码，请妥善保存。学生端不需要输入它。";
+"teacher_classcode_share" = "我的 Pinyintone 教师班级码：%@";
 "teacher_classcode_share_btn" = "分享班级码";
 "teacher_classcode_go_dashboard" = "进入数据面板";
 
