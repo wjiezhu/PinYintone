@@ -410,6 +410,19 @@ final class FieldSessionTests: XCTestCase {
         XCTAssertEqual(word.glosses(for: "it").primary, "Medico")
         XCTAssertEqual(word.glosses(for: "fr").primary, "Médecin")
         XCTAssertNotNil(word.glosses(for: "fr").secondary)
+        XCTAssertEqual(word.glosses(for: "en").primary, "Doctor")
+    }
+
+    /// 每个词在西语、意语、英语界面都有自己语言的释义，不回退到法语
+    func testEveryWordHasSpanishItalianAndEnglishGlosses() {
+        let words = CorpusLoader.shared.loadLexemes()
+        XCTAssertEqual(words.count, 20)
+        for word in words {
+            for (language, gloss) in [("es", word.spanish), ("it", word.italian), ("en", word.english)] {
+                XCTAssertFalse((gloss ?? "").isEmpty, "\(word.id) 缺 \(language) 释义")
+                XCTAssertEqual(word.glosses(for: language).primary, gloss)
+            }
+        }
     }
 
     /// 语言背景题与注册页都能选西班牙语、意大利语

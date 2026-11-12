@@ -1,0 +1,2 @@
+/* 系统麦克风权限弹窗里的说明（覆盖 Info.plist 的英文默认值） */
+"NSMicrophoneUsageDescription" = "Pinyintone usa el micrófono para grabar y analizar tu pronunciación del chino mandarín.";

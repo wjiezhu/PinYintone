@@ -107,7 +107,7 @@ python scripts/verify_pipeline.py --base-url <后端地址> \
 
 ---
 
-### A9. 现场实测轮（App 2.1 / 构建 21 起，正式发布用构建 22，2026-10-28 研究者决定）
+### A9. 现场实测轮（App 2.1 / 构建 21 起，正式发布用构建 23，2026-10-28 研究者决定）
 
 **改了什么**
 - 已参加研究的人，在研究者在场时从首页「开始现场实测」进入：
@@ -129,7 +129,7 @@ python scripts/verify_pipeline.py --base-url <后端地址> \
 **冻结配置**（App 上架之后，连线上库，须研究者当场同意）
 ```
 python3 scripts/seed_manifest.py \
-  --study-id pinyintone-2026-field --app-version 2.1 --build-number 22 \
+  --study-id pinyintone-2026-field --app-version 2.1 --build-number 23 \
   --lexicon-version lex-2026.10 --scoring-version scoring-v5 \
   --feedback-version fb-1.0 --advice-policy-version advice-1.0 \
   --survey-version survey-1.2 --consent-version consent-1.1 \

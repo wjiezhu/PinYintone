@@ -26,6 +26,21 @@ final class LocalizationParityTests: XCTestCase {
         }
     }
 
+    /// 系统麦克风权限弹窗的说明每种语言都有，不再只有英文
+    func testMicrophonePermissionTextIsLocalized() throws {
+        var seen = Set<String>()
+        for language in languages {
+            let path = try XCTUnwrap(Bundle.main.path(forResource: "InfoPlist", ofType: "strings",
+                                                      inDirectory: nil, forLocalization: language),
+                                     "\(language) 缺 InfoPlist.strings")
+            let dict = try XCTUnwrap(NSDictionary(contentsOfFile: path) as? [String: String])
+            let text = try XCTUnwrap(dict["NSMicrophoneUsageDescription"], language)
+            XCTAssertTrue(text.contains("Pinyintone"), language)
+            seen.insert(text)
+        }
+        XCTAssertEqual(seen.count, languages.count, "各语言的说明应各不相同（不是照抄）")
+    }
+
     func testNoEmptyTranslations() throws {
         for language in languages {
             for (key, value) in try table(language) {

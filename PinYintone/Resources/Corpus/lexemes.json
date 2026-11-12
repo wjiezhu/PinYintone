@@ -17,7 +17,8 @@
       "aspirated": true
     },
     "spanish": "Correr",
-    "italian": "Correre"
+    "italian": "Correre",
+    "english": "Run"
   },
   {
     "id": "bangzhu",
@@ -37,7 +38,8 @@
       "aspirated": false
     },
     "spanish": "Ayudar",
-    "italian": "Aiutare"
+    "italian": "Aiutare",
+    "english": "Help"
   },
   {
     "id": "tingdong",
@@ -57,7 +59,8 @@
       "aspirated": true
     },
     "spanish": "Entender (al oír)",
-    "italian": "Capire (ascoltando)"
+    "italian": "Capire (ascoltando)",
+    "english": "Understand (by listening)"
   },
   {
     "id": "dengdai",
@@ -77,7 +80,8 @@
       "aspirated": false
     },
     "spanish": "Esperar",
-    "italian": "Aspettare"
+    "italian": "Aspettare",
+    "english": "Wait"
   },
   {
     "id": "kaoshi",
@@ -97,7 +101,8 @@
       "aspirated": true
     },
     "spanish": "Examen",
-    "italian": "Esame"
+    "italian": "Esame",
+    "english": "Exam"
   },
   {
     "id": "gaosu",
@@ -117,7 +122,8 @@
       "aspirated": false
     },
     "spanish": "Decir",
-    "italian": "Dire"
+    "italian": "Dire",
+    "english": "Tell"
   },
   {
     "id": "xianzai",
@@ -134,7 +140,8 @@
     "audioFilename": null,
     "wordSet": "set1",
     "spanish": "Ahora",
-    "italian": "Adesso"
+    "italian": "Adesso",
+    "english": "Now"
   },
   {
     "id": "dianshi",
@@ -151,7 +158,8 @@
     "audioFilename": null,
     "wordSet": "set2",
     "spanish": "Televisión",
-    "italian": "Televisione"
+    "italian": "Televisione",
+    "english": "Television"
   },
   {
     "id": "sushe",
@@ -168,7 +176,8 @@
     "audioFilename": null,
     "wordSet": "assessment",
     "spanish": "Residencia de estudiantes",
-    "italian": "Dormitorio"
+    "italian": "Dormitorio",
+    "english": "Dormitory"
   },
   {
     "id": "hanzi",
@@ -185,7 +194,8 @@
     "audioFilename": null,
     "wordSet": "assessment",
     "spanish": "Carácter chino",
-    "italian": "Carattere cinese"
+    "italian": "Carattere cinese",
+    "english": "Chinese character"
   },
   {
     "id": "heshui",
@@ -202,7 +212,8 @@
     "audioFilename": null,
     "wordSet": "assessment",
     "spanish": "Beber agua",
-    "italian": "Bere acqua"
+    "italian": "Bere acqua",
+    "english": "Drink water"
   },
   {
     "id": "shenti",
@@ -219,7 +230,8 @@
     "audioFilename": null,
     "wordSet": "set1",
     "spanish": "Cuerpo",
-    "italian": "Corpo"
+    "italian": "Corpo",
+    "english": "Body"
   },
   {
     "id": "jingli",
@@ -236,7 +248,8 @@
     "audioFilename": null,
     "wordSet": "set2",
     "spanish": "Gerente",
-    "italian": "Direttore"
+    "italian": "Direttore",
+    "english": "Manager"
   },
   {
     "id": "yisheng",
@@ -253,7 +266,8 @@
     "audioFilename": null,
     "wordSet": "set1",
     "spanish": "Médico",
-    "italian": "Medico"
+    "italian": "Medico",
+    "english": "Doctor"
   },
   {
     "id": "qingchu",
@@ -270,7 +284,8 @@
     "audioFilename": null,
     "wordSet": "set1",
     "spanish": "Claro",
-    "italian": "Chiaro"
+    "italian": "Chiaro",
+    "english": "Clear"
   },
   {
     "id": "xiuxi",
@@ -287,7 +302,8 @@
     "audioFilename": null,
     "wordSet": "set2",
     "spanish": "Descansar",
-    "italian": "Riposare"
+    "italian": "Riposare",
+    "english": "Rest"
   },
   {
     "id": "ziji",
@@ -304,7 +320,8 @@
     "audioFilename": null,
     "wordSet": "set1",
     "spanish": "Uno mismo",
-    "italian": "Se stesso"
+    "italian": "Se stesso",
+    "english": "Oneself"
   },
   {
     "id": "canjia",
@@ -321,7 +338,8 @@
     "audioFilename": null,
     "wordSet": "set2",
     "spanish": "Participar",
-    "italian": "Partecipare"
+    "italian": "Partecipare",
+    "english": "Take part"
   },
   {
     "id": "zaocan",
@@ -338,7 +356,8 @@
     "audioFilename": null,
     "wordSet": "set2",
     "spanish": "Desayuno",
-    "italian": "Colazione"
+    "italian": "Colazione",
+    "english": "Breakfast"
   },
   {
     "id": "xiangxin",
@@ -355,6 +374,7 @@
     "audioFilename": null,
     "wordSet": "assessment",
     "spanish": "Creer",
-    "italian": "Credere"
+    "italian": "Credere",
+    "english": "Believe"
   }
 ]

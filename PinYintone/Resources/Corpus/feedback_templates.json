@@ -19,6 +19,16 @@
       "ممتاز! نطقك رائع جداً!",
       "أحسنت! تبدو كأنك متحدث أصلي!",
       "رائع! نبراتك صحيحة تماماً!"
+    ],
+    "es": [
+      "¡Perfecto! ¡Tu pronunciación es excelente!",
+      "¡Increíble! ¡Suenas como un hablante nativo!",
+      "¡Magnífico! ¡Tus tonos son perfectos!"
+    ],
+    "it": [
+      "Perfetto! La tua pronuncia è eccellente!",
+      "Fantastico! Sembri un madrelingua!",
+      "Ottimo! I tuoi toni sono perfetti!"
     ]
   },
   "good": {
@@ -41,6 +51,16 @@
       "أحسنت! اقتربت كثيراً.",
       "جيد جداً! واصل هكذا.",
       "عمل جيد! بقي القليل."
+    ],
+    "es": [
+      "¡Bien hecho! Casi perfecto.",
+      "¡Muy bien! Sigue así.",
+      "¡Buen trabajo! Ya casi lo tienes."
+    ],
+    "it": [
+      "Ben fatto! Quasi perfetto.",
+      "Molto bene! Continua così.",
+      "Bel lavoro! Ci sei quasi."
     ]
   },
   "needsPractice": {
@@ -63,6 +83,16 @@
       "لا بأس! تحتاج لمزيد من التدريب.",
       "أنت تتحسن! حاول مرة أخرى.",
       "واصل! استمع جيداً إلى النموذج."
+    ],
+    "es": [
+      "¡Nada mal! Un poco más de práctica.",
+      "¡Estás mejorando! Inténtalo de nuevo para afinarlo.",
+      "¡Sigue así! Escucha el modelo con atención."
+    ],
+    "it": [
+      "Niente male! Ancora un po' di pratica.",
+      "Stai migliorando! Riprova per perfezionarlo.",
+      "Continua così! Ascolta bene il modello."
     ]
   },
   "fail": {
@@ -85,6 +115,16 @@
       "واصل المحاولة! استمع إلى النموذج مجدداً.",
       "لا تستسلم! خذ وقتك.",
       "حاول مجدداً! ركّز على النبرات."
+    ],
+    "es": [
+      "¡Sigue intentándolo! Escucha el modelo otra vez.",
+      "¡No te rindas! Ve con calma.",
+      "¡Inténtalo de nuevo! Concéntrate en los tonos."
+    ],
+    "it": [
+      "Continua a provare! Riascolta il modello.",
+      "Non arrenderti! Fai con calma.",
+      "Riprova! Concentrati sui toni."
     ]
   }
 }
