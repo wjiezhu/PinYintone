@@ -44,7 +44,7 @@ final class ResearchStore: ObservableObject {
             activate(accountKey: nil)
             return
         }
-        activate(accountKey: profile.appleUserID ?? profile.deviceID)
+        activate(accountKey: profile.accountKey)
     }
 
     func activate(accountKey: String?) {

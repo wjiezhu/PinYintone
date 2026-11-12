@@ -2,7 +2,7 @@ import Foundation
 
 /// 三级（四档）双语反馈模板加载器（对应论文 3.4 节情感反馈模块）。
 /// 从 Bundle 内 feedback_templates.json 按「评分等级 → 语言」随机抽取一条反馈语句。
-/// 语言沿用 app 四语：fr / zh / en / ar。
+/// 语言与界面一致：fr / zh / en / ar / es / it。
 final class FeedbackTemplateLoader {
 
     // 勿删：见 CLAUDE.md 禁令 18（隐式析构在 iOS 18.5 / 26.2 上实测崩溃）
@@ -20,7 +20,7 @@ final class FeedbackTemplateLoader {
     /// 按评分等级和语言返回一条反馈模板文本。
     /// - Parameters:
     ///   - grade: DTW 评分等级
-    ///   - language: "fr" | "zh" | "en" | "ar"
+    ///   - language: "fr" | "zh" | "en" | "ar" | "es" | "it"
     func template(for grade: FeedbackGrade, language: String) -> String {
         let byLanguage = templates[grade.rawValue]
         // 语言缺失时回退英文，再回退任意可用语言

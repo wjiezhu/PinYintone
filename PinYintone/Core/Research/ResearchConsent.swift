@@ -16,16 +16,20 @@ enum ResearchConsent {
 
     /// 本构建携带的知情同意文本。**文案有任何改动都必须换新版本号**，并重新冻结研究配置。
     ///
-    /// 历史：`consent-1.0`（研究者 2026-10-14 审定，第一轮自然使用研究）不再随 App 携带。
+    /// 历史（不再随 App 携带）：
+    /// - `consent-1.0`（研究者 2026-10-14 审定，第一轮自然使用研究）
+    /// - `consent-1.1`（研究者 2026-10-31 审定）：写的是「与你的 Apple 账号对应的匿名编号」，
+    ///   构建 23 加了邮箱登录后对邮箱用户不准确，从未冻结进线上配置
     ///
-    /// - `consent-1.1`：现场实测轮。说明前测 → 训练 → 后测，**录音不上传**。
+    /// - `consent-1.2`：现场实测轮。说明前测 → 训练 → 后测，**录音不上传**。
+    ///   与 1.1 只差一句：匿名编号对应「登录账号（Apple 账号或邮箱）」。
     /// - `consent-2.0`：同上，另写明**上传录音**、退出即删除录音。
     ///   只有开了录音上传的配置才会下发这一版（种子脚本强制两者一致）。
+    ///   ⚠ 草稿里仍写「Apple 账号」，审定前要同样改正并换版本号。
     ///
-    /// 两版都是开发方起草、待研究者与导师审定的稿子；审定记在
-    /// `backend/research_materials_approval.json`，未审定只能冻结成测试配置。
+    /// 审定记在 `backend/research_materials_approval.json`，未审定只能冻结成测试配置。
     nonisolated enum Text: String, CaseIterable {
-        case fieldSession = "consent-1.1"
+        case fieldSession = "consent-1.2"
         case fieldSessionWithAudio = "consent-2.0"
 
         /// 这一版是否写明了上传录音

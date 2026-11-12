@@ -21,9 +21,10 @@ struct Lexeme: Codable, Identifiable {
     let wordSet: WordSet?
     /// 关卡 1（送气）考察的声母，都在词的第一个字上。声调词条为 nil。
     var aspirationTarget: AspirationTarget? = nil
-    /// 西班牙语、意大利语释义（界面选这两种语言时显示）
+    /// 西班牙语、意大利语、英语释义（界面选这几种语言时显示）
     var spanish: String? = nil
     var italian: String? = nil
+    var english: String? = nil
 }
 
 /// 这个词考察的声母，以及它是不是送气音。写在语料里，不从 `focus` 的说明文字里猜。

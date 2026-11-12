@@ -1,0 +1,2 @@
+/* 系统麦克风权限弹窗里的说明（覆盖 Info.plist 的英文默认值） */
+"NSMicrophoneUsageDescription" = "Pinyintone 使用麦克风录下并分析你的普通话发音。";

@@ -22,7 +22,7 @@
 <body>
 
 <h1>Privacy Policy — Pinyintone</h1>
-<p class="sub">Last updated: 29 October 2026</p>
+<p class="sub">Last updated: 12 November 2026</p>
 
 <p>Pinyintone is a Mandarin pronunciation training app developed as part of academic research
 at Shanghai International Studies University. This policy explains exactly what the app
@@ -37,7 +37,8 @@ collects, why, and how you can delete it.</p>
     <td>Pseudonymous — tied to a random device identifier</td>
   </tr>
   <tr>
-    <td>A random device identifier, and your Sign in with Apple user identifier</td>
+    <td>A random device identifier, and your sign-in identifier: your Sign in with Apple user identifier,
+        or, if you sign in with email, a one-way hash of your email address (see section 4)</td>
     <td>To keep your progress consistent across sessions and devices</td>
     <td>Yes (pseudonymous identifier only)</td>
   </tr>
@@ -54,7 +55,9 @@ collects, why, and how you can delete it.</p>
       processed on your device; only numerical results such as scores leave the phone.
       The only exception is described in section 6: recordings made during an in-person
       research session, and only if you have explicitly agreed to it in the study consent form.</li>
-  <li>We do not collect your email address, contacts, photos, location, or browsing activity.</li>
+  <li>We do not collect your contacts, photos, location, or browsing activity.</li>
+  <li>If you sign in with email, we do not keep your email address in readable form on our servers
+      (see section 4).</li>
   <li>We do not use advertising, analytics SDKs, or third-party trackers.</li>
   <li>We do not sell or share your data with anyone for marketing purposes.</li>
 </ul>
@@ -64,9 +67,15 @@ collects, why, and how you can delete it.</p>
 Audio is analysed on-device. It is not stored or transmitted, except for in-person research
 session recordings that a study participant has explicitly agreed to upload (see section 6).</p>
 
-<h2>4. Sign in with Apple</h2>
-<p>Sign in with Apple is used to create your account. We receive only an anonymous Apple user
-identifier, and your name if you choose to share it. We never receive your Apple ID password.</p>
+<h2>4. Signing in</h2>
+<p><strong>Sign in with Apple.</strong> We receive only an anonymous Apple user identifier, and your
+name if you choose to share it. We never receive your Apple ID password.</p>
+<p><strong>Email sign-in.</strong> If you choose to sign in with an email address, the address you
+enter is sent to our server and passed to our email delivery provider only to send you a 6-digit
+sign-in code. Our database stores a one-way hash (SHA-256) of the address as your account
+identifier, and a keyed hash of the code, which expires after 10 minutes; it does not store the
+address itself. The address is kept on your device so the app can show which account you are
+signed in with. We never send marketing emails.</p>
 
 <h2>5. Where data is stored</h2>
 <p>Practice data is stored on servers operated by Render (application server, Oregon, United States)
