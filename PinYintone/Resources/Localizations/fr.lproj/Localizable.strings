@@ -186,7 +186,7 @@
 "consent_purpose_title" = "Objectif";
 "consent_purpose_body" = "Comprendre comment les apprenants de chinois utilisent un outil d'entraînement aux tons, dans le cadre d'un mémoire de master sur la conception et l'utilisabilité.\n\nAprès avoir rejoint l'étude, vous pouvez faire une « séance sur place » en présence de l'équipe de recherche, d'environ 15 à 20 minutes : lire d'abord une série de mots (sans résultat affiché), puis vous entraîner sur une autre série (avec retour), et enfin relire la première série (sans résultat affiché). Vous pouvez arrêter la séance à tout moment.";
 "consent_data_title" = "Données collectées";
-"consent_data_body" = "Vos actions d'entraînement (début d'un exercice, lecture du modèle, enregistrement, consultation des retours), les résultats d'évaluation et les réponses aux questionnaires que vous choisissez de donner (y compris des informations de profil comme la tranche d'âge, la nationalité et le niveau de chinois).\n\nLes enregistrements eux-mêmes ne sont pas transmis. Dans les données de recherche, vous n'êtes identifié(e) que par un numéro anonyme associé à votre compte Apple ; elles ne contiennent ni votre nom, ni votre e-mail, ni aucune autre information personnelle.";
+"consent_data_body" = "Vos actions d'entraînement (début d'un exercice, lecture du modèle, enregistrement, consultation des retours), les résultats d'évaluation et les réponses aux questionnaires que vous choisissez de donner (y compris des informations de profil comme la tranche d'âge, la nationalité et le niveau de chinois).\n\nLes enregistrements eux-mêmes ne sont pas transmis. Dans les données de recherche, vous n'êtes identifié(e) que par un numéro anonyme associé à votre compte de connexion (compte Apple ou e-mail) ; elles ne contiennent ni votre nom, ni votre e-mail, ni aucune autre information personnelle.";
 "consent_use_title" = "Utilisation";
 "consent_use_body" = "Uniquement pour l'analyse et la rédaction de ce mémoire. Les résultats sont présentés sous forme de statistiques de groupe, pas individuelles.";
 "consent_withdraw_title" = "Comment se retirer";
@@ -384,7 +384,7 @@
 "field_exit_confirm_message" = "Ce que vous avez déjà enregistré est conservé. La prochaine fois sera une nouvelle séance, qui reprendra depuis la première série de mots.";
 "field_intro_title" = "Cette séance comporte trois étapes et dure environ 15 à 20 minutes";
 "field_intro_pretest" = "Lisez %1$d mots. Aucun résultat n'est affiché ; le mot suivant arrive automatiquement.";
-"field_intro_training" = "Entraînez-vous sur %1$d autres mots, avec retour. Passez au suivant après %2$d résultats valides pour chaque mot.";
+"field_intro_training" = "Entraînez-vous sur %1$d autres mots, avec retour. Lisez d'abord chaque mot par vous-même ; si ce n'est pas réussi, vous pouvez écouter le modèle puis relire. Passez au suivant après %2$d résultats valides pour chaque mot.";
 "field_intro_posttest" = "Relisez les %1$d mots de l'étape 1. Aucun résultat n'est affiché.";
 "field_intro_note" = "Prononcez-les comme d'habitude. Vous pouvez toucher « Quitter » en haut à tout moment.";
 "field_start" = "Commencer l'étape 1";
@@ -393,9 +393,10 @@
 "field_posttest_progress" = "Étape 3 · mot %1$d sur %2$d";
 "field_training_progress" = "Étape 2 · mot %1$d sur %2$d";
 "field_training_count" = "Enregistrements valides pour ce mot : %1$d sur %2$d";
+"field_training_tip" = "Lisez d'abord par vous-même. Si ce n'est pas réussi, touchez Écouter pour entendre le modèle, puis relisez.";
 "field_word_done_hint" = "C'est suffisant pour ce mot. Touchez « Suivant » en bas pour continuer.";
 "field_pretest_done" = "Étape 1 terminée";
-"field_next_training" = "Ensuite, entraînez-vous sur %1$d nouveaux mots avec retour. Passez au suivant après %2$d résultats valides pour chaque mot.";
+"field_next_training" = "Ensuite, entraînez-vous sur %1$d nouveaux mots avec retour. Lisez d'abord chaque mot par vous-même ; si ce n'est pas réussi, vous pouvez écouter le modèle puis relire. Passez au suivant après %2$d résultats valides pour chaque mot.";
 "field_training_done" = "Étape 2 terminée";
 "field_next_posttest" = "Pour finir, relisez les %1$d mots de l'étape 1. Aucun résultat n'est affiché.";
 "field_continue" = "Continuer";

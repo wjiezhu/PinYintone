@@ -143,7 +143,7 @@
 "consent_purpose_title" = "Finalidad";
 "consent_purpose_body" = "Entender cómo usan quienes aprenden chino una herramienta para practicar los tonos, para una tesis de máster sobre diseño y usabilidad.\n\nTras unirte, puedes hacer una «sesión presencial» con el equipo de investigación delante, de unos 15–20 minutos: primero lees un grupo de palabras (sin ver resultados), luego practicas otro grupo (con comentarios) y por último lees de nuevo el primer grupo (sin ver resultados). Puedes detener la sesión en cualquier momento.";
 "consent_data_title" = "Qué se recoge";
-"consent_data_body" = "Tu actividad de práctica (empezar un ejercicio, reproducir el modelo, grabar, ver comentarios), los resultados de la evaluación y las respuestas a los cuestionarios que decidas dar (incluidos datos como grupo de edad, nacionalidad y nivel de chino).\n\nLas grabaciones en sí no se suben. En los datos de la investigación solo se te identifica con un número anónimo vinculado a tu cuenta de Apple; no incluyen tu nombre, tu correo ni ningún otro dato personal.";
+"consent_data_body" = "Tu actividad de práctica (empezar un ejercicio, reproducir el modelo, grabar, ver comentarios), los resultados de la evaluación y las respuestas a los cuestionarios que decidas dar (incluidos datos como grupo de edad, nacionalidad y nivel de chino).\n\nLas grabaciones en sí no se suben. En los datos de la investigación solo se te identifica con un número anónimo vinculado a tu cuenta de inicio de sesión (cuenta de Apple o correo); no incluyen tu nombre, tu correo ni ningún otro dato personal.";
 "consent_data_body_audio" = "Tu actividad de práctica (empezar un ejercicio, reproducir el modelo, grabar, ver comentarios), los resultados de la evaluación y las respuestas a los cuestionarios que decidas dar (incluidos datos como grupo de edad, nacionalidad y nivel de chino).\n\nLas grabaciones de la sesión presencial se suben para que el equipo de investigación pueda comprobar las puntuaciones de oído. Como una voz puede identificar a una persona, estas grabaciones se guardan solo en el servidor de la investigación, solo las usa el equipo de investigación, nunca se publican ni se incluyen en los anexos de la tesis. Las grabaciones de la práctica habitual no se suben.\n\nEn los datos de la investigación solo se te identifica con un número anónimo vinculado a tu cuenta de Apple; no incluyen tu nombre, tu correo ni ningún otro dato personal.";
 "consent_use_title" = "Para qué se usa";
 "consent_use_body" = "Solo para el análisis y la redacción de esa tesis. Los resultados se presentan como estadísticas de grupo, no sobre personas concretas.";
@@ -332,7 +332,7 @@
 "field_exit_confirm_message" = "Lo que ya has grabado se conserva. La próxima vez será una sesión nueva, desde el primer grupo de palabras.";
 "field_intro_title" = "Esta sesión tiene tres pasos y dura unos 15–20 minutos";
 "field_intro_pretest" = "Lee %1$d palabras. No se muestra ningún resultado; la palabra siguiente aparece sola.";
-"field_intro_training" = "Practica otras %1$d palabras, con comentarios. Pasa a la siguiente tras %2$d resultados válidos por palabra.";
+"field_intro_training" = "Practica otras %1$d palabras, con comentarios. Lee primero cada palabra por tu cuenta; si no la superas, puedes escuchar el modelo y volver a leer. Pasa a la siguiente tras %2$d resultados válidos por palabra.";
 "field_intro_posttest" = "Lee otra vez las %1$d palabras del paso 1. No se muestra ningún resultado.";
 "field_intro_note" = "Dilas como lo harías normalmente. Puedes tocar Salir arriba en cualquier momento.";
 "field_start" = "Empezar el paso 1";
@@ -341,9 +341,10 @@
 "field_posttest_progress" = "Paso 3 · palabra %1$d de %2$d";
 "field_training_progress" = "Paso 2 · palabra %1$d de %2$d";
 "field_training_count" = "Grabaciones válidas de esta palabra: %1$d de %2$d";
+"field_training_tip" = "Lee primero por tu cuenta. Si no lo superas, toca Escuchar para oír el modelo y vuelve a leer.";
 "field_word_done_hint" = "Ya es suficiente para esta palabra. Toca Siguiente abajo para continuar.";
 "field_pretest_done" = "Paso 1 terminado";
-"field_next_training" = "Ahora practica %1$d palabras nuevas con comentarios. Pasa a la siguiente tras %2$d resultados válidos por palabra.";
+"field_next_training" = "Ahora practica %1$d palabras nuevas con comentarios. Lee primero cada palabra por tu cuenta; si no la superas, puedes escuchar el modelo y volver a leer. Pasa a la siguiente tras %2$d resultados válidos por palabra.";
 "field_training_done" = "Paso 2 terminado";
 "field_next_posttest" = "Por último, lee otra vez las %1$d palabras del paso 1. No se muestra ningún resultado.";
 "field_continue" = "Continuar";

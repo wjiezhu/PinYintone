@@ -114,7 +114,9 @@ python scripts/verify_pipeline.py --base-url <后端地址> \
   第一步读 6 个测试词（不显示结果）→ 第二步练 8 个训练词（有反馈，每词 3 次有效结果）→
   第三步把 6 个测试词再读一遍（不显示结果）。约 15–20 分钟，随时可退出，不拦普通练习。
 - 纳入不限国籍（eligibility-3.0），国籍照常记录。成年与 HSK 1–3 不变。
-- 录音上传：代码已就绪，**这一轮不收**（研究者 2026-10-31 决定）。用 consent-1.1（不含录音）冻结配置，
+- 第二步（训练词）提示学习者「先自己读，没通过再听示范再读」（研究者 2026-11-12 决定）。
+  只是提示：「听示范」不锁，什么时候听由学习者自己决定，记录里照常有播放事件。
+- 录音上传：代码已就绪，**这一轮不收**（研究者 2026-10-31 决定）。用 consent-1.2（不含录音）冻结配置，
   录音一条都不留；以后要收，研究者审定 consent-2.0 后加 `--audio-upload` 再冻结一份配置，
   **不需要重新提审 App**（文本不改的前提下）。
 - 新一轮的 study_id 是 `pinyintone-2026-field`，与第一轮（pinyintone-2026-ma）分开。
@@ -124,7 +126,11 @@ python scripts/verify_pipeline.py --base-url <后端地址> \
    休息 相信 早餐）、训练 8（现在 电视 宿舍 身体 经理 医生 清楚 自己），每词 3 次有效结果。
    测试词里 4 个以一声开头，声调组合不均衡，论文里如实写。改词要换版本号、重新审定并重新出构建。
 2. 同意文本 consent-1.1 与纳入规则 eligibility-3.0。文本改了就换新版本号，旧的审定不延续。
-3. consent-2.0（含录音）**未审定**；审定**只能研究者本人确认后填**。
+   构建 23 加了邮箱登录，1.1 里「与你的 Apple 账号对应的匿名编号」对邮箱用户不准确，
+   研究者 2026-11-12 决定改成 consent-1.2（只改这一句：「登录账号（Apple 账号或邮箱）」），
+   App 只带 1.2，正式配置用 1.2。1.1 从未冻结进线上配置。
+3. consent-2.0（含录音）**未审定**；审定**只能研究者本人确认后填**。草稿里同样写着「Apple 账号」，
+   审定前要先改正并换版本号。
 
 **冻结配置**（App 上架之后，连线上库，须研究者当场同意）
 ```
@@ -132,7 +138,7 @@ python3 scripts/seed_manifest.py \
   --study-id pinyintone-2026-field --app-version 2.1 --build-number 23 \
   --lexicon-version lex-2026.10 --scoring-version scoring-v5 \
   --feedback-version fb-1.0 --advice-policy-version advice-1.0 \
-  --survey-version survey-1.2 --consent-version consent-1.1 \
+  --survey-version survey-1.2 --consent-version consent-1.2 \
   --eligibility-version eligibility-3.0 \
   --collection-start <上架时刻，带时区> \
   --field-protocol

@@ -157,6 +157,12 @@ struct FieldTrainingHeader: View {
                         field.validAttemptsPerWord))
                 .font(.footnote.monospacedDigit())
                 .foregroundStyle(Theme.textSecondary)
+            // 研究者 2026-11-12 定的做法：先自己读，没通过再听示范。只是提示，不锁「听示范」
+            Text(NSLocalizedString("field_training_tip", comment: ""))
+                .font(.footnote)
+                .foregroundStyle(Theme.textSecondary)
+                .multilineTextAlignment(.center)
+                .fixedSize(horizontal: false, vertical: true)
         }
         .frame(maxWidth: .infinity)
         .accessibilityElement(children: .combine)

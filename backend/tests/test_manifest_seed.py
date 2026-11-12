@@ -141,7 +141,7 @@ def test_shipped_materials_are_final(db):
 from scripts.seed_manifest import (DEFAULT_FIELD_PROTOCOL, OPEN_END,  # noqa: E402
                                    load_approvals, load_field_protocol)
 
-PENDING = {"consent": {"consent-1.1": None, "consent-2.0": None},
+PENDING = {"consent": {"consent-1.2": None, "consent-2.0": None},
            "eligibility": {"eligibility-3.0": None},
            "field_protocol": {"field-1.0": None}}
 APPROVED = {k: {v: "2026-11-01 研究者确认" for v in d} for k, d in PENDING.items()}
@@ -154,7 +154,7 @@ PROTOCOL = ("field-1.0", {"lexicon_version": "lex-1.0",
 def _field(db, **kw):
     if db.get(m.ResearchLexeme, "v-canjia") is None:
         _lexeme(db, "canjia")
-    args = dict(consent_version="consent-1.1", eligibility_version="eligibility-3.0",
+    args = dict(consent_version="consent-1.2", eligibility_version="eligibility-3.0",
                 field_protocol=PROTOCOL, approvals=APPROVED)
     args.update(kw)
     return _build(db, **args)
@@ -165,7 +165,7 @@ def test_unapproved_field_materials_only_freeze_as_test(db):
     with pytest.raises(ManifestError) as e:
         _field(db, approvals=PENDING)
     msg = str(e.value)
-    for item in ("consent-1.1", "eligibility-3.0", "field-1.0"):
+    for item in ("consent-1.2", "eligibility-3.0", "field-1.0"):
         assert item in msg
     assert _field(db, approvals=PENDING, is_test=True).is_test
 
@@ -182,7 +182,7 @@ def test_approved_field_manifest_carries_protocol_and_open_nationality(db):
 def test_audio_upload_only_with_the_audio_consent_text(db):
     """同意书写了上传录音才能收；用了那份同意书就必须收——两边说法一致。"""
     with pytest.raises(ManifestError):
-        _field(db, audio_upload=True)                      # consent-1.1 不含录音
+        _field(db, audio_upload=True)                      # consent-1.2 不含录音
     with pytest.raises(ManifestError):
         _field(db, consent_version="consent-2.0")          # 同意书说上传，配置却不收
     assert _field(db, consent_version="consent-2.0", audio_upload=True).audio_upload

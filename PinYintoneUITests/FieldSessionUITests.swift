@@ -58,6 +58,9 @@ final class FieldSessionUITests: PinYintoneUITestCase {
 
         // 训练：有反馈；练够次数前「下一个」不可用
         XCTAssertTrue(element("field.trainingProgress").waitForExistence(timeout: 10))
+        XCTAssertTrue(element("field.trainingProgress").label.contains("先自己读"),
+                      "训练段要提示「先自己读，没通过再听示范」")
+        shot("field-04b-training-tip")
         var shotTraining = false
         guardCount = 0
         while !element("field.between").exists, guardCount < 40 {

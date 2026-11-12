@@ -120,10 +120,10 @@ final class ResearchConsentFlowTests: XCTestCase {
     /// 现场实测轮携带两版同意文本：不含录音的 1.1 与写明上传录音的 2.0。
     /// 文案一改就要换版本号，否则参与者签的和配置里记的不是同一份。
     func testShippedConsentTextsAndAudioClause() {
-        XCTAssertEqual(ResearchConsent.supportedVersions, ["consent-1.1", "consent-2.0"])
+        XCTAssertEqual(ResearchConsent.supportedVersions, ["consent-1.2", "consent-2.0"])
         XCTAssertFalse(ResearchConsent.allowsAudioUpload(consentVersion: "consent-1.0"),
                        "第一轮的同意书写的是录音不上传")
-        XCTAssertFalse(ResearchConsent.allowsAudioUpload(consentVersion: "consent-1.1"))
+        XCTAssertFalse(ResearchConsent.allowsAudioUpload(consentVersion: "consent-1.2"))
         XCTAssertTrue(ResearchConsent.allowsAudioUpload(consentVersion: "consent-2.0"))
         XCTAssertFalse(ResearchConsent.allowsAudioUpload(consentVersion: nil))
         // 写明录音的那一版，采集内容与退出两段都换成讲录音的文字

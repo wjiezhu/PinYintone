@@ -210,7 +210,7 @@ final class FieldSessionTests: XCTestCase {
 
     func testNoRecordingKeptWithoutAudioConsent() async {
         // 同意的是不含录音的 1.1：即使配置收录音也不留
-        ResearchTestSupport.enrolledAccount(consentVersion: "consent-1.1", audioUpload: true)
+        ResearchTestSupport.enrolledAccount(consentVersion: "consent-1.2", audioUpload: true)
         makeViewModel()
         vm.beginFieldSession(small)
         vm.continueFieldSession()

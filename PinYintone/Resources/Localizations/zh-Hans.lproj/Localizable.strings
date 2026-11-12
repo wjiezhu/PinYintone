@@ -186,7 +186,7 @@
 "consent_purpose_title" = "研究目的";
 "consent_purpose_body" = "了解汉语学习者如何使用声调练习工具，用于一篇硕士学位论文的设计与可用性研究。\n\n参加后，你可以在研究者在场时做一次「现场实测」，大约 15–20 分钟：先读一组词（不显示结果），再练习另一组词（有反馈），最后把第一组词再读一遍（不显示结果）。实测随时可以中途退出。";
 "consent_data_title" = "采集内容";
-"consent_data_body" = "你的练习操作记录（开始练习、播放示范、录音、查看反馈等）、评分结果，以及你自愿填写的问卷答案（包括年龄段、国籍、汉语水平等背景信息）。\n\n录音本身不会上传。研究数据里只用一个与你的 Apple 账号对应的匿名编号来区分参与者，不包含你的姓名、邮箱或其他个人信息。";
+"consent_data_body" = "你的练习操作记录（开始练习、播放示范、录音、查看反馈等）、评分结果，以及你自愿填写的问卷答案（包括年龄段、国籍、汉语水平等背景信息）。\n\n录音本身不会上传。研究数据里只用一个与你的登录账号（Apple 账号或邮箱）对应的匿名编号来区分参与者，不包含你的姓名、邮箱或其他个人信息。";
 "consent_use_title" = "用途";
 "consent_use_body" = "仅用于该论文的统计分析与撰写。分析结果以群体统计呈现，不针对个人。";
 "consent_withdraw_title" = "如何退出";
@@ -384,7 +384,7 @@
 "field_exit_confirm_message" = "已经录好的内容会保存。下次再做是新的一次，从第一组词重新开始。";
 "field_intro_title" = "这次实测分三步，大约 15–20 分钟";
 "field_intro_pretest" = "读 %1$d 个词。录完不显示结果，自动进入下一个词。";
-"field_intro_training" = "练习另外 %1$d 个词，有反馈。每个词得到 %2$d 次有效结果后进入下一个。";
+"field_intro_training" = "练习另外 %1$d 个词，有反馈。每个词先自己读，没通过可以听示范再读；得到 %2$d 次有效结果后进入下一个。";
 "field_intro_posttest" = "把第一步的 %1$d 个词再读一遍，同样不显示结果。";
 "field_intro_note" = "按平时的读法念就好。随时可以点左上角「退出」。";
 "field_start" = "开始第一步";
@@ -393,9 +393,10 @@
 "field_posttest_progress" = "第三步 · 第 %1$d / %2$d 词";
 "field_training_progress" = "第二步 · 第 %1$d / %2$d 词";
 "field_training_count" = "本词有效录音 %1$d / %2$d";
+"field_training_tip" = "先自己读；没通过的话，点「听示范」听一遍再读。";
 "field_word_done_hint" = "这个词练够了，点下方的「下一个」继续。";
 "field_pretest_done" = "第一步完成";
-"field_next_training" = "接下来练习 %1$d 个新词，有反馈。每个词得到 %2$d 次有效结果后进入下一个。";
+"field_next_training" = "接下来练习 %1$d 个新词，有反馈。每个词先自己读，没通过可以听示范再读；得到 %2$d 次有效结果后进入下一个。";
 "field_training_done" = "第二步完成";
 "field_next_posttest" = "最后，把第一步的 %1$d 个词再读一遍，不显示结果。";
 "field_continue" = "继续";
