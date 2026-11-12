@@ -1,6 +1,6 @@
 # 「读平也通关」研究：原因与修法对比
 
-> **状态：已采用 C2（2 个半音），随记录 schemaVersion 7 上线**（两端 `ToneContourSpanGate`，关卡 2 / 3 都有；
+> **状态：已采用 C2（2 个半音），随记录 schemaVersion 8 上线（原定 v8；main 上的 v8 已用于现场实测，故顺延为 v8）**（两端 `ToneContourSpanGate`，关卡 2 / 3 都有；
 > 记录新增 `pitchSpanSemitones` / `platform`）。下文是决定前的研究报告，「推荐」「上线清单」即当时的方案。
 >
 > 原状态：研究报告，供决定修法用。 没有改任何正式评分代码（Swift `PinYintone/Core/Audio`、
@@ -316,8 +316,8 @@ A2 0.42、A3 0.27 仍通关；C2 / C3 / C4 都是闸门拦下（DTW 仍 0.311）
   但禁令 16 的理由「其余声调 DTW 处理正常（4+4 实测正确 0.081 / 错误平读 0.933）」本身被本研究推翻了：
   0.933 是等长、无下限时测的，现行条件下 4+4 读平只有 0.311。这句理由要改。
 - **CLAUDE.md**：DTW 评分表加一行；禁令 15 的「必须传原始 Hz」扩到新闸门；禁令 16 改写理由；
-  新增禁令（不得喂归一化序列、不得改成固定 Hz、不得扩到全一声词）；记录版本加 v7 说明。
-- **数据**：`dtwScore` 逐位不变，只有 `grade` / `passed` 变；v7 起「`grade = fail` 且 `dtwScore ≤ 0.5`」
+  新增禁令（不得喂归一化序列、不得改成固定 Hz、不得扩到全一声词）；记录版本加 v8 说明。
+- **数据**：`dtwScore` 逐位不变，只有 `grade` / `passed` 变；v8 起「`grade = fail` 且 `dtwScore ≤ 0.5`」
   对非一声词表示幅度闸门、对全一声词表示走向闸门，按声调可区分。
 
 ### 6.4 D（组合）与阈值
@@ -371,7 +371,7 @@ A2 0.42、A3 0.27 仍通关；C2 / C3 / C4 都是闸门拦下（DTW 仍 0.311）
    ORDER BY lexeme_id, schema_version;
    ```
    注意线上 `training_sessions` 里有约 10 条之前误传的合成测试记录（schema_version 6、2026-10-13），取数时排除。
-4. **上线后**：v7 记录里的走势跨度字段，按词条看正确读法（`grade` ≠ fail 且未被闸门拦）的跨度 P1 / P5，
+4. **上线后**：v8 记录里的走势跨度字段，按词条看正确读法（`grade` ≠ fail 且未被闸门拦）的跨度 P1 / P5，
    确认 2 半音有余量。
 
 ## 9. 上线改动清单（C2，随 schemaVersion 7）
@@ -387,7 +387,7 @@ A2 0.42、A3 0.27 仍通关；C2 / C3 / C4 都是闸门拦下（DTW 仍 0.311）
 - iOS：`FreeWordPracticeViewModel`（关卡 3）是否同样加闸门，要一并决定（它也用同一 DTW）。
 - Android：`android/core` 新增 `ToneContourSpanGate.kt`，`ToneScorer.evaluate` 里并列调用，`Outcome.Scored` 加对应字段。
 - 两端：记录新增走势跨度（半音，浮点，可空）字段；`RecordSchema.version` 6 → 7；后端 `training_sessions`
-  与研究表加列与迁移，`backend/analysis/export.sql` 抬头补 v7 说明。
+  与研究表加列与迁移，`backend/analysis/export.sql` 抬头补 v8 说明。
 - 注释：`DTWAnalyzer.swift` / `ToneDirectionGate.swift` / Kotlin 对应处「4+4 错误平读 0.933」的说法改掉。
 
 **对照数据**
@@ -403,7 +403,7 @@ A2 0.42、A3 0.27 仍通关；C2 / C3 / C4 都是闸门拦下（DTW 仍 0.311）
 - 「DTW 评分」表加一行：非一声词走势幅度闸门 = 含二 / 三 / 四声的词，原始 Hz 的 P90−P10 < 2 个半音 = 不通关（不论 DTW 分数）。
 - 「记录版本与结果状态」加 `schemaVersion ≥ 7`：新增幅度闸门；`grade = fail` 且 `dtwScore ≤ 0.5` 在非一声词上表示幅度闸门；
   v4–v6 非一声词的 `passed` 偏宽（读平约 2/3 通关），v1–v3 约一半，**不能当作发音正确的证据**；
-  `dtwScore` 跨 v6 / v7 逐位一致、可比较，`passed` 不可跨版本混合。
+  `dtwScore` 跨 v6 / v8 逐位一致、可比较，`passed` 不可跨版本混合。
 - 禁令 15：扩为「两道闸门都必须喂原始 Hz」。
 - 禁令 16：保留「走向闸门不得扩大到非全一声词」，把理由改成本研究的结论，并写明幅度闸门是另一道、方向相反的闸门。
 - 新增禁令：不得把幅度闸门喂归一化序列；不得改成固定 Hz；不得用到全一声词或 1+5 上。

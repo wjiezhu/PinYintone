@@ -185,7 +185,7 @@ final class TonePracticeTests: XCTestCase {
         XCTAssertTrue(LearnerRecordingStore.shared.hasRecording, "录音应可回听")
     }
 
-    /// v7 走势幅度闸门：含二 / 三 / 四声的词读平 → 不通关、有整词提示、跨度入库与研究记录
+    /// v8 走势幅度闸门：含二 / 三 / 四声的词读平 → 不通关、有整词提示、跨度入库与研究记录
     func testFlatReadingOfContourWordIsGatedAndSpanIsRecorded() async throws {
         vm.select(lexemeID: "xianzai")   // 现在 4+4（首个词是一声词，不适用）
         let tones = try XCTUnwrap(vm.currentLexeme?.tones)

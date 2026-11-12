@@ -61,9 +61,9 @@ extension TrainingSession {
     /// 产生该记录的 App 版本，形如 "1.2 (9)"
     @NSManaged public var appVersion: String?
 
-    // MARK: - v7（模型版本 3，轻量迁移；旧行读出为 nil）
+    // MARK: - v8（模型版本 3，轻量迁移；旧行读出为 nil）
 
-    /// 记录来自哪一端："ios" / "android"。v7 之前的旧行为 nil（那时只有 iOS）
+    /// 记录来自哪一端："ios" / "android"。v8 之前的旧行为 nil（那时只有 iOS）
     @NSManaged public var platform: String?
     /// 走势跨度（半音，`ToneContourSpanGate.spanSemitones`）。有效结果一律记（任何词）；
     /// 技术失败、或有声帧不足 6 无法计算时为 nil。是否触发幅度闸门 = 词含二 / 三 / 四声且本值 < 2.0

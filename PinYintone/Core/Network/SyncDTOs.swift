@@ -40,7 +40,7 @@ nonisolated struct TrainingSessionDTO: Codable {
     let failureReason: String?         // 技术失败原因；有效记录为 nil
     let schemaVersion: Int?            // 记录字段版本
     let appVersion: String?            // 产生该记录的 App 版本
-    // v7：走势跨度（半音）；技术失败 / 无法计算为 nil。platform = "ios" / "android"
+    // v8：走势跨度（半音）；技术失败 / 无法计算为 nil。platform = "ios" / "android"
     let pitchSpanSemitones: Double?
     let platform: String?
 }
@@ -57,7 +57,7 @@ nonisolated struct AspirationAttemptDTO: Codable {
     let phase: String?                 // 研究阶段，供按阶段筛选（升级需求 §3.1）
     let schemaVersion: Int?
     let appVersion: String?
-    let platform: String?              // v7："ios" / "android"
+    let platform: String?              // v8："ios" / "android"
 }
 
 nonisolated struct FreeTextRecordDTO: Codable {
@@ -75,7 +75,7 @@ nonisolated struct FreeTextRecordDTO: Codable {
     let phase: String?                 // 研究阶段，供按阶段筛选（升级需求 §3.1）
     let schemaVersion: Int?
     let appVersion: String?
-    let platform: String?              // v7："ios" / "android"
+    let platform: String?              // v8："ios" / "android"
 }
 
 // MARK: - 实体 → DTO（在主线程/拥有上下文的线程调用）

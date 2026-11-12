@@ -64,9 +64,9 @@ def migrate_account_identities(engine) -> None:
                               "VALUES (:n, CURRENT_TIMESTAMP)"), {"n": ACCOUNT_LINKS_MIGRATION})
 
 
-# 记录 schemaVersion 7（走势幅度闸门）新增的列。全部可空、无默认值：
-# 旧行保持 NULL——跨度当时没算，platform 为空即「v7 之前，只有 iOS」，不回填猜测值。
-_V7_COLUMNS = (
+# 记录 schemaVersion 8（走势幅度闸门）新增的列。全部可空、无默认值：
+# 旧行保持 NULL——跨度当时没算，platform 为空即「v8 之前，只有 iOS」，不回填猜测值。
+_V8_COLUMNS = (
     ("training_sessions", "pitch_span_semitones", "DOUBLE PRECISION", "FLOAT"),
     ("training_sessions", "platform", "VARCHAR", "VARCHAR"),
     ("aspiration_attempts", "platform", "VARCHAR", "VARCHAR"),
@@ -76,8 +76,8 @@ _V7_COLUMNS = (
 )
 
 
-def migrate_v7_columns(engine) -> None:
-    """给已存在的表补 v7 的列。SQLite 与 PostgreSQL 都跑（本地库与测试同一结构），幂等。
+def migrate_v8_columns(engine) -> None:
+    """给已存在的表补 v8 的列。SQLite 与 PostgreSQL 都跑（本地库与测试同一结构），幂等。
 
     须在 `Base.metadata.create_all` 之后调用：新库由 create_all 直接建成最新结构，这里什么也不做。
     """
@@ -85,7 +85,7 @@ def migrate_v7_columns(engine) -> None:
     tables = set(insp.get_table_names())
     pg = engine.dialect.name == "postgresql"
     with engine.begin() as conn:
-        for table, column, pg_type, sqlite_type in _V7_COLUMNS:
+        for table, column, pg_type, sqlite_type in _V8_COLUMNS:
             if table not in tables:
                 continue
             if column in {c["name"] for c in insp.get_columns(table)}:

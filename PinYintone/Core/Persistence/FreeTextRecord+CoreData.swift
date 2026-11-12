@@ -29,9 +29,9 @@ extension FreeTextRecord {
     /// 产生该记录的 App 版本，形如 "1.2 (9)"
     @NSManaged public var appVersion: String?
 
-    // MARK: - v7（模型版本 3，轻量迁移；旧行读出为 nil）
+    // MARK: - v8（模型版本 3，轻量迁移；旧行读出为 nil）
 
-    /// 记录来自哪一端："ios" / "android"。v7 之前的旧行为 nil（那时只有 iOS）
+    /// 记录来自哪一端："ios" / "android"。v8 之前的旧行为 nil（那时只有 iOS）
     @NSManaged public var platform: String?
 }
 

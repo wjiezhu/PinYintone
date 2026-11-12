@@ -83,7 +83,7 @@ final class ResearchWireFormatTests: XCTestCase {
                                     "finishedAt", "recordingDurationMs", "analysisDurationMs",
                                     "signalStatus", "metricValue", "passed", "errorCode",
                                     "resultDisplayedAt", "timeQuality",
-                                    // 字典 1.2 增补（v7）
+                                    // 字典 1.2 增补（v8）
                                     "pitchSpanSemitones", "platform"]
         for a in attempts {
             XCTAssertTrue(Set(a.keys).isSubset(of: allowed), "多出字段：\(Set(a.keys).subtracting(allowed))")

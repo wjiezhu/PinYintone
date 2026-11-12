@@ -45,18 +45,18 @@ enum RecordSchema {
     ///      与普通练习在旧表里无法区分——要区分请用研究表的 `field_session_id`。
     ///      送气记录同版起语义也变了：`triggerRate` 是录音内峰值（分母固定 6 帧），
     ///      不送气词 `passed` = 峰值 < 0.6（方向相反）。不可与 ≤ 6 的送气记录混合分析。
-    /// - 7（同号，待重编号）：新增**走势幅度闸门**（`ToneContourSpanGate`）。词里含二 / 三 / 四声时，
+    /// - 8：新增**走势幅度闸门**（`ToneContourSpanGate`）。词里含二 / 三 / 四声时，
     ///      clean 后原始 Hz 的跨度（P90 − P10）不足 2 个半音即判 `fail`，不论 DTW 分数——
     ///      归一化尺度不变，读平的录音照样能和参照形状对上（见
-    ///      `docs/SCORING_FLAT_READING_STUDY.md`）。`dtwScore` 的算法不变，与 v6 逐位一致；
-    ///      变的是 `grade` / `passed`：v4–v6 非一声词读平约 2/3 判通关，v1–v3 约一半，
-    ///      那些版本非一声词的 `passed` 偏宽，**不可与 v7 混合分析**。
+    ///      `docs/SCORING_FLAT_READING_STUDY.md`）。`dtwScore` 的算法不变，与 v7 逐位一致；
+    ///      变的是 `grade` / `passed`：v4–v7 非一声词读平约 2/3 判通关，v1–v3 约一半，
+    ///      那些版本非一声词的 `passed` 偏宽，**不可与 v8 混合分析**。
     ///      新增字段：`pitchSpanSemitones`（半音，可空：技术失败或有声帧不足 6 为 nil；
-    ///      有效结果对任何词都记）、`platform`（"ios" / "android"；v7 之前的记录为 nil，即 iOS）。
-    ///      关卡 3（自由文本）同样加了这道闸门。参考音频换成母语者录音另作 v8，不在本版。
-    static let version = 7
+    ///      有效结果对任何词都记）、`platform`（"ios" / "android"；v8 之前的记录为 nil，即 iOS）。
+    ///      关卡 3（自由文本）同样加了这道闸门。参考音频换成母语者录音另作 v9，不在本版。
+    static let version = 8
 
-    /// 记录来自哪一端（v7 起随每条记录上报）。Android 写 "android"
+    /// 记录来自哪一端（v8 起随每条记录上报）。Android 写 "android"
     static let platform = "ios"
 
     /// 形如 "1.2 (9)"：短版本号 + 构建号，便于按构建定位数据

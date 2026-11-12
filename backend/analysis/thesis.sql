@@ -30,11 +30,11 @@
 -- 取数口径（与 CLAUDE.md、RESEARCH_RUNBOOK.md 一致）：
 --   · 通过与否一律看 grade（passed 列），不要用 dtw_score <= 0.5 重算：
 --     schema_version >= 5 起，全一声的词掉调超过 3 个半音会被走向闸门判不通过（gated_level_tone）；
---     schema_version >= 7 起，含二 / 三 / 四声的词读平（走势跨度 < 2 个半音）会被幅度闸门判不通过
+--     schema_version >= 8 起，含二 / 三 / 四声的词读平（走势跨度 < 2 个半音）会被幅度闸门判不通过
 --     （gated_flat_contour，看 pitch_span_semitones）。
---   · ⚠ v7 改变了含二 / 三 / 四声的词的 passed：此前读平约 2/3 判通过（v1–v3 约一半），偏宽。
---     pass_rule 列区分 'contour_gate'（v7 起）/ 'pre_contour_gate'（v6 及以前）/ 'unchanged'（词不适用该闸门），
---     **不同 pass_rule 的通过率不能合并**；dtw_score 本身跨 v6 / v7 逐位一致，可以比较。
+--   · ⚠ v8 改变了含二 / 三 / 四声的词的 passed：此前读平约 2/3 判通过（v1–v3 约一半），偏宽。
+--     pass_rule 列区分 'contour_gate'（v8 起）/ 'pre_contour_gate'（v7 及以前）/ 'unchanged'（词不适用该闸门），
+--     **不同 pass_rule 的通过率不能合并**；dtw_score 本身跨 v6 / v7 / v8 逐位一致，可以比较。
 --     见 docs/SCORING_FLAT_READING_STUDY.md。
 --   · 技术失败（result_status = 'technical_retry'）没有成绩：长表里 dtw_score / passed 留空，
 --     汇总段一律不计入；失败率见第 7 段。质量标记（quality_flagged）同样不进汇总。
@@ -314,7 +314,7 @@ t2 AS (
            ('1' = ANY (string_to_array(l.tones, '-')))                                                     AS contains_tone1,
            (l.tones ~ '^1(-1)*$')                                          AS all_tone1,
            CASE WHEN l.tones !~ '[234]' THEN 'unchanged'
-                WHEN COALESCE(t.schema_version, 1) >= 7 THEN 'contour_gate'
+                WHEN COALESCE(t.schema_version, 1) >= 8 THEN 'contour_gate'
                 ELSE 'pre_contour_gate' END                                AS pass_rule,
            t.phase,
            COALESCE(t.schema_version, 1)                                   AS schema_version,
@@ -434,10 +434,10 @@ v AS (
            t.dtw_score,
            (t.grade NOT IN ('fail', 'n/a'))                   AS passed,
            CASE WHEN l.tones !~ '[234]' THEN 'unchanged'
-                WHEN COALESCE(t.schema_version, 1) >= 7 THEN 'contour_gate'
+                WHEN COALESCE(t.schema_version, 1) >= 8 THEN 'contour_gate'
                 ELSE 'pre_contour_gate' END AS pass_rule,
            (COALESCE(t.schema_version, 1) >= 5 AND l.tones ~ '^1(-1)*$' AND t.grade = 'fail' AND t.dtw_score <= 0.5) AS gated,
-           (COALESCE(t.schema_version, 1) >= 7 AND l.tones ~ '[234]' AND t.pitch_span_semitones < 2.0) AS gated_flat
+           (COALESCE(t.schema_version, 1) >= 8 AND l.tones ~ '[234]' AND t.pitch_span_semitones < 2.0) AS gated_flat
     FROM ts t
     JOIN pcode pc ON pc.device_id = t.device_id
     JOIN lex l    ON l.lexeme_id = t.lexeme_id
@@ -544,10 +544,10 @@ v AS (
            t.dtw_score,
            (t.grade NOT IN ('fail', 'n/a'))      AS passed,
            CASE WHEN l.tones !~ '[234]' THEN 'unchanged'
-                WHEN COALESCE(t.schema_version, 1) >= 7 THEN 'contour_gate'
+                WHEN COALESCE(t.schema_version, 1) >= 8 THEN 'contour_gate'
                 ELSE 'pre_contour_gate' END AS pass_rule,
            (COALESCE(t.schema_version, 1) >= 5 AND l.tones ~ '^1(-1)*$' AND t.grade = 'fail' AND t.dtw_score <= 0.5) AS gated,
-           (COALESCE(t.schema_version, 1) >= 7 AND l.tones ~ '[234]' AND t.pitch_span_semitones < 2.0) AS gated_flat,
+           (COALESCE(t.schema_version, 1) >= 8 AND l.tones ~ '[234]' AND t.pitch_span_semitones < 2.0) AS gated_flat,
            ROW_NUMBER() OVER (PARTITION BY pc.participant, t.lexeme_id ORDER BY t.timestamp, t.id) AS k
     FROM ts t
     JOIN pcode pc ON pc.device_id = t.device_id

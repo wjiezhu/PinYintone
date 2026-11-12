@@ -4,7 +4,7 @@
 本文件只记录**代码实际实现与 v1 不同或 v1 没写到的地方**，供更新主文件时逐条对照。
 主文件更新后，本文件对应条目可以删除。
 
-版本：2026-10-20（对应需求 2.3 版、本机记录 `schemaVersion = 7`、导出格式 `research-export-2.0`）。
+版本：2026-10-20（对应需求 2.3 版、本机记录 `schemaVersion = 8`、导出格式 `research-export-2.0`）。
 上一版 2026-10-13 对应 `schemaVersion = 6`；本版增补见 1.2（走势跨度与来源端）。
 
 > 状态与枚举的唯一真源是 `backend/app/routers/research.py` 顶部的常量与
@@ -21,8 +21,8 @@
 | `research_participants` | `enrolled_manifest_id` | 字符串，可空 | 纳入时所依据的配置。 |
 | `research_attempts` | `pitch_span_semitones` | 数值，可空 | **1.2 增补**。走势跨度（半音）：clean 后原始 Hz 有声帧排序后 P90 与 P10 的音程。**只有 `status = succeeded` 才可能有值**；失败、取消、中断、有声帧不足 6 算不出、以及旧版客户端一律 NULL——不写 0、不写哨兵，服务端拒收非成功尝试带的值和负数。对任何词都记（含全一声的词）；是否触发走势幅度闸门 = 词含二 / 三 / 四声且本值 < 2.0。 |
 | `research_attempts` | `platform` | 字符串，可空 | **1.2 增补**。`ios` / `android`；旧版客户端不带，为 NULL（即 iOS）。其它值拒收。 |
-| `training_sessions`（旧表） | `pitch_span_semitones` | 浮点，可空 | 同上，旧表口径：有效结果（`valid_result` / `quality_flagged`）对任何词都记；`technical_retry` 一律 NULL（服务端即使收到也不入库）；`schema_version < 7` 为 NULL。 |
-| `training_sessions` / `aspiration_attempts` / `freetext_records`（旧表） | `platform` | 字符串，可空 | `ios` / `android`；`schema_version < 7` 为 NULL（那时只有 iOS）。 |
+| `training_sessions`（旧表） | `pitch_span_semitones` | 浮点，可空 | 同上，旧表口径：有效结果（`valid_result` / `quality_flagged`）对任何词都记；`technical_retry` 一律 NULL（服务端即使收到也不入库）；`schema_version < 8` 为 NULL。 |
+| `training_sessions` / `aspiration_attempts` / `freetext_records`（旧表） | `platform` | 字符串，可空 | `ios` / `android`；`schema_version < 8` 为 NULL（那时只有 iOS）。 |
 | `research_survey_instances` | `received_at` | 时间 | 服务端**首次**收到这份问卷的时间。 |
 | `research_survey_instances` | `updated_at` | 时间 | 服务端最近一次接受状态更新的时间。 |
 
@@ -134,17 +134,18 @@ Apple 账号到内部编号的对应关系。设备行会被换账号登录改�
 - `summary.json`：研究者核对用的最小汇总——纳入人数、背景提交人数、前置与使用后问卷各状态人数、
   成功与各类失败尝试数、去重后事件数、版本与测试标记分布。
 - 参与者数按研究编号去重；通过与否以 `passed` 为准，**不要用 `metric_value <= 0.5` 重算**
-  （平调词走向闸门、v7 起的走势幅度闸门都会让两者不一致）。
+  （平调词走向闸门、v8 起的走势幅度闸门都会让两者不一致）。
 - `attempts.csv` 自动带上 1.2 的 `pitch_span_semitones` 与 `platform` 两列（按表结构导出）。
-  v7 之前的客户端产生的尝试这两列为空；**含二 / 三 / 四声的词，v7 之前的 `passed` 偏宽**
-  （读平约 2/3 判通过），与 v7 的不可合并，按 `app_version` 分层。
+  v8 之前的客户端产生的尝试这两列为空；**含二 / 三 / 四声的词，v8 之前的 `passed` 偏宽**
+  （读平约 2/3 判通过），与 v8 的不可合并，按 `app_version` 分层。
 - 身份映射表 `research_identity_map` 与 `users` **不导出**。
 
 ## 5. 本机（iOS）记录
 
-- `RecordSchema.version = 7`。旧业务表的 `phase`：普通练习与实测训练段写 `training`，
+- `RecordSchema.version = 8`（Android 同为 8）。旧业务表的 `phase`：普通练习与实测训练段写 `training`，
   自测写 `self_test`，现场实测的前测 / 后测写 `pretest` / `posttest`（与 ≤ 5 的强制前后测语义不同）。
-- v7：每条记录带 `platform`；声调记录带 `pitchSpanSemitones`（取值规则见第 1 节）。关卡 3（自由文本）
+- v7：现场实测（见 `CLAUDE.md`「普通练习、可选自测与现场实测」）。
+- v8：每条记录带 `platform`；声调记录带 `pitchSpanSemitones`（取值规则见第 1 节）。关卡 3（自由文本）
   同样过走势幅度闸门，其研究尝试也带跨度。
 - 研究状态按账号分开保存（身份、计数、问卷草稿、待传队列），切换账号互不可见。
 - 待传队列持久化在本机；被服务端明确拒收的条目移出队列并计数，不无限重试。

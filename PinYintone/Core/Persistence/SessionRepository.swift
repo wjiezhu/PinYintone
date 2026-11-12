@@ -55,7 +55,7 @@ final class SessionRepository {
         session.failureReason = failureReason?.rawValue
         session.schemaVersion = Int16(RecordSchema.version)
         session.appVersion = RecordSchema.appVersion
-        // v7：技术失败调用方不传，保持 nil
+        // v8：技术失败调用方不传，保持 nil
         session.pitchSpanSemitones = pitchSpanSemitones.map { NSNumber(value: Double($0)) }
         session.platform = RecordSchema.platform
         saveContext()

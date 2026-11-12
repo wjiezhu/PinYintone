@@ -17,7 +17,7 @@ Android 侧由 [`android/core/src/test/.../ScoringGoldenTest.kt`](../../android/
 **声调用例**（`toneCases`）——每例都有：逐帧 F0（`f0Raw`）、clean 后（`f0Clean`）、
 有声帧数、理想轮廓参照（`referenceNormalized`）、归一化后的学习者序列、DTW 分数、
 逐字分段分数、走向闸门（`gate`：`applies` / `fallSemitones` / `fails`）、
-走势幅度闸门（`contourGate`：`applies` / `spanSemitones` / `fails`，v7 起；`spanSemitones` 即记录里的 `pitchSpanSemitones`）、
+走势幅度闸门（`contourGate`：`applies` / `spanSemitones` / `fails`，v8 起；`spanSemitones` 即记录里的 `pitchSpanSemitones`）、
 `grade`、`passed`、`resultStatus`；
 以及把同一段音当作「母语者 / TTS 参照」时的整形各步（`referenceShaping`：
 `smoothed` → `deDeclined` → `blended` → `contradicts`，以及 `f0Track` 带声调 / 不带声调的最终结果）。
@@ -25,7 +25,7 @@ Android 侧由 [`android/core/src/test/.../ScoringGoldenTest.kt`](../../android/
 覆盖：一声读平带微小抖动（归一化下限）、男声低音域一声、一声一路下滑（闸门拦下而 DTW 在线内）、
 带句调下倾的一声（去下倾）、二声、四声、三声曲折、二声 + 四声带无声间隔、四声读平、
 声调与走向矛盾（参照整形判矛盾）、有声帧不足与纯底噪（技术性重录）；
-v7 加了走势幅度闸门的用例：四声读平带 1.5 半音下倾（DTW 在线内、闸门拦下）、2+4 读平、
+v8 加了走势幅度闸门的用例：四声读平带 1.5 半音下倾（DTW 在线内、闸门拦下）、2+4 读平、
 3+2 走势压缩到约 3 半音（闸门放行）、1+5 读平（两道闸门都不适用）、
 2+4 只录到一个字（跨度不足被拦——已知风险边界，见 `docs/SCORING_FLAT_READING_STUDY.md`）。
 

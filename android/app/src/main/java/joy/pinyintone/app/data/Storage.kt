@@ -49,9 +49,9 @@ data class TrainingRecordEntity(
     val schemaVersion: Int,
     val appVersion: String,
     val synced: Boolean,
-    /** v7 起：走势跨度（半音）；技术失败或无法计算为 null。见 [TrainingRecord.pitchSpanSemitones] */
+    /** v8 起：走势跨度（半音）；技术失败或无法计算为 null。见 [TrainingRecord.pitchSpanSemitones] */
     val pitchSpanSemitones: Double? = null,
-    /** v7 起："android"。数据库版本 1 的旧行由迁移补成 "android"（本端只会产生本端的记录） */
+    /** v8 起："android"。数据库版本 1 的旧行由迁移补成 "android"（本端只会产生本端的记录） */
     val platform: String = "android",
 ) {
     fun toRecord() = TrainingRecord(
@@ -104,7 +104,7 @@ abstract class AppDatabase : RoomDatabase() {
 
     companion object {
         /**
-         * 1 → 2（记录 schemaVersion 7）：加走势跨度与 platform 两列。旧行保持原样：
+         * 1 → 2（记录 schemaVersion 8）：加走势跨度与 platform 两列。旧行保持原样：
          * 跨度为 NULL（当时没算），platform 补 "android"。不用破坏性重建——那会丢掉未上传的记录。
          */
         val MIGRATION_1_2 = object : Migration(1, 2) {

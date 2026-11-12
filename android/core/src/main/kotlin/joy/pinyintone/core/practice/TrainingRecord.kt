@@ -41,11 +41,11 @@ data class TrainingRecord(
     val schemaVersion: Int,
     val appVersion: String,
     /**
-     * 走势跨度（半音，v7 起）。有效结果一律记（任何词，含全一声的词）；
+     * 走势跨度（半音，v8 起）。有效结果一律记（任何词，含全一声的词）；
      * 技术失败、或有声帧不足 6 无法计算时为 null。是否触发幅度闸门 = 词含二 / 三 / 四声且本值 < 2.0。
      */
     val pitchSpanSemitones: Double? = null,
-    /** "ios" / "android"（v7 起） */
+    /** "ios" / "android"（v8 起） */
     val platform: String = RecordSchema.PLATFORM,
     val synced: Boolean = false,
 ) {

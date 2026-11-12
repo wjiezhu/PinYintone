@@ -54,10 +54,10 @@ nonisolated struct ResearchAttemptRecord: Codable, Equatable {
     /// 后置问卷计数只认 succeeded 且本项非空者（字典 §7 末）。
     var resultDisplayedAt: Date?
     var timeQuality: TimeQuality
-    /// v7：走势跨度（半音）。只有 succeeded 才可能有值；失败、取消、无法计算一律 nil，
+    /// v8：走势跨度（半音）。只有 succeeded 才可能有值；失败、取消、无法计算一律 nil，
     /// **不填占位值**。旧版本落盘的记录没有这个键，解码为 nil。
     var pitchSpanSemitones: Double? = nil
-    /// v7：产生记录的一端，"ios" / "android"。旧版本落盘的记录解码为 nil
+    /// v8：产生记录的一端，"ios" / "android"。旧版本落盘的记录解码为 nil
     var platform: String? = nil
 }
 

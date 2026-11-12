@@ -170,7 +170,7 @@ final class ScoringGoldenTests: XCTestCase {
                     ("fallSemitones", fall.map(J.float) ?? .null),
                     ("fails", .bool(dropped)),
                 ])),
-                // v7 走势幅度闸门；spanSemitones 即记录里的 pitchSpanSemitones
+                // v8 走势幅度闸门；spanSemitones 即记录里的 pitchSpanSemitones
                 ("contourGate", .obj([
                     ("applies", .bool(ToneContourSpanGate.applies(tones: c.tones))),
                     ("spanSemitones", span.map(J.float) ?? .null),
@@ -417,7 +417,7 @@ extension ScoringGoldenTests {
                  pieces: [.silence(0.2), .voice(0.3, rising), .silence(0.12), .voice(0.3, falling), .silence(0.2)]),
         ToneCase(name: "t2t2_contradict", note: "目标二声 + 二声但整段下降：参照整形应判矛盾、f0Track 返回空",
                  tones: [2, 2], pieces: two({ t in 260 - 40 * t }, { t in 220 - 60 * t })),
-        // v7 走势幅度闸门的用例
+        // v8 走势幅度闸门的用例
         ToneCase(name: "t4t4_flat_declining", note: "四声词读平带 1.5 半音自然下倾（220→201.6 Hz）：DTW 在线内，幅度闸门应拦下",
                  tones: [4, 4], pieces: [.silence(0.15), .voice(0.7, { t in 220 * pow(2, -1.5 * t / 12) }), .silence(0.15)]),
         ToneCase(name: "t2t4_read_flat", note: "二声 + 四声读平 200 Hz，两字间 60 ms 无声：幅度闸门应拦下",

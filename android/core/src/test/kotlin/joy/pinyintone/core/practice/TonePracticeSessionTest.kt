@@ -137,7 +137,7 @@ class TonePracticeSessionTest {
         assertEquals("fail", r.grade)
         assertTrue(r.pitchSpanSemitones!! < 2.0)
         assertEquals("android", r.platform)
-        assertEquals(7, r.schemaVersion)
+        assertEquals(8, r.schemaVersion)
     }
 
     @Test

@@ -741,7 +741,7 @@ ADVICE_STATUSES = {"pending", "succeeded", "failed"}
 ADVICE_SOURCE_TYPES = {"teacher_hint_only", "rule_feedback"}
 # verified_syllable_feature 的资格未经核验（V2_DECISIONS 第 11 条），本轮不得使用
 ADVICE_EVIDENCE_CODES = {"signal_unusable", "overall_metric", "none"}
-# gate：触发了哪道闸门——level_tone_fall（平调词走向闸门）或 flat_contour（v7 走势幅度闸门）。它是明确计算、有阈值依据的**整词**特征
+# gate：触发了哪道闸门——level_tone_fall（平调词走向闸门）或 flat_contour（v8 走势幅度闸门）。它是明确计算、有阈值依据的**整词**特征
 # （V2_DECISIONS 第 11 条的例外），不是未经核验的音节级诊断。字典 1.1 增补。
 ADVICE_SNAPSHOT_KEYS = {"signal_status", "metric_name", "metric_value", "gate"}
 

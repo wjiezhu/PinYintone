@@ -48,7 +48,7 @@ final class GateFeedbackConsistencyTests: XCTestCase {
         XCTAssertNotEqual(template, DirectionHint.wordDropping.coachKey, "本地化键应已翻译")
     }
 
-    // MARK: - 走势幅度闸门（v7）
+    // MARK: - 走势幅度闸门（v8）
 
     func testFlatContourGateGivesWholeWordHintAndCapsScore() {
         let segs = (0..<2).map {

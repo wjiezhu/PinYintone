@@ -1257,7 +1257,7 @@ def test_advice_rejects_unverified_evidence_and_ai_source():
     assert _post_advice([_advice(evidenceCodes=["none", "overall_metric"])]).status_code == 400
 
 
-# ---------------- v7：走势跨度与来源端（字典 1.2 增补） ----------------
+# ---------------- v8：走势跨度与来源端（字典 1.2 增补） ----------------
 
 def test_succeeded_attempt_stores_pitch_span_and_platform():
     _enrolled()

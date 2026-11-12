@@ -63,7 +63,7 @@ final class ResearchAttemptLogTests: XCTestCase {
         XCTAssertNil(log.pending.first { $0.attemptID == bad }?.pitchSpanSemitones)
     }
 
-    /// v7 之前落盘的记录没有新键：照常解码，新字段为 nil
+    /// v8 之前落盘的记录没有新键：照常解码，新字段为 nil
     func testOldQueuedRecordDecodesWithoutNewKeys() throws {
         let id = begin()
         log.markAnalyzing(id)

@@ -34,10 +34,10 @@ final class SyncDTOTests: XCTestCase {
         XCTAssertEqual(json["resultStatus"] as? String, "valid_result")
         XCTAssertEqual(json["schemaVersion"] as? Int, RecordSchema.version)
         XCTAssertEqual(json["appVersion"] as? String, "1.2 (9)")
-        // v7：走势跨度与来源端
+        // v8：走势跨度与来源端
         XCTAssertEqual(json["pitchSpanSemitones"] as? Double, 7.25)
         XCTAssertEqual(json["platform"] as? String, "ios")
-        XCTAssertEqual(RecordSchema.version, 7)
+        XCTAssertEqual(RecordSchema.version, 8)
     }
 
     /// 技术失败没有走势跨度：编码时不带该键（后端按 NULL 入库），**不写占位值**

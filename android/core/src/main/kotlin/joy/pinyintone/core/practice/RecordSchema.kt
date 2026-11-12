@@ -6,9 +6,9 @@ package joy.pinyintone.core.practice
  */
 object RecordSchema {
     /** 记录字段版本。与 iOS 同步：字段增删或语义变更时两端一起 +1（见 Swift 注释里的版本史） */
-    const val VERSION = 7
+    const val VERSION = 8
 
-    /** 记录来自哪一端（v7 起上报）。iOS 写 "ios" */
+    /** 记录来自哪一端（v8 起上报）。iOS 写 "ios" */
     const val PLATFORM = "android"
 }
 

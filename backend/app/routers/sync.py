@@ -36,7 +36,7 @@ def sync_session(dto: schemas.TrainingSessionDTO, db: Session = Depends(get_db))
     obj.voiced_frame_count = dto.voicedFrameCount
     obj.quality_flag = dto.qualityFlag
     obj.reference_switched = dto.referenceSwitchedDuringAttempt
-    # v7：旧客户端不带，为 NULL。技术失败客户端不带跨度；即使带了也不入库——那不是成绩
+    # v8：旧客户端不带，为 NULL。技术失败客户端不带跨度；即使带了也不入库——那不是成绩
     obj.pitch_span_semitones = (None if dto.resultStatus == "technical_retry"
                                 else dto.pitchSpanSemitones)
     obj.phase = dto.phase

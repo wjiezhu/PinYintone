@@ -106,7 +106,7 @@ class TrainingSessionDTO(BaseModel):
     failureReason: Optional[str] = None
     schemaVersion: Optional[int] = None
     appVersion: Optional[str] = None
-    # v7（旧客户端不带，故可选）
+    # v8（旧客户端不带，故可选）
     pitchSpanSemitones: Optional[float] = None
     platform: Optional[str] = None
 
@@ -123,7 +123,7 @@ class AspirationAttemptDTO(BaseModel):
     phase: Optional[str] = None
     schemaVersion: Optional[int] = None
     appVersion: Optional[str] = None
-    platform: Optional[str] = None             # v7：ios|android
+    platform: Optional[str] = None             # v8：ios|android
 
 
 class FreeTextRecordDTO(BaseModel):
@@ -141,7 +141,7 @@ class FreeTextRecordDTO(BaseModel):
     phase: Optional[str] = None
     schemaVersion: Optional[int] = None
     appVersion: Optional[str] = None
-    platform: Optional[str] = None             # v7：ios|android
+    platform: Optional[str] = None             # v8：ios|android
 
 
 # ───────────── Teacher Dashboard（下行响应）─────────────

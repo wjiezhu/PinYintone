@@ -1,4 +1,4 @@
-"""记录 schemaVersion 7：旧业务表的走势跨度 / platform 字段，与给旧库补列的迁移。"""
+"""记录 schemaVersion 8：旧业务表的走势跨度 / platform 字段，与给旧库补列的迁移。"""
 import pytest
 from fastapi.testclient import TestClient
 from sqlalchemy import create_engine, inspect, text
@@ -8,7 +8,7 @@ from sqlalchemy.pool import StaticPool
 from app import models
 from app.database import Base, get_db
 from app.main import app
-from app.migrations import migrate_v7_columns
+from app.migrations import migrate_v8_columns
 
 engine = create_engine("sqlite:///:memory:", connect_args={"check_same_thread": False},
                        poolclass=StaticPool)
@@ -44,7 +44,7 @@ def _session(**kw):
             "groupAssignment": "n/a", "lexemeID": "xianzai", "dtwScore": 0.31, "grade": "fail",
             "attemptNumber": 1, "timestamp": "2026-10-20T08:00:00Z", "referenceType": "tts",
             "voicedFrameCount": 88, "qualityFlag": False, "referenceSwitchedDuringAttempt": False,
-            "phase": "training", "resultStatus": "valid_result", "schemaVersion": 7,
+            "phase": "training", "resultStatus": "valid_result", "schemaVersion": 8,
             "appVersion": "2.1 (21)", "pitchSpanSemitones": 0.4, "platform": "ios"}
     body.update(kw)
     return body
@@ -58,12 +58,12 @@ def _row(id="s1"):
         db.close()
 
 
-def test_v7_training_session_stores_span_and_platform():
+def test_v8_training_session_stores_span_and_platform():
     assert client.post("/api/sync/session", json=_session()).status_code == 200
     r = _row()
     assert r.pitch_span_semitones == pytest.approx(0.4)
     assert r.platform == "ios"
-    assert r.schema_version == 7
+    assert r.schema_version == 8
     # 被幅度闸门拦下的记录：grade = fail 且 dtw ≤ 0.5，且跨度 < 2
     assert r.grade == "fail" and r.dtw_score <= 0.5 and r.pitch_span_semitones < 2.0
 
@@ -86,12 +86,12 @@ def test_old_client_record_is_still_accepted():
 def test_aspiration_and_freetext_carry_platform():
     asp = {"id": "a1", "deviceID": "dev", "role": "student", "targetWord": "跑步",
            "triggerRate": 0.7, "passed": True, "timestamp": "2026-10-20T08:00:00Z",
-           "phase": "training", "schemaVersion": 7, "appVersion": "2.1 (21)", "platform": "ios"}
+           "phase": "training", "schemaVersion": 8, "appVersion": "2.1 (21)", "platform": "ios"}
     assert client.post("/api/sync/aspiration", json=asp).status_code == 200
     ft = {"id": "f1", "deviceID": "dev", "role": "student", "originalText": "现在",
           "tokenizedWord": "现在", "pinyin": "xiàn zài", "toneSequence": [4, 4],
           "f0Track": [0, 220, 220, 0], "duration": 1.0, "timestamp": "2026-10-20T08:00:00Z",
-          "phase": "training", "schemaVersion": 7, "appVersion": "2.1 (21)", "platform": "ios"}
+          "phase": "training", "schemaVersion": 8, "appVersion": "2.1 (21)", "platform": "ios"}
     assert client.post("/api/sync/freetext", json=ft).status_code == 200
     db = TestingSession()
     assert db.get(models.AspirationAttempt, "a1").platform == "ios"
@@ -99,7 +99,7 @@ def test_aspiration_and_freetext_carry_platform():
     db.close()
 
 
-def test_migration_adds_v7_columns_to_an_old_database_and_is_idempotent():
+def test_migration_adds_v8_columns_to_an_old_database_and_is_idempotent():
     old = create_engine("sqlite:///:memory:", poolclass=StaticPool)
     with old.begin() as c:
         # v6 时代的表结构（只列迁移相关的几列），里面已有一行旧数据
@@ -107,8 +107,8 @@ def test_migration_adds_v7_columns_to_an_old_database_and_is_idempotent():
                        "schema_version INTEGER)"))
         c.execute(text("INSERT INTO training_sessions VALUES ('old', 0.3, 6)"))
         c.execute(text("CREATE TABLE research_attempts (attempt_id VARCHAR PRIMARY KEY, metric_value NUMERIC)"))
-    migrate_v7_columns(old)
-    migrate_v7_columns(old)   # 第二次什么也不做
+    migrate_v8_columns(old)
+    migrate_v8_columns(old)   # 第二次什么也不做
     cols = {c["name"] for c in inspect(old).get_columns("training_sessions")}
     assert {"pitch_span_semitones", "platform"} <= cols
     assert {"pitch_span_semitones", "platform"} <= {c["name"] for c in inspect(old).get_columns("research_attempts")}
