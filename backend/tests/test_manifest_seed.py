@@ -220,3 +220,5 @@ def test_audio_consent_still_awaits_the_researcher():
     for kind, version in (("consent", "consent-1.1"), ("eligibility", "eligibility-3.0"),
                           ("field_protocol", "field-1.0")):
         assert approvals[kind][version], f"{version} 研究者已于 2026-10-31 审定"
+    # 构建 23 加了邮箱登录，同意文本改成 1.2（只改匿名编号对应的账号那一句），研究者 2026-11-12 审定
+    assert approvals["consent"]["consent-1.2"], "consent-1.2 研究者已于 2026-11-12 审定"
