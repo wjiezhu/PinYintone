@@ -1,7 +1,7 @@
 import AuthenticationServices
 import SwiftUI
 
-/// 学生注册：Sign in with Apple。
+/// 学生注册：Sign in with Apple，或邮箱验证码（`EmailLoginView`）。
 /// - 名字可选：Apple 首次授权会返回 fullName，自动作为昵称；也可手动输入覆盖
 /// - 分组由后端均衡随机分配；同一 Apple ID 跨设备登录继承原分组（幂等）
 struct StudentSignupView: View {
@@ -25,6 +25,7 @@ struct StudentSignupView: View {
                 languagesSection
                 errorLabel
                 appleButton
+                emailButton
                 #if DEBUG
                 uiTestLoginButton
                 #endif
@@ -118,6 +119,21 @@ struct StudentSignupView: View {
         .signInWithAppleButtonStyle(colorScheme == .dark ? .white : .black)
         .frame(height: 50)
         .clipShape(RoundedRectangle(cornerRadius: Theme.radius))
+    }
+
+    /// 没有 Apple 账号、或想用 Gmail 等邮箱的学习者：邮箱验证码登录。
+    /// 名字与会说的语言沿用本页已填的内容。
+    private var emailButton: some View {
+        NavigationLink {
+            let typed = nickname.trimmingCharacters(in: .whitespacesAndNewlines)
+            EmailLoginView(nickname: typed.isEmpty ? nil : typed,
+                           languages: Array(selectedLanguages))
+        } label: {
+            Label(NSLocalizedString("signup_email_option", comment: ""), systemImage: "envelope")
+                .frame(maxWidth: .infinity, minHeight: 28)
+        }
+        .buttonStyle(SecondaryButtonStyle())
+        .accessibilityIdentifier("signup.emailLogin")
     }
 
     #if DEBUG

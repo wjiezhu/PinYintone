@@ -66,6 +66,49 @@ final class UserManager: ObservableObject {
         registerInBackground(p)
     }
 
+    /// 与服务端一致的邮箱规范化：去首尾空白、转小写。账号键与显示都用它。
+    static func normalizedEmail(_ raw: String) -> String {
+        raw.trimmingCharacters(in: .whitespacesAndNewlines).lowercased()
+    }
+
+    /// 给邮箱发登录验证码
+    func requestEmailCode(email: String) async throws -> APIClient.EmailCodeSent {
+        try await APIClient.shared.requestEmailCode(email: Self.normalizedEmail(email))
+    }
+
+    /// 学生用邮箱验证码登录。
+    ///
+    /// 和 Apple 登录不同，这一步**必须等服务端**：验证码只有服务端能核对，
+    /// 核对通过的同时就建好了档。失败抛 `EmailLoginError`，停在登录页。
+    func registerStudentWithEmail(email: String, code: String, nickname: String?,
+                                  spokenLanguages: [SpokenLanguage] = []) async throws {
+        let normalized = Self.normalizedEmail(email)
+        let p = UserProfile(
+            deviceID: UIDevice.current.identifierForVendor?.uuidString ?? UUID().uuidString,
+            role: .student,
+            appleUserID: nil,
+            nickname: nickname,
+            classCode: nil,
+            teacherEmail: nil,
+            teacherToken: nil,
+            nativeLanguage: Locale.current.language.languageCode?.identifier,
+            spokenLanguages: spokenLanguages.map(\.rawValue),
+            registeredAt: Date(),
+            loginEmail: normalized
+        )
+        try await APIClient.shared.loginWithEmail(
+            email: normalized, code: code.trimmingCharacters(in: .whitespaces), profile: p)
+        identityToken = nil
+        save(p)
+        // 服务端已建档，不必再补送
+        UserDefaults.standard.set(Self.fingerprint(p), forKey: Self.registeredKey)
+        profile = p
+        ResearchStore.shared.activate(for: p)
+        ResearchStore.shared.update { s in
+            if s.participation == .notAsked { s.signupConsentDue = true }
+        }
+    }
+
     /// 回到前台时调用：本机档案还没送到后端的（离线登录、服务器没醒、改了名字），补送一次。
     func syncRegistrationIfNeeded() {
         guard let p = profile, p.role == .student,
@@ -117,10 +160,13 @@ final class UserManager: ObservableObject {
 
     /// 后端关心的字段变了才需要重送
     private static func fingerprint(_ p: UserProfile) -> String {
-        [p.deviceID, p.appleUserID ?? "", p.nickname ?? "",
-         (p.spokenLanguages ?? []).joined(separator: ","), p.nativeLanguage ?? ""]
-            .joined(separator: "|")
+        var parts = [p.deviceID, p.appleUserID ?? "", p.nickname ?? "",
+                     (p.spokenLanguages ?? []).joined(separator: ","), p.nativeLanguage ?? ""]
+        // 只在邮箱账号上追加：Apple 账号的指纹保持原样，升级后不会全员重送一次
+        if let email = p.loginEmail { parts.append(email) }
+        return parts.joined(separator: "|")
     }
+
 
     /// 修改显示名（升级需求 §4.1：姓名可选，首次授权后允许学习者自行修改）。
     ///

@@ -16,7 +16,7 @@
 "role_select_title" = "您的身份是？";
 
 // 学生注册
-"student_signup_subtitle" = "使用 Apple 账户登录即可开始练习。";
+"student_signup_subtitle" = "使用 Apple 账户或邮箱验证码登录，即可开始练习。";
 "signup_nickname_label" = "你的名字（可选，Apple 账户会自动提供）";
 "signup_nickname_hint" = "例如：Ahmed";
 "signup_submit" = "继续";
@@ -422,3 +422,23 @@
 "consent_full_title" = "完整说明";
 "research_wechat_copy" = "复制微信号（汉语问题、学习资料）";
 "research_wechat_copied" = "微信号已复制：herecomes_zhuozhuo";
+"signup_email_option" = "用邮箱验证码登录";
+"email_login_title" = "邮箱登录";
+"email_login_body" = "输入你的邮箱，我们会发一个 6 位验证码。Gmail、QQ 邮箱等任何邮箱都可以；第一次登录会自动创建账号。";
+"email_login_email_label" = "邮箱";
+"email_login_send" = "发送验证码";
+"email_login_sent" = "验证码已发到 %@，%d 分钟内有效。没收到的话，看看垃圾邮件文件夹。";
+"email_login_code_label" = "验证码";
+"email_login_submit" = "登录";
+"email_login_resend" = "重新发送验证码";
+"email_login_resend_wait" = "%d 秒后可以重新发送";
+"email_error_invalid_email" = "邮箱格式不对，请检查一下。";
+"email_error_code_format" = "验证码是 6 位数字。";
+"email_error_code_invalid" = "验证码不对或已失效，请重新获取。";
+"email_error_code_invalid_left" = "验证码不对，还可以试 %d 次。";
+"email_error_code_expired" = "验证码已过期，请重新获取。";
+"email_error_attempts" = "尝试次数太多，请重新获取验证码。";
+"email_error_cooldown" = "请 %d 秒后再获取验证码。";
+"email_error_rate_limited" = "获取验证码太频繁，请一小时后再试。";
+"email_error_unavailable" = "验证码邮件暂时发不出去，请稍后再试，或先用 Apple 账户登录。";
+"email_error_network" = "连不上服务器，请检查网络后再试。";

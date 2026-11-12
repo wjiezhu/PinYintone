@@ -16,7 +16,7 @@
 "role_select_title" = "Who are you?";
 
 // Student signup
-"student_signup_subtitle" = "Sign in with your Apple ID to start practicing.";
+"student_signup_subtitle" = "Sign in with your Apple ID or an email code to start practicing.";
 "signup_nickname_label" = "Your name (optional — provided by Apple ID)";
 "signup_nickname_hint" = "e.g. Ahmed";
 "signup_submit" = "Continue";
@@ -422,3 +422,23 @@
 "consent_full_title" = "Full information sheet";
 "research_wechat_copy" = "Copy WeChat ID (Chinese questions, study materials)";
 "research_wechat_copied" = "WeChat ID copied: herecomes_zhuozhuo";
+"signup_email_option" = "Sign in with an email code";
+"email_login_title" = "Email sign-in";
+"email_login_body" = "Enter your email and we'll send you a 6-digit code. Any address works, such as Gmail. Signing in for the first time creates your account.";
+"email_login_email_label" = "Email";
+"email_login_send" = "Send code";
+"email_login_sent" = "Code sent to %@. It's valid for %d minutes. If it doesn't arrive, check your spam folder.";
+"email_login_code_label" = "Code";
+"email_login_submit" = "Sign in";
+"email_login_resend" = "Resend code";
+"email_login_resend_wait" = "You can resend in %d s";
+"email_error_invalid_email" = "That email address doesn't look right. Please check it.";
+"email_error_code_format" = "The code is 6 digits.";
+"email_error_code_invalid" = "The code is wrong or no longer valid. Please get a new one.";
+"email_error_code_invalid_left" = "Wrong code. You have %d tries left.";
+"email_error_code_expired" = "The code has expired. Please get a new one.";
+"email_error_attempts" = "Too many tries. Please get a new code.";
+"email_error_cooldown" = "Please wait %d s before requesting another code.";
+"email_error_rate_limited" = "Too many code requests. Please try again in an hour.";
+"email_error_unavailable" = "We can't send the email right now. Try again later, or sign in with Apple for now.";
+"email_error_network" = "Can't reach the server. Check your connection and try again.";

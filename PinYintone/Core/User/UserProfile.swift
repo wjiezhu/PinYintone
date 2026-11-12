@@ -13,4 +13,14 @@ struct UserProfile: Codable {
     /// 旧档案无此字段，解码时默认空数组。
     var spokenLanguages: [String]?
     var registeredAt: Date
+    /// 学生用邮箱验证码登录时的邮箱（已小写、去空格）；Apple 登录为 nil。
+    /// 只存本机用于显示和区分账号，补送档案时不上传（服务端只存它的摘要）。
+    var loginEmail: String? = nil
+
+    /// 本机按账号隔离研究状态用的键。Apple 与邮箱是不同的账号，加前缀避免撞在一起。
+    var accountKey: String {
+        if let appleUserID { return appleUserID }
+        if let loginEmail { return "email:" + loginEmail }
+        return deviceID
+    }
 }

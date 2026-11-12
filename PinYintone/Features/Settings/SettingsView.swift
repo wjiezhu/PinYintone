@@ -212,7 +212,7 @@ struct SettingsView: View {
             if profile.role == .teacher, let code = profile.classCode {
                 rows.append(valueRow("settings_classcode", value: code))
             }
-            if let email = profile.teacherEmail {
+            if let email = profile.teacherEmail ?? profile.loginEmail {
                 rows.append(valueRow("settings_email", value: email))
             }
         }

@@ -18,7 +18,7 @@
 "role_select_title" = "من أنت؟";
 
 // تسجيل الطالب
-"student_signup_subtitle" = "سجّل الدخول بحساب Apple لبدء التدريب.";
+"student_signup_subtitle" = "سجّل الدخول بحساب Apple أو برمز يصلك عبر البريد الإلكتروني لبدء التدريب.";
 "signup_nickname_label" = "اسمك (اختياري — يوفره حساب Apple)";
 "signup_nickname_hint" = "مثال: أحمد";
 "signup_submit" = "متابعة";
@@ -424,3 +424,23 @@
 "consent_full_title" = "النص الكامل";
 "research_wechat_copy" = "نسخ معرّف WeChat (أسئلة الصينية والمواد التعليمية)";
 "research_wechat_copied" = "تم نسخ معرّف WeChat: herecomes_zhuozhuo";
+"signup_email_option" = "تسجيل الدخول برمز عبر البريد الإلكتروني";
+"email_login_title" = "الدخول بالبريد الإلكتروني";
+"email_login_body" = "أدخل بريدك الإلكتروني وسنرسل إليك رمزًا من 6 أرقام. يصلح أي بريد، مثل Gmail. أول تسجيل دخول يُنشئ حسابك.";
+"email_login_email_label" = "البريد الإلكتروني";
+"email_login_send" = "إرسال الرمز";
+"email_login_sent" = "أُرسل الرمز إلى %@، وهو صالح لمدة %d دقائق. إن لم يصلك فتحقّق من مجلد الرسائل غير المرغوب فيها.";
+"email_login_code_label" = "الرمز";
+"email_login_submit" = "تسجيل الدخول";
+"email_login_resend" = "إعادة إرسال الرمز";
+"email_login_resend_wait" = "يمكنك إعادة الإرسال بعد %d ث";
+"email_error_invalid_email" = "يبدو أن عنوان البريد غير صحيح. تحقّق منه من فضلك.";
+"email_error_code_format" = "الرمز مكوّن من 6 أرقام.";
+"email_error_code_invalid" = "الرمز غير صحيح أو لم يعد صالحًا. اطلب رمزًا جديدًا.";
+"email_error_code_invalid_left" = "الرمز غير صحيح. بقي لديك %d محاولات.";
+"email_error_code_expired" = "انتهت صلاحية الرمز. اطلب رمزًا جديدًا.";
+"email_error_attempts" = "محاولات كثيرة جدًا. اطلب رمزًا جديدًا.";
+"email_error_cooldown" = "انتظر %d ث قبل طلب رمز آخر.";
+"email_error_rate_limited" = "طلبات رموز كثيرة جدًا. حاول مرة أخرى بعد ساعة.";
+"email_error_unavailable" = "تعذّر إرسال البريد الآن. حاول لاحقًا، أو سجّل الدخول بحساب Apple مؤقتًا.";
+"email_error_network" = "تعذّر الاتصال بالخادم. تحقّق من الاتصال وحاول مرة أخرى.";

@@ -148,6 +148,9 @@ final class APIClient {
     }
 
     /// 档案字段原样平铺，再加登录方式与凭证。凭证不进 `UserProfile`——它不落盘。
+    ///
+    /// 邮箱账号补送档案时写 `provider = email`、不带凭证：服务端认得这台设备
+    /// 已用同一邮箱验证过。邮箱本身不随补送上传（`loginEmail` 置空后再编码）。
     struct StudentRegistrationBody: Encodable {
         let profile: UserProfile
         let identityToken: String?
@@ -155,13 +158,70 @@ final class APIClient {
         private enum Keys: String, CodingKey { case provider, identityToken }
 
         func encode(to encoder: Encoder) throws {
-            try profile.encode(to: encoder)
+            var flat = profile
+            flat.loginEmail = nil
+            try flat.encode(to: encoder)
             var c = encoder.container(keyedBy: Keys.self)
             if profile.appleUserID != nil {
                 try c.encode("apple", forKey: .provider)
+            } else if profile.loginEmail != nil {
+                try c.encode("email", forKey: .provider)
             }
             try c.encodeIfPresent(identityToken, forKey: .identityToken)
         }
+    }
+
+    // MARK: - 邮箱验证码登录（学生）
+
+    struct EmailCodeSent: Decodable {
+        let sent: Bool
+        let expiresInSeconds: Int
+        let resendAfterSeconds: Int
+    }
+
+    /// 给邮箱发 6 位验证码。邮箱登录本身就是注册：没注册过的邮箱返回也一样。
+    func requestEmailCode(email: String) async throws -> EmailCodeSent {
+        struct Body: Encodable { let email: String }
+        return try await emailRequest("student/email/request-code", body: Body(email: email))
+    }
+
+    /// 用验证码登录；成功即在服务端建好档（与 Apple 登录同一套流程）。
+    func loginWithEmail(email: String, code: String, profile: UserProfile) async throws {
+        struct Body: Encodable {
+            let email, code, deviceID, role: String
+            let nickname, nativeLanguage: String?
+            let spokenLanguages: [String]?
+        }
+        let _: StudentRegistration = try await emailRequest(
+            "student/email/login",
+            body: Body(email: email, code: code, deviceID: profile.deviceID,
+                       role: profile.role.rawValue, nickname: profile.nickname,
+                       nativeLanguage: profile.nativeLanguage,
+                       spokenLanguages: profile.spokenLanguages))
+    }
+
+    /// 邮箱接口单独解析错误：服务端的 `detail` 以机器可读的原因码开头（冒号前），
+    /// 要按原因给出能照着做的提示。通用的 `request` 会把带 email 字样的 400
+    /// 一律当成「邮箱已注册」，在这里是错的。
+    private func emailRequest<T: Decodable>(_ path: String, body: any Encodable) async throws -> T {
+        var req = URLRequest(url: baseURL.appendingPathComponent(path))
+        req.httpMethod = "POST"
+        req.setValue("application/json", forHTTPHeaderField: "Content-Type")
+        req.httpBody = try JSONEncoder().encode(body)
+        let data: Data
+        let response: URLResponse
+        do {
+            (data, response) = try await URLSession.shared.data(for: req)
+        } catch {
+            throw EmailLoginError.network
+        }
+        guard let http = response as? HTTPURLResponse else { throw EmailLoginError.network }
+        guard (200..<300).contains(http.statusCode) else {
+            let detail = (try? JSONDecoder().decode(ErrorResponse.self, from: data))?.detail ?? ""
+            let retryAfter = http.value(forHTTPHeaderField: "Retry-After").flatMap(Int.init)
+            throw EmailLoginError(status: http.statusCode, detail: detail, retryAfter: retryAfter)
+        }
+        return try JSONDecoder().decode(T.self, from: data)
     }
 
     // MARK: - Research
