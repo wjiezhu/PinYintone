@@ -69,7 +69,7 @@ final class ResearchEnrollmentTests: XCTestCase {
         XCTAssertEqual(body["priorUseEvidence"] as? String, "insufficient")
         XCTAssertEqual(body["internalUserID"] as? String, "device-test")
         XCTAssertEqual(body["consentVersion"] as? String, ResearchConsent.textVersion)
-        XCTAssertTrue(["zh", "en", "fr", "ar"].contains(body["consentLanguage"] as? String ?? ""),
+        XCTAssertTrue(["zh", "en", "fr", "ar", "es", "it"].contains(body["consentLanguage"] as? String ?? ""),
                       "同意语言必须是 App 内的界面语言")
         XCTAssertEqual(body["isTest"] as? Bool, true, "开发构建一律是测试数据")
     }
@@ -121,10 +121,9 @@ final class ResearchEnrollmentTests: XCTestCase {
     func testIneligibleOrUndeterminedLearnersAreNotEnrolledAndNothingIsUploaded() async throws {
         let cases: [(SurveyOutcome, ResearchEligibility.Outcome)] = [
             (ResearchTestSupport.background(adult: "minor"), .excluded(.age)),
-            (ResearchTestSupport.background(nationality: ["FR"]), .excluded(.nationality)),
             (ResearchTestSupport.background(stage: "hsk4_plus"), .excluded(.courseStage)),
             (ResearchTestSupport.background(adult: nil), .pending),              // 关键题没答
-            (ResearchTestSupport.background(nationality: ["prefer_not"]), .pending),
+            // 国籍不再参与判定（eligibility-3.0）：非摩洛哥籍、不愿回答都可纳入，见 FieldSessionTests
             (ResearchTestSupport.background(stage: nil), .pending),
         ]
         for (answers, expected) in cases {

@@ -30,6 +30,8 @@ final class LearningHistoryTests: XCTestCase {
             "zh-Hans": ["进步", "提升", "水平", "能力"],
             "en": ["improve", "progress", "proficiency", "level of"],
             "fr": ["progrès", "amélior", "niveau de"],
+            "es": ["progreso", "mejora", "nivel de"],
+            "it": ["progress", "miglior", "livello di"],
         ]
         let keys = ["history_title", "history_empty", "history_empty_filtered",
                     "history_footer_note", "history_filter", "history_filter_all",

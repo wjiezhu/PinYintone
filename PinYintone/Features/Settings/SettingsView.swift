@@ -20,6 +20,7 @@ struct SettingsView: View {
     @State private var surveyToOpen: PracticeHomeView.SurveyTarget?
     @State private var isDeleting = false
     @State private var isSyncing = false
+    @State private var wechatCopied = false
     @State private var deleteError: String?
     /// 显示名编辑草稿；进页面时用当前档案填充，提交后写回
     @State private var nicknameDraft = ""
@@ -312,6 +313,11 @@ struct SettingsView: View {
                     }
                 })
             }
+            rows.append(actionRow(wechatCopied ? "research_wechat_copied" : "research_wechat_copy",
+                                  icon: "message", id: "settings.researchWeChat") {
+                UIPasteboard.general.string = ResearchConsent.wechatID
+                wechatCopied = true
+            })
             rows.append(actionRow("research_withdraw", icon: "rectangle.portrait.and.arrow.right",
                                   id: "settings.researchWithdraw", destructive: true) {
                 showWithdrawConfirm = true

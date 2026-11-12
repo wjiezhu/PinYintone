@@ -25,7 +25,7 @@ final class FreeWordPracticeViewModel: ObservableObject {
     /// 由 View 注入的原始整段文本（用于研究数据 originalText 字段）
     var originalText: String = ""
 
-    private let audioEngine = AudioEngine()
+    private let audioEngine = RecordingSourceFactory.make()
     private let framer = AudioFramer()
     private let f0Extractor = F0Extractor()
     private let dtwAnalyzer = DTWAnalyzer()
@@ -98,7 +98,7 @@ final class FreeWordPracticeViewModel: ObservableObject {
 
     private func startRecording(targetWord: String) {
         // 麦克风权限在首次实际录音前申请（需求 R02），不在启动时
-        if MicPermission.state == .undetermined {
+        if !RecordingSourceFactory.isSynthetic, MicPermission.state == .undetermined {
             Task { [weak self] in
                 _ = await MicPermission.request()
                 self?.beginRecording(targetWord: targetWord)
@@ -126,7 +126,10 @@ final class FreeWordPracticeViewModel: ObservableObject {
                                         lexemeVersionID: nil, priorPracticeCount: nil)
         isRecording = true
         do {
-            try audioEngine.start()
+            #if DEBUG
+            (audioEngine as? SyntheticRecordingSource)?.tones = currentTones
+            #endif
+            try audioEngine.start(duration: nil)
         } catch {
             isRecording = false
             // 禁令 11：录音启动失败必须给出可执行提示，不得静默吞掉

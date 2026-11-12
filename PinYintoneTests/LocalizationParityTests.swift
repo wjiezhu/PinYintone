@@ -7,7 +7,7 @@ import XCTest
 /// 「tone_stage_ready」），而只看中文界面的开发者永远发现不了。
 final class LocalizationParityTests: XCTestCase {
 
-    private let languages = ["zh-Hans", "en", "fr", "ar"]
+    private let languages = ["zh-Hans", "en", "fr", "ar", "es", "it"]
 
     private func table(_ language: String) throws -> [String: String] {
         let path = try XCTUnwrap(Bundle.main.path(forResource: "Localizable", ofType: "strings",

@@ -10,14 +10,128 @@ import XCTest
 @MainActor
 final class AspirationFailureTests: XCTestCase {
 
-    /// 一帧都没收到时 stop() **不得落发音记录**，而是给出重录提示
-    func testNoFramesProducesHintNotScore() {
-        let vm = AspirationViewModel()
-        let before = AspirationRepository.shared.fetchAll().count
-        vm.stop()      // 从未开始检测，receivedFrames = 0
-        XCTAssertNotNil(vm.retryHint, "没录上必须给出可执行提示，不得静默")
-        XCTAssertEqual(AspirationRepository.shared.fetchAll().count, before,
-                       "技术失败不得计入发音成绩（禁令 9）")
+    private func make() -> (AspirationViewModel, FakeRecorder) {
+        let recorder = FakeRecorder()
+        let vm = AspirationViewModel(recorder: recorder)
+        return (vm, recorder)
+    }
+
+    private func settle() async {
+        for _ in 0..<20 { await Task.yield() }
+        try? await Task.sleep(nanoseconds: 80_000_000)
+    }
+
+    /// 选到指定类型的词
+    private func load(_ vm: AspirationViewModel, aspirated: Bool) {
+        for _ in 0..<12 {
+            vm.loadNextLexeme()
+            if vm.currentLexeme?.aspirationTarget?.aspirated == aspirated { return }
+        }
+        XCTFail("语料里没有这类词")
+    }
+
+    /// 校准 500ms → 出声 `seconds` 秒 → 点停止
+    private func run(_ vm: AspirationViewModel, _ recorder: FakeRecorder, seconds: Double) async {
+        vm.toggleRecording()
+        recorder.silence(seconds: 0.5)
+        await settle()
+        XCTAssertEqual(vm.stage, .recording)
+        if seconds > 0 { recorder.speak(tones: [1], seconds: seconds) }
+        recorder.silence(seconds: 0.2)
+        await settle()
+        vm.toggleRecording()
+    }
+
+    func testOpeningThePageDoesNotStartTheMicrophone() {
+        let (vm, recorder) = make()
+        vm.loadNextLexeme()
+        XCTAssertEqual(vm.stage, .idle)
+        XCTAssertEqual(recorder.startCount, 0, "换词、进页面都不开麦，点了开始才录")
+    }
+
+    /// 词集区分：3 个送气 + 3 个不送气，声母与词的第一个字拼音一致
+    func testCorpusMarksAspiratedAndUnaspiratedWords() throws {
+        let words = CorpusLoader.shared.lexemes(in: .aspiration)
+        let targets = try words.map { try XCTUnwrap($0.aspirationTarget, $0.id) }
+        XCTAssertEqual(Set(targets.filter(\.aspirated).map(\.initial)), ["p", "t", "k"])
+        XCTAssertEqual(Set(targets.filter { !$0.aspirated }.map(\.initial)), ["b", "d", "g"])
+        for w in words {
+            XCTAssertTrue(w.pinyin.hasPrefix(w.aspirationTarget!.initial), w.id)
+        }
+    }
+
+    func testAspiratedNeedsABurst() async {
+        let (vm, recorder) = make()
+        load(vm, aspirated: true)
+        await run(vm, recorder, seconds: 0.9)
+        XCTAssertEqual(vm.passed, true)
+        XCTAssertFalse(recorder.isRunning, "点停止后麦克风关闭")
+
+        // 太短的一声够不到 60%：第一帧不能算 100%（分母固定 6 帧）
+        await run(vm, recorder, seconds: 0.3)
+        XCTAssertEqual(vm.passed, false)
+        XCTAssertEqual(vm.peakRate, 0.5, accuracy: 0.01)
+    }
+
+    func testUnaspiratedMustNotBurst() async {
+        let (vm, recorder) = make()
+        load(vm, aspirated: false)
+        await run(vm, recorder, seconds: 0.3)
+        XCTAssertEqual(vm.passed, true, "没有爆破：不送气音就该这样")
+        await run(vm, recorder, seconds: 0.9)
+        XCTAssertEqual(vm.passed, false, "气流太强：不送气音不通过")
+    }
+
+    /// 没出声是技术失败：有提示、没成绩，不能算成「不送气做对了」（禁令 9）
+    func testSilenceIsATechnicalFailureForBothKinds() async {
+        for aspirated in [true, false] {
+            let (vm, recorder) = make()
+            load(vm, aspirated: aspirated)
+            await run(vm, recorder, seconds: 0)
+            XCTAssertNil(vm.passed)
+            XCTAssertEqual(vm.stage, .idle)
+            XCTAssertNotNil(vm.retryHint)
+        }
+    }
+
+    func testStoppingDuringCalibrationIsNotAResult() {
+        let (vm, recorder) = make()
+        vm.loadNextLexeme()
+        vm.toggleRecording()
+        XCTAssertEqual(vm.stage, .calibrating)
+        vm.toggleRecording()
+        XCTAssertFalse(recorder.isRunning)
+        XCTAssertNil(vm.passed)
+        XCTAssertNotNil(vm.retryHint)
+    }
+
+    func testMicrophoneStartFailureGivesAHint() {
+        let (vm, recorder) = make()
+        vm.loadNextLexeme()
+        recorder.startError = AudioEngine.AudioEngineError.invalidInputFormat
+        vm.toggleRecording()
+        XCTAssertEqual(vm.stage, .idle)
+        XCTAssertNotNil(vm.retryHint, "禁令 11：录音起不来必须说出来")
+    }
+
+    func testLeavingWhileRecordingStopsWithoutAResult() async {
+        let (vm, recorder) = make()
+        vm.loadNextLexeme()
+        vm.toggleRecording()
+        recorder.silence(seconds: 0.5)
+        await settle()
+        recorder.speak(tones: [1], seconds: 0.9)
+        await settle()
+        vm.leavePage()
+        XCTAssertFalse(recorder.isRunning)
+        XCTAssertNil(vm.passed)
+    }
+
+    func testRuleDirectionsAndThresholdBoundary() {
+        XCTAssertTrue(AspirationRule.passes(aspirated: true, peakRate: 0.6))
+        XCTAssertFalse(AspirationRule.passes(aspirated: true, peakRate: 0.59))
+        XCTAssertFalse(AspirationRule.passes(aspirated: false, peakRate: 0.6))
+        XCTAssertTrue(AspirationRule.passes(aspirated: false, peakRate: 0.59))
     }
 
     /// 提示文案四语齐备

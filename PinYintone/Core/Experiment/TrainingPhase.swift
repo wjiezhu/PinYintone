@@ -9,8 +9,8 @@ import Foundation
 /// - `training`：普通练习。显示学习者自选的反馈模式与行动提示。
 /// - `selfTest`：可选自测。不显示分数、等级、颜色、曲线、示范或建议。
 ///   它是学习者自己挑时间做的，**不是规范化的前后测**，不得当作前后测证据。
-/// - `pretest` / `posttest`：**仅历史记录里有**。新版不再写入，保留枚举值
-///   只是为了让升级前的记录仍可读。
+/// - `pretest` / `posttest`：schemaVersion ≤ 5 里是强制流程的前后测；
+///   schemaVersion ≥ 7 起只来自**现场实测**（研究者在场、自愿开始）。两者语义不同，不可合并。
 ///
 /// 本列只为旧表兼容而保留；新版研究数据在 `research_attempts.task_type`
 /// （fixed_word / self_test / free_text）。

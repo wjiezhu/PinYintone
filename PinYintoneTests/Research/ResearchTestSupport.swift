@@ -26,12 +26,16 @@ enum ResearchTestSupport {
     @discardableResult
     static func enrolledAccount(windowStart: Date = Date().addingTimeInterval(-3600),
                                 windowEnd: Date = Date().addingTimeInterval(86_400),
-                                backgroundAcked: Bool = true) -> String {
+                                backgroundAcked: Bool = true,
+                                consentVersion: String = ResearchConsent.Text.fieldSession.rawValue,
+                                audioUpload: Bool = false) -> String {
         let key = freshAccount()
         ResearchStore.shared.update { s in
             s.participation = .enrolled
             s.eligibility = "eligible"
-            s.consentVersion = ResearchConsent.textVersion
+            s.consentVersion = consentVersion
+            s.audioUpload = audioUpload
+            s.roundStudyID = "study-test"
             s.consentLanguage = "fr"
             s.consentAt = Date().addingTimeInterval(-600)
             s.participantID = "participant-test"
@@ -61,11 +65,37 @@ enum ResearchTestSupport {
 
     static func manifest(start: Date = Date().addingTimeInterval(-3600),
                          end: Date = Date().addingTimeInterval(86_400),
-                         isTest: Bool = true) -> ResearchConfig.Manifest {
-        .init(manifestID: "manifest-test", studyID: "study-test",
-              collectionStartAt: start, collectionEndAt: end, postTriggerCount: 5,
-              consentVersion: ResearchConsent.textVersion, rewardRuleVersion: nil,
-              isTest: isTest)
+                         isTest: Bool = true,
+                         consent: String = ResearchConsent.Text.fieldSession.rawValue,
+                         audioUpload: Bool = false,
+                         withFieldProtocol: Bool = false) -> ResearchConfig.Manifest {
+        var m = ResearchConfig.Manifest(
+            manifestID: "manifest-test", studyID: "study-test",
+            collectionStartAt: start, collectionEndAt: end, postTriggerCount: 5,
+            consentVersion: consent, rewardRuleVersion: nil, isTest: isTest)
+        m.audioUpload = audioUpload
+        if withFieldProtocol, let p = FieldProtocol.bundled {
+            m.fieldProtocolVersion = p.protocolVersion
+            m.fieldProtocol = fieldProtocolSpec(p)
+        }
+        return m
+    }
+
+    /// 与本机携带的协议一致的配置内协议
+    static func fieldProtocolSpec(_ p: FieldProtocol) -> APIClient.FieldProtocolSpec {
+        .init(lexiconVersion: ResearchLexicon.lexiconVersion ?? "",
+              testLexemeVersionIDs: p.testWords.compactMap { ResearchLexicon.versionID(for: $0) },
+              trainingLexemeVersionIDs: p.trainingWords.compactMap {
+                  ResearchLexicon.versionID(for: $0) },
+              trainingValidAttemptsPerWord: p.trainingValidAttemptsPerWord)
+    }
+
+    /// 置一份可用配置
+    static func openManifest(consent: String = ResearchConsent.Text.fieldSession.rawValue,
+                             audioUpload: Bool = false, withFieldProtocol: Bool = false) {
+        ResearchConfig.shared.setAvailableForTesting(
+            manifest(consent: consent, audioUpload: audioUpload,
+                     withFieldProtocol: withFieldProtocol))
     }
 
     /// 符合纳入条件的背景答卷（成年、MA、hsk2）

@@ -2,144 +2,181 @@ import AVFoundation
 import Combine
 import Foundation
 
-/// 送气训练业务逻辑：500ms 底噪校准 → 600ms 滑动窗口送气检测 → 保存记录。
-/// 参数遵循 CLAUDE.md：阈值 = 底噪 + 15 dB，触发率通关线 ≥ 0.6。
+/// 送气练习的判定规则。送气音要爆破，不送气音不要爆破，所以同一条通关线方向相反。
+nonisolated enum AspirationRule {
+    /// CLAUDE.md 锁定的触发率通关线
+    static let threshold: Float = 0.6
+
+    static func passes(aspirated: Bool, peakRate: Float) -> Bool {
+        aspirated ? peakRate >= threshold : peakRate < threshold
+    }
+}
+
+/// 送气练习业务逻辑：学习者点开始 → 500ms 底噪校准 → 600ms 滑动窗口检测 →
+/// 学习者点停止 → 按词的送气类型判定 → 保存记录。
+/// 参数遵循 CLAUDE.md：阈值 = 底噪 + 15 dB，触发率通关线 0.6。
+///
+/// 进页面、换词都不开麦，只有点了开始才录。
 @MainActor
 final class AspirationViewModel: ObservableObject {
 
     // 勿删：见 CLAUDE.md 禁令 18（隐式析构在 iOS 18.5 / 26.2 上实测崩溃）
     nonisolated deinit {}
 
-    @Published var currentLexeme: Lexeme?
-    @Published var triggerRate: Float = 0
-    @Published var triggered: Bool = false      // 当前帧是否超阈
-    @Published var calibrated: Bool = false
-    @Published var isRecording: Bool = false
-    @Published var passed: Bool = false
-    /// 技术性失败的可执行提示。**不得为 nil 地静默失败**——
-    /// CLAUDE.md 禁令 11：否则学习者看到的是一个按了没反应的按钮。
-    @Published var retryHint: String?
+    enum Stage: Equatable { case idle, calibrating, recording, result }
 
-    /// 本次检测实际收到的音频帧数。用于区分「读了但没到阈值」与「根本没录上」：
-    /// 后者是技术失败，**不得计入发音成绩**（禁令 9）。
-    private var receivedFrames = 0
+    @Published private(set) var stage: Stage = .idle
+    @Published private(set) var currentLexeme: Lexeme?
+    /// 当前 600ms 窗口的触发率
+    @Published private(set) var triggerRate: Float = 0
+    /// 这次录音到目前为止的最高触发率。判定看它：爆破只有一瞬间，停止时窗口早已回落
+    @Published private(set) var peakRate: Float = 0
+    /// 本次结果；还没有结果时为 nil
+    @Published private(set) var passed: Bool?
+    /// 技术性失败的可执行提示。**不得静默失败**（禁令 11）。
+    @Published private(set) var retryHint: String?
 
-    private let audioEngine = AudioEngine()
+    var isActive: Bool { stage == .calibrating || stage == .recording }
+    /// 词的送气类型。语料里每个送气词条都有；缺失时按送气音处理
+    var isAspirated: Bool { currentLexeme?.aspirationTarget?.aspirated ?? true }
+
+    private let recorder: RecordingSource
+    private let usesMicrophone: Bool
     private let detector = AspirationDetector()
 
+    private let calibrationFrameCount = 5        // 500ms = 5 × 0.1s 帧
     private let windowSize = 6                   // 600ms = 6 × 0.1s 帧
     private var window: [[Float]] = []
     private var calibrationFrames: [[Float]] = []
+    /// 录音里有没有听到声音。没有就是技术失败，**不得计入发音成绩**（禁令 9），
+    /// 也不能算成「不送气做对了」。
+    private var heardVoice = false
+
+    /// 默认参数会在调用方的隔离域里求值，所以这里用可选值（同 ToneTrainingViewModel）
+    init(recorder: RecordingSource? = nil) {
+        let source = recorder ?? RecordingSourceFactory.make()
+        self.recorder = source
+        usesMicrophone = source is AudioEngine
+        source.onChunk = { [weak self] pcm in
+            let frame = AudioEngine.floatSamples(from: pcm)
+            Task { @MainActor in self?.process(frame) }
+        }
+    }
 
     // MARK: - 词条
 
     func loadNextLexeme() {
+        guard !isActive else { return }
         currentLexeme = CorpusLoader.shared.nextLexeme(category: .aspiration)
-        resetState()
-        startCalibration()
+        resetResult()
+        retryHint = nil
+        stage = .idle
     }
 
-    private func resetState() {
+    private func resetResult() {
         triggerRate = 0
-        triggered = false
-        passed = false
+        peakRate = 0
+        passed = nil
         window = []
+        calibrationFrames = []
+        heardVoice = false
     }
 
-    // MARK: - 校准（前 500ms 采底噪）
+    // MARK: - 开始 / 停止
 
-    func startCalibration() {
-        // 麦克风权限在首次实际录音前申请（需求 R02），不在启动时。
-        // 还没问过就先问；拒绝的话下面的启动会失败并给出提示。
-        if MicPermission.state == .undetermined {
+    /// 点录音键：没在录就开始，在录就停止。全 App 统一「点一下开始、点一下停止」。
+    func toggleRecording() {
+        if isActive { stopAndEvaluate() } else { start() }
+    }
+
+    private func start() {
+        guard currentLexeme != nil else { return }
+        // 麦克风权限在首次实际录音前申请（需求 R02）。拒绝的话下面的启动会失败并给出提示。
+        if usesMicrophone, MicPermission.state == .undetermined {
             Task { [weak self] in
                 _ = await MicPermission.request()
-                self?.beginCalibration()
+                self?.beginRecording()
             }
             return
         }
-        beginCalibration()
+        beginRecording()
     }
 
-    private func beginCalibration() {
-        calibrated = false
-        calibrationFrames = []
-        audioEngine.onChunk = { [weak self] pcm in
-            let frame = AudioEngine.floatSamples(from: pcm)
-            Task { @MainActor in self?.calibrationFrames.append(frame) }
-        }
-        audioEngine.onFinish = { [weak self] _ in
-            guard let self else { return }
-            self.detector.calibrateBaseline(frames: self.calibrationFrames)
-            self.calibrated = true
-            self.startDetection()
-        }
-        do {
-            try audioEngine.start(duration: 0.5)
-        } catch {
-            calibrated = false
-            // 校准起不来 = 后面整条检测都没法做，必须说出来
-            retryHint = NSLocalizedString("tone_retry_mic_unavailable", comment: "")
-        }
-    }
-
-    // MARK: - 检测（600ms 滑动窗口）
-
-    private func startDetection() {
-        resetState()
+    private func beginRecording() {
+        guard !isActive else { return }
+        resetResult()
         retryHint = nil
-        receivedFrames = 0
-        isRecording = true
-        audioEngine.onFinish = nil
-        audioEngine.onChunk = { [weak self] pcm in
-            let frame = AudioEngine.floatSamples(from: pcm)
-            Task { @MainActor in self?.process(frame) }
-        }
         do {
-            try audioEngine.start()
+            try recorder.start(duration: nil)
+            stage = .calibrating
         } catch {
-            isRecording = false
+            stage = .idle
             // 禁令 11：录音启动失败必须给出可执行重录提示
             retryHint = NSLocalizedString("tone_retry_mic_unavailable", comment: "")
         }
     }
 
-    private func process(_ frame: [Float]) {
-        receivedFrames += 1
-        window.append(frame)
-        if window.count > windowSize { window.removeFirst() }
-        triggerRate = detector.triggerRate(frames: window)
-        triggered = detector.detect(frame: frame)
-        if triggerRate >= 0.6, !passed {
-            passed = true
-            stop()
+    /// 点了停止：判定并保存。校准没结束或没出声都不是成绩，只提示重录。
+    func stopAndEvaluate() {
+        guard isActive else { return }
+        let wasCalibrating = stage == .calibrating
+        recorder.stop()
+        guard !wasCalibrating else {
+            stage = .idle
+            retryHint = NSLocalizedString("aspiration_stopped_early", comment: "")
+            return
         }
-    }
-
-    func stop() {
-        audioEngine.stop()
-        isRecording = false
-
-        // 没录上（引擎没起来、或一帧都没收到）是**技术失败**，不是发音不达标。
-        // 此前无论如何都会落一条 triggerRate = 0、passed = false 的记录——
-        // 那等于把麦克风故障算成了送气没做到（禁令 9）。
-        guard receivedFrames >= windowSize else {
+        guard heardVoice else {
+            stage = .idle
             retryHint = NSLocalizedString("tone_retry_no_voice", comment: "")
             return
         }
-        persist()
+        let result = AspirationRule.passes(aspirated: isAspirated, peakRate: peakRate)
+        passed = result
+        stage = .result
+        persist(passed: result)
+    }
+
+    /// 离开页面：录音中就放弃这一次，不判定、不留记录。
+    func leavePage() {
+        guard isActive else { return }
+        recorder.stop()
+        stage = .idle
+    }
+
+    // MARK: - 校准（前 500ms 采底噪）与检测（600ms 滑动窗口）
+
+    private func process(_ frame: [Float]) {
+        switch stage {
+        case .calibrating:
+            calibrationFrames.append(frame)
+            if calibrationFrames.count >= calibrationFrameCount {
+                detector.calibrateBaseline(frames: calibrationFrames)
+                stage = .recording
+            }
+        case .recording:
+            if detector.isAudible(frame: frame) { heardVoice = true }
+            window.append(frame)
+            if window.count > windowSize { window.removeFirst() }
+            // 分母固定为窗口的 6 帧：刚开始只收到 1 帧时，1/1 = 100% 会让任何一声都算通过
+            triggerRate = detector.triggerRate(frames: window)
+                * Float(window.count) / Float(windowSize)
+            peakRate = max(peakRate, triggerRate)
+        case .idle, .result:
+            break     // 停止之后才到的帧不算
+        }
     }
 
     // MARK: - 持久化
 
-    private func persist() {
+    private func persist(passed: Bool) {
         guard let profile = UserManager.shared.profile, let lex = currentLexeme else { return }
         AspirationRepository.shared.save(
             deviceID: profile.deviceID,
             classCode: profile.classCode,
             role: profile.role.rawValue,
             targetWord: lex.hanzi,
-            triggerRate: Double(triggerRate),
+            triggerRate: Double(peakRate),
             passed: passed,
             timestamp: Date(),
             phase: TrainingPhase.training.rawValue

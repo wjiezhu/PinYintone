@@ -1,0 +1,8 @@
+{
+  "protocolVersion": "field-1.0",
+  "status": "draft",
+  "note": "现场实测：前测（无反馈）→ 训练（有反馈）→ 后测（无反馈，与前测同一组词）。测试词与训练词不重叠。草稿由开发方按声调组合拆分，待研究者审定；审定记录在 backend/research_materials_approval.json，不在本文件里改状态。",
+  "testWords": ["hanzi", "heshui", "canjia", "xiuxi", "xiangxin", "zaocan"],
+  "trainingWords": ["xianzai", "dianshi", "sushe", "shenti", "jingli", "yisheng", "qingchu", "ziji"],
+  "trainingValidAttemptsPerWord": 3
+}

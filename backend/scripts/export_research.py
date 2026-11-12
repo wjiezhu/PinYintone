@@ -43,8 +43,8 @@ sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 
 from app import research_models as m  # noqa: E402
 from app.database import SessionLocal  # noqa: E402
-from app.research_rules import (ELIGIBLE_NATIONALITY, ELIGIBLE_STAGES, aware,  # noqa: E402
-                                background_eligible, latest_consent)
+from app.research_rules import (aware, background_eligible, describe_spec,  # noqa: E402
+                                latest_consent, spec_of)
 
 EXPORT_FORMAT_VERSION = "research-export-2.0"
 SURVEY_FINAL = {"declined", "partial", "complete"}
@@ -129,7 +129,9 @@ def export(db, manifest_ids, out_dir, include_test=False, cutoff=None):
             if latest is None or latest.action != "granted":
                 reason = "consent_not_active"
             else:
-                ok, why = background_eligible(db, p.participant_id)
+                enrolled = (db.get(m.ResearchManifest, p.enrolled_manifest_id)
+                            if p.enrolled_manifest_id else None)
+                ok, why = background_eligible(db, p.participant_id, spec_of(enrolled))
                 if not ok:
                     reason = why
         if reason:
@@ -243,9 +245,10 @@ def export(db, manifest_ids, out_dir, include_test=False, cutoff=None):
         } for x in manifests],
         "windows": {k: [v[0].isoformat(), v[1].isoformat()] for k, v in windows.items()},
         "include_test": include_test,
-        "inclusion_rule": ("属于指定配置所在的研究、同意有效、成年、国籍含 "
-                           f"{ELIGIBLE_NATIONALITY}、课程阶段 {'/'.join(sorted(ELIGIBLE_STAGES))}、"
-                           "is_test=false；记录按发生时间位于研究窗口（左闭右开）、"
+        "inclusion_rule": ("属于指定配置所在的研究、同意有效、按参与者纳入时所用配置的规则合格（"
+                           + "；".join(sorted({f"{x.eligibility_version}：{describe_spec(spec_of(x))}"
+                                               for x in manifests}))
+                           + "）、is_test=false；记录按发生时间位于研究窗口（左闭右开）、"
                            "配置在指定清单内、截止时点前到达。缺失或未知不推定满足。"),
         "prior_use_policy": ("本轮**不以新旧用户作为纳入条件**（研究者已确认）。"
                              "prior_use_status 如实记录，未实现识别路径时为 unknown，"

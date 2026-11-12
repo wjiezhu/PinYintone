@@ -75,6 +75,15 @@ nonisolated struct ResearchState: Codable, Equatable {
     /// 使用后问卷的触发次数，纳入时随配置记下
     var postTriggerCount: Int?
 
+    /// 这份参与状态属于哪一轮研究（study_id）。同意时记下。
+    /// 研究换了新的一轮（新 study_id），上一轮的「已参与 / 已退出 / 未纳入」不该挡住新一轮的邀请。
+    /// 升级前留下的状态没有这一项，一律视为第一轮。
+    var roundStudyID: String?
+    /// 纳入所用配置是否接收录音（纳入时与配置刷新时记下）。离线或配置下线后据此决定能否补传录音
+    var audioUpload: Bool?
+    /// 刚用 Apple 账号登录、还没弹过参加研究的说明。弹一次就清掉；关掉不算同意
+    var signupConsentDue = false
+
     struct PendingWithdrawal: Codable, Equatable {
         let participantID: String
         let consentVersion: String

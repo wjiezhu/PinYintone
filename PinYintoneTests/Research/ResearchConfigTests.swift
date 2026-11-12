@@ -17,7 +17,7 @@ final class ResearchConfigTests: XCTestCase {
         super.tearDown()
     }
 
-    private func served(consent: String = ResearchConsent.textVersion,
+    private func served(consent: String = ResearchConsent.Text.fieldSession.rawValue,
                         eligibility: String? = ResearchEligibility.version,
                         lexicon: String? = ResearchLexicon.lexiconVersion,
                         appVersion: String? = AppEnvironment.appVersion,

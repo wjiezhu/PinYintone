@@ -44,6 +44,17 @@ final class ResearchUploader {
         let attempts: [ResearchAttemptRecord]
     }
 
+    struct RecordingUpload: Encodable {
+        let participantID: String
+        let manifestID: String
+        let attemptID: UUID
+        let audioFormat: String
+        let sampleRate: Int
+        let durationMs: Int
+        let sha256: String
+        let audioBase64: String
+    }
+
     struct AdviceBatch: Encodable {
         let participantID: String
         let manifestID: String
@@ -159,6 +170,45 @@ final class ResearchUploader {
             }) {
             case .done:      attemptLog.remove(ids); uploaded += batch.count
             case .stop:      return uploaded
+            }
+        }
+
+        // 3b) 录音：挂在已上传的尝试上，所以排在尝试之后
+        let recordings = ResearchRecordingQueue.shared
+        for item in recordings.pending {
+            guard let data = recordings.data(for: item) else {
+                recordings.remove([item.attemptID])
+                continue
+            }
+            do {
+                _ = try await APIClient.shared.uploadResearchRecording(RecordingUpload(
+                    participantID: pid, manifestID: mid, attemptID: item.attemptID,
+                    audioFormat: ResearchRecordingQueue.audioFormat,
+                    sampleRate: ResearchRecordingQueue.sampleRate,
+                    durationMs: item.durationMs, sha256: item.sha256,
+                    audioBase64: data.base64EncodedString()))
+                guard sameAccount() else { return uploaded }
+                recordings.remove([item.attemptID])
+                uploaded += 1
+            } catch let error as ResearchAPIError {
+                guard sameAccount() else { return uploaded }
+                switch error.reasonCode {
+                case "attempt_not_uploaded":
+                    break                                 // 尝试还没到，下一轮再传
+                case "audio_upload_disabled", "audio_consent_required",
+                     "attempt_cancelled", "attempt_owner_mismatch":
+                    // 明确不收这段录音：删掉，不再重试。**不是**退出研究——
+                    // 这些 403/409 只针对录音，不能交给 handleRefusal 当成停收
+                    ResearchStore.shared.addDeadLetters(1, queue: "recordings")
+                    recordings.remove([item.attemptID])
+                default:
+                    if handleRefusal(error) { return uploaded }
+                    if error.isRetryable { return uploaded }
+                    ResearchStore.shared.addDeadLetters(1, queue: "recordings")
+                    recordings.remove([item.attemptID])
+                }
+            } catch {
+                return uploaded
             }
         }
 

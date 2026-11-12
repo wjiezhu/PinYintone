@@ -179,10 +179,12 @@ struct StatusLabel: View {
 }
 
 extension Lexeme {
-    /// 按界面语言取释义。语料只有法语与摩洛哥阿拉伯语两种释义：
-    /// 阿拉伯语界面优先 Darija，其余界面优先法语；另一种作为第二行。
+    /// 按界面语言取释义。西班牙语、意大利语界面显示自己语言的一行；
+    /// 阿拉伯语界面优先 Darija，其余界面优先法语，另一种作为第二行。
     /// 没有的语言**不现编**。
     func glosses(for language: String) -> (primary: String, secondary: String?) {
+        if language == "es", let spanish { return (spanish, nil) }
+        if language == "it", let italian { return (italian, nil) }
         let pair = language == "ar" ? (darija, french) : (french, darija)
         let primary = pair.0.isEmpty ? pair.1 : pair.0
         let secondary = (pair.0.isEmpty || pair.1.isEmpty) ? nil : pair.1

@@ -117,10 +117,31 @@ final class ResearchConsentFlowTests: XCTestCase {
         XCTAssertEqual(ResearchStore.shared.state.participation, .notAsked)
     }
 
-    /// 发布的同意文本是研究者审定过的版本（2026-10-14）。
-    /// 文案一改就要递增版本号，否则参与者签的和配置里记的不是同一份。
-    func testShippedConsentTextIsTheApprovedVersion() {
-        XCTAssertEqual(ResearchConsent.textVersion, "consent-1.0")
-        XCTAssertFalse(ResearchConsent.textVersion.contains("unpublished"))
+    /// 现场实测轮携带两版同意文本：不含录音的 1.1 与写明上传录音的 2.0。
+    /// 文案一改就要换版本号，否则参与者签的和配置里记的不是同一份。
+    func testShippedConsentTextsAndAudioClause() {
+        XCTAssertEqual(ResearchConsent.supportedVersions, ["consent-1.1", "consent-2.0"])
+        XCTAssertFalse(ResearchConsent.allowsAudioUpload(consentVersion: "consent-1.0"),
+                       "第一轮的同意书写的是录音不上传")
+        XCTAssertFalse(ResearchConsent.allowsAudioUpload(consentVersion: "consent-1.1"))
+        XCTAssertTrue(ResearchConsent.allowsAudioUpload(consentVersion: "consent-2.0"))
+        XCTAssertFalse(ResearchConsent.allowsAudioUpload(consentVersion: nil))
+        // 写明录音的那一版，采集内容与退出两段都换成讲录音的文字
+        let audio = ResearchConsent.Text.fieldSessionWithAudio.sections.map(\.body)
+        XCTAssertTrue(audio.contains("consent_data_body_audio"))
+        XCTAssertTrue(audio.contains("consent_withdraw_body_audio"))
+        let plain = ResearchConsent.Text.fieldSession.sections.map(\.body)
+        XCTAssertFalse(plain.contains { $0.hasSuffix("_audio") })
+    }
+
+    /// 没有配置时显示不含录音的那一版；配置要求 2.0 时显示 2.0，同意记下的也是 2.0
+    func testConsentShownFollowsTheManifest() {
+        ResearchConfig.shared.setAvailableForTesting(nil)
+        XCTAssertEqual(ResearchConsent.current, .fieldSession)
+        ResearchTestSupport.openManifest(consent: "consent-2.0", audioUpload: true)
+        XCTAssertEqual(ResearchConsent.current, .fieldSessionWithAudio)
+        ResearchConsent.grant()
+        XCTAssertEqual(ResearchStore.shared.state.consentVersion, "consent-2.0")
+        ResearchConfig.shared.setAvailableForTesting(nil)
     }
 }

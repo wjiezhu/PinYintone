@@ -29,6 +29,8 @@ struct PracticeHomeView: View {
     enum Route: Hashable {
         case tone(lexemeID: String?)
         case freeText, saved, aspiration
+        /// 现场实测（已参加研究、配置带实测协议时才出现）
+        case fieldSession
     }
 
     struct SurveyTarget: Identifiable {
@@ -67,11 +69,23 @@ struct PracticeHomeView: View {
                 case .freeText:     FreeTextInputView()
                 case .saved:        SavedWordsView()
                 case .aspiration:   AspirationView()
+                case .fieldSession: ToneTrainingView(startsFieldSession: true)
                 }
             }
         }
         .sheet(item: $surveyToOpen) { ResearchSurveySheet(formKey: $0.formKey) }
         .sheet(isPresented: $showResearchFlow) { ResearchJoinFlowView() }
+        // 刚登录：取到研究配置后弹一次知情同意（可以不同意，不影响任何功能）
+        .task {
+            guard store.state.signupConsentDue else { return }
+            await ResearchConfig.shared.refresh()
+            presentSignupConsentIfDue()
+        }
+        .onChange(of: config.available?.manifestID) { _ in presentSignupConsentIfDue() }
+    }
+
+    private func presentSignupConsentIfDue() {
+        if ResearchEnrollment.consumeSignupConsent() { showResearchFlow = true }
     }
 
     /// 从本机记录里取最近实际练过的词。只读本机，不向服务器要任何人的记录。
@@ -98,11 +112,24 @@ struct PracticeHomeView: View {
         }
     }
 
+    /// 现场实测入口：研究者在场时由学习者点开。配置开着就一直在，不提供关闭
+    private var showsFieldSessionRow: Bool {
+        _ = config.available          // 配置刷新后重新判断
+        return config.fieldSessionAvailable()
+    }
+
     @ViewBuilder
     private var notices: some View {
         let surveys = store.state.surveyBannerDismissed ? [] : SurveyCenter.resumable(in: store.state)
-        if !surveys.isEmpty || showsResearchRow {
+        if !surveys.isEmpty || showsResearchRow || showsFieldSessionRow {
             VStack(spacing: Theme.Space.s) {
+                if showsFieldSessionRow {
+                    noticeRow(icon: "list.number",
+                              title: NSLocalizedString("home_field_session", comment: ""),
+                              id: "home.fieldSession",
+                              onOpen: { path.append(.fieldSession) },
+                              onDismiss: nil)
+                }
                 ForEach(surveys) { record in
                     noticeRow(icon: "square.and.pencil",
                               title: NSLocalizedString(record.formKey == SurveyCenter.preKey

@@ -1,18 +1,22 @@
 {
   "form_key": "tone_needs_v1",
   "form_version": "tone_needs_v1-1.0",
-  "translation_version": "research-survey-i18n-1.0",
+  "translation_version": "research-survey-i18n-1.2",
   "title": {
     "zh": "声调学习情况",
     "en": "Your experience learning tones",
     "fr": "Votre apprentissage des tons",
-    "ar": "تجربتك في تعلّم النغمات"
+    "ar": "تجربتك في تعلّم النغمات",
+    "es": "Tu experiencia al aprender los tonos",
+    "it": "La tua esperienza con i toni"
   },
   "intro": {
     "zh": "开始练习前，我们想了解你平时学习汉语声调的情况。答案没有对错，请按实际经历回答。你可以跳过问题，或不填写并继续使用应用。",
     "en": "Before you start practicing, we would like to learn about your usual experience learning Chinese tones. There are no right or wrong answers. Please answer based on your own experience. You can skip questions or continue using the app without answering.",
     "fr": "Avant de commencer les exercices, nous souhaitons connaître votre expérience habituelle de l’apprentissage des tons du chinois. Il n’y a pas de bonnes ou de mauvaises réponses. Répondez selon votre expérience. Vous pouvez passer des questions ou continuer à utiliser l’application sans répondre.",
-    "ar": "قبل بدء التدريب، نود التعرّف إلى تجربتك المعتادة في تعلّم النغمات في اللغة الصينية. لا توجد إجابات صحيحة أو خاطئة؛ يرجى الإجابة وفقًا لتجربتك الفعلية. يمكنك تخطي الأسئلة أو متابعة استخدام التطبيق دون الإجابة."
+    "ar": "قبل بدء التدريب، نود التعرّف إلى تجربتك المعتادة في تعلّم النغمات في اللغة الصينية. لا توجد إجابات صحيحة أو خاطئة؛ يرجى الإجابة وفقًا لتجربتك الفعلية. يمكنك تخطي الأسئلة أو متابعة استخدام التطبيق دون الإجابة.",
+    "es": "Antes de empezar a practicar, nos gustaría conocer tu experiencia habitual al aprender los tonos del chino. No hay respuestas correctas ni incorrectas. Responde según tu propia experiencia. Puedes saltar preguntas o seguir usando la app sin responder.",
+    "it": "Prima di iniziare a esercitarti, vorremmo conoscere la tua esperienza abituale con i toni del cinese. Non ci sono risposte giuste o sbagliate. Rispondi in base alla tua esperienza. Puoi saltare le domande o continuare a usare l'app senza rispondere."
   },
   "questions": [
     {
@@ -22,7 +26,9 @@
         "zh": "过去两周，你说汉语时，会注意自己声调的读法吗？",
         "en": "Over the past two weeks, how often did you pay attention to how you pronounced tones when speaking Chinese?",
         "fr": "Au cours des deux dernières semaines, à quelle fréquence avez-vous fait attention à votre prononciation des tons en parlant chinois ?",
-        "ar": "خلال الأسبوعين الماضيين، كم مرة كنت تنتبه إلى نطقك للنغمات عند التحدث بالصينية؟"
+        "ar": "خلال الأسبوعين الماضيين، كم مرة كنت تنتبه إلى نطقك للنغمات عند التحدث بالصينية؟",
+        "es": "En las últimas dos semanas, ¿con qué frecuencia prestaste atención a cómo pronunciabas los tonos al hablar chino?",
+        "it": "Nelle ultime due settimane, quanto spesso hai fatto attenzione a come pronunciavi i toni parlando cinese?"
       },
       "options": [
         {
@@ -31,7 +37,9 @@
             "zh": "从不",
             "en": "Never",
             "fr": "Jamais",
-            "ar": "أبدًا"
+            "ar": "أبدًا",
+            "es": "Nunca",
+            "it": "Mai"
           }
         },
         {
@@ -40,7 +48,9 @@
             "zh": "很少",
             "en": "Rarely",
             "fr": "Rarement",
-            "ar": "نادرًا"
+            "ar": "نادرًا",
+            "es": "Rara vez",
+            "it": "Raramente"
           }
         },
         {
@@ -49,7 +59,9 @@
             "zh": "有时",
             "en": "Sometimes",
             "fr": "Parfois",
-            "ar": "أحيانًا"
+            "ar": "أحيانًا",
+            "es": "A veces",
+            "it": "A volte"
           }
         },
         {
@@ -58,7 +70,9 @@
             "zh": "经常",
             "en": "Often",
             "fr": "Souvent",
-            "ar": "غالبًا"
+            "ar": "غالبًا",
+            "es": "A menudo",
+            "it": "Spesso"
           }
         },
         {
@@ -67,7 +81,9 @@
             "zh": "总是",
             "en": "Always",
             "fr": "Toujours",
-            "ar": "دائمًا"
+            "ar": "دائمًا",
+            "es": "Siempre",
+            "it": "Sempre"
           }
         },
         {
@@ -76,7 +92,9 @@
             "zh": "过去两周没有说过汉语",
             "en": "I have not spoken Chinese in the past two weeks",
             "fr": "Je n’ai pas parlé chinois au cours des deux dernières semaines",
-            "ar": "لم أتحدث بالصينية خلال الأسبوعين الماضيين"
+            "ar": "لم أتحدث بالصينية خلال الأسبوعين الماضيين",
+            "es": "No he hablado chino en las últimas dos semanas",
+            "it": "Non ho parlato cinese nelle ultime due settimane"
           }
         }
       ],
@@ -89,7 +107,9 @@
         "zh": "学习汉语声调时，你觉得哪些事情比较困难？可多选。",
         "en": "When learning Chinese tones, which things do you find difficult? Select all that apply.",
         "fr": "Lorsque vous apprenez les tons du chinois, qu’est-ce qui vous semble difficile ? Plusieurs réponses possibles.",
-        "ar": "عند تعلّم النغمات في اللغة الصينية، ما الأمور التي تجدها صعبة؟ يمكنك اختيار أكثر من إجابة."
+        "ar": "عند تعلّم النغمات في اللغة الصينية، ما الأمور التي تجدها صعبة؟ يمكنك اختيار أكثر من إجابة.",
+        "es": "Al aprender los tonos del chino, ¿qué te resulta difícil? Selecciona todo lo que corresponda.",
+        "it": "Studiando i toni del cinese, che cosa trovi difficile? Seleziona tutto ciò che è pertinente."
       },
       "options": [
         {
@@ -98,7 +118,9 @@
             "zh": "听出不同声调的区别",
             "en": "Hearing the difference between tones",
             "fr": "Entendre la différence entre les tons",
-            "ar": "سماع الفرق بين النغمات المختلفة"
+            "ar": "سماع الفرق بين النغمات المختلفة",
+            "es": "Oír la diferencia entre los tonos",
+            "it": "Sentire la differenza tra i toni"
           }
         },
         {
@@ -107,7 +129,9 @@
             "zh": "跟着示范读准一个字的声调",
             "en": "Pronouncing the tone of a single Chinese character correctly by following a model",
             "fr": "Prononcer correctement le ton d’un caractère chinois en suivant un modèle",
-            "ar": "نطق نغمة حرف صيني واحد بشكل صحيح باتباع نموذج للنطق"
+            "ar": "نطق نغمة حرف صيني واحد بشكل صحيح باتباع نموذج للنطق",
+            "es": "Pronunciar bien el tono de un solo carácter siguiendo un modelo",
+            "it": "Pronunciare correttamente il tono di un singolo carattere seguendo un modello"
           }
         },
         {
@@ -116,7 +140,9 @@
             "zh": "连续读准一个词中几个字的声调",
             "en": "Pronouncing the tones of several characters correctly together in a word",
             "fr": "Enchaîner correctement les tons des différents caractères d’un mot",
-            "ar": "نطق نغمات عدة أحرف متتابعة في كلمة واحدة بشكل صحيح"
+            "ar": "نطق نغمات عدة أحرف متتابعة في كلمة واحدة بشكل صحيح",
+            "es": "Pronunciar bien juntos los tonos de varios caracteres en una palabra",
+            "it": "Pronunciare correttamente insieme i toni di più caratteri in una parola"
           }
         },
         {
@@ -125,7 +151,9 @@
             "zh": "在句子中保持声调准确",
             "en": "Keeping tones accurate in sentences",
             "fr": "Garder des tons corrects dans les phrases",
-            "ar": "الحفاظ على صحة النغمات داخل الجمل"
+            "ar": "الحفاظ على صحة النغمات داخل الجمل",
+            "es": "Mantener los tonos correctos en las frases",
+            "it": "Mantenere i toni corretti nelle frasi"
           }
         },
         {
@@ -134,7 +162,9 @@
             "zh": "其他",
             "en": "Other",
             "fr": "Autre",
-            "ar": "غير ذلك"
+            "ar": "غير ذلك",
+            "es": "Otro",
+            "it": "Altro"
           },
           "text_input": {
             "max_chars": 200
@@ -146,7 +176,9 @@
             "zh": "目前没有明显困难",
             "en": "I do not currently have any noticeable difficulties",
             "fr": "Je ne rencontre actuellement aucune difficulté particulière",
-            "ar": "لا أواجه صعوبات واضحة حاليًا"
+            "ar": "لا أواجه صعوبات واضحة حاليًا",
+            "es": "Ahora no tengo dificultades notables",
+            "it": "Al momento non ho difficoltà evidenti"
           },
           "exclusive": true
         },
@@ -156,7 +188,9 @@
             "zh": "不确定",
             "en": "Not sure",
             "fr": "Je ne sais pas",
-            "ar": "لست متأكدًا"
+            "ar": "لست متأكدًا",
+            "es": "No estoy seguro/a",
+            "it": "Non so"
           },
           "exclusive": true
         }
@@ -169,7 +203,9 @@
         "zh": "没有老师或他人提示时，你能判断自己的声调是否读对吗？",
         "en": "Without help from a teacher or someone else, can you tell whether you have pronounced your tones correctly?",
         "fr": "Sans l’aide d’un enseignant ou d’une autre personne, pouvez-vous savoir si vous avez prononcé les tons correctement ?",
-        "ar": "دون مساعدة من معلّم أو شخص آخر، هل تستطيع معرفة ما إذا كنت قد نطقت النغمات بشكل صحيح؟"
+        "ar": "دون مساعدة من معلّم أو شخص آخر، هل تستطيع معرفة ما إذا كنت قد نطقت النغمات بشكل صحيح؟",
+        "es": "Sin ayuda de un docente o de otra persona, ¿puedes saber si has pronunciado bien los tonos?",
+        "it": "Senza l'aiuto di un docente o di altre persone, riesci a capire se hai pronunciato correttamente i toni?"
       },
       "options": [
         {
@@ -178,7 +214,9 @@
             "zh": "完全不能",
             "en": "Not at all",
             "fr": "Pas du tout",
-            "ar": "لا أستطيع إطلاقًا"
+            "ar": "لا أستطيع إطلاقًا",
+            "es": "En absoluto",
+            "it": "Per niente"
           }
         },
         {
@@ -187,7 +225,9 @@
             "zh": "大多不能",
             "en": "Usually not",
             "fr": "Généralement non",
-            "ar": "لا أستطيع في معظم الأحيان"
+            "ar": "لا أستطيع في معظم الأحيان",
+            "es": "Normalmente no",
+            "it": "Di solito no"
           }
         },
         {
@@ -196,7 +236,9 @@
             "zh": "有时能",
             "en": "Sometimes",
             "fr": "Parfois",
-            "ar": "أستطيع أحيانًا"
+            "ar": "أستطيع أحيانًا",
+            "es": "A veces",
+            "it": "A volte"
           }
         },
         {
@@ -205,7 +247,9 @@
             "zh": "大多能",
             "en": "Most of the time",
             "fr": "La plupart du temps",
-            "ar": "أستطيع في معظم الأحيان"
+            "ar": "أستطيع في معظم الأحيان",
+            "es": "La mayoría de las veces",
+            "it": "Il più delle volte"
           }
         },
         {
@@ -214,7 +258,9 @@
             "zh": "基本都能",
             "en": "Almost always",
             "fr": "Presque toujours",
-            "ar": "أستطيع دائمًا تقريبًا"
+            "ar": "أستطيع دائمًا تقريبًا",
+            "es": "Casi siempre",
+            "it": "Quasi sempre"
           }
         },
         {
@@ -223,7 +269,9 @@
             "zh": "不确定",
             "en": "Not sure",
             "fr": "Je ne sais pas",
-            "ar": "لست متأكدًا"
+            "ar": "لست متأكدًا",
+            "es": "No estoy seguro/a",
+            "it": "Non so"
           }
         }
       ],
@@ -236,7 +284,9 @@
         "zh": "过去两周，你有多少天在课外专门练习过汉语声调？",
         "en": "Over the past two weeks, on how many days did you specifically practice Chinese tones outside class?",
         "fr": "Au cours des deux dernières semaines, pendant combien de jours avez-vous fait des exercices spécifiquement consacrés aux tons du chinois en dehors des cours ?",
-        "ar": "خلال الأسبوعين الماضيين، في كم يوم خصصت وقتًا للتدرّب على النغمات الصينية خارج الحصص الدراسية؟"
+        "ar": "خلال الأسبوعين الماضيين، في كم يوم خصصت وقتًا للتدرّب على النغمات الصينية خارج الحصص الدراسية؟",
+        "es": "En las últimas dos semanas, ¿cuántos días practicaste específicamente los tonos del chino fuera de clase?",
+        "it": "Nelle ultime due settimane, in quanti giorni ti sei esercitato/a specificamente sui toni fuori dalle lezioni?"
       },
       "options": [
         {
@@ -245,7 +295,9 @@
             "zh": "0天",
             "en": "0 days",
             "fr": "0 jour",
-            "ar": "0 يوم"
+            "ar": "0 يوم",
+            "es": "0 días",
+            "it": "0 giorni"
           }
         },
         {
@@ -254,7 +306,9 @@
             "zh": "1—2天",
             "en": "1–2 days",
             "fr": "1 à 2 jours",
-            "ar": "من يوم واحد إلى يومين"
+            "ar": "من يوم واحد إلى يومين",
+            "es": "1–2 días",
+            "it": "1–2 giorni"
           }
         },
         {
@@ -263,7 +317,9 @@
             "zh": "3—5天",
             "en": "3–5 days",
             "fr": "3 à 5 jours",
-            "ar": "من 3 إلى 5 أيام"
+            "ar": "من 3 إلى 5 أيام",
+            "es": "3–5 días",
+            "it": "3–5 giorni"
           }
         },
         {
@@ -272,7 +328,9 @@
             "zh": "6—9天",
             "en": "6–9 days",
             "fr": "6 à 9 jours",
-            "ar": "من 6 إلى 9 أيام"
+            "ar": "من 6 إلى 9 أيام",
+            "es": "6–9 días",
+            "it": "6–9 giorni"
           }
         },
         {
@@ -281,7 +339,9 @@
             "zh": "10—14天",
             "en": "10–14 days",
             "fr": "10 à 14 jours",
-            "ar": "من 10 إلى 14 يومًا"
+            "ar": "من 10 إلى 14 يومًا",
+            "es": "10–14 días",
+            "it": "10–14 giorni"
           }
         },
         {
@@ -290,7 +350,9 @@
             "zh": "记不清",
             "en": "I cannot remember",
             "fr": "Je ne me souviens pas",
-            "ar": "لا أتذكر"
+            "ar": "لا أتذكر",
+            "es": "No lo recuerdo",
+            "it": "Non ricordo"
           }
         }
       ],
@@ -303,7 +365,9 @@
         "zh": "练习汉语声调时，你通常通过哪些方式判断自己读得怎么样？可多选。",
         "en": "When practicing Chinese tones, how do you usually judge your pronunciation? Select all that apply.",
         "fr": "Lorsque vous vous entraînez aux tons du chinois, comment évaluez-vous habituellement votre prononciation ? Plusieurs réponses possibles.",
-        "ar": "عند التدرّب على النغمات الصينية، كيف تقيّم نطقك عادةً؟ يمكنك اختيار أكثر من إجابة."
+        "ar": "عند التدرّب على النغمات الصينية، كيف تقيّم نطقك عادةً؟ يمكنك اختيار أكثر من إجابة.",
+        "es": "Al practicar los tonos, ¿cómo sueles valorar tu pronunciación? Selecciona todo lo que corresponda.",
+        "it": "Esercitandoti sui toni, come valuti di solito la tua pronuncia? Seleziona tutto ciò che è pertinente."
       },
       "options": [
         {
@@ -312,7 +376,9 @@
             "zh": "请老师纠正",
             "en": "Ask a teacher to correct me",
             "fr": "Demander à un enseignant de me corriger",
-            "ar": "أطلب من المعلّم تصحيح نطقي"
+            "ar": "أطلب من المعلّم تصحيح نطقي",
+            "es": "Pido a un docente que me corrija",
+            "it": "Chiedo a un docente di correggermi"
           }
         },
         {
@@ -321,7 +387,9 @@
             "zh": "请同学或朋友帮助",
             "en": "Ask classmates or friends for help",
             "fr": "Demander de l’aide à des camarades ou à des amis",
-            "ar": "أطلب المساعدة من زملائي أو أصدقائي"
+            "ar": "أطلب المساعدة من زملائي أو أصدقائي",
+            "es": "Pido ayuda a compañeros o amigos",
+            "it": "Chiedo aiuto a compagni o amici"
           }
         },
         {
@@ -330,7 +398,9 @@
             "zh": "听示范后，自己比较",
             "en": "Listen to a model and compare my pronunciation myself",
             "fr": "Écouter un modèle et comparer moi-même ma prononciation",
-            "ar": "أستمع إلى نموذج للنطق ثم أقارن نطقي به بنفسي"
+            "ar": "أستمع إلى نموذج للنطق ثم أقارن نطقي به بنفسي",
+            "es": "Escucho un modelo y comparo mi pronunciación",
+            "it": "Ascolto un modello e confronto da solo/a la mia pronuncia"
           }
         },
         {
@@ -339,7 +409,9 @@
             "zh": "录下自己的声音再回听",
             "en": "Record my voice and listen to it again",
             "fr": "Enregistrer ma voix, puis la réécouter",
-            "ar": "أسجّل صوتي ثم أستمع إليه مجددًا"
+            "ar": "أسجّل صوتي ثم أستمع إليه مجددًا",
+            "es": "Grabo mi voz y la vuelvo a escuchar",
+            "it": "Registro la mia voce e la riascolto"
           }
         },
         {
@@ -348,7 +420,9 @@
             "zh": "查看其他软件的反馈",
             "en": "Check feedback from other apps or software",
             "fr": "Consulter les retours d’autres applications ou logiciels",
-            "ar": "أراجع الملاحظات التي تقدّمها تطبيقات أو برامج أخرى"
+            "ar": "أراجع الملاحظات التي تقدّمها تطبيقات أو برامج أخرى",
+            "es": "Miro los comentarios de otras apps o programas",
+            "it": "Controllo il riscontro di altre app o programmi"
           }
         },
         {
@@ -357,7 +431,9 @@
             "zh": "其他",
             "en": "Other",
             "fr": "Autre",
-            "ar": "غير ذلك"
+            "ar": "غير ذلك",
+            "es": "Otro",
+            "it": "Altro"
           },
           "text_input": {
             "max_chars": 200
@@ -369,7 +445,9 @@
             "zh": "通常不判断",
             "en": "I do not usually check",
             "fr": "Je n’évalue généralement pas ma prononciation",
-            "ar": "لا أقيّم نطقي عادةً"
+            "ar": "لا أقيّم نطقي عادةً",
+            "es": "No suelo comprobarlo",
+            "it": "Di solito non controllo"
           },
           "exclusive": true
         },
@@ -379,7 +457,9 @@
             "zh": "还没有进行过声调练习",
             "en": "I have not practiced tones yet",
             "fr": "Je n’ai pas encore fait d’exercices sur les tons",
-            "ar": "لم أتدرّب على النغمات بعد"
+            "ar": "لم أتدرّب على النغمات بعد",
+            "es": "Todavía no he practicado los tonos",
+            "it": "Non mi sono ancora esercitato/a sui toni"
           },
           "exclusive": true
         }
@@ -393,7 +473,9 @@
         "zh": "你最希望声调练习工具帮助你做什么？最多选两项。",
         "en": "What would you most like a tone-practice tool to help you do? Select up to two answers.",
         "fr": "Qu’aimeriez-vous surtout qu’un outil d’entraînement aux tons vous aide à faire ? Sélectionnez deux réponses au maximum.",
-        "ar": "ما أكثر ما ترغب في أن تساعدك عليه أداة للتدرّب على النغمات؟ اختر إجابتين كحد أقصى."
+        "ar": "ما أكثر ما ترغب في أن تساعدك عليه أداة للتدرّب على النغمات؟ اختر إجابتين كحد أقصى.",
+        "es": "¿En qué te gustaría sobre todo que te ayudara una herramienta de práctica de tonos? Selecciona hasta dos respuestas.",
+        "it": "In che cosa vorresti soprattutto essere aiutato/a da uno strumento per i toni? Seleziona fino a due risposte."
       },
       "options": [
         {
@@ -402,7 +484,9 @@
             "zh": "听清楚示范发音",
             "en": "Hear model pronunciations clearly",
             "fr": "Entendre clairement les modèles de prononciation",
-            "ar": "سماع نماذج النطق بوضوح"
+            "ar": "سماع نماذج النطق بوضوح",
+            "es": "Oír con claridad las pronunciaciones modelo",
+            "it": "Sentire chiaramente le pronunce modello"
           }
         },
         {
@@ -411,7 +495,9 @@
             "zh": "了解自己的发音哪里需要调整",
             "en": "Understand which parts of my pronunciation need adjustment",
             "fr": "Comprendre ce que je dois ajuster dans ma prononciation",
-            "ar": "معرفة ما يحتاج إلى تعديل في نطقي"
+            "ar": "معرفة ما يحتاج إلى تعديل في نطقي",
+            "es": "Entender qué partes de mi pronunciación debo ajustar",
+            "it": "Capire quali parti della mia pronuncia correggere"
           }
         },
         {
@@ -420,7 +506,9 @@
             "zh": "获得具体的练习建议",
             "en": "Get specific practice suggestions",
             "fr": "Obtenir des conseils précis pour m’entraîner",
-            "ar": "الحصول على اقتراحات محددة للتدريب"
+            "ar": "الحصول على اقتراحات محددة للتدريب",
+            "es": "Recibir sugerencias concretas de práctica",
+            "it": "Ricevere suggerimenti concreti per esercitarmi"
           }
         },
         {
@@ -429,7 +517,9 @@
             "zh": "练习课堂上学过的词语",
             "en": "Practice words learned in class",
             "fr": "M’entraîner sur les mots appris en cours",
-            "ar": "التدرّب على الكلمات التي تعلّمتها في الصف"
+            "ar": "التدرّب على الكلمات التي تعلّمتها في الصف",
+            "es": "Practicar palabras aprendidas en clase",
+            "it": "Esercitarmi sulle parole imparate a lezione"
           }
         },
         {
@@ -438,7 +528,9 @@
             "zh": "查看自己的练习记录和变化",
             "en": "Review my practice history and changes over time",
             "fr": "Consulter mon historique d’exercices et son évolution",
-            "ar": "الاطّلاع على سجل تدريباتي والتغيّرات بمرور الوقت"
+            "ar": "الاطّلاع على سجل تدريباتي والتغيّرات بمرور الوقت",
+            "es": "Revisar mi historial de práctica y los cambios con el tiempo",
+            "it": "Rivedere la cronologia degli esercizi e i cambiamenti nel tempo"
           }
         },
         {
@@ -447,7 +539,9 @@
             "zh": "其他",
             "en": "Other",
             "fr": "Autre",
-            "ar": "غير ذلك"
+            "ar": "غير ذلك",
+            "es": "Otro",
+            "it": "Altro"
           },
           "text_input": {
             "max_chars": 200
@@ -459,7 +553,9 @@
             "zh": "暂时没有明确期待",
             "en": "I do not have any specific expectations yet",
             "fr": "Je n’ai pas encore d’attentes précises",
-            "ar": "ليست لدي توقعات محددة حاليًا"
+            "ar": "ليست لدي توقعات محددة حاليًا",
+            "es": "Todavía no tengo expectativas concretas",
+            "it": "Non ho ancora aspettative precise"
           },
           "exclusive": true
         }

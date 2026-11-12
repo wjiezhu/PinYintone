@@ -96,7 +96,9 @@ class PinYintoneUITestCase: XCTestCase {
     // MARK: - 常用步骤
 
     /// 语言选择 → 学生 → 测试登录，停在练习首页
-    func signIn(chooseLanguage: String? = nil, file: StaticString = #filePath, line: UInt = #line) {
+    /// `keepConsentPopup` 为 false 时关掉登录后弹出的研究说明，停在首页（状态仍是「未询问」）
+    func signIn(chooseLanguage: String? = nil, keepConsentPopup: Bool = false,
+                file: StaticString = #filePath, line: UInt = #line) {
         if let chooseLanguage {
             tap(app.buttons["onboarding.language.\(chooseLanguage)"], file: file, line: line)
         }
@@ -107,6 +109,9 @@ class PinYintoneUITestCase: XCTestCase {
         login.tap()
         XCTAssertTrue(app.buttons["home.continueTone"].waitForExistence(timeout: 15),
                       "登录后应直接进入练习首页", file: file, line: line)
+        if !keepConsentPopup, app.buttons["consent.decline"].waitForExistence(timeout: 4) {
+            tap(app.buttons["research.close"], file: file, line: line)
+        }
     }
 
     func tap(_ element: XCUIElement, timeout: TimeInterval = 10,

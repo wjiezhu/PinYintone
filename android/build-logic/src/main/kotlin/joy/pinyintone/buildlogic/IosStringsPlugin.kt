@@ -19,11 +19,6 @@ abstract class GenerateIosStringsTask : DefaultTask() {
     @get:PathSensitive(PathSensitivity.RELATIVE)
     abstract val localizationsDir: DirectoryProperty
 
-    /** 只有 Android 有的语言（见 [IosStrings.ANDROID_ONLY]） */
-    @get:InputDirectory
-    @get:PathSensitive(PathSensitivity.RELATIVE)
-    abstract val androidOnlyLocalizationsDir: DirectoryProperty
-
     @get:InputFile
     @get:PathSensitive(PathSensitivity.RELATIVE)
     abstract val keysFile: RegularFileProperty
@@ -33,9 +28,9 @@ abstract class GenerateIosStringsTask : DefaultTask() {
 
     @TaskAction
     fun run() {
+        val root = localizationsDir.get().asFile
         val sources = IosStrings.LANGUAGES.keys.associateWith {
-            val root = if (it in IosStrings.ANDROID_ONLY) androidOnlyLocalizationsDir else localizationsDir
-            File(root.get().asFile, "$it.lproj/Localizable.strings").readText()
+            File(root, "$it.lproj/Localizable.strings").readText()
         }
         val keys = IosStrings.parseKeys(keysFile.get().asFile.readText())
         val out = outputDir.get().asFile
@@ -73,7 +68,6 @@ class IosStringsPlugin : Plugin<Project> {
             it.group = "pinyintone"
             it.description = "从 iOS 的 Localizable.strings 生成 Android 字符串资源"
             it.localizationsDir.set(project.rootProject.layout.projectDirectory.dir("../PinYintone/Resources/Localizations"))
-            it.androidOnlyLocalizationsDir.set(project.layout.projectDirectory.dir("localizations"))
             it.keysFile.set(project.layout.projectDirectory.file("ios-strings.keys"))
             it.outputDir.set(project.layout.buildDirectory.dir("generated/iosStrings/res"))
         }

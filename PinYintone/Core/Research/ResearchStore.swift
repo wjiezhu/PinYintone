@@ -75,10 +75,35 @@ final class ResearchStore: ObservableObject {
         ResearchAttemptLog.shared.reload()
         ResearchEventLog.shared.reload()
         AdviceRequestLog.shared.reload()
+        ResearchRecordingQueue.shared.reload()
     }
+
+    /// 研究开了新的一轮（新的 study_id）：上一轮的参与状态不再挡住新一轮的邀请。
+    ///
+    /// 只在上一轮的东西都已送达之后才翻篇——还有没传完的尝试、事件、问卷、录音或退出指令时
+    /// 先不动，它们会按上一轮的身份补传完，下次刷新配置时再翻。
+    func rollOverToNewStudyIfNeeded(_ studyID: String) {
+        guard accountKey != nil else { return }
+        let s = state
+        guard s.participation != .notAsked, s.roundStudyID != studyID else { return }
+        let drained = s.pendingWithdrawal == nil
+            && ResearchAttemptLog.shared.pending.isEmpty
+            && ResearchEventLog.shared.pending.isEmpty
+            && AdviceRequestLog.shared.pending.isEmpty
+            && ResearchRecordingQueue.shared.pending.isEmpty
+            && SurveyCenter.recordsNeedingUpload(in: s).isEmpty
+        guard drained else { return }
+        update { $0 = ResearchState() }
+        // 上一轮在首页关掉的研究邀请，新一轮重新出现一次
+        UserDefaults.standard.removeObject(forKey: "pt_research_home_row_dismissed")
+    }
+
+    /// 本账号研究数据在本机的存储域名（录音文件也按它分目录）。未登录为 nil
+    var storageDomain: String? { suiteName }
 
     /// 删除账号时抹掉该账号在本机的全部研究状态与队列。
     func purgeCurrentAccount() {
+        ResearchRecordingQueue.shared.removeAll()
         if let suiteName { UserDefaults.standard.removePersistentDomain(forName: suiteName) }
         defaults?.removeObject(forKey: Key.state)
         activate(accountKey: nil)

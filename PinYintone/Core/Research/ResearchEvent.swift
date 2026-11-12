@@ -11,6 +11,10 @@ nonisolated enum ResearchEventName: String, Codable, CaseIterable {
     case historyOpened = "history_opened"
     case operationError = "operation_error"
     case crashReportReceived = "crash_report_received"
+    /// 现场实测（2026-10-28）：流程开始、某一段走完、流程结束（完成或中途离开）
+    case fieldSessionStarted = "field_session_started"
+    case fieldStepCompleted = "field_step_completed"
+    case fieldSessionEnded = "field_session_ended"
 
     /// 是否必须携带 attempt_id（字典 §8 表格）
     var requiresAttempt: Bool {
@@ -110,6 +114,9 @@ nonisolated struct ResearchEvent: Codable, Equatable {
         case .crashReportReceived: return ["crash_occurred_at"]
         case .modelAudioStarted, .learnerAudioStarted, .historyOpened:
             return []
+        case .fieldSessionStarted: return ["field_session_id", "protocol_version"]
+        case .fieldStepCompleted:  return ["field_session_id", "step"]
+        case .fieldSessionEnded:   return ["field_session_id", "outcome", "last_step"]
         }
     }
 }

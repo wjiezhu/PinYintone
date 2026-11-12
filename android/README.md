@@ -53,7 +53,7 @@ android/
 | 内容 | 源头 | Android 怎么拿 |
 |------|------|----------------|
 | 语料 | `PinYintone/Resources/Corpus/lexemes.json` | 构建时 `copySharedCorpus` 复制进 assets；core 测试直接读 |
-| 界面文字（中英法阿；西班牙语只有 Android，源文件在 `android/app/localizations/es.lproj`，只含白名单里的键，不放进 iOS 的 Localizations 以免 App Store 把它列成 iOS 支持的语言） | `PinYintone/Resources/Localizations/*/Localizable.strings` | 构建时 `generateIosStrings` 按 `app/ios-strings.keys` 生成 `strings_ios.xml`；缺译或占位符不一致即构建失败 |
+| 界面文字（中英法阿西） | `PinYintone/Resources/Localizations/*/Localizable.strings` | 构建时 `generateIosStrings` 按 `app/ios-strings.keys` 生成 `strings_ios.xml`；缺译或占位符不一致即构建失败 |
 | 颜色 token | `PinYintone/Core/UI/Theme.swift` | 色值抄在 `ThemeTokens.kt`，测试解析 Theme.swift 逐个核对 |
 | 词序、记录字段、schemaVersion | `CorpusLoader.swift` / `SyncDTOs.swift` / `RecordSchema.swift` | 抄在 Kotlin 里，测试解析 Swift 文件核对 |
 

@@ -37,7 +37,15 @@ enum RecordSchema {
     ///      训练词与自测词不再要求不重叠；`assessmentSetVersion` 仅自测记录有值。
     ///      送气与自由文本记录的 `phase` 恒为 `training`（此前会跟着声调阶段写成
     ///      `pretest` 等，那是错的——它们从不属于声调的前后测）。
-    /// - 7：新增**走势幅度闸门**（`ToneContourSpanGate`）。词里含二 / 三 / 四声时，
+    /// - 7：**现场实测**（2026-10-28）。`phase` 重新出现 `pretest` / `posttest`，
+    ///      但语义是「研究者在场、学习者自愿开始的一次前测 → 训练 → 后测」里的裸测，
+    ///      不是 v2–v5 强制流程里的前后测，**不得与那些记录合并分析**。
+    ///      测试词与训练词不重叠（协议 field_protocol.json）；前后测记录的
+    ///      `assessmentSetVersion` 写协议版本（如 `field-1.0`）。实测训练段写 `training`，
+    ///      与普通练习在旧表里无法区分——要区分请用研究表的 `field_session_id`。
+    ///      送气记录同版起语义也变了：`triggerRate` 是录音内峰值（分母固定 6 帧），
+    ///      不送气词 `passed` = 峰值 < 0.6（方向相反）。不可与 ≤ 6 的送气记录混合分析。
+    /// - 7（同号，待重编号）：新增**走势幅度闸门**（`ToneContourSpanGate`）。词里含二 / 三 / 四声时，
     ///      clean 后原始 Hz 的跨度（P90 − P10）不足 2 个半音即判 `fail`，不论 DTW 分数——
     ///      归一化尺度不变，读平的录音照样能和参照形状对上（见
     ///      `docs/SCORING_FLAT_READING_STUDY.md`）。`dtwScore` 的算法不变，与 v6 逐位一致；
