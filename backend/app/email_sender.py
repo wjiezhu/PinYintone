@@ -19,6 +19,7 @@ import ssl
 import urllib.error
 import urllib.request
 from email.message import EmailMessage
+from email.utils import formataddr, formatdate, make_msgid, parseaddr
 from typing import Protocol
 
 from .config import settings
@@ -53,6 +54,21 @@ def compose(code: str, ttl_minutes: int) -> tuple[str, str]:
         "ignorez cet e-mail.\n"
     )
     return subject, body
+
+
+DISPLAY_NAME = "Pinyintone"
+
+
+def with_display_name(sender: str) -> str:
+    """EMAIL_FROM 只写了地址时补上发件人名称。
+
+    收件端看到的是「Pinyintone」而不是一个陌生的个人邮箱地址；没有名称的发件人
+    是常见的垃圾邮件特征之一。已经写了名称（`名称 <地址>`）就原样保留。
+    """
+    name, addr = parseaddr(sender)
+    if name or not addr:
+        return sender
+    return formataddr((DISPLAY_NAME, addr))
 
 
 class ConsoleSender:
@@ -105,6 +121,10 @@ class SMTPSender:
         msg["From"] = self.sender
         msg["To"] = to
         msg["Subject"] = subject
+        # 缺 Date / Message-ID 的邮件更容易被判成垃圾邮件；Message-ID 用发件地址的域名
+        msg["Date"] = formatdate(usegmt=True)
+        domain = parseaddr(self.sender)[1].rpartition("@")[2] or None
+        msg["Message-ID"] = make_msgid(domain=domain)
         msg.set_content(body)
         context = ssl.create_default_context()
         try:
@@ -134,8 +154,8 @@ def _resend() -> EmailSender:
                               ("EMAIL_FROM", settings.email_from)) if not v.strip()]
     if missing:
         raise EmailNotConfigured(f"缺少 {', '.join(missing)}")
-    return ResendSender(settings.resend_api_key.strip(), settings.email_from.strip(),
-                        settings.resend_api_url)
+    return ResendSender(settings.resend_api_key.strip(),
+                        with_display_name(settings.email_from.strip()), settings.resend_api_url)
 
 
 def _smtp() -> EmailSender:
@@ -147,7 +167,8 @@ def _smtp() -> EmailSender:
     if security not in ("ssl", "starttls"):
         raise EmailNotConfigured("SMTP_SECURITY 须为 ssl 或 starttls")
     return SMTPSender(settings.smtp_host.strip(), settings.smtp_port, settings.smtp_username,
-                      settings.smtp_password, security, settings.email_from.strip())
+                      settings.smtp_password, security,
+                      with_display_name(settings.email_from.strip()))
 
 
 _FACTORIES = {"console": _console, "resend": _resend, "smtp": _smtp}

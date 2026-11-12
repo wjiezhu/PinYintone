@@ -521,3 +521,43 @@ def test_mail_body_has_code_and_ttl_in_three_languages_without_links():
     assert "042917" in subject
     assert body.count("042917") == 3 and body.count("10") == 3
     assert "http" not in body.lower()
+
+
+def test_bare_sender_address_gets_the_pinyintone_display_name():
+    assert email_sender.with_display_name("a@gmail.com") == "Pinyintone <a@gmail.com>"
+    assert email_sender.with_display_name("Other <a@gmail.com>") == "Other <a@gmail.com>"
+
+
+def test_smtp_sender_sets_display_name_date_and_message_id(real_sender, monkeypatch):
+    monkeypatch.setattr(settings, "app_env", "production")
+    monkeypatch.setattr(settings, "email_sender", "smtp")
+    monkeypatch.setattr(settings, "email_from", "sender@gmail.com")
+    monkeypatch.setattr(settings, "smtp_host", "smtp.example.com")
+    monkeypatch.setattr(settings, "smtp_username", "sender@gmail.com")
+    monkeypatch.setattr(settings, "smtp_password", "app-password")
+    monkeypatch.setattr(settings, "smtp_security", "ssl")
+    sent = []
+
+    class FakeSMTP:
+        def __init__(self, host, port, timeout, context):
+            self.host = host
+
+        def __enter__(self):
+            return self
+
+        def __exit__(self, *a):
+            return False
+
+        def login(self, user, password):
+            sent.append(("login", user))
+
+        def send_message(self, msg):
+            sent.append(("msg", msg))
+
+    monkeypatch.setattr(email_sender.smtplib, "SMTP_SSL", FakeSMTP)
+    assert _request("x@example.com").status_code == 200
+    assert sent[0] == ("login", "sender@gmail.com")
+    msg = sent[1][1]
+    assert msg["From"] == "Pinyintone <sender@gmail.com>"
+    assert msg["To"] == "x@example.com"
+    assert msg["Date"] and msg["Message-ID"].endswith("@gmail.com>")
