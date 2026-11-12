@@ -127,7 +127,7 @@ struct StudentSignupView: View {
     private var uiTestLoginButton: some View {
         if let identifier = UITestSupport.loginIdentifier {
             Button("UI test sign-in") {
-                submit(appleUserID: identifier, nickname: nil, languages: [])
+                submit(appleUserID: identifier, identityToken: nil, nickname: nil, languages: [])
             }
             .buttonStyle(SecondaryButtonStyle())
             .accessibilityIdentifier("signup.uiTestLogin")
@@ -150,7 +150,10 @@ struct StudentSignupView: View {
                 .joined(separator: " ")
             let typed = nickname.trimmingCharacters(in: .whitespacesAndNewlines)
             let finalName = typed.isEmpty ? (appleName.isEmpty ? nil : appleName) : typed
-            submit(appleUserID: cred.user, nickname: finalName,
+            // 服务端用它验签确认 Apple 账号（只信客户端传的 cred.user 会被冒充）。
+            // 拿不到时照旧登录：过渡期服务端仍放行，之后由服务端决定
+            let token = cred.identityToken.flatMap { String(data: $0, encoding: .utf8) }
+            submit(appleUserID: cred.user, identityToken: token, nickname: finalName,
                    languages: Array(selectedLanguages))
 
         case .failure(let error):
@@ -163,14 +166,14 @@ struct StudentSignupView: View {
         }
     }
 
-    private func submit(appleUserID: String, nickname: String?,
+    private func submit(appleUserID: String, identityToken: String?, nickname: String?,
                         languages: [SpokenLanguage]) {
         errorMessage = nil
         isLoading = true
         Task {
             do {
                 try await userManager.registerStudent(
-                    appleUserID: appleUserID, nickname: nickname,
+                    appleUserID: appleUserID, identityToken: identityToken, nickname: nickname,
                     spokenLanguages: languages)
             } catch let e as RegisterError {
                 errorMessage = e.errorDescription

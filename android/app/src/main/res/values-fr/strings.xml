@@ -1,0 +1,49 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="tts_missing_voice">Aucune voix chinoise n\'est installée pour la synthèse vocale. Téléchargez une voix chinoise (mandarin) dans les réglages de synthèse vocale du téléphone, puis revenez ici.</string>
+    <string name="tts_unavailable">Le modèle ne peut pas être lu : aucun moteur de synthèse vocale n\'est disponible sur ce téléphone. Vous pouvez quand même enregistrer et obtenir un retour.</string>
+    <string name="tts_open_settings">Ouvrir les réglages de synthèse vocale</string>
+
+    <!-- 设置、诊断信息、新版本提示（Android 独有） -->
+    <string name="ui_language_code">fr</string>
+    <string name="settings_app_version">Version %1$s</string>
+    <string name="diag_title">Informations de diagnostic</string>
+    <string name="diag_intro">Informations techniques sur ce téléphone et l\'application. En cas de problème, copiez-les et envoyez-les au chercheur. Elles ne contiennent aucun enregistrement, aucun contenu d\'exercice et aucune information personnelle.</string>
+    <string name="diag_app_version">Version de l\'application</string>
+    <string name="diag_device">Fabricant et modèle</string>
+    <string name="diag_android">Version d\'Android</string>
+    <string name="diag_sample_rate">Fréquence d\'échantillonnage</string>
+    <string name="diag_resampled">Converti en 16 kHz</string>
+    <string name="diag_audio_source">Source audio</string>
+    <string name="diag_last_voiced">Dernier enregistrement : trames voisées</string>
+    <string name="diag_last_status">Dernier enregistrement : résultat</string>
+    <string name="diag_chinese_tts">Voix chinoise (écouter le modèle)</string>
+    <string name="diag_ui_language">Langue de l\'application</string>
+    <string name="diag_font_scale">Taille du texte</string>
+    <string name="diag_not_yet">Aucun enregistrement pour l\'instant</string>
+    <string name="diag_yes">Oui</string>
+    <string name="diag_no">Non</string>
+    <string name="diag_status_valid">Valide</string>
+    <string name="diag_status_flagged">Valide (qualité à vérifier)</string>
+    <string name="diag_status_retry">Échec technique : %1$s</string>
+    <string name="diag_reason_insufficient_voiced_frames">aucune voix détectée</string>
+    <string name="diag_reason_permission_denied">micro non autorisé</string>
+    <string name="diag_reason_recording_interrupted">enregistrement interrompu</string>
+    <string name="diag_reason_low_signal_quality">signal trop faible</string>
+    <string name="diag_reason_analysis_error">erreur d\'analyse</string>
+    <string name="diag_tts_ready">Disponible</string>
+    <string name="diag_tts_missing">Aucune voix chinoise installée</string>
+    <string name="diag_tts_unavailable">Aucun moteur de synthèse vocale</string>
+    <string name="diag_tts_checking">Vérification…</string>
+    <string name="diag_copy">Copier</string>
+    <string name="diag_copied">Copié. Collez-le dans un message au chercheur.</string>
+    <string name="diag_share">Envoyer…</string>
+    <string name="diag_share_chooser">Envoyer les informations de diagnostic</string>
+    <string name="diag_copy_note">Le texte copié est le texte technique ci-dessous, en anglais, pour que le chercheur puisse le lire.</string>
+    <string name="update_available_title">Nouvelle version %1$s disponible</string>
+    <string name="update_available_body">Vous pouvez continuer à vous entraîner et mettre à jour plus tard.</string>
+    <string name="update_required_title">Veuillez mettre à jour l\'application</string>
+    <string name="update_required_body">Cette version n\'est plus prise en charge. Téléchargez la version %1$s. En attendant, vous pouvez continuer à vous entraîner.</string>
+    <string name="update_download">Télécharger dans le navigateur</string>
+    <string name="update_open_failed">Impossible d\'ouvrir un navigateur. Copiez cette adresse dans un navigateur : %1$s</string>
+</resources>

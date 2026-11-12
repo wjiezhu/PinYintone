@@ -34,7 +34,12 @@ class TeacherLoginResponse(BaseModel):
 class StudentRegisterRequest(BaseModel):
     deviceID: str
     role: str
-    appleUserID: Optional[str] = None       # Sign in with Apple 稳定标识
+    # 登录方式：apple | google。缺省时按旧版 iOS 处理（有 appleUserID 即 apple）
+    provider: Optional[str] = None
+    # 登录凭证：Apple 的 identityToken / Google 的 ID token。用户号以它为准（identity.py）
+    identityToken: Optional[str] = None
+    # Sign in with Apple 用户号。旧版 iOS 只传这个；新版也传，须与凭证里的 sub 一致
+    appleUserID: Optional[str] = None
     spokenLanguages: Optional[list[str]] = None  # 会说的语言（多选，母语迁移分析）
     experimentGroup: Optional[str] = None   # 历史兼容字段，服务端分配，客户端值忽略
     nickname: Optional[str] = None
@@ -43,6 +48,29 @@ class StudentRegisterRequest(BaseModel):
     teacherToken: Optional[str] = None
     nativeLanguage: Optional[str] = None
     # 客户端用 Apple 参考时间(数字)编码，服务端忽略并以 now() 入库
+    registeredAt: Optional[float] = None
+
+
+class EmailCodeRequest(BaseModel):
+    email: str
+
+
+class EmailCodeResponse(BaseModel):
+    """不管邮箱有没有注册过，返回都一样。"""
+    sent: bool
+    expiresInSeconds: int
+    resendAfterSeconds: int
+
+
+class EmailLoginRequest(BaseModel):
+    """邮箱验证码登录。设备信息与 StudentRegisterRequest 相同。"""
+    email: str
+    code: str
+    deviceID: str
+    role: str = "student"
+    spokenLanguages: Optional[list[str]] = None
+    nickname: Optional[str] = None
+    nativeLanguage: Optional[str] = None
     registeredAt: Optional[float] = None
 
 
@@ -78,6 +106,9 @@ class TrainingSessionDTO(BaseModel):
     failureReason: Optional[str] = None
     schemaVersion: Optional[int] = None
     appVersion: Optional[str] = None
+    # v8（旧客户端不带，故可选）
+    pitchSpanSemitones: Optional[float] = None
+    platform: Optional[str] = None
 
 
 class AspirationAttemptDTO(BaseModel):
@@ -92,6 +123,7 @@ class AspirationAttemptDTO(BaseModel):
     phase: Optional[str] = None
     schemaVersion: Optional[int] = None
     appVersion: Optional[str] = None
+    platform: Optional[str] = None             # v8：ios|android
 
 
 class FreeTextRecordDTO(BaseModel):
@@ -109,6 +141,7 @@ class FreeTextRecordDTO(BaseModel):
     phase: Optional[str] = None
     schemaVersion: Optional[int] = None
     appVersion: Optional[str] = None
+    platform: Optional[str] = None             # v8：ios|android
 
 
 # ───────────── Teacher Dashboard（下行响应）─────────────
@@ -338,6 +371,9 @@ class ResearchAttemptDTO(BaseModel):
     errorCode: str | None = None
     resultDisplayedAt: IsoDatetime | None = None
     timeQuality: str
+    # 字典 1.2 增补；旧版客户端不带
+    pitchSpanSemitones: float | None = None
+    platform: str | None = None
     # 现场实测的流程编号；普通练习与自测不带
     fieldSessionID: str | None = None
 

@@ -73,6 +73,14 @@ struct FreeWordPracticeView: View {
                                                                                  comment: ""),
                                                        result.score))
                         }
+                        // 被走势幅度闸门拦下：分数说明不了原因，给一句整词提示
+                        if let key = result.gateHintKey {
+                            Text(NSLocalizedString(key, comment: ""))
+                                .font(.subheadline)
+                                .foregroundStyle(Theme.textPrimary)
+                                .fixedSize(horizontal: false, vertical: true)
+                                .accessibilityIdentifier("freeText.gateHint")
+                        }
                     }
                     .frame(maxWidth: .infinity, alignment: .leading)
                     .padding(.vertical, Theme.Space.m)

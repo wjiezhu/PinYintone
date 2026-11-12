@@ -3,10 +3,11 @@ from fastapi.middleware.cors import CORSMiddleware
 from sqlalchemy import text
 
 from .database import Base, engine
+from .migrations import migrate_account_identities, migrate_v8_columns
 # 新版研究表：import 即注册到 Base.metadata，由下面的 create_all 自动建表。
 # 与旧表物理分离，旧表冻结只读。
 from . import research_models  # noqa: F401
-from .routers import auth, research, sync, teacher
+from .routers import app_version, auth, research, sync, teacher
 
 # 开发期自动建表（生产建议改用 Alembic 迁移）
 Base.metadata.create_all(bind=engine)
@@ -81,6 +82,11 @@ if engine.dialect.name == "postgresql":
             _conn.execute(text(_ddl))
         _conn.commit()
 
+# 账号身份改为 (登录方式, 用户号)：两种库都要跑，见 migrations.py
+migrate_account_identities(engine)
+# 记录 v8（走势幅度闸门）：补跨度与 platform 列，两种库都跑
+migrate_v8_columns(engine)
+
 app = FastAPI(title="Pinyintone Backend", version="0.1.0")
 
 app.add_middleware(
@@ -94,6 +100,7 @@ app.include_router(auth.router)
 app.include_router(sync.router)
 app.include_router(teacher.router)
 app.include_router(research.router)
+app.include_router(app_version.router)
 
 
 @app.get("/health")

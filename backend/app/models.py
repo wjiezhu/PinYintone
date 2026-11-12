@@ -1,6 +1,6 @@
 from datetime import datetime, timezone
 
-from sqlalchemy import ForeignKey, BigInteger, Boolean, Column, DateTime, Float, Integer, JSON, String
+from sqlalchemy import ForeignKey, BigInteger, Boolean, Column, DateTime, Float, Index, Integer, JSON, String
 
 from .database import Base
 
@@ -23,8 +23,20 @@ class User(Base):
     """设备级用户，不含 PII。游客 class_code 为空。"""
     __tablename__ = "users"
     device_id = Column(String, primary_key=True)
-    apple_user_id = Column(String, index=True, nullable=True)  # Sign in with Apple 稳定标识
-    # 业务账号的稳定内部编号：同一 Apple 账号在多台设备上共用一个值。
+    # 登录身份 = (登录方式, 该方式下的用户号)：apple → Apple 的 sub，google → Google 的 sub，
+    # email → 规范化邮箱的 SHA-256（不存邮箱明文，见 email_login.py）。
+    # 用户号取自服务端验过签的凭证（identity.py），过渡期的旧版 iOS 例外（见 legacy_login_at）。
+    auth_provider = Column(String, nullable=True)     # apple | google | email
+    auth_subject = Column(String, nullable=True)
+    # 最近一次用验过签的凭证绑定的时间；为空 = 这一行的身份从未被服务端验证过
+    auth_verified_at = Column(DateTime(timezone=True), nullable=True)
+    # 最近一次靠过渡开关（ALLOW_LEGACY_UNVERIFIED_APPLE）放行的未验证登录。
+    # 决定什么时候关开关时，看最近还有多少设备落在这里
+    legacy_login_at = Column(DateTime(timezone=True), nullable=True)
+    # 历史列：只支持 Apple 时的身份列。迁移时已抄进 auth_*；Apple 登录仍同步写一份，
+    # 便于回滚到旧后端。**新代码不按它判断身份。**
+    apple_user_id = Column(String, index=True, nullable=True)
+    # 业务账号的稳定内部编号：同一登录身份在多台设备上共用一个值。
     # 研究纳入按它（而不是 device_id）去重，否则同一人换设备会变成第二位参与者。
     # 服务端随机生成，不是 Apple 标识的派生值；旧行为空，注册或纳入时补上。
     account_id = Column(String, index=True, nullable=True)
@@ -40,23 +52,57 @@ class User(Base):
     spoken_languages = Column(JSON, nullable=True)   # 会说的语言列表（母语迁移分析）
     install_date = Column(DateTime, default=_utcnow)
 
+    __table_args__ = (Index("ix_users_auth_identity", "auth_provider", "auth_subject"),)
+
 
 class AccountLink(Base):
-    """Apple 账号 → 业务账号的稳定内部编号。
+    """登录身份 (provider, subject) → 业务账号的稳定内部编号。
 
-    `users` 表一台设备一行，设备换一个 Apple 账号登录时那一行会被改写——
-    所以「这个 Apple 账号是谁」不能只记在设备行上：
+    `users` 表一台设备一行，设备换一个账号登录时那一行会被改写——
+    所以「这个账号是谁」不能只记在设备行上：
     - 记在设备行上，新登录的人会**继承上一个人的编号**，在研究里被当成同一位参与者；
     - 上一个人再登录回来时，他原来的编号已经找不到了，会变成第二位参与者。
 
     这张表把对应关系单独存一份，不随设备行的改写而丢失。
-    它是业务表（Apple 标识本来就在 `users` 里），**不进研究导出**；
-    研究侧的 research_identity_map 只存这里的 `account_id`，不存 Apple 标识。
+    它是业务表，**不进研究导出**；研究侧的 research_identity_map 只存这里的 `account_id`，
+    不存登录方式的用户号。
+
+    表名：只支持 Apple 时叫 `account_links`（apple_user_id 主键），
+    启动迁移（migrations.py）把它整表抄到这里、provider 记为 apple，account_id 原样不动。
+    旧表**保留在库里待人工清理，但已停用**：故意不给它建模型，代码不读也不写它。
     """
-    __tablename__ = "account_links"
-    apple_user_id = Column(String, primary_key=True)
+    __tablename__ = "account_identities"
+    provider = Column(String, primary_key=True)     # apple | google | email
+    subject = Column(String, primary_key=True)
     account_id = Column(String, nullable=False, unique=True, index=True)
     created_at = Column(DateTime, default=_utcnow)
+
+
+class EmailLoginCode(Base):
+    """邮箱登录验证码（email_login.py）。不存邮箱明文，也不存验证码明文。
+
+    `email_hash` 即该邮箱登录身份的用户号（provider = email 时的 auth_subject），
+    删除账号时按它把验证码一并删掉。
+    """
+    __tablename__ = "email_login_codes"
+    id = Column(String, primary_key=True)
+    email_hash = Column(String, index=True, nullable=False)
+    code_hash = Column(String, nullable=False)     # HMAC(服务端密钥, 盐 + 邮箱 + 验证码)
+    salt = Column(String, nullable=False)
+    created_at = Column(DateTime(timezone=True), nullable=False)
+    expires_at = Column(DateTime(timezone=True), nullable=False)
+    attempts = Column(Integer, nullable=False, default=0)
+    # 用过、试满次数、被新验证码顶替，都记在这里；不为空 = 作废
+    consumed_at = Column(DateTime(timezone=True), nullable=True)
+
+
+class EmailCodeRequest(Base):
+    """发送验证码的流水，只用于频率限制。超过一天的行在每次请求时清掉。"""
+    __tablename__ = "email_code_requests"
+    id = Column(Integer, primary_key=True, autoincrement=True)
+    email_hash = Column(String, index=True, nullable=False)
+    ip_hash = Column(String, index=True, nullable=False)   # HMAC，不存 IP 明文
+    created_at = Column(DateTime(timezone=True), index=True, nullable=False)
 
 
 class TrainingSession(Base):
@@ -96,6 +142,11 @@ class TrainingSession(Base):
     failure_reason = Column(String, nullable=True)           # 仅技术失败记录有值
     schema_version = Column(Integer, nullable=True)          # 记录字段版本；NULL 视为 1
     app_version = Column(String, nullable=True)              # 产生该记录的 App 版本
+    # v8：走势跨度（半音，clean 后原始 Hz 的 P90−P10）。有效结果对任何词都记；
+    # 技术失败、有声帧不足 6、或 v8 之前的记录为 NULL（**不写占位值**）。
+    # 是否触发走势幅度闸门 = 词含二 / 三 / 四声且本列 < 2.0。
+    pitch_span_semitones = Column(Float, nullable=True)
+    platform = Column(String, nullable=True)                 # v8：ios|android；NULL = v8 之前（只有 iOS）
 
 
 class AspirationAttempt(Base):
@@ -112,6 +163,7 @@ class AspirationAttempt(Base):
     phase = Column(String, index=True, nullable=True)
     schema_version = Column(Integer, nullable=True)
     app_version = Column(String, nullable=True)
+    platform = Column(String, nullable=True)                 # v8：ios|android；NULL = v8 之前
 
 
 class FreeTextRecord(Base):
@@ -131,3 +183,4 @@ class FreeTextRecord(Base):
     phase = Column(String, index=True, nullable=True)
     schema_version = Column(Integer, nullable=True)
     app_version = Column(String, nullable=True)
+    platform = Column(String, nullable=True)                 # v8：ios|android；NULL = v8 之前

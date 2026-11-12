@@ -786,11 +786,14 @@ final class ToneTrainingViewModel: ObservableObject {
             return
         }
 
-        // 平调词走向闸门：DTW 归一化后尺度不变，判不出全一声的词被读成一路下滑。
+        // 两道闸门：DTW 归一化后尺度不变，判不出全一声的词被读成一路下滑（走向闸门），
+        // 也判不出含二 / 三 / 四声的词被读平（幅度闸门）。适用范围不重叠。
         // **必须**喂原始 Hz 的 cleaned，不能喂 normalized（CLAUDE.md 禁令 15）。
         let tones = currentLexeme?.tones ?? []
         let droppedPitch = ToneDirectionGate.fails(hzTrack: cleaned, tones: tones)
-        let grade = droppedPitch ? .fail : dtwAnalyzer.grade(dtwScore: score)
+        let flatContour = ToneContourSpanGate.fails(hzTrack: cleaned, tones: tones)
+        let span = ToneContourSpanGate.spanSemitones(hzTrack: cleaned)
+        let grade = (droppedPitch || flatContour) ? .fail : dtwAnalyzer.grade(dtwScore: score)
 
         // 按词累计尝试数（换词不归零）
         let lexemeID = currentLexeme?.id ?? "unknown"
@@ -798,7 +801,8 @@ final class ToneTrainingViewModel: ObservableObject {
 
         if let attemptID {
             ResearchAttemptLog.shared.markSucceeded(
-                attemptID, metric: Double(score), passed: grade != .fail)
+                attemptID, metric: Double(score), passed: grade != .fail,
+                pitchSpanSemitones: span)
             // 积分由 manifest.reward_rule_version 开关，本轮保持关闭；自测与实测从不发积分
             if mode == .practice {
                 RewardLedger.shared.settle(attemptID: attemptID, lexemeID: lexemeID,
@@ -809,6 +813,8 @@ final class ToneTrainingViewModel: ObservableObject {
         let result = FeedbackResult(
             dtwScore: score,
             levelToneDropped: droppedPitch,
+            flatContour: flatContour,
+            pitchSpanSemitones: span,
             grade: grade,
             attemptNumber: attempt,
             segments: buildSegments(student: normalized, reference: reference)
@@ -1068,7 +1074,8 @@ final class ToneTrainingViewModel: ObservableObject {
             wordSetID: lexeme.wordSet?.rawValue,
             assessmentSetVersion: legacyAssessmentVersion,
             feedbackMode: shownStyle,
-            resultStatus: qualityFlag ? .qualityFlagged : .validResult
+            resultStatus: qualityFlag ? .qualityFlagged : .validResult,
+            pitchSpanSemitones: result.pitchSpanSemitones
         )
     }
 

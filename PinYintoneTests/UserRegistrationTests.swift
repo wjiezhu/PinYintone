@@ -15,12 +15,15 @@ final class UserRegistrationTests: XCTestCase {
     private let registeredKey = "pt_registered_profile"
     private var savedProfile: Data?
     private var savedRegistered: String?
-    private var savedSender: ((UserProfile) async throws -> Void)!
+    private var savedSender: ((UserProfile, String?) async throws -> Void)!
 
     /// 假实现收到的每一次建档（含宿主 App 回到前台时 `AppSync` 补送的那次）
     private var sent: [UserProfile] = []
+    /// 每一次建档带上的 identityToken（与 `sent` 一一对应）
+    private var tokens: [String?] = []
     /// 假实现的行为，用例里随时换
     private var behaviour: () async throws -> Void = {}
+    private var savedNow: (() -> Date)!
 
     override func setUp() {
         super.setUp()
@@ -29,16 +32,20 @@ final class UserRegistrationTests: XCTestCase {
         UserDefaults.standard.removeObject(forKey: registeredKey)
         savedSender = UserManager.sendRegistration
         sent = []
+        tokens = []
         behaviour = {}
-        UserManager.sendRegistration = { [weak self] p in
+        savedNow = UserManager.now
+        UserManager.sendRegistration = { [weak self] p, token in
             guard let self else { return }
             self.sent.append(p)
+            self.tokens.append(token)
             try await self.behaviour()
         }
     }
 
     override func tearDown() {
         UserManager.sendRegistration = savedSender
+        UserManager.now = savedNow
         ResearchStore.shared.purgeCurrentAccount()
         if let savedProfile {
             UserDefaults.standard.set(savedProfile, forKey: profileKey)
@@ -122,5 +129,61 @@ final class UserRegistrationTests: XCTestCase {
 
         UserManager.shared.logout()
         XCTAssertFalse(delivered)
+    }
+
+    // MARK: - identityToken（服务端验签用）
+
+    func testIdentityTokenGoesWithRegistration() async throws {
+        let appleID = "apple-\(UUID().uuidString)"
+        try await UserManager.shared.registerStudent(
+            appleUserID: appleID, identityToken: "header.payload.sig", nickname: nil)
+        try await waitUntil { delivered }
+        let i = try XCTUnwrap(sent.firstIndex { $0.appleUserID == appleID })
+        XCTAssertEqual(tokens[i], "header.payload.sig")
+    }
+
+    func testExpiredIdentityTokenIsNotResent() async throws {
+        // Apple 的凭证约 10 分钟过期：之后的补送不带它，交给服务端认已验证过的设备
+        var clock = Date()
+        UserManager.now = { clock }
+        behaviour = { throw URLError(.timedOut) }
+        let appleID = "apple-\(UUID().uuidString)"
+        try await UserManager.shared.registerStudent(
+            appleUserID: appleID, identityToken: "tok", nickname: nil)
+        try await waitUntil { !sends(for: appleID).isEmpty }
+        XCTAssertEqual(tokens[sent.firstIndex { $0.appleUserID == appleID }!], "tok")
+
+        clock = clock.addingTimeInterval(UserManager.identityTokenLifetime + 1)
+        behaviour = {}
+        UserManager.shared.syncRegistrationIfNeeded()
+        try await waitUntil { delivered }
+        XCTAssertNil(tokens[sent.lastIndex { $0.appleUserID == appleID }!])
+    }
+
+    func testIdentityTokenIsNotReusedForAnotherAccount() async throws {
+        try await UserManager.shared.registerStudent(
+            appleUserID: "apple-\(UUID().uuidString)", identityToken: "tok-1", nickname: nil)
+        UserManager.shared.logout()
+        let second = "apple-\(UUID().uuidString)"
+        try await UserManager.shared.registerStudent(appleUserID: second, nickname: nil)
+        try await waitUntil { !sends(for: second).isEmpty }
+        XCTAssertNil(tokens[sent.firstIndex { $0.appleUserID == second }!])
+    }
+
+    func testRegistrationBodyCarriesProviderAndTokenNextToProfileFields() throws {
+        let p = UserProfile(deviceID: "dev-1", role: .student, appleUserID: "apple-1",
+                            nickname: "Amina", classCode: nil, teacherEmail: nil,
+                            teacherToken: nil, nativeLanguage: "fr", spokenLanguages: ["fr"],
+                            registeredAt: Date())
+        let json = try XCTUnwrap(JSONSerialization.jsonObject(with: JSONEncoder().encode(
+            APIClient.StudentRegistrationBody(profile: p, identityToken: "tok"))) as? [String: Any])
+        XCTAssertEqual(json["deviceID"] as? String, "dev-1")
+        XCTAssertEqual(json["appleUserID"] as? String, "apple-1")
+        XCTAssertEqual(json["provider"] as? String, "apple")
+        XCTAssertEqual(json["identityToken"] as? String, "tok")
+
+        let bare = try XCTUnwrap(JSONSerialization.jsonObject(with: JSONEncoder().encode(
+            APIClient.StudentRegistrationBody(profile: p, identityToken: nil))) as? [String: Any])
+        XCTAssertNil(bare["identityToken"])
     }
 }

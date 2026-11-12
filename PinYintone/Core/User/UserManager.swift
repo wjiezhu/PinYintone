@@ -15,6 +15,15 @@ final class UserManager: ObservableObject {
 
     private static let storageKey = "pt_user_profile"
 
+    /// Sign in with Apple 给的 identityToken（JWT），服务端用它验证这次登录确实是这个 Apple 账号。
+    /// 只放内存、不落盘：它约 10 分钟就过期，留着也没用，落盘反倒多一份凭证。
+    /// 过期后的补送不带它——服务端认得这台设备已验证过的同一账号。
+    private var identityToken: (value: String, appleUserID: String, obtainedAt: Date)?
+    /// Apple 的凭证 10 分钟过期；留一分钟余量给时钟偏差和网络
+    static let identityTokenLifetime: TimeInterval = 9 * 60
+    /// 单元测试换成可拨动的时钟
+    static var now: () -> Date = { Date() }
+
     private init() {}
 
     /// 启动时读取本地持久化的用户档案
@@ -28,10 +37,11 @@ final class UserManager: ObservableObject {
         ResearchStore.shared.activate(for: p)
     }
 
-    /// 学生注册（Sign in with Apple）。后端按 deviceID / Apple ID 幂等建档，
-    /// 不再分配任何实验分组或反馈条件。
-    func registerStudent(appleUserID: String, nickname: String?,
+    /// 学生注册（Sign in with Apple）。后端按 deviceID 幂等建档，Apple 账号以
+    /// `identityToken` 验签为准；不再分配任何实验分组或反馈条件。
+    func registerStudent(appleUserID: String, identityToken: String? = nil, nickname: String?,
                          spokenLanguages: [SpokenLanguage] = []) async throws {
+        self.identityToken = identityToken.map { ($0, appleUserID, Self.now()) }
         let p = UserProfile(
             deviceID: UIDevice.current.identifierForVendor?.uuidString ?? UUID().uuidString,
             role: .student,
@@ -65,7 +75,19 @@ final class UserManager: ObservableObject {
     }
 
     private func registerInBackground(_ p: UserProfile) {
-        Task { await Self.pushRegistration(p) }
+        let token = freshIdentityToken(for: p)
+        Task { await Self.pushRegistration(p, identityToken: token) }
+    }
+
+    /// 还没过期、且属于这份档案的 Apple 账号的 identityToken；没有就是 nil。
+    func freshIdentityToken(for p: UserProfile) -> String? {
+        guard let t = identityToken, t.appleUserID == p.appleUserID,
+              Self.now().timeIntervalSince(t.obtainedAt) < Self.identityTokenLifetime
+        else {
+            identityToken = nil
+            return nil
+        }
+        return t.value
     }
 
     /// 把档案送到后端。
@@ -76,9 +98,9 @@ final class UserManager: ObservableObject {
     /// 建档本来就允许失败（本机先建好、之后补送），
     /// 送达后记下这份档案的指纹，没送达的由 `syncRegistrationIfNeeded()` 下次补。
     /// 参加研究前 `ResearchEnrollment` 还会再同步送一次，纳入不受影响。
-    private static func pushRegistration(_ p: UserProfile) async {
+    private static func pushRegistration(_ p: UserProfile, identityToken: String?) async {
         do {
-            try await sendRegistration(p)
+            try await sendRegistration(p, identityToken)
         } catch {
             return
         }
@@ -87,8 +109,8 @@ final class UserManager: ObservableObject {
 
     /// 真正发出建档请求的那一步。单元测试会换成不经网络栈的假实现：
     /// 用 URLProtocol 桩模拟「慢服务器」时，GitHub 上的模拟器会把等待拖上 30 多秒，结果不稳定。
-    static var sendRegistration: (UserProfile) async throws -> Void = { p in
-        _ = try await APIClient.shared.registerUser(p)
+    static var sendRegistration: (UserProfile, String?) async throws -> Void = { p, token in
+        _ = try await APIClient.shared.registerUser(p, identityToken: token)
     }
 
     private static let registeredKey = "pt_registered_profile"
@@ -113,7 +135,7 @@ final class UserManager: ObservableObject {
         save(p)
         profile = p
         // 后端不可达时本地已改好，回到前台时会补送
-        await Self.pushRegistration(p)
+        await Self.pushRegistration(p, identityToken: freshIdentityToken(for: p))
     }
 
     /// 教师注册；服务器返回 6 位班级码
@@ -156,6 +178,7 @@ final class UserManager: ObservableObject {
         LearnerRecordingStore.shared.clear()
         UserDefaults.standard.removeObject(forKey: Self.storageKey)
         UserDefaults.standard.removeObject(forKey: Self.registeredKey)
+        identityToken = nil
         profile = nil
         ResearchStore.shared.activate(for: nil)
     }
@@ -176,6 +199,7 @@ final class UserManager: ObservableObject {
         UserDefaults.standard.removeObject(forKey: Self.storageKey)
         // 服务端那份已删：同一账号再登录时要重新建档
         UserDefaults.standard.removeObject(forKey: Self.registeredKey)
+        identityToken = nil
         self.profile = nil
     }
 

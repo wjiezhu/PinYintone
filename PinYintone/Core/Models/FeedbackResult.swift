@@ -18,6 +18,8 @@ enum DirectionHint: String, Codable {
     case neutral             // T5 轻声 或 无法判定
     /// 全平调词整体掉调——走向闸门判定，不归咎于某个字
     case wordDropping
+    /// 含二 / 三 / 四声的词读平（几乎没有起伏）——走势幅度闸门判定，不归咎于某个字
+    case wordFlat
 
     /// 用于 UI 显示的 SF Symbol 名。
     var symbol: String {
@@ -29,6 +31,7 @@ enum DirectionHint: String, Codable {
         case .shouldFall:         return "arrow.down.right"
         case .neutral:            return "questionmark.circle"
         case .wordDropping:       return "arrow.down.forward"
+        case .wordFlat:           return "arrow.left.and.right"
         }
     }
 
@@ -42,6 +45,7 @@ enum DirectionHint: String, Codable {
         case .shouldFall:         return "coach_fall"
         case .neutral:            return "coach_neutral"
         case .wordDropping:       return "coach_keep_level"   // 整词句式，无 %@ 占位符
+        case .wordFlat:           return "coach_add_movement" // 整词句式，无 %@ 占位符
         }
     }
 
@@ -55,6 +59,7 @@ enum DirectionHint: String, Codable {
         case .shouldFall:         return "direction_should_fall"
         case .neutral:            return "direction_neutral"
         case .wordDropping:       return "direction_word_dropping"
+        case .wordFlat:           return "direction_word_flat"
         }
     }
 }
@@ -89,9 +94,24 @@ struct FeedbackResult {
     /// 是否被平调词走向闸门拦下（全一声的词整体掉调）。
     /// 此时 `grade` 恒为 `.fail`，即便 `dtwScore` 还在通关线内。
     var levelToneDropped: Bool = false
+    /// 是否被走势幅度闸门拦下（含二 / 三 / 四声的词读平，见 `ToneContourSpanGate`）。
+    /// 此时 `grade` 恒为 `.fail`。与 `levelToneDropped` 适用范围不重叠，不会同时为 true。
+    var flatContour: Bool = false
+    /// 走势跨度（半音），随记录上报；有声帧不足 6 时为 nil。
+    var pitchSpanSemitones: Float? = nil
     let grade: FeedbackGrade
     let attemptNumber: Int
     let segments: [ToneSegmentResult]  // 按字诊断；按音节顺序
+
+    /// 是否被任一闸门拦下（平调走向 / 走势幅度）
+    var isGated: Bool { levelToneDropped || flatContour }
+
+    /// 被闸门拦下时结果区给的整词提示（本地化键）；未拦下为 nil
+    var gateHintKey: String? {
+        if flatContour { return "advice_add_movement" }
+        if levelToneDropped { return "advice_keep_level" }
+        return nil
+    }
 
     /// 错误字下标（向后兼容旧字段，从 segments 推导）。
     var toneErrors: [Int] {
@@ -107,6 +127,9 @@ struct FeedbackResult {
         // 与 grade = .fail 直接矛盾。整词掉调是此刻唯一该说的事（§4.3 只给一个方向）。
         if levelToneDropped {
             return CoachAdvice(focusChar: nil, hint: .wordDropping, praiseChar: nil)
+        }
+        if flatContour {
+            return CoachAdvice(focusChar: nil, hint: .wordFlat, praiseChar: nil)
         }
         let needsWork = segments.filter { $0.directionHint != .ok }
         guard let worst = needsWork.max(by: { $0.segmentScore < $1.segmentScore }) else {
@@ -127,7 +150,7 @@ struct FeedbackResult {
     var score: Int {
         // 被闸门拦下就是不通关，分数不得高于通关线对应的 60 分，
         // 否则会出现"85 分但不通关"。
-        if levelToneDropped { return min(59, Self.mapped(dtwScore)) }
+        if isGated { return min(59, Self.mapped(dtwScore)) }
         return Self.mapped(dtwScore)
     }
 

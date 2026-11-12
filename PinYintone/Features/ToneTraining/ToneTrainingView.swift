@@ -326,6 +326,14 @@ struct ToneTrainingView: View {
                         resultScore(result)
                     }
                 }
+                // 被闸门拦下（读平 / 一声词掉调）：分数说明不了原因，给一句整词提示
+                if let key = result.gateHintKey {
+                    Text(NSLocalizedString(key, comment: ""))
+                        .font(.subheadline)
+                        .foregroundStyle(Theme.textPrimary)
+                        .fixedSize(horizontal: false, vertical: true)
+                        .accessibilityIdentifier("practice.gateHint")
+                }
                 // 实测训练：这个词练够了，提示去下一个；没练够就显示还差几次（不是评价，只是进度）。
                 // 结果出来时页面会滚到这里，顶部的进度看不到，所以在这里再说一次
                 if vm.mode == .field, !vm.fieldTrainingWordDone, let field = vm.field {

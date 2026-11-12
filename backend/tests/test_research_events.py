@@ -1255,3 +1255,34 @@ def test_advice_rejects_unverified_evidence_and_ai_source():
     assert _post_advice([_advice(evidenceCodes=["verified_syllable_feature"])]).status_code == 400
     assert _post_advice([_advice(sourceType="ai_generated")]).status_code == 400
     assert _post_advice([_advice(evidenceCodes=["none", "overall_metric"])]).status_code == 400
+
+
+# ---------------- v8：走势跨度与来源端（字典 1.2 增补） ----------------
+
+def test_succeeded_attempt_stores_pitch_span_and_platform():
+    _enrolled()
+    r = _post_attempts([_attempt(passed=False, pitchSpanSemitones=0.42, platform="android")])
+    assert r.status_code == 200 and r.json()["inserted"] == 1
+    db = TestingSession()
+    row = db.query(models.ResearchAttempt).one()
+    assert float(row.pitch_span_semitones) == pytest.approx(0.42)
+    assert row.platform == "android"
+    db.close()
+
+
+def test_old_client_attempt_without_new_fields_is_accepted_as_null():
+    _enrolled()
+    assert _post_attempts([_attempt()]).status_code == 200
+    db = TestingSession()
+    row = db.query(models.ResearchAttempt).one()
+    assert row.pitch_span_semitones is None and row.platform is None
+    db.close()
+
+
+def test_pitch_span_only_on_succeeded_and_never_a_placeholder():
+    _enrolled()
+    failed = _attempt(aid="f1", status="analysis_failed", metricValue=None, passed=None,
+                      errorCode="no_signal", resultDisplayedAt=None, pitchSpanSemitones=0.0)
+    assert _post_attempts([failed]).status_code == 400, "失败的尝试不得带跨度（哪怕是 0）"
+    assert _post_attempts([_attempt(aid="n1", pitchSpanSemitones=-1)]).status_code == 400, "不收负数哨兵"
+    assert _post_attempts([_attempt(aid="p1", platform="windows")]).status_code == 400

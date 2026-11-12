@@ -586,6 +586,8 @@ TIME_QUALITIES = {"valid", "suspect", "unknown"}
 # 这些状态下必须有 finished_at（字典 §7）
 STATUSES_REQUIRING_FINISH = {"cancelled", "recording_failed", "analysis_failed", "succeeded"}
 # 没有有效成绩的状态：metric / passed 必须为空
+# 记录来自哪一端（字典 1.2 增补）
+PLATFORMS = {"ios", "android"}
 STATUSES_WITHOUT_SCORE = {"recording", "cancelled", "recording_failed", "analyzing",
                           "analysis_failed", "interrupted_unknown"}
 # 必须说明原因的失败状态。取消与未知中断不是错误，不强求错误码。
@@ -623,6 +625,14 @@ def _validate_attempt(a: schemas.ResearchAttemptDTO) -> None:
             raise HTTPException(400, "metricValue 必须是有限数值")
         if a.metricValue < 0:
             raise HTTPException(400, "metricValue 为负：疑似旧表哨兵值，无有效指标应为空")
+    # 走势跨度：只有成功的尝试才有；没有就是 NULL，不收 0 / 负数之类的占位
+    if a.pitchSpanSemitones is not None:
+        if a.status != "succeeded":
+            raise HTTPException(400, f"{a.status} 不得带 pitchSpanSemitones")
+        if not math.isfinite(a.pitchSpanSemitones) or a.pitchSpanSemitones < 0:
+            raise HTTPException(400, "pitchSpanSemitones 必须是非负有限数值")
+    if a.platform is not None and a.platform not in PLATFORMS:
+        raise HTTPException(400, f"未知的 platform：{a.platform}")
     # 裸测不呈现结果，不该带结果显示时间；带了说明客户端把它当成了有反馈的练习
     if a.taskType in BARE_TASK_TYPES and a.resultDisplayedAt is not None:
         raise HTTPException(400, f"{a.taskType} 不呈现结果，不得带 resultDisplayedAt")
@@ -718,6 +728,8 @@ def upload_attempts(body: schemas.ResearchAttemptBatch, db: Session = Depends(ge
             error_code=a.errorCode,
             result_displayed_at=a.resultDisplayedAt,
             time_quality=a.timeQuality,
+            pitch_span_semitones=a.pitchSpanSemitones,
+            platform=a.platform,
         ))
         inserted += 1
     db.commit()
@@ -729,7 +741,7 @@ ADVICE_STATUSES = {"pending", "succeeded", "failed"}
 ADVICE_SOURCE_TYPES = {"teacher_hint_only", "rule_feedback"}
 # verified_syllable_feature 的资格未经核验（V2_DECISIONS 第 11 条），本轮不得使用
 ADVICE_EVIDENCE_CODES = {"signal_unusable", "overall_metric", "none"}
-# gate：平调词走向闸门是否触发。它是明确计算、有阈值依据的**整词**特征
+# gate：触发了哪道闸门——level_tone_fall（平调词走向闸门）或 flat_contour（v8 走势幅度闸门）。它是明确计算、有阈值依据的**整词**特征
 # （V2_DECISIONS 第 11 条的例外），不是未经核验的音节级诊断。字典 1.1 增补。
 ADVICE_SNAPSHOT_KEYS = {"signal_status", "metric_name", "metric_value", "gate"}
 

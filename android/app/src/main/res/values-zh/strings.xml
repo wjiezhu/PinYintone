@@ -1,0 +1,49 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="tts_missing_voice">手机的文字转语音里没有中文语音。请在系统的文字转语音设置中下载中文（普通话）语音，再回到这里。</string>
+    <string name="tts_unavailable">无法播放示范：这台手机没有可用的文字转语音引擎。录音和反馈不受影响。</string>
+    <string name="tts_open_settings">打开文字转语音设置</string>
+
+    <!-- 设置、诊断信息、新版本提示（Android 独有） -->
+    <string name="ui_language_code">zh</string>
+    <string name="settings_app_version">版本 %1$s</string>
+    <string name="diag_title">诊断信息</string>
+    <string name="diag_intro">这里是手机和 App 的技术信息。遇到问题时，复制后发给研究者。不包含录音、练习内容或任何个人信息。</string>
+    <string name="diag_app_version">App 版本</string>
+    <string name="diag_device">手机厂商和型号</string>
+    <string name="diag_android">Android 版本</string>
+    <string name="diag_sample_rate">录音采样率</string>
+    <string name="diag_resampled">降采样到 16 kHz</string>
+    <string name="diag_audio_source">音源</string>
+    <string name="diag_last_voiced">最近一次录音：有声帧数</string>
+    <string name="diag_last_status">最近一次录音：结果</string>
+    <string name="diag_chinese_tts">中文语音（听示范）</string>
+    <string name="diag_ui_language">界面语言</string>
+    <string name="diag_font_scale">字号缩放</string>
+    <string name="diag_not_yet">还没有录过音</string>
+    <string name="diag_yes">是</string>
+    <string name="diag_no">否</string>
+    <string name="diag_status_valid">有效</string>
+    <string name="diag_status_flagged">有效（质量待查）</string>
+    <string name="diag_status_retry">技术失败：%1$s</string>
+    <string name="diag_reason_insufficient_voiced_frames">没录到声音</string>
+    <string name="diag_reason_permission_denied">没有麦克风权限</string>
+    <string name="diag_reason_recording_interrupted">录音被打断</string>
+    <string name="diag_reason_low_signal_quality">信号太弱</string>
+    <string name="diag_reason_analysis_error">分析出错</string>
+    <string name="diag_tts_ready">有</string>
+    <string name="diag_tts_missing">没有中文语音</string>
+    <string name="diag_tts_unavailable">没有文字转语音引擎</string>
+    <string name="diag_tts_checking">正在检查…</string>
+    <string name="diag_copy">复制</string>
+    <string name="diag_copied">已复制。粘贴到发给研究者的消息里即可。</string>
+    <string name="diag_share">发送…</string>
+    <string name="diag_share_chooser">发送诊断信息</string>
+    <string name="diag_copy_note">复制出去的是下面这段英文技术信息，方便研究者查看。</string>
+    <string name="update_available_title">有新版本 %1$s</string>
+    <string name="update_available_body">可以先继续练习，以后再更新。</string>
+    <string name="update_required_title">请更新 App</string>
+    <string name="update_required_body">这个版本已停止支持，请下载 %1$s 版。更新之前仍可以继续练习。</string>
+    <string name="update_download">在浏览器中下载</string>
+    <string name="update_open_failed">打不开浏览器。请把这个地址复制到浏览器里：%1$s</string>
+</resources>

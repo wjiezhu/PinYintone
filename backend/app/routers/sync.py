@@ -36,6 +36,9 @@ def sync_session(dto: schemas.TrainingSessionDTO, db: Session = Depends(get_db))
     obj.voiced_frame_count = dto.voicedFrameCount
     obj.quality_flag = dto.qualityFlag
     obj.reference_switched = dto.referenceSwitchedDuringAttempt
+    # v8：旧客户端不带，为 NULL。技术失败客户端不带跨度；即使带了也不入库——那不是成绩
+    obj.pitch_span_semitones = (None if dto.resultStatus == "technical_retry"
+                                else dto.pitchSpanSemitones)
     obj.phase = dto.phase
     obj.word_set_id = dto.wordSetID
     obj.presentation_order = dto.presentationOrder
@@ -45,6 +48,7 @@ def sync_session(dto: schemas.TrainingSessionDTO, db: Session = Depends(get_db))
     obj.failure_reason = dto.failureReason
     obj.schema_version = dto.schemaVersion
     obj.app_version = dto.appVersion
+    obj.platform = dto.platform
     db.commit()
     return {}
 
@@ -65,6 +69,7 @@ def sync_aspiration(dto: schemas.AspirationAttemptDTO, db: Session = Depends(get
     obj.phase = dto.phase
     obj.schema_version = dto.schemaVersion
     obj.app_version = dto.appVersion
+    obj.platform = dto.platform
     db.commit()
     return {}
 
@@ -88,5 +93,6 @@ def sync_freetext(dto: schemas.FreeTextRecordDTO, db: Session = Depends(get_db))
     obj.phase = dto.phase
     obj.schema_version = dto.schemaVersion
     obj.app_version = dto.appVersion
+    obj.platform = dto.platform
     db.commit()
     return {}

@@ -65,6 +65,10 @@ nonisolated struct PracticeAdvice: Equatable {
             // 平调闸门是**明确计算、有阈值依据的整词特征**，可以据此给出方向建议
             key = "advice_keep_level"
             snapshot["gate"] = "level_tone_fall"
+        } else if result.flatContour {
+            // 走势幅度闸门同理：原始 Hz 的整词跨度，阈值明确（2 个半音）
+            key = "advice_add_movement"
+            snapshot["gate"] = "flat_contour"
         } else {
             switch result.grade {
             case .excellent, .good: key = "advice_close_to_model"

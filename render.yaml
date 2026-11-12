@@ -17,3 +17,18 @@ services:
         generateValue: true       # Render 自动生成强随机值
       - key: DATABASE_URL
         sync: false               # 手动填 Neon Postgres 连接串
+      - key: APPLE_BUNDLE_IDS
+        value: Joy.PinYintone     # Apple identityToken 的 aud
+      - key: GOOGLE_CLIENT_IDS
+        sync: false               # 手动填 Google Cloud 里建的 Web client id
+      - key: ALLOW_LEGACY_UNVERIFIED_APPLE
+        value: "true"             # 过渡开关，关掉的时机由人决定
+      # Android 直接分发的新版本检查（/api/app-version/android），发新版时在 Render 后台填
+      - key: ANDROID_LATEST_VERSION_CODE
+        sync: false
+      - key: ANDROID_LATEST_VERSION_NAME
+        sync: false
+      - key: ANDROID_MIN_VERSION_CODE
+        sync: false
+      - key: ANDROID_DOWNLOAD_URL
+        sync: false

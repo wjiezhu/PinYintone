@@ -29,7 +29,13 @@
 --
 -- 取数口径（与 CLAUDE.md、RESEARCH_RUNBOOK.md 一致）：
 --   · 通过与否一律看 grade（passed 列），不要用 dtw_score <= 0.5 重算：
---     schema_version >= 5 起，全一声的词掉调超过 3 个半音会被走向闸门判不通过（gated_level_tone）。
+--     schema_version >= 5 起，全一声的词掉调超过 3 个半音会被走向闸门判不通过（gated_level_tone）；
+--     schema_version >= 8 起，含二 / 三 / 四声的词读平（走势跨度 < 2 个半音）会被幅度闸门判不通过
+--     （gated_flat_contour，看 pitch_span_semitones）。
+--   · ⚠ v8 改变了含二 / 三 / 四声的词的 passed：此前读平约 2/3 判通过（v1–v3 约一半），偏宽。
+--     pass_rule 列区分 'contour_gate'（v8 起）/ 'pre_contour_gate'（v7 及以前）/ 'unchanged'（词不适用该闸门），
+--     **不同 pass_rule 的通过率不能合并**；dtw_score 本身跨 v6 / v7 / v8 逐位一致，可以比较。
+--     见 docs/SCORING_FLAT_READING_STUDY.md。
 --   · 技术失败（result_status = 'technical_retry'）没有成绩：长表里 dtw_score / passed 留空，
 --     汇总段一律不计入；失败率见第 7 段。质量标记（quality_flagged）同样不进汇总。
 --   · 含一声的词：schema_version <= 3 与 >= 4 的分数语义不同，不能混在一起。
@@ -307,6 +313,9 @@ t2 AS (
            COALESCE(t.word_set_id, l.word_set)                             AS word_set,
            ('1' = ANY (string_to_array(l.tones, '-')))                                                     AS contains_tone1,
            (l.tones ~ '^1(-1)*$')                                          AS all_tone1,
+           CASE WHEN l.tones !~ '[234]' THEN 'unchanged'
+                WHEN COALESCE(t.schema_version, 1) >= 8 THEN 'contour_gate'
+                ELSE 'pre_contour_gate' END                                AS pass_rule,
            t.phase,
            COALESCE(t.schema_version, 1)                                   AS schema_version,
            NOT (('1' = ANY (string_to_array(l.tones, '-'))) AND COALESCE(t.schema_version, 1) < 4)                                                    AS comparable_across_versions,
@@ -316,7 +325,8 @@ t2 AS (
            COALESCE(t.quality_flag, false)                                 AS quality_flag,
            (COALESCE(t.result_status, 'valid_result') <> 'technical_retry') AS scored,
            (COALESCE(t.result_status, 'valid_result') = 'valid_result' AND NOT COALESCE(t.quality_flag, false))                                                       AS valid,
-           t.dtw_score, t.grade, t.voiced_frame_count
+           t.dtw_score, t.grade, t.voiced_frame_count,
+           t.pitch_span_semitones, t.platform
     FROM ts t
     CROSS JOIN cfg c
     JOIN pcode pc ON pc.device_id = t.device_id
@@ -332,7 +342,10 @@ SELECT participant,
        result_status, failure_reason, quality_flag, voiced_frame_count,
        CASE WHEN scored THEN dtw_score END         AS dtw_score,
        CASE WHEN scored THEN grade NOT IN ('fail', 'n/a') END AS passed,
-       CASE WHEN scored THEN (schema_version >= 5 AND grade = 'fail' AND dtw_score <= 0.5) END AS gated_level_tone,
+       pass_rule, platform,
+       CASE WHEN scored THEN pitch_span_semitones END AS pitch_span_semitones,
+       CASE WHEN scored THEN (schema_version >= 5 AND all_tone1 AND grade = 'fail' AND dtw_score <= 0.5) END AS gated_level_tone,
+       CASE WHEN scored THEN (pass_rule = 'contour_gate' AND pitch_span_semitones < 2.0) END AS gated_flat_contour,
        grade,
        CASE WHEN valid THEN ROW_NUMBER() OVER (PARTITION BY participant, lexeme_id, valid
                                                 ORDER BY timestamp, id) END AS attempt_on_word,
@@ -420,21 +433,25 @@ v AS (
            NOT (('1' = ANY (string_to_array(l.tones, '-'))) AND COALESCE(t.schema_version, 1) < 4)               AS comparable_across_versions,
            t.dtw_score,
            (t.grade NOT IN ('fail', 'n/a'))                   AS passed,
-           (COALESCE(t.schema_version, 1) >= 5 AND t.grade = 'fail' AND t.dtw_score <= 0.5) AS gated
+           CASE WHEN l.tones !~ '[234]' THEN 'unchanged'
+                WHEN COALESCE(t.schema_version, 1) >= 8 THEN 'contour_gate'
+                ELSE 'pre_contour_gate' END AS pass_rule,
+           (COALESCE(t.schema_version, 1) >= 5 AND l.tones ~ '^1(-1)*$' AND t.grade = 'fail' AND t.dtw_score <= 0.5) AS gated,
+           (COALESCE(t.schema_version, 1) >= 8 AND l.tones ~ '[234]' AND t.pitch_span_semitones < 2.0) AS gated_flat
     FROM ts t
     JOIN pcode pc ON pc.device_id = t.device_id
     JOIN lex l    ON l.lexeme_id = t.lexeme_id
     WHERE COALESCE(t.result_status, 'valid_result') = 'valid_result' AND NOT COALESCE(t.quality_flag, false)
 ),
 per_p AS (
-    SELECT tones, mode, comparable_across_versions, participant, AVG(passed::int) AS p_rate
-    FROM v GROUP BY 1, 2, 3, 4
+    SELECT tones, mode, comparable_across_versions, pass_rule, participant, AVG(passed::int) AS p_rate
+    FROM v GROUP BY 1, 2, 3, 4, 5
 ),
 by_p AS (
-    SELECT tones, mode, comparable_across_versions, ROUND(AVG(p_rate)::numeric, 3) AS pass_rate_by_participant
-    FROM per_p GROUP BY 1, 2, 3
+    SELECT tones, mode, comparable_across_versions, pass_rule, ROUND(AVG(p_rate)::numeric, 3) AS pass_rate_by_participant
+    FROM per_p GROUP BY 1, 2, 3, 4
 )
-SELECT v.tones, v.mode, v.comparable_across_versions,
+SELECT v.tones, v.mode, v.comparable_across_versions, v.pass_rule,
        COUNT(DISTINCT v.participant)                                                AS n_participants,
        COUNT(*)                                                                     AS n_attempts,
        ROUND(AVG(v.passed::int)::numeric, 3)                                        AS pass_rate,
@@ -443,11 +460,12 @@ SELECT v.tones, v.mode, v.comparable_across_versions,
        ROUND(percentile_cont(0.25) WITHIN GROUP (ORDER BY v.dtw_score)::numeric, 3) AS q1_dtw,
        ROUND(percentile_cont(0.5)  WITHIN GROUP (ORDER BY v.dtw_score)::numeric, 3) AS median_dtw,
        ROUND(percentile_cont(0.75) WITHIN GROUP (ORDER BY v.dtw_score)::numeric, 3) AS q3_dtw,
-       COUNT(*) FILTER (WHERE v.gated)                                              AS n_gated_level_tone
+       COUNT(*) FILTER (WHERE v.gated)                                              AS n_gated_level_tone,
+       COUNT(*) FILTER (WHERE v.gated_flat)                                         AS n_gated_flat_contour
 FROM v
-JOIN by_p b USING (tones, mode, comparable_across_versions)
-GROUP BY v.tones, v.mode, v.comparable_across_versions, b.pass_rate_by_participant
-ORDER BY v.mode, v.comparable_across_versions DESC, v.tones;
+JOIN by_p b USING (tones, mode, comparable_across_versions, pass_rule)
+GROUP BY v.tones, v.mode, v.comparable_across_versions, v.pass_rule, b.pass_rate_by_participant
+ORDER BY v.mode, v.comparable_across_versions DESC, v.pass_rule, v.tones;
 
 
 -- =====================================================================
@@ -525,7 +543,11 @@ v AS (
            NOT (('1' = ANY (string_to_array(l.tones, '-'))) AND COALESCE(t.schema_version, 1) < 4)  AS comparable_across_versions,
            t.dtw_score,
            (t.grade NOT IN ('fail', 'n/a'))      AS passed,
-           (COALESCE(t.schema_version, 1) >= 5 AND t.grade = 'fail' AND t.dtw_score <= 0.5) AS gated,
+           CASE WHEN l.tones !~ '[234]' THEN 'unchanged'
+                WHEN COALESCE(t.schema_version, 1) >= 8 THEN 'contour_gate'
+                ELSE 'pre_contour_gate' END AS pass_rule,
+           (COALESCE(t.schema_version, 1) >= 5 AND l.tones ~ '^1(-1)*$' AND t.grade = 'fail' AND t.dtw_score <= 0.5) AS gated,
+           (COALESCE(t.schema_version, 1) >= 8 AND l.tones ~ '[234]' AND t.pitch_span_semitones < 2.0) AS gated_flat,
            ROW_NUMBER() OVER (PARTITION BY pc.participant, t.lexeme_id ORDER BY t.timestamp, t.id) AS k
     FROM ts t
     JOIN pcode pc ON pc.device_id = t.device_id
@@ -534,14 +556,14 @@ v AS (
       AND COALESCE(t.phase, 'training') NOT IN ('self_test', 'pretest', 'posttest')
 ),
 per_p AS (
-    SELECT lexeme_id, comparable_across_versions, participant, AVG(passed::int) AS p_rate
-    FROM v GROUP BY 1, 2, 3
+    SELECT lexeme_id, comparable_across_versions, pass_rule, participant, AVG(passed::int) AS p_rate
+    FROM v GROUP BY 1, 2, 3, 4
 ),
 by_p AS (
-    SELECT lexeme_id, comparable_across_versions, ROUND(AVG(p_rate)::numeric, 3) AS pass_rate_by_participant
-    FROM per_p GROUP BY 1, 2
+    SELECT lexeme_id, comparable_across_versions, pass_rule, ROUND(AVG(p_rate)::numeric, 3) AS pass_rate_by_participant
+    FROM per_p GROUP BY 1, 2, 3
 )
-SELECT v.lexeme_id, v.hanzi, v.tones, v.word_set, v.comparable_across_versions,
+SELECT v.lexeme_id, v.hanzi, v.tones, v.word_set, v.comparable_across_versions, v.pass_rule,
        COUNT(DISTINCT v.participant)                                                AS n_participants,
        COUNT(*)                                                                     AS n_attempts,
        ROUND(AVG(v.passed::int)::numeric, 3)                                        AS pass_rate,
@@ -550,11 +572,12 @@ SELECT v.lexeme_id, v.hanzi, v.tones, v.word_set, v.comparable_across_versions,
        ROUND(AVG(v.passed::int) FILTER (WHERE v.k = 1)::numeric, 3)                 AS first_try_pass_rate,
        ROUND(AVG(v.passed::int) FILTER (WHERE v.k BETWEEN 2 AND 5)::numeric, 3)     AS try_2_5_pass_rate,
        ROUND(AVG(v.passed::int) FILTER (WHERE v.k >= 6)::numeric, 3)                AS try_6_plus_pass_rate,
-       COUNT(*) FILTER (WHERE v.gated)                                              AS n_gated_level_tone
+       COUNT(*) FILTER (WHERE v.gated)                                              AS n_gated_level_tone,
+       COUNT(*) FILTER (WHERE v.gated_flat)                                         AS n_gated_flat_contour
 FROM v
-JOIN by_p b USING (lexeme_id, comparable_across_versions)
-GROUP BY v.lexeme_id, v.hanzi, v.tones, v.word_set, v.comparable_across_versions, b.pass_rate_by_participant
-ORDER BY v.tones, v.lexeme_id, v.comparable_across_versions DESC;
+JOIN by_p b USING (lexeme_id, comparable_across_versions, pass_rule)
+GROUP BY v.lexeme_id, v.hanzi, v.tones, v.word_set, v.comparable_across_versions, v.pass_rule, b.pass_rate_by_participant
+ORDER BY v.tones, v.lexeme_id, v.comparable_across_versions DESC, v.pass_rule;
 
 
 -- =====================================================================

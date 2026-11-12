@@ -54,6 +54,11 @@ nonisolated struct ResearchAttemptRecord: Codable, Equatable {
     /// 后置问卷计数只认 succeeded 且本项非空者（字典 §7 末）。
     var resultDisplayedAt: Date?
     var timeQuality: TimeQuality
+    /// v8：走势跨度（半音）。只有 succeeded 才可能有值；失败、取消、无法计算一律 nil，
+    /// **不填占位值**。旧版本落盘的记录没有这个键，解码为 nil。
+    var pitchSpanSemitones: Double? = nil
+    /// v8：产生记录的一端，"ios" / "android"。旧版本落盘的记录解码为 nil
+    var platform: String? = nil
 }
 
 /// 尝试记录的采集入口。与事件同样受研究门禁约束。
@@ -129,7 +134,8 @@ final class ResearchAttemptLog {
             passed: nil,
             errorCode: nil,
             resultDisplayedAt: nil,
-            timeQuality: .valid)
+            timeQuality: .valid,
+            platform: RecordSchema.platform)
         startUptime[attemptID] = ProcessInfo.processInfo.systemUptime
         persist()
         return true
@@ -152,6 +158,7 @@ final class ResearchAttemptLog {
     ///
     /// 指标必须是有限数：NaN / Infinity 不是成绩，按分析失败处理。
     func markSucceeded(_ id: UUID, metric: Double, passed: Bool,
+                       pitchSpanSemitones: Float? = nil,
                        signal: ResearchAttemptRecord.SignalStatus = .usable,
                        now: Date = Date()) {
         guard metric.isFinite, metric >= 0 else {
@@ -166,6 +173,7 @@ final class ResearchAttemptLog {
         r.signalStatus = signal
         r.metricValue = metric
         r.passed = passed
+        r.pitchSpanSemitones = pitchSpanSemitones.flatMap { $0.isFinite ? Double($0) : nil }
         inFlight[id] = r
         persist()
     }
@@ -181,6 +189,7 @@ final class ResearchAttemptLog {
         r.signalStatus = signal
         r.metricValue = nil
         r.passed = nil
+        r.pitchSpanSemitones = nil
         r.errorCode = error
         inFlight[id] = r
         flushToPending(id)

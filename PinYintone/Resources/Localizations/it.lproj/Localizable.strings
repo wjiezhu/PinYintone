@@ -136,7 +136,9 @@
 "coach_all_good" = "Entrambe le sillabe vanno bene. Puoi passare alla parola successiva.";
 "coach_praise" = "«%@» è già stabile.";
 "coach_keep_level" = "Tutta la parola scende. Il primo tono resta alto e piano: mantieni l'altezza costante.";
+"coach_add_movement" = "L’intonazione si è mossa appena. I toni di questa parola salgono e scendono: segui il modello, rendi chiaro il movimento e riprova.";
 "direction_word_dropping" = "Sta scendendo";
+"direction_word_flat" = "L’altezza quasi non si muove";
 "consent_title" = "Partecipa allo studio (facoltativo)";
 "consent_purpose_title" = "Scopo";
 "consent_purpose_body" = "Capire come chi studia il cinese usa uno strumento per esercitarsi sui toni, per una tesi magistrale su progettazione e usabilità.\n\nDopo l'adesione puoi fare una «sessione in presenza» con il gruppo di ricerca, di circa 15–20 minuti: prima leggi un gruppo di parole (senza risultati), poi ti eserciti su un altro gruppo (con riscontro) e infine rileggi il primo gruppo (senza risultati). Puoi interrompere la sessione in qualsiasi momento.";
@@ -189,6 +191,7 @@
 "advice_action_again" = "Esercitati di nuovo";
 "advice_retry_no_signal" = "La registrazione non è chiara. Avvicinati al microfono e riprova.";
 "advice_keep_level" = "Tutta la parola scende. Il primo tono resta alto e piano: mantieni l'altezza costante.";
+"advice_add_movement" = "L’intonazione si è mossa appena. I toni di questa parola salgono e scendono: segui il modello, rendi chiaro il movimento e riprova.";
 "advice_close_to_model" = "Nel complesso è già vicino al modello.";
 "advice_listen_and_compare" = "Riproduci il modello, poi riascolta la tua registrazione e confrontali.";
 "advice_try_again_whole_word" = "Nel complesso c'è ancora distanza dal modello. Esercitati ancora su questa parola.";

@@ -136,7 +136,9 @@
 "coach_all_good" = "Las dos sílabas están bien. Puedes pasar a la palabra siguiente.";
 "coach_praise" = "«%@» ya es estable.";
 "coach_keep_level" = "Toda la palabra va cayendo. El primer tono se mantiene alto y llano: sostén la altura.";
+"coach_add_movement" = "Tu entonación apenas se movió. Los tonos de esta palabra suben y bajan: sigue el modelo, marca bien el movimiento y vuelve a intentarlo.";
 "direction_word_dropping" = "Va cayendo";
+"direction_word_flat" = "La altura casi no se mueve";
 "consent_title" = "Participar en el estudio (opcional)";
 "consent_purpose_title" = "Finalidad";
 "consent_purpose_body" = "Entender cómo usan quienes aprenden chino una herramienta para practicar los tonos, para una tesis de máster sobre diseño y usabilidad.\n\nTras unirte, puedes hacer una «sesión presencial» con el equipo de investigación delante, de unos 15–20 minutos: primero lees un grupo de palabras (sin ver resultados), luego practicas otro grupo (con comentarios) y por último lees de nuevo el primer grupo (sin ver resultados). Puedes detener la sesión en cualquier momento.";
@@ -189,6 +191,7 @@
 "advice_action_again" = "Practicar otra vez";
 "advice_retry_no_signal" = "No se ha grabado con claridad. Acércate al micrófono e inténtalo de nuevo.";
 "advice_keep_level" = "Toda la palabra va cayendo. El primer tono se mantiene alto y llano: sostén la altura.";
+"advice_add_movement" = "Tu entonación apenas se movió. Los tonos de esta palabra suben y bajan: sigue el modelo, marca bien el movimiento y vuelve a intentarlo.";
 "advice_close_to_model" = "En conjunto ya se acerca al modelo.";
 "advice_listen_and_compare" = "Reproduce el modelo, escucha después tu grabación y compáralos.";
 "advice_try_again_whole_word" = "En conjunto aún hay diferencia con el modelo. Practica esta palabra una vez más.";

@@ -177,7 +177,9 @@
 "coach_all_good" = "这次都念稳了，可以换下一个词。";
 "coach_praise" = "「%@」已经很稳了。";
 "coach_keep_level" = "整个词都在往下掉。一声要从头平到尾，把音高稳住再来一次。";
+"coach_add_movement" = "音高几乎没有变化。这个词的声调有升有降，跟着示范把起伏读出来，再试一次。";
 "direction_word_dropping" = "整体在下滑";
+"direction_word_flat" = "音高几乎没变";
 
 /* 研究授权（需求 §2）。译稿待核校，不得标记为正式施测版本。 */
 "consent_title" = "参与研究（可选）";
@@ -229,6 +231,7 @@
 "advice_action_again" = "再练一次";
 "advice_retry_no_signal" = "没录清楚，请靠近麦克风再录一次。";
 "advice_keep_level" = "整个词都在往下掉。一声要从头平到尾，把音高稳住再来一次。";
+"advice_add_movement" = "音高几乎没有变化。这个词的声调有升有降，跟着示范把起伏读出来，再试一次。";
 "advice_close_to_model" = "整体已经很接近示范了。";
 "advice_listen_and_compare" = "先听一次示范，再对照自己的录音听一遍。";
 "advice_try_again_whole_word" = "整体和示范还有差距，再练一次这个词。";

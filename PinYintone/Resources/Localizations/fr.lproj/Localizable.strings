@@ -177,7 +177,9 @@
 "coach_all_good" = "Les deux syllabes sont bonnes. Passez au mot suivant.";
 "coach_praise" = "« %@ » est déjà stable.";
 "coach_keep_level" = "Le mot entier descend. Le premier ton reste haut et plat du début à la fin — maintenez la hauteur.";
+"coach_add_movement" = "La hauteur de votre voix n'a presque pas bougé. Les tons de ce mot montent et descendent : suivez le modèle, marquez bien ces mouvements et réessayez.";
 "direction_word_dropping" = "Descend";
+"direction_word_flat" = "Hauteur presque plate";
 
 /* Consentement à l'étude. Traduction provisoire, en attente de relecture. */
 "consent_title" = "Participer à l'étude (facultatif)";
@@ -229,6 +231,7 @@
 "advice_action_again" = "Recommencer";
 "advice_retry_no_signal" = "L'enregistrement n'est pas clair. Rapprochez-vous du micro et réessayez.";
 "advice_keep_level" = "Le mot entier descend. Le premier ton reste haut et plat du début à la fin — maintenez la hauteur.";
+"advice_add_movement" = "La hauteur de votre voix n'a presque pas bougé. Les tons de ce mot montent et descendent : suivez le modèle, marquez bien ces mouvements et réessayez.";
 "advice_close_to_model" = "Dans l'ensemble, c'est déjà proche du modèle.";
 "advice_listen_and_compare" = "Écoutez le modèle, puis réécoutez votre enregistrement pour comparer.";
 "advice_try_again_whole_word" = "Il reste un écart avec le modèle. Reprenez ce mot une fois de plus.";

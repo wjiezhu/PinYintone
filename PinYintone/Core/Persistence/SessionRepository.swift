@@ -25,7 +25,8 @@ final class SessionRepository {
               assessmentSetVersion: String? = nil,
               feedbackMode: String? = nil,
               resultStatus: ResultStatus = .validResult,
-              failureReason: FailureReason? = nil) -> TrainingSession {
+              failureReason: FailureReason? = nil,
+              pitchSpanSemitones: Float? = nil) -> TrainingSession {
         let session = TrainingSession(context: context)
         session.id = UUID()
         session.deviceID = deviceID
@@ -54,6 +55,9 @@ final class SessionRepository {
         session.failureReason = failureReason?.rawValue
         session.schemaVersion = Int16(RecordSchema.version)
         session.appVersion = RecordSchema.appVersion
+        // v8：技术失败调用方不传，保持 nil
+        session.pitchSpanSemitones = pitchSpanSemitones.map { NSNumber(value: Double($0)) }
+        session.platform = RecordSchema.platform
         saveContext()
         return session
     }

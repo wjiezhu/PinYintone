@@ -54,9 +54,19 @@ final class PracticeAdviceTests: XCTestCase {
         XCTAssertEqual(a.evidenceSnapshot["gate"], "level_tone_fall")
     }
 
+    /// 走势幅度闸门触发：整词「把起伏读出来」，快照记 flat_contour
+    func testFlatContourGateGivesWholeWordDirection() {
+        let r = FeedbackResult(dtwScore: 0.3, flatContour: true, grade: .fail,
+                               attemptNumber: 1, segments: [])
+        let a = PracticeAdvice.make(result: r, lexemeID: "xianzai")
+        XCTAssertEqual(a.mainSentenceKey, "advice_add_movement")
+        XCTAssertEqual(a.evidenceSnapshot["gate"], "flat_contour")
+        XCTAssertEqual(a.evidence, [.overallMetric])
+    }
+
     /// 四语都有译文，且主建议模板不含占位符（整词建议无可归咎的单字）
     func testAllSentencesLocalizedWithoutPlaceholder() throws {
-        let keys = ["advice_retry_no_signal", "advice_keep_level", "advice_close_to_model",
+        let keys = ["advice_retry_no_signal", "advice_keep_level", "advice_add_movement", "advice_close_to_model",
                     "advice_listen_and_compare", "advice_try_again_whole_word",
                     "advice_title", "advice_target_title", "advice_this_time_title"]
         for lang in ["zh-Hans", "en", "fr", "ar"] {
