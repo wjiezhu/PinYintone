@@ -21,7 +21,10 @@ enum class LexemeCategory(val rawValue: String) {
  * 对应 Swift `WordSet`。
  */
 enum class WordSet(val rawValue: String) {
-    SET1("set1"), SET2("set2"), ASSESSMENT("assessment");
+    SET1("set1"), SET2("set2"), ASSESSMENT("assessment"),
+
+    /** 2026-11 扩充的词：只在普通练习里出现，不进自测词集 */
+    EXPANSION("expansion");
 
     companion object {
         fun of(raw: String?): WordSet? = entries.firstOrNull { it.rawValue == raw }

@@ -39,7 +39,7 @@ extension TrainingSession {
 
     /// 研究阶段："pretest" | "training" | "posttest"（TrainingPhase.rawValue）
     @NSManaged public var phase: String?
-    /// 词集归属："set1" | "set2" | "assessment"（WordSet.rawValue）
+    /// 词集归属："set1" | "set2" | "assessment" | "expansion"（WordSet.rawValue）
     @NSManaged public var wordSetID: String?
     /// **历史列**：条件呈现顺序。A/B 取消后不再写入，恒为 nil。
     @NSManaged public var presentationOrder: String?

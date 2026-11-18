@@ -56,7 +56,7 @@ class TonePracticeSessionTest {
         assertEquals(Stage.Ready, session.stage)
         assertEquals(ReferenceType.IDEAL, session.referenceType)
         assertArrayEquals(ToneScorer().idealReference(listOf(1, 1)), session.reference, 0f)
-        assertEquals(1 to 14, session.progress)
+        assertEquals(1 to 106, session.progress)
     }
 
     @Test
@@ -204,6 +204,11 @@ class TonePracticeSessionTest {
         session.select("hanzi")
         assertEquals("hanzi", session.lexeme?.id)
         assertEquals(13, store.practiceCursor)
+        session.loadNext()
+        assertEquals("jintian", session.lexeme?.id)   // 固定词序之后接着是扩充的词
+        // 词表最后一个词之后绕回第一个
+        session.select("zhongyao")
+        assertEquals(105, store.practiceCursor)
         session.loadNext()
         assertEquals("yisheng", session.lexeme?.id)
         session.select("not-a-word")

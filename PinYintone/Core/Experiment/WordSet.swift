@@ -12,6 +12,8 @@ nonisolated enum WordSet: String, Codable, CaseIterable {
     case set1
     case set2
     case assessment
+    /// 2026-11 扩充的词。不属于当年的两个训练词集，也不进自测词集；只在普通练习里出现
+    case expansion
 
     /// 训练池所含的词集标签（合并遍历，不再分块）
     static var trainingSets: [WordSet] { [.set1, .set2] }

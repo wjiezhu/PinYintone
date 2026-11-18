@@ -44,7 +44,8 @@ def test_seed_rows_build_cleanly():
     from scripts.seed_lexicon import build_rows
     version, rows, problems = build_rows()
     assert problems == [], problems
-    assert len(rows) == 20
+    assert len(rows) == 152
+    assert sum(1 for r in rows if r["review_status"] == "approved") == 20
     # 版本编号不是稳定编号
     assert all(r["lexeme_version_id"] != r["lexeme_id"] for r in rows)
 

@@ -53,8 +53,8 @@ final class AspirationFailureTests: XCTestCase {
     func testCorpusMarksAspiratedAndUnaspiratedWords() throws {
         let words = CorpusLoader.shared.lexemes(in: .aspiration)
         let targets = try words.map { try XCTUnwrap($0.aspirationTarget, $0.id) }
-        XCTAssertEqual(Set(targets.filter(\.aspirated).map(\.initial)), ["p", "t", "k"])
-        XCTAssertEqual(Set(targets.filter { !$0.aspirated }.map(\.initial)), ["b", "d", "g"])
+        XCTAssertEqual(Set(targets.filter(\.aspirated).map(\.initial)), ["p", "t", "k", "c", "ch", "q"])
+        XCTAssertEqual(Set(targets.filter { !$0.aspirated }.map(\.initial)), ["b", "d", "g", "z", "zh", "j"])
         for w in words {
             XCTAssertTrue(w.pinyin.hasPrefix(w.aspirationTarget!.initial), w.id)
         }

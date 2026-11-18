@@ -3,14 +3,85 @@ import XCTest
 
 final class CorpusLoaderTests: XCTestCase {
 
-    func testCorpusLoadsTwentyWords() {
-        // 验证 lexemes.json 解码成功且为 20 词（捕获 JSON schema 错误）
-        XCTAssertEqual(CorpusLoader.shared.loadLexemes().count, 20)
+    func testCorpusLoadsAllWords() {
+        // 验证 lexemes.json 解码成功（捕获 JSON schema 错误）。2026-11-18 由 20 词扩充到 152 词
+        XCTAssertEqual(CorpusLoader.shared.loadLexemes().count, 152)
     }
 
     func testCategorySplit() {
-        XCTAssertEqual(CorpusLoader.shared.lexemes(in: .aspiration).count, 6, "送气关卡 6 词")
-        XCTAssertEqual(CorpusLoader.shared.lexemes(in: .tone).count, 14, "声调关卡 14 词")
+        XCTAssertEqual(CorpusLoader.shared.lexemes(in: .aspiration).count, 46, "送气关卡 46 词")
+        XCTAssertEqual(CorpusLoader.shared.lexemes(in: .tone).count, 106, "声调关卡 106 词")
+    }
+
+    // MARK: - 2026-11-18 扩充
+
+    func testIDsAndHanziAreUnique() {
+        let words = CorpusLoader.shared.loadLexemes()
+        XCTAssertEqual(Set(words.map(\.id)).count, words.count)
+        XCTAssertEqual(Set(words.map(\.hanzi)).count, words.count)
+    }
+
+    /// 四个声调两两组合的 16 种都有词，每种至少 3 个（扩充前只有 7 种，且没有二声）
+    func testAllSixteenToneCombinationsAreCovered() {
+        var counts: [String: Int] = [:]
+        for word in CorpusLoader.shared.lexemes(in: .tone) {
+            counts["\(word.tones[0])+\(word.tones[1])", default: 0] += 1
+        }
+        for first in 1...4 {
+            for second in 1...4 {
+                XCTAssertGreaterThanOrEqual(counts["\(first)+\(second)"] ?? 0, 3, "\(first)+\(second) 的词太少")
+            }
+        }
+    }
+
+    /// 扩充的词都是双音节、不含轻声（研究者 2026-11-18 决定去掉候选里的轻声词），各语言释义齐全
+    func testExpansionWordsAreDisyllabicWithoutNeutralTone() {
+        let original: Set<String> = ["paobu", "bangzhu", "tingdong", "dengdai", "kaoshi", "gaosu",
+                                     "xianzai", "dianshi", "sushe", "hanzi", "heshui", "shenti", "jingli",
+                                     "yisheng", "qingchu", "xiuxi", "ziji", "canjia", "zaocan", "xiangxin"]
+        let added = CorpusLoader.shared.loadLexemes().filter { !original.contains($0.id) }
+        XCTAssertEqual(added.count, 132)
+        for word in added {
+            XCTAssertEqual(word.tones.count, 2, word.id)
+            XCTAssertEqual(word.hanzi.count, 2, word.id)
+            XCTAssertEqual(word.pinyin.split(separator: " ").count, 2, word.id)
+            XCTAssertFalse(word.tones.contains(5), "\(word.id) 含轻声")
+            XCTAssertTrue(word.tones.allSatisfy { (1...4).contains($0) }, word.id)
+            for gloss in [word.french, word.darija, word.spanish ?? "", word.italian ?? "", word.english ?? ""] {
+                XCTAssertFalse(gloss.isEmpty, "\(word.id) 缺释义")
+            }
+            if word.category == .tone {
+                XCTAssertEqual(word.wordSet, .expansion, "\(word.id) 不得混进旧词集或自测词集")
+            }
+        }
+    }
+
+    /// 送气词都写明考察的声母与方向，声母就是拼音的开头；送气与不送气两边都有词
+    func testEveryAspirationWordDeclaresItsTarget() {
+        let aspirated: Set<String> = ["p", "t", "k", "c", "ch", "q"]
+        let unaspirated: Set<String> = ["b", "d", "g", "z", "zh", "j"]
+        var perInitial: [String: Int] = [:]
+        for word in CorpusLoader.shared.lexemes(in: .aspiration) {
+            guard let target = word.aspirationTarget else {
+                XCTFail("\(word.id) 缺 aspirationTarget"); continue
+            }
+            XCTAssertTrue(word.id.hasPrefix(target.initial), word.id)
+            if target.initial.count == 1 {
+                XCTAssertFalse(word.id.hasPrefix(target.initial + "h"), "\(word.id) 的声母写错了")
+            }
+            XCTAssertEqual(target.aspirated, aspirated.contains(target.initial), word.id)
+            XCTAssertTrue(aspirated.union(unaspirated).contains(target.initial), word.id)
+            perInitial[target.initial, default: 0] += 1
+        }
+        for initial in aspirated.union(unaspirated) {
+            XCTAssertGreaterThanOrEqual(perInitial[initial] ?? 0, 2, "\(initial) 的词太少")
+        }
+    }
+
+    /// 自测词集没有因为扩充而变化（`assess-v1` 不变）
+    func testAssessmentSetIsUnchangedByTheExpansion() {
+        XCTAssertEqual(Set(CorpusLoader.shared.assessmentPool().map(\.id)),
+                       ["xiangxin", "heshui", "sushe", "hanzi"])
     }
 
     func testAspirationFirstWord() {
