@@ -91,10 +91,12 @@ final class SurveyFormAnswerTests: XCTestCase {
 
     /// 国籍：显示名按语言本地化，保存的是固定的 ISO 代码（U07）
     func testCountryNamesAreLocalizedButCodesAreFixed() {
-        let names = ["zh", "en", "fr", "ar"].map { CountryPickerSheet.name(for: "MA", language: $0) }
+        let names = ["zh", "en", "fr", "ar"].map {
+            SurveyOptionLists.name(for: "MA", kind: .region, language: $0)
+        }
         XCTAssertEqual(Set(names).count, 4, "四种语言下国名应各不相同：\(names)")
-        XCTAssertEqual(CountryPickerSheet.name(for: "MA", language: "fr"), "Maroc")
-        XCTAssertEqual(CountryPickerSheet.name(for: "MA", language: "en"), "Morocco")
+        XCTAssertEqual(SurveyOptionLists.name(for: "MA", kind: .region, language: "fr"), "Maroc")
+        XCTAssertEqual(SurveyOptionLists.name(for: "MA", kind: .region, language: "en"), "Morocco")
     }
 
     /// 背景表答案 → 资格所需的派生字段

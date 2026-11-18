@@ -1,7 +1,7 @@
 {
   "form_key": "background_v1",
-  "form_version": "background_v1-1.2",
-  "translation_version": "research-survey-i18n-1.2",
+  "form_version": "background_v1-1.3",
+  "translation_version": "research-survey-i18n-1.3",
   "title": {
     "zh": "学习背景",
     "en": "Learning background",
@@ -63,12 +63,12 @@
       "question_id": "B02",
       "type": "multi",
       "question": {
-        "zh": "你的国籍是什么？如有多个国籍，可以选择多个；其他国籍请在「其他国籍」里直接填写。",
-        "en": "What is your nationality? If you have more than one, you can select more than one; for any other nationality, type it under \"Other nationality\".",
-        "fr": "Quelle est votre nationalité ? Si vous en avez plusieurs, vous pouvez en sélectionner plusieurs ; pour toute autre nationalité, saisissez-la dans « Autre nationalité ».",
-        "ar": "ما جنسيتك؟ إذا كنت تحمل أكثر من جنسية يمكنك اختيار أكثر من واحدة، ولأي جنسية أخرى اكتبها في خانة «جنسية أخرى».",
-        "es": "¿Cuál es tu nacionalidad? Si tienes más de una, puedes seleccionar varias; para cualquier otra nacionalidad, escríbela en «Otra nacionalidad».",
-        "it": "Qual è la tua nazionalità? Se ne hai più di una, puoi selezionarne più di una; per qualsiasi altra nazionalità, scrivila in «Altra nazionalità»."
+        "zh": "你的国籍是什么？如有多个国籍，可以选择多个；点「搜索国家或地区」可以从完整列表里选。",
+        "en": "What is your nationality? If you have more than one, you can select more than one; tap \"Search countries and regions\" to choose from the full list.",
+        "fr": "Quelle est votre nationalité ? Si vous en avez plusieurs, vous pouvez en sélectionner plusieurs ; touchez « Rechercher un pays ou une région » pour choisir dans la liste complète.",
+        "ar": "ما جنسيتك؟ إذا كنت تحمل أكثر من جنسية يمكنك اختيار أكثر من واحدة، واضغط على «البحث عن بلد أو منطقة» للاختيار من القائمة الكاملة.",
+        "es": "¿Cuál es tu nacionalidad? Si tienes más de una, puedes seleccionar varias; toca «Buscar países y regiones» para elegir de la lista completa.",
+        "it": "Qual è la tua nazionalità? Se ne hai più di una, puoi selezionarne più di una; tocca «Cerca paesi e regioni» per scegliere dall’elenco completo."
       },
       "options": [
         {
@@ -80,28 +80,6 @@
             "ar": "المغرب",
             "es": "Marruecos",
             "it": "Marocco"
-          }
-        },
-        {
-          "code": "other",
-          "label": {
-            "zh": "其他国籍",
-            "en": "Other nationality",
-            "fr": "Autre nationalité",
-            "ar": "جنسية أخرى",
-            "es": "Otra nacionalidad",
-            "it": "Altra nazionalità"
-          },
-          "text_input": {
-            "max_chars": 100,
-            "hint": {
-              "zh": "请填写国籍",
-              "en": "Type your nationality",
-              "fr": "Saisissez votre nationalité",
-              "ar": "اكتب جنسيتك",
-              "es": "Escribe tu nacionalidad",
-              "it": "Scrivi la tua nazionalità"
-            }
           }
         },
         {
@@ -117,7 +95,8 @@
           "exclusive": true
         }
       ],
-      "note": "background_v1-1.1：国家列表改为「其他国籍」直接填写（研究者 2026-10-14 决定）。纳入判断只看是否选了 MA；「其他国籍」里填的文字原样保存在 text_value，不做归一化、不参与纳入判断——在其中写了「摩洛哥」的人不会被自动判为符合。不得以地区/界面语言/IP 代填。"
+      "note": "background_v1-1.3：国籍选项改为完整的 ISO 3166-1 alpha-2 列表（survey_option_lists_v1.json，249 个代码），存代码，显示名由系统按问卷语言本地化（研究者 2026-11-18 要求）。MA 仍作为预置选项排在前面。1.1–1.2 的「其他国籍」自由填写项取消；那两版的答案里 option_codes 含 other、文字在 text_value，原样保留，不归一化成代码。不得以地区/界面语言/IP 代填。",
+      "option_source": "iso3166_1_alpha2"
     },
     {
       "question_id": "B03",
@@ -223,7 +202,7 @@
       },
       "options": [
         {
-          "code": "darija",
+          "code": "ary",
           "label": {
             "zh": "达里贾语（摩洛哥阿拉伯方言）",
             "en": "Darija (Moroccan Arabic)",
@@ -234,7 +213,7 @@
           }
         },
         {
-          "code": "amazigh",
+          "code": "ber",
           "label": {
             "zh": "阿马齐格语",
             "en": "Amazigh",
@@ -245,7 +224,7 @@
           }
         },
         {
-          "code": "msa",
+          "code": "arb",
           "label": {
             "zh": "标准阿拉伯语",
             "en": "Standard Arabic",
@@ -256,7 +235,7 @@
           }
         },
         {
-          "code": "french",
+          "code": "fr",
           "label": {
             "zh": "法语",
             "en": "French",
@@ -267,7 +246,7 @@
           }
         },
         {
-          "code": "spanish",
+          "code": "es",
           "label": {
             "zh": "西班牙语",
             "en": "Spanish",
@@ -278,7 +257,7 @@
           }
         },
         {
-          "code": "italian",
+          "code": "it",
           "label": {
             "zh": "意大利语",
             "en": "Italian",
@@ -322,7 +301,9 @@
           },
           "exclusive": true
         }
-      ]
+      ],
+      "option_source": "iso639",
+      "note": "background_v1-1.3：语言选项改存 ISO 639 代码，并可从完整列表（survey_option_lists_v1.json：ISO 639-1 全部 183 个代码，另加 ary / arb / ber）里选；列表里没有的语言仍可在「其他」里填写。预置选项沿用原译名。1.2 及更早版本存的是自定代码，对应关系：darija→ary、msa→arb、amazigh→ber、french→fr、english→en、chinese→zh、spanish→es、italian→it（SurveyOptionLists.legacyLanguageCodes）；旧答案不改写。"
     },
     {
       "question_id": "B05",
@@ -337,7 +318,7 @@
       },
       "options": [
         {
-          "code": "darija",
+          "code": "ary",
           "label": {
             "zh": "达里贾语（摩洛哥阿拉伯方言）",
             "en": "Darija (Moroccan Arabic)",
@@ -348,7 +329,7 @@
           }
         },
         {
-          "code": "amazigh",
+          "code": "ber",
           "label": {
             "zh": "阿马齐格语",
             "en": "Amazigh",
@@ -359,7 +340,7 @@
           }
         },
         {
-          "code": "msa",
+          "code": "arb",
           "label": {
             "zh": "标准阿拉伯语",
             "en": "Standard Arabic",
@@ -370,7 +351,7 @@
           }
         },
         {
-          "code": "french",
+          "code": "fr",
           "label": {
             "zh": "法语",
             "en": "French",
@@ -381,7 +362,7 @@
           }
         },
         {
-          "code": "english",
+          "code": "en",
           "label": {
             "zh": "英语",
             "en": "English",
@@ -392,7 +373,7 @@
           }
         },
         {
-          "code": "chinese",
+          "code": "zh",
           "label": {
             "zh": "汉语",
             "en": "Chinese",
@@ -403,7 +384,7 @@
           }
         },
         {
-          "code": "spanish",
+          "code": "es",
           "label": {
             "zh": "西班牙语",
             "en": "Spanish",
@@ -414,7 +395,7 @@
           }
         },
         {
-          "code": "italian",
+          "code": "it",
           "label": {
             "zh": "意大利语",
             "en": "Italian",
@@ -458,7 +439,9 @@
           },
           "exclusive": true
         }
-      ]
+      ],
+      "option_source": "iso639",
+      "note": "background_v1-1.3：语言选项改存 ISO 639 代码，并可从完整列表（survey_option_lists_v1.json：ISO 639-1 全部 183 个代码，另加 ary / arb / ber）里选；列表里没有的语言仍可在「其他」里填写。预置选项沿用原译名。1.2 及更早版本存的是自定代码，对应关系：darija→ary、msa→arb、amazigh→ber、french→fr、english→en、chinese→zh、spanish→es、italian→it（SurveyOptionLists.legacyLanguageCodes）；旧答案不改写。"
     }
   ]
 }

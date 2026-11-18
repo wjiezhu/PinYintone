@@ -428,11 +428,11 @@ final class FieldSessionTests: XCTestCase {
     /// 语言背景题与注册页都能选西班牙语、意大利语
     func testSpanishAndItalianCanBeChosenAsLanguages() throws {
         let form = try XCTUnwrap(SurveyFormLoader.bundled[SurveyCenter.backgroundKey])
-        XCTAssertEqual(form.formVersion, "background_v1-1.2", "选项变了版本号必须跟着变")
+        XCTAssertEqual(form.formVersion, "background_v1-1.3", "选项变了版本号必须跟着变")
         for id in ["B04", "B05"] {
             let q = try XCTUnwrap(form.questions.first { $0.questionId == id })
             let codes = q.options.map(\.code)
-            XCTAssertTrue(codes.contains("spanish") && codes.contains("italian"), id)
+            XCTAssertTrue(codes.contains("es") && codes.contains("it"), id)
             XCTAssertEqual(codes.last, "prefer_not", "互斥项仍排最后")
         }
         XCTAssertTrue(SpokenLanguage.displayOrder.contains(.spanish))

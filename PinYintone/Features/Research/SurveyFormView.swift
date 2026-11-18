@@ -25,7 +25,7 @@ struct SurveyFormView: View {
 
     @State private var draft: SurveyDraft
     @State private var limitWarning = false
-    @State private var showCountryPicker = false
+    @State private var showCodePicker = false
     @FocusState private var textFocused: Bool
 
     init(form: SurveyForm, language: String, draft: SurveyDraft,
@@ -40,6 +40,12 @@ struct SurveyFormView: View {
         self.onDecline = onDecline
         var d = draft
         d.index = min(max(d.index, 0), max(form.questions.count - 1, 0))
+        // 旧版问卷留下的草稿里，语言题存的是自定代码；换成现在的 ISO 639 代码
+        for q in form.questions where SurveyOptionLists.list(q.optionSource)?.kind == .language {
+            if let old = d.selections[q.questionId] {
+                d.selections[q.questionId] = Array(Set(old.map(SurveyOptionLists.canonicalLanguageCode))).sorted()
+            }
+        }
         _draft = State(initialValue: d)
     }
 
@@ -83,21 +89,22 @@ struct SurveyFormView: View {
                     ForEach(question.options, id: \.code) { opt in
                         optionRow(opt)
                     }
-                    if usesCountryList {
-                        ForEach(extraCountries, id: \.self) { code in
-                            countryRow(code)
+                    if let kind = codeListKind {
+                        ForEach(extraCodes, id: \.self) { code in
+                            extraCodeRow(code, kind: kind)
                         }
                         Button {
-                            showCountryPicker = true
+                            showCodePicker = true
                         } label: {
-                            Label(ui("search_country"), systemImage: "magnifyingglass")
+                            Label(pickerTitle(kind), systemImage: "magnifyingglass")
                                 .font(.body.weight(.medium))
                                 .foregroundStyle(Theme.primary)
+                                .multilineTextAlignment(.leading)
                                 .frame(maxWidth: .infinity, minHeight: Theme.minTap, alignment: .leading)
                                 .contentShape(Rectangle())
                         }
                         .buttonStyle(.plain)
-                        .accessibilityIdentifier("survey.countrySearch")
+                        .accessibilityIdentifier(kind == .region ? "survey.countrySearch" : "survey.languageSearch")
                     }
                 }
 
@@ -143,11 +150,14 @@ struct SurveyFormView: View {
                 Button(NSLocalizedString("settings_done", comment: "")) { textFocused = false }
             }
         }
-        .sheet(isPresented: $showCountryPicker) {
-            CountryPickerSheet(language: language,
-                               selected: Set(draft.selections[question.questionId] ?? []),
-                               title: ui("search_country")) { code in
-                toggleCountry(code)
+        .sheet(isPresented: $showCodePicker) {
+            if let kind = codeListKind {
+                CodeListPickerSheet(source: question.optionSource, kind: kind, language: language,
+                                    overrides: presetNames,
+                                    selected: Set(draft.selections[question.questionId] ?? []),
+                                    title: pickerTitle(kind)) { code in
+                    toggleListed(code)
+                }
             }
         }
         // 问卷的阅读方向跟着它自己的语言，不跟 App 当前语言
@@ -180,10 +190,26 @@ struct SurveyFormView: View {
 
     // MARK: - 选项
 
-    private var usesCountryList: Bool { question.optionSource != nil }
+    /// 这道题的选项是否另由标准代码表补全（国籍题、语言题）
+    private var codeListKind: SurveyOptionLists.Kind? {
+        SurveyOptionLists.list(question.optionSource)?.kind
+    }
 
-    /// 列表里没有预置、由用户从国家列表里选的国籍
-    private var extraCountries: [String] {
+    private func pickerTitle(_ kind: SurveyOptionLists.Kind) -> String {
+        ui(kind == .region ? "search_country" : "search_language")
+    }
+
+    /// 预置选项自带的译名：完整列表里同一个代码也用它，同一种语言不出现两种叫法
+    private var presetNames: [String: String] {
+        var out: [String: String] = [:]
+        for opt in question.options where opt.textInput == nil && opt.exclusive != true {
+            out[opt.code] = localized(opt.label)
+        }
+        return out
+    }
+
+    /// 不在预置选项里、由用户从完整列表里选的代码
+    private var extraCodes: [String] {
         let preset = Set(question.options.map(\.code))
         return (draft.selections[question.questionId] ?? []).filter { !preset.contains($0) }.sorted()
     }
@@ -223,15 +249,16 @@ struct SurveyFormView: View {
         }
     }
 
-    private func countryRow(_ code: String) -> some View {
+    private func extraCodeRow(_ code: String, kind: SurveyOptionLists.Kind) -> some View {
         Button {
-            toggleCountry(code)
+            toggleListed(code)
         } label: {
-            choiceLabel(text: CountryPickerSheet.name(for: code, language: language),
+            choiceLabel(text: SurveyOptionLists.name(for: code, kind: kind, language: language),
                         chosen: true, single: false)
         }
         .buttonStyle(.plain)
         .accessibilityAddTraits(.isSelected)
+        .accessibilityIdentifier("survey.option.\(code)")
     }
 
     /// 单选用圆钮，多选用复选框（需求 U06）。每个选项一格；
@@ -359,16 +386,22 @@ struct SurveyFormView: View {
         store(selection: current, for: q)
     }
 
-    private func toggleCountry(_ code: String) {
+    /// 从完整列表里选或取消一项。规则与预置选项相同：与互斥项不能同选
+    private func toggleListed(_ code: String) {
         let q = question
-        var current = Set(draft.selections[q.questionId] ?? [])
-        if current.contains(code) {
-            current.remove(code)
+        let current = Set(draft.selections[q.questionId] ?? [])
+        store(selection: Self.toggling(code, in: current, exclusives: form.exclusiveCodes(in: q)), for: q)
+    }
+
+    static func toggling(_ code: String, in current: Set<String>, exclusives: Set<String>) -> Set<String> {
+        var next = current
+        if next.contains(code) {
+            next.remove(code)
         } else {
-            current.subtract(form.exclusiveCodes(in: q))
-            current.insert(code)
+            next.subtract(exclusives)
+            next.insert(code)
         }
-        store(selection: current, for: q)
+        return next
     }
 
     private func store(selection: Set<String>, for q: SurveyForm.Question) {
@@ -436,12 +469,14 @@ struct SurveyFormView: View {
     }
 }
 
-/// 国籍选择：平台提供的国家与地区列表，**名称按问卷语言本地化显示，保存的是固定的
-/// ISO 3166-1 两位代码**（需求 U07）。可搜索、可多选。
+/// 从标准代码表里选：国家与地区（ISO 3166-1）或语言（ISO 639）。
+/// **名称按问卷语言显示，保存的是代码**（需求 U07）。可搜索、可多选，名称长了换行。
 /// 不按设备地区、界面语言或 IP 预先替用户选。
-struct CountryPickerSheet: View {
+struct CodeListPickerSheet: View {
+    let source: String?
+    let kind: SurveyOptionLists.Kind
     let language: String
-    let selected: Set<String>
+    let overrides: [String: String]
     let title: String
     let onToggle: (String) -> Void
 
@@ -449,34 +484,20 @@ struct CountryPickerSheet: View {
     @State private var query = ""
     @State private var chosen: Set<String>
 
-    init(language: String, selected: Set<String>, title: String,
+    init(source: String?, kind: SurveyOptionLists.Kind, language: String,
+         overrides: [String: String] = [:], selected: Set<String>, title: String,
          onToggle: @escaping (String) -> Void) {
+        self.source = source
+        self.kind = kind
         self.language = language
-        self.selected = selected
+        self.overrides = overrides
         self.title = title
         self.onToggle = onToggle
         _chosen = State(initialValue: selected)
     }
 
-    static func name(for code: String, language: String) -> String {
-        Locale(identifier: language == "zh" ? "zh-Hans" : language)
-            .localizedString(forRegionCode: code) ?? code
-    }
-
-    private static func allCodes() -> [String] {
-        Locale.Region.isoRegions
-            .filter { $0.subRegions.isEmpty && $0.identifier.count == 2 }
-            .map(\.identifier)
-    }
-
-    private var rows: [(code: String, name: String)] {
-        let all = Self.allCodes()
-            .map { (code: $0, name: Self.name(for: $0, language: language)) }
-            .sorted { $0.name.localizedCompare($1.name) == .orderedAscending }
-        let q = query.trimmingCharacters(in: .whitespaces)
-        guard !q.isEmpty else { return all }
-        return all.filter { $0.name.localizedCaseInsensitiveContains(q)
-            || $0.code.localizedCaseInsensitiveContains(q) }
+    private var rows: [SurveyOptionLists.Row] {
+        SurveyOptionLists.rows(source: source, language: language, query: query, overrides: overrides)
     }
 
     var body: some View {
@@ -486,20 +507,25 @@ struct CountryPickerSheet: View {
                     if chosen.contains(row.code) { chosen.remove(row.code) } else { chosen.insert(row.code) }
                     onToggle(row.code)
                 } label: {
-                    HStack {
-                        Text(row.name).foregroundStyle(Theme.textPrimary)
-                        Spacer()
+                    HStack(alignment: .center, spacing: Theme.Space.m) {
+                        Text(row.name)
+                            .foregroundStyle(Theme.textPrimary)
+                            .multilineTextAlignment(.leading)
+                            .fixedSize(horizontal: false, vertical: true)
+                        Spacer(minLength: 0)
                         if chosen.contains(row.code) {
                             Image(systemName: "checkmark")
                                 .foregroundStyle(Theme.primary)
                                 .accessibilityHidden(true)
                         }
                     }
+                    .frame(maxWidth: .infinity, alignment: .leading)
+                    .contentShape(Rectangle())
                 }
                 .accessibilityAddTraits(chosen.contains(row.code) ? .isSelected : [])
-                .accessibilityIdentifier("country.\(row.code)")
+                .accessibilityIdentifier("\(kind == .region ? "country" : "language").\(row.code)")
             }
-            .searchable(text: $query, prompt: title)
+            .searchable(text: $query, placement: .navigationBarDrawer(displayMode: .always), prompt: title)
             .navigationTitle(title)
             .navigationBarTitleDisplayMode(.inline)
             .toolbar {

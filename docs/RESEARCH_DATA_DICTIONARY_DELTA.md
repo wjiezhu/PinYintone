@@ -179,3 +179,32 @@ Apple 账号到内部编号的对应关系。设备行会被换账号登录改�
 尝试尚未上传 → 409 `attempt_not_uploaded`（客户端稍后重试）；取消的尝试 → 409 `attempt_cancelled`。
 `POST /research/withdraw` 的回执多了 `recordingsDeleted`。
 
+
+## 背景表 `background_v1-1.3`：国籍与语言选项改用标准代码（2026-11-18，未冻结进任何配置）
+
+研究者要求国籍、语言两类题给出完整的标准列表。只改了 iOS 端的问卷定义；
+安卓版没有问卷，服务端不校验选项码，都不用动。**线上配置绑定的仍是 `background_v1-1.2`**，
+带 1.3 的构建要等研究者冻结新配置后才能参加研究。
+
+- 代码表随包发布：`PinYintone/Resources/Surveys/survey_option_lists_v1.json`
+  （`survey-option-lists-1.0`）。显示名由系统按问卷语言本地化，**库里只有代码**。
+- `B02` 国籍：`option_codes` 是 ISO 3166-1 alpha-2（249 个正式代码）或 `prefer_not`。
+  1.1–1.2 的 `other` + `text_value`（自由填写的国籍）不再出现；旧答案原样保留，不归一化。
+  纳入规则不受影响：`eligibility-2.0` 仍看是否含 `MA`，`eligibility-3.0` 不看国籍。
+- `B04` / `B05` 语言：`option_codes` 是 ISO 639 代码（ISO 639-1 的 183 个两位代码，
+  另加 `ary` 摩洛哥阿拉伯语、`arb` 标准阿拉伯语、`ber` 阿马齐格语族），或 `other`（+ `text_value`）、
+  `prefer_not`。
+- **跨版本分析语言题时先把旧代码换成新代码**（按 `research_survey_instances.form_version` 区分）：
+
+  | 1.2 及更早 | 1.3 起 |
+  |---|---|
+  | `darija` | `ary` |
+  | `msa` | `arb` |
+  | `amazigh` | `ber` |
+  | `french` | `fr` |
+  | `english` | `en` |
+  | `chinese` | `zh` |
+  | `spanish` | `es` |
+  | `italian` | `it` |
+
+  1.3 起参与者还可以选 `ar`（阿拉伯语，不分变体）等旧版没有的代码；它与 `ary` / `arb` 是不同的回答，不合并。

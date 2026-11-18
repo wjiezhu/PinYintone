@@ -33,7 +33,7 @@ final class BundledResourceTests: XCTestCase {
 
     /// 关键资源必须在位——这几份缺了功能直接不可用，值得单独点名
     func testCriticalResourcesPresent() {
-        let required = ["lexemes"] + SurveyFormLoader.formKeys + ["survey_ui_v1"]
+        let required = ["lexemes"] + SurveyFormLoader.formKeys + ["survey_ui_v1", "survey_option_lists_v1"]
         for name in required {
             XCTAssertNotNil(Bundle.main.url(forResource: name, withExtension: "json"),
                             "\(name).json 未随包发布")
