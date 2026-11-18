@@ -405,14 +405,14 @@
 "field_back_to_practice" = "回到练习";
 
 /* 送气练习：开始 / 停止按钮，区分送气与不送气 */
-"aspiration_prompt_aspirated" = "这是送气音 %1$@：念「%2$@」时让气流冲出来（要爆破）。";
-"aspiration_prompt_unaspirated" = "这是不送气音 %1$@：轻轻念「%2$@」，不要喷气（不要爆破）。";
+"aspiration_prompt_aspirated" = "这是送气音 %1$@：念「%2$@」时让一股气流冲出来。";
+"aspiration_prompt_unaspirated" = "这是不送气音 %1$@：轻轻念「%2$@」，不要喷出气流。";
 "aspiration_tag_aspirated" = "送气音 · %@";
 "aspiration_tag_unaspirated" = "不送气音 · %@";
 "aspiration_ready" = "点下方的麦克风开始，只念第一个字，念完再点一次停止。";
 "aspiration_recording" = "现在念，念完点停止。";
 "aspiration_unaspirated_success" = "没有喷气，这个音就该这样。";
-"aspiration_unaspirated_too_strong" = "气流太强了。这个音不需要爆破，再轻一点。";
+"aspiration_unaspirated_too_strong" = "气流太强了。这个音不需要送气，再轻一点。";
 "aspiration_stopped_early" = "校准还没结束，这次没有录。请等提示后再念。";
 
 /* 注册后的知情同意与微信入口 */

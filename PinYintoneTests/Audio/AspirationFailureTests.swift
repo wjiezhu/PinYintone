@@ -77,7 +77,7 @@ final class AspirationFailureTests: XCTestCase {
         let (vm, recorder) = make()
         load(vm, aspirated: false)
         await run(vm, recorder, seconds: 0.3)
-        XCTAssertEqual(vm.passed, true, "没有爆破：不送气音就该这样")
+        XCTAssertEqual(vm.passed, true, "没有强气流：不送气音就该这样")
         await run(vm, recorder, seconds: 0.9)
         XCTAssertEqual(vm.passed, false, "气流太强：不送气音不通过")
     }
