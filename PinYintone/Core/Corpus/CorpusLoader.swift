@@ -1,6 +1,9 @@
 import Foundation
 
-/// 语料库加载器：从 Bundle 读取 Resources/Corpus/lexemes.json，按关卡类别顺序循环取词。
+/// 语料库加载器：从 Bundle 读取 Resources/Corpus/lexemes.json。
+///
+/// 2026-11-19 起练习的词**随机给出**（`nextLexeme`、`ToneSequencer.advance`）；
+/// `toneOrder` 只决定选词列表里的排列。下面是当年固定词序的由来，留作历史说明。
 ///
 /// 实验可比性（关卡 2）：
 /// - 关卡 2 走 `toneOrder` 定义的**固定词序**，所有学习者完全一致，
@@ -61,14 +64,31 @@ final class CorpusLoader {
         return ordered + remaining   // 未列入固定序的新词追加在后
     }
 
-    /// 按类别顺序循环返回下一词；该类别为空时返回占位词。
-    /// 游标持久化，冷启动续接（见类型注释）。
+    /// **随机**返回该类别的下一词（送气练习用）；该类别为空时返回占位词。
+    /// 一轮之内每个词出现一次，一轮走完换一轮新的顺序（`ShuffledOrder`）。
+    /// 游标是「已经给出过几个词」，持久化，冷启动接着同一轮往下走。
     func nextLexeme(category: LexemeCategory) -> Lexeme {
         let pool = orderedPool(category: category)
         guard !pool.isEmpty else { return Self.placeholder(category) }
-        let idx = (cursors[category] ?? 0) % pool.count
-        setCursor(idx + 1, for: category)
-        return pool[idx]
+        let step = max(cursors[category] ?? 0, 0)
+        let base = shuffleSeed(for: category)
+        let round = step / pool.count
+        var order = ShuffledOrder.permutation(count: pool.count, seed: base &+ round)
+        // 新一轮的头一个词不与上一轮的最后一个相同
+        if round > 0, pool.count > 1,
+           ShuffledOrder.permutation(count: pool.count, seed: base &+ round - 1).last == order[0] {
+            order.swapAt(0, 1)
+        }
+        setCursor(step + 1, for: category)
+        return pool[order[step % pool.count]]
+    }
+
+    private func shuffleSeed(for category: LexemeCategory) -> Int {
+        let key = "pt_corpus_shuffle_seed_\(category.rawValue)"
+        if let saved = UserDefaults.standard.object(forKey: key) as? Int { return saved }
+        let seed = ShuffledOrder.newSeed()
+        UserDefaults.standard.set(seed, forKey: key)
+        return seed
     }
 
     /// 当前游标在词表中的位置（1-based）与词表总数，供进度显示。

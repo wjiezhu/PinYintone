@@ -9,7 +9,7 @@ final class FieldSessionTests: XCTestCase {
     private var recorder: FakeRecorder!
     private var vm: ToneTrainingViewModel!
     private var savedDefaults: [String: Any?] = [:]
-    private let touchedKeys = ["pt_tone_attempts", "pt_tone_practice_cursor"]
+    private let touchedKeys = ["pt_tone_attempts", "pt_tone_practice_cursor", "pt_tone_practice_seed"]
 
     /// 一个测试词、一个训练词、每个训练词 2 次有效结果：走完全程只要几秒
     private let small = FieldProtocol(protocolVersion: "field-test", testWords: ["hanzi"],

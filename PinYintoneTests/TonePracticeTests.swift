@@ -79,7 +79,7 @@ final class TonePracticeTests: XCTestCase {
     private var recorder: FakeRecorder!
     private var vm: ToneTrainingViewModel!
     private var savedDefaults: [String: Any?] = [:]
-    private let touchedKeys = ["pt_tone_attempts", "pt_tone_practice_cursor", "pt_tone_phase",
+    private let touchedKeys = ["pt_tone_attempts", "pt_tone_practice_cursor", "pt_tone_practice_seed", "pt_tone_phase",
                                "pt_tone_cursor_pretest", "pt_tone_cursor_training"]
 
     override func setUp() {
@@ -148,21 +148,115 @@ final class TonePracticeTests: XCTestCase {
         upgraded.loadCurrent()
         XCTAssertEqual(upgraded.mode, .practice)
         XCTAssertNotNil(upgraded.currentLexeme)
-        XCTAssertEqual(upgraded.currentLexeme?.id, ToneSequencer().pool.first?.id,
-                       "应从普通练习的词表开始，而不是续上旧的前测位置")
+        XCTAssertEqual(upgraded.currentLexeme?.id, vm.currentLexeme?.id,
+                       "应停在普通练习的位置，而不是续上旧的前测位置")
+        XCTAssertEqual(upgraded.progress.index, 1)
     }
 
-    func testAnyWordCanBeSelectedAndNextWrapsAround() {
+    func testAnyWordCanBeSelected() {
         let sequencer = ToneSequencer()
         let pool = sequencer.pool
         XCTAssertGreaterThan(pool.count, 4)
         XCTAssertTrue(sequencer.select(lexemeID: pool.last!.id))
         XCTAssertEqual(sequencer.currentLexeme?.id, pool.last?.id)
-        XCTAssertEqual(sequencer.progress.index, pool.count)
-        sequencer.advance()
-        XCTAssertEqual(sequencer.currentLexeme?.id, pool.first?.id, "到末尾回到开头，没有「完成」死路")
         XCTAssertFalse(sequencer.select(lexemeID: "no-such-word"))
-        XCTAssertEqual(sequencer.currentLexeme?.id, pool.first?.id)
+        XCTAssertEqual(sequencer.currentLexeme?.id, pool.last?.id)
+        sequencer.advance()
+        XCTAssertNotEqual(sequencer.currentLexeme?.id, pool.last?.id)
+    }
+
+    // MARK: - 随机出词（研究者 2026-11-19）
+
+    private func freshSequencer(seeds: [Int]) -> ToneSequencer {
+        for key in ToneSequencer.storageKeys { UserDefaults.standard.removeObject(forKey: key) }
+        var remaining = seeds
+        return ToneSequencer(seedSource: { remaining.isEmpty ? 99 : remaining.removeFirst() })
+    }
+
+    /// 一轮之内每个词出现一次、不重复；顺序不是词表里的固定顺序
+    func testNextWordIsRandomAndEveryWordAppearsOncePerRound() {
+        let sequencer = freshSequencer(seeds: [7, 8])
+        let pool = sequencer.pool.map(\.id)
+        var seen = [sequencer.currentLexeme!.id]
+        XCTAssertEqual(sequencer.progress.index, 1)
+        for step in 1..<pool.count {
+            sequencer.advance()
+            seen.append(sequencer.currentLexeme!.id)
+            XCTAssertEqual(sequencer.progress.index, step + 1, "进度是这一轮里的第几个")
+        }
+        XCTAssertEqual(Set(seen).count, pool.count, "一轮里有词重复出现")
+        XCTAssertEqual(Set(seen), Set(pool))
+        XCTAssertNotEqual(seen, pool, "出词顺序仍是词表的固定顺序")
+
+        // 一轮走完换一轮新的顺序；新一轮的头一个不是刚练完的那个
+        let last = seen.last
+        sequencer.advance()
+        XCTAssertNotEqual(sequencer.currentLexeme?.id, last)
+        var second = [sequencer.currentLexeme!.id]
+        while second.count < pool.count - 1 {
+            sequencer.advance()
+            second.append(sequencer.currentLexeme!.id)
+        }
+        XCTAssertEqual(Set(second).count, second.count)
+        XCTAssertNotEqual(Array(seen.prefix(10)), Array(second.prefix(10)), "两轮顺序不该一样")
+    }
+
+    /// 不同的设备（种子）顺序不同，第一个词也不都一样
+    func testDifferentSeedsGiveDifferentOrders() {
+        func firstFive(_ seed: Int) -> [String] {
+            let sequencer = freshSequencer(seeds: [seed])
+            var out = [sequencer.currentLexeme!.id]
+            for _ in 0..<4 { sequencer.advance(); out.append(sequencer.currentLexeme!.id) }
+            return out
+        }
+        let orders = Set((1...6).map { firstFive($0) })
+        XCTAssertGreaterThan(orders.count, 4)
+        XCTAssertGreaterThan(Set((1...12).map { firstFive($0)[0] }).count, 4, "不该人人都从同一个词开始")
+        XCTAssertEqual(firstFive(3), firstFive(3), "同一个种子顺序相同")
+    }
+
+    /// 杀掉 App 再进来：停在原来的词上，接着同一轮往下走
+    func testOrderSurvivesRelaunch() {
+        let first = freshSequencer(seeds: [21])
+        first.advance(); first.advance()
+        let word = first.currentLexeme?.id
+        let reference = freshSequencer(seeds: [21])
+        (0..<3).forEach { _ in reference.advance() }
+        let expectedNext = reference.currentLexeme?.id
+
+        for key in ToneSequencer.storageKeys { UserDefaults.standard.removeObject(forKey: key) }
+        let before = ToneSequencer(seedSource: { 21 })
+        before.advance(); before.advance()
+        let relaunched = ToneSequencer(seedSource: { 500 })
+        XCTAssertEqual(relaunched.currentLexeme?.id, word)
+        XCTAssertEqual(relaunched.progress.index, 3)
+        relaunched.advance()
+        XCTAssertEqual(relaunched.currentLexeme?.id, expectedNext)
+    }
+
+    /// 升级上来、已经停在某个词上的人留在原来的词
+    func testUpgradeKeepsTheStoredWord() {
+        for key in ToneSequencer.storageKeys { UserDefaults.standard.removeObject(forKey: key) }
+        UserDefaults.standard.set(5, forKey: "pt_tone_practice_cursor")
+        let sequencer = ToneSequencer(seedSource: { 4 })
+        XCTAssertEqual(sequencer.currentLexeme?.id, sequencer.pool[5].id)
+    }
+
+    /// 送气练习同样随机：一轮之内不重复，都是送气词
+    func testAspirationWordsComeInRandomOrderWithoutRepeats() {
+        let keys = ["pt_corpus_cursor_aspiration", "pt_corpus_shuffle_seed_aspiration"]
+        let saved = keys.map { UserDefaults.standard.object(forKey: $0) }
+        defer {
+            for (key, value) in zip(keys, saved) { UserDefaults.standard.set(value, forKey: key) }
+            CorpusLoader.shared.resetCursor(category: .aspiration)
+        }
+        CorpusLoader.shared.resetCursor(category: .aspiration)
+        let pool = CorpusLoader.shared.orderedPool(category: .aspiration).map(\.id)
+        let round = (0..<pool.count).map { _ in CorpusLoader.shared.nextLexeme(category: .aspiration).id }
+        XCTAssertEqual(Set(round).count, pool.count, "一轮里有词重复出现")
+        XCTAssertEqual(Set(round), Set(pool))
+        XCTAssertNotEqual(round, pool)
+        XCTAssertNotEqual(CorpusLoader.shared.nextLexeme(category: .aspiration).id, round.last)
     }
 
     // MARK: - 状态机与有效结果（U03 / A14）

@@ -3,8 +3,8 @@ import Foundation
 
 /// 声调普通练习的选词与顺序（需求 R06）。
 ///
-/// 没有阶段，没有门槛：全部声调词条都可以直接练，可以按顺序走，
-/// 也可以从词表里挑任意一个。不需要先完成前测、练遍词库或达到某个分数。
+/// 没有阶段，没有门槛：全部声调词条都可以直接练。「下一个」**随机给出**
+/// （一轮之内每个词出现一次，见 `ShuffledOrder`），也可以从词表里挑任意一个。不需要先完成前测、练遍词库或达到某个分数。
 ///
 /// 历史说明：本类型曾是「前测 → 训练 → 后测」三阶段的状态机，
 /// 前测走完才进训练、训练池练遍才解锁后测。那套流程与「自主选择练习内容、
@@ -23,24 +23,60 @@ final class ToneSequencer: ObservableObject {
     @Published private(set) var progress: (index: Int, total: Int) = (0, 0)
     @Published private(set) var currentLexeme: Lexeme?
 
+    /// 当前词在 `pool` 里的下标
     private var cursor: Int = 0
+    /// 这一轮乱序的种子
+    private var seed: Int
+    private let seedSource: () -> Int
     private static let cursorKey = "pt_tone_practice_cursor"
+    private static let seedKey = "pt_tone_practice_seed"
 
-    init() {
-        cursor = UserDefaults.standard.integer(forKey: Self.cursorKey)
+    /// - Parameter seedSource: 取新一轮的种子。测试里传固定值
+    init(seedSource: (() -> Int)? = nil) {
+        let source = seedSource ?? ShuffledOrder.newSeed
+        self.seedSource = source
+        let defaults = UserDefaults.standard
+        cursor = defaults.integer(forKey: Self.cursorKey)
+        if let saved = defaults.object(forKey: Self.seedKey) as? Int {
+            seed = saved
+        } else {
+            seed = source()
+            defaults.set(seed, forKey: Self.seedKey)
+            // 第一次进练习：从这一轮的第一个词开始，不是人人都从同一个词开始。
+            // 升级上来、已经停在某个词上的人留在原来的词
+            if defaults.object(forKey: Self.cursorKey) == nil,
+               let first = ShuffledOrder.permutation(
+                   count: CorpusLoader.shared.orderedPool(category: .tone).count, seed: seed).first {
+                cursor = first
+                defaults.set(cursor, forKey: Self.cursorKey)
+            }
+        }
         refresh()
     }
 
-    /// 普通练习的词表：全部声调词条，沿用语料的固定顺序（由易到难）。
+    /// 这一轮的出词顺序（`pool` 的下标）
+    private var order: [Int] { ShuffledOrder.permutation(count: pool.count, seed: seed) }
+
+    /// 普通练习的词表：全部声调词条。这是**选词列表里的排列顺序**，不是出词顺序。
     /// 原「测试词集」的词也在其中——自愿练习不要求练习词与自测词不重叠，
     /// 自测时如实记录该词此前练过几次。
     var pool: [Lexeme] { CorpusLoader.shared.orderedPool(category: .tone) }
 
-    /// 下一个词，到末尾回到开头
+    /// 下一个词：随机顺序里的下一个。一轮走完换一轮新的顺序，没有「完成」死路
     func advance() {
-        let total = pool.count
-        guard total > 0 else { return }
-        cursor = (cursor + 1) % total
+        let order = self.order
+        guard !order.isEmpty else { return }
+        let position = order.firstIndex(of: cursor) ?? -1
+        if position + 1 < order.count {
+            cursor = order[position + 1]
+        } else {
+            let last = cursor
+            seed = seedSource()
+            UserDefaults.standard.set(seed, forKey: Self.seedKey)
+            let next = self.order
+            // 新一轮的头一个词不与刚练完的那个相同
+            cursor = (next[0] == last && next.count > 1) ? next[1] : next[0]
+        }
         persist()
     }
 
@@ -67,11 +103,12 @@ final class ToneSequencer: ObservableObject {
         }
         cursor = ((cursor % pool.count) + pool.count) % pool.count
         currentLexeme = pool[cursor]
-        progress = (cursor + 1, pool.count)
+        // 进度是这一轮里的第几个，不是词表里的第几个
+        progress = ((order.firstIndex(of: cursor) ?? 0) + 1, pool.count)
     }
 
     /// 删除账号时清掉练习位置
-    static let storageKeys = [cursorKey]
+    static let storageKeys = [cursorKey, seedKey]
 }
 
 /// 一次可选自测的进度（需求 R06 / U04）。

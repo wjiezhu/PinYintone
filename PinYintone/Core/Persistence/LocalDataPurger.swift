@@ -23,6 +23,9 @@ enum LocalDataPurger {
         "pt_tone_cursor_posttest",
         "pt_counterbalance_index",   // A/B 时期的历史键，仍需清理
         "pt_tone_practice_cursor",
+        "pt_tone_practice_seed",
+        "pt_corpus_shuffle_seed_tone",
+        "pt_corpus_shuffle_seed_aspiration",
         "pt_research_home_row_dismissed",
         FeedbackStyle.storageKey,
     ]
