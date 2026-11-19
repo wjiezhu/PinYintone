@@ -58,7 +58,7 @@ class TonePracticeSessionTest {
         assertEquals(Stage.Ready, session.stage)
         assertEquals(ReferenceType.IDEAL, session.referenceType)
         assertArrayEquals(ToneScorer().idealReference(listOf(1, 1)), session.reference, 0f)
-        assertEquals(106, session.progress.second)
+        assertEquals(98, session.progress.second)
     }
 
     /** 「下一个」随机给出：一轮之内每个词出现一次，一轮走完换一轮新的顺序 */

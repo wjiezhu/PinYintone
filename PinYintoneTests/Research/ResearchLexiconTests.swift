@@ -41,7 +41,7 @@ final class ResearchLexiconTests: XCTestCase {
     }
 
     /// lex-2026.10 的 20 词由研究者 2026-10-14 确认，扩充后仍是已核对，版本编号也没有变。
-    /// 2026-11-18 扩充的 132 词还没有逐词核对：词表版本带 draft（服务端因此不会冻结成正式配置），
+    /// 2026-11-18 扩充、11-19 配平后的 124 个新词还没有逐词核对：词表版本带 draft（服务端因此不会冻结成正式配置），
     /// 新词不得标成已核对——**核对只能由研究者本人做**。
     func testOnlyResearcherReviewedWordsAreApproved() {
         XCTAssertEqual(ResearchLexicon.lexiconVersion, "lex-2026.11-draft")

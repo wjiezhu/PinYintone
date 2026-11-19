@@ -4,13 +4,13 @@ import XCTest
 final class CorpusLoaderTests: XCTestCase {
 
     func testCorpusLoadsAllWords() {
-        // 验证 lexemes.json 解码成功（捕获 JSON schema 错误）。2026-11-18 由 20 词扩充到 152 词
-        XCTAssertEqual(CorpusLoader.shared.loadLexemes().count, 152)
+        // 验证 lexemes.json 解码成功（捕获 JSON schema 错误）。2026-11-18 由 20 词扩充，11-19 配平后 144 词
+        XCTAssertEqual(CorpusLoader.shared.loadLexemes().count, 144)
     }
 
     func testCategorySplit() {
         XCTAssertEqual(CorpusLoader.shared.lexemes(in: .aspiration).count, 46, "送气关卡 46 词")
-        XCTAssertEqual(CorpusLoader.shared.lexemes(in: .tone).count, 106, "声调关卡 106 词")
+        XCTAssertEqual(CorpusLoader.shared.lexemes(in: .tone).count, 98, "声调关卡 98 词")
     }
 
     // MARK: - 2026-11-18 扩充
@@ -21,7 +21,7 @@ final class CorpusLoaderTests: XCTestCase {
         XCTAssertEqual(Set(words.map(\.hanzi)).count, words.count)
     }
 
-    /// 四个声调两两组合的 16 种都有词，每种至少 3 个（扩充前只有 7 种，且没有二声）
+    /// 四个声调两两组合的 16 种**各 6 个词**（研究者 2026-11-19 决定配平；扩充前只有 7 种，且没有二声）
     func testAllSixteenToneCombinationsAreCovered() {
         var counts: [String: Int] = [:]
         for word in CorpusLoader.shared.lexemes(in: .tone) {
@@ -29,7 +29,7 @@ final class CorpusLoaderTests: XCTestCase {
         }
         for first in 1...4 {
             for second in 1...4 {
-                XCTAssertGreaterThanOrEqual(counts["\(first)+\(second)"] ?? 0, 3, "\(first)+\(second) 的词太少")
+                XCTAssertEqual(counts["\(first)+\(second)"] ?? 0, 6, "\(first)+\(second) 没有配平到 6 个")
             }
         }
     }
@@ -40,7 +40,7 @@ final class CorpusLoaderTests: XCTestCase {
                                      "xianzai", "dianshi", "sushe", "hanzi", "heshui", "shenti", "jingli",
                                      "yisheng", "qingchu", "xiuxi", "ziji", "canjia", "zaocan", "xiangxin"]
         let added = CorpusLoader.shared.loadLexemes().filter { !original.contains($0.id) }
-        XCTAssertEqual(added.count, 132)
+        XCTAssertEqual(added.count, 124)
         for word in added {
             XCTAssertEqual(word.tones.count, 2, word.id)
             XCTAssertEqual(word.hanzi.count, 2, word.id)

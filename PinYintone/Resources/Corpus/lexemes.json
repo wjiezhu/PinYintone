@@ -1272,24 +1272,6 @@
     "english": "Company"
   },
   {
-    "id": "xigua",
-    "hanzi": "西瓜",
-    "pinyin": "xī guā",
-    "tones": [
-      1,
-      1
-    ],
-    "category": "tone",
-    "focus": "1+1 声调组合",
-    "french": "Pastèque",
-    "darija": "Dellah (دلاح)",
-    "audioFilename": null,
-    "wordSet": "expansion",
-    "spanish": "Sandía",
-    "italian": "Anguria",
-    "english": "Watermelon"
-  },
-  {
     "id": "xiangjiao",
     "hanzi": "香蕉",
     "pinyin": "xiāng jiāo",
@@ -1306,24 +1288,6 @@
     "spanish": "Plátano",
     "italian": "Banana",
     "english": "Banana"
-  },
-  {
-    "id": "fashao",
-    "hanzi": "发烧",
-    "pinyin": "fā shāo",
-    "tones": [
-      1,
-      1
-    ],
-    "category": "tone",
-    "focus": "1+1 声调组合",
-    "french": "Avoir de la fièvre",
-    "darija": "Skhana (سخانة)",
-    "audioFilename": null,
-    "wordSet": "expansion",
-    "spanish": "Tener fiebre",
-    "italian": "Avere la febbre",
-    "english": "Have a fever"
   },
   {
     "id": "zhongguo",
@@ -1560,24 +1524,6 @@
     "english": "Birthday"
   },
   {
-    "id": "yinyue",
-    "hanzi": "音乐",
-    "pinyin": "yīn yuè",
-    "tones": [
-      1,
-      4
-    ],
-    "category": "tone",
-    "focus": "1+4 声调组合",
-    "french": "Musique",
-    "darija": "Mousiqa (موسيقى)",
-    "audioFilename": null,
-    "wordSet": "expansion",
-    "spanish": "Música",
-    "italian": "Musica",
-    "english": "Music"
-  },
-  {
     "id": "yiyuan",
     "hanzi": "医院",
     "pinyin": "yī yuàn",
@@ -1594,24 +1540,6 @@
     "spanish": "Hospital",
     "italian": "Ospedale",
     "english": "Hospital"
-  },
-  {
-    "id": "fangbian",
-    "hanzi": "方便",
-    "pinyin": "fāng biàn",
-    "tones": [
-      1,
-      4
-    ],
-    "category": "tone",
-    "focus": "1+4 声调组合",
-    "french": "Pratique",
-    "darija": "Sahel (ساهل)",
-    "audioFilename": null,
-    "wordSet": "expansion",
-    "spanish": "Práctico",
-    "italian": "Comodo",
-    "english": "Convenient"
   },
   {
     "id": "mingtian",
@@ -1684,24 +1612,6 @@
     "spanish": "Habitación",
     "italian": "Stanza",
     "english": "Room"
-  },
-  {
-    "id": "xiongmao",
-    "hanzi": "熊猫",
-    "pinyin": "xióng māo",
-    "tones": [
-      2,
-      1
-    ],
-    "category": "tone",
-    "focus": "2+1 声调组合",
-    "french": "Panda",
-    "darija": "Panda (باندا)",
-    "audioFilename": null,
-    "wordSet": "expansion",
-    "spanish": "Panda",
-    "italian": "Panda",
-    "english": "Panda"
   },
   {
     "id": "guojia",
@@ -1830,6 +1740,24 @@
     "english": "Study abroad"
   },
   {
+    "id": "nianji",
+    "hanzi": "年级",
+    "pinyin": "nián jí",
+    "tones": [
+      2,
+      2
+    ],
+    "category": "tone",
+    "focus": "2+2 声调组合",
+    "french": "Année scolaire",
+    "darija": "Lmustawa (المستوى)",
+    "audioFilename": null,
+    "wordSet": "expansion",
+    "spanish": "Curso (año escolar)",
+    "italian": "Anno scolastico",
+    "english": "Grade (school year)"
+  },
+  {
     "id": "pingguo",
     "hanzi": "苹果",
     "pinyin": "píng guǒ",
@@ -1920,6 +1848,24 @@
     "english": "If"
   },
   {
+    "id": "erqie",
+    "hanzi": "而且",
+    "pinyin": "ér qiě",
+    "tones": [
+      2,
+      3
+    ],
+    "category": "tone",
+    "focus": "2+3 声调组合",
+    "french": "De plus",
+    "darija": "Ou zid (وزيد)",
+    "audioFilename": null,
+    "wordSet": "expansion",
+    "spanish": "Además",
+    "italian": "Inoltre",
+    "english": "Moreover"
+  },
+  {
     "id": "xuexiao",
     "hanzi": "学校",
     "pinyin": "xué xiào",
@@ -1954,24 +1900,6 @@
     "spanish": "Color",
     "italian": "Colore",
     "english": "Color"
-  },
-  {
-    "id": "yangrou",
-    "hanzi": "羊肉",
-    "pinyin": "yáng ròu",
-    "tones": [
-      2,
-      4
-    ],
-    "category": "tone",
-    "focus": "2+4 声调组合",
-    "french": "Viande de mouton",
-    "darija": "Lhem dyal lghenmi (لحم الغنمي)",
-    "audioFilename": null,
-    "wordSet": "expansion",
-    "spanish": "Carne de cordero",
-    "italian": "Carne di montone",
-    "english": "Mutton"
   },
   {
     "id": "rongyi",
@@ -2134,24 +2062,6 @@
     "spanish": "Rico",
     "italian": "Buono",
     "english": "Tasty"
-  },
-  {
-    "id": "jiandan",
-    "hanzi": "简单",
-    "pinyin": "jiǎn dān",
-    "tones": [
-      3,
-      1
-    ],
-    "category": "tone",
-    "focus": "3+1 声调组合",
-    "french": "Simple",
-    "darija": "Basit (بسيط)",
-    "audioFilename": null,
-    "wordSet": "expansion",
-    "spanish": "Sencillo",
-    "italian": "Semplice",
-    "english": "Simple"
   },
   {
     "id": "lvyou",
@@ -2766,24 +2676,6 @@
     "english": "Movie"
   },
   {
-    "id": "lishi",
-    "hanzi": "历史",
-    "pinyin": "lì shǐ",
-    "tones": [
-      4,
-      3
-    ],
-    "category": "tone",
-    "focus": "4+3 声调组合",
-    "french": "Histoire",
-    "darija": "Tarikh (تاريخ)",
-    "audioFilename": null,
-    "wordSet": "expansion",
-    "spanish": "Historia",
-    "italian": "Storia",
-    "english": "History"
-  },
-  {
     "id": "tiaowu",
     "hanzi": "跳舞",
     "pinyin": "tiào wǔ",
@@ -2820,24 +2712,6 @@
     "english": "Goodbye"
   },
   {
-    "id": "shuijiao",
-    "hanzi": "睡觉",
-    "pinyin": "shuì jiào",
-    "tones": [
-      4,
-      4
-    ],
-    "category": "tone",
-    "focus": "4+4 声调组合",
-    "french": "Dormir",
-    "darija": "Naas (نعس)",
-    "audioFilename": null,
-    "wordSet": "expansion",
-    "spanish": "Dormir",
-    "italian": "Dormire",
-    "english": "Sleep"
-  },
-  {
     "id": "yundong",
     "hanzi": "运动",
     "pinyin": "yùn dòng",
@@ -2854,23 +2728,5 @@
     "spanish": "Deporte",
     "italian": "Sport",
     "english": "Sport"
-  },
-  {
-    "id": "zhongyao",
-    "hanzi": "重要",
-    "pinyin": "zhòng yào",
-    "tones": [
-      4,
-      4
-    ],
-    "category": "tone",
-    "focus": "4+4 声调组合",
-    "french": "Important",
-    "darija": "Mouhim (مهم)",
-    "audioFilename": null,
-    "wordSet": "expansion",
-    "spanish": "Importante",
-    "italian": "Importante",
-    "english": "Important"
   }
 ]
