@@ -4,12 +4,12 @@ import XCTest
 final class CorpusLoaderTests: XCTestCase {
 
     func testCorpusLoadsAllWords() {
-        // 验证 lexemes.json 解码成功（捕获 JSON schema 错误）。2026-11-18 由 20 词扩充，11-19 配平后 144 词
-        XCTAssertEqual(CorpusLoader.shared.loadLexemes().count, 144)
+        // 验证 lexemes.json 解码成功（捕获 JSON schema 错误）。2026-11-18 由 20 词扩充，11-19 配平后 170 词
+        XCTAssertEqual(CorpusLoader.shared.loadLexemes().count, 170)
     }
 
     func testCategorySplit() {
-        XCTAssertEqual(CorpusLoader.shared.lexemes(in: .aspiration).count, 46, "送气关卡 46 词")
+        XCTAssertEqual(CorpusLoader.shared.lexemes(in: .aspiration).count, 72, "送气关卡 72 词")
         XCTAssertEqual(CorpusLoader.shared.lexemes(in: .tone).count, 98, "声调关卡 98 词")
     }
 
@@ -40,7 +40,7 @@ final class CorpusLoaderTests: XCTestCase {
                                      "xianzai", "dianshi", "sushe", "hanzi", "heshui", "shenti", "jingli",
                                      "yisheng", "qingchu", "xiuxi", "ziji", "canjia", "zaocan", "xiangxin"]
         let added = CorpusLoader.shared.loadLexemes().filter { !original.contains($0.id) }
-        XCTAssertEqual(added.count, 124)
+        XCTAssertEqual(added.count, 150)
         for word in added {
             XCTAssertEqual(word.tones.count, 2, word.id)
             XCTAssertEqual(word.hanzi.count, 2, word.id)
@@ -56,7 +56,7 @@ final class CorpusLoaderTests: XCTestCase {
         }
     }
 
-    /// 送气词都写明考察的声母与方向，声母就是拼音的开头；送气与不送气两边都有词
+    /// 送气词都写明考察的声母与方向，声母就是拼音的开头；12 个声母**各 6 个词**（研究者 2026-11-19 决定配平）
     func testEveryAspirationWordDeclaresItsTarget() {
         let aspirated: Set<String> = ["p", "t", "k", "c", "ch", "q"]
         let unaspirated: Set<String> = ["b", "d", "g", "z", "zh", "j"]
@@ -74,7 +74,7 @@ final class CorpusLoaderTests: XCTestCase {
             perInitial[target.initial, default: 0] += 1
         }
         for initial in aspirated.union(unaspirated) {
-            XCTAssertGreaterThanOrEqual(perInitial[initial] ?? 0, 2, "\(initial) 的词太少")
+            XCTAssertEqual(perInitial[initial] ?? 0, 6, "\(initial) 没有配平到 6 个")
         }
     }
 

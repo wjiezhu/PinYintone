@@ -966,6 +966,552 @@
     "english": "Egg"
   },
   {
+    "id": "pashan",
+    "hanzi": "爬山",
+    "pinyin": "pá shān",
+    "tones": [
+      2,
+      1
+    ],
+    "category": "aspiration",
+    "focus": "P(送气)",
+    "french": "Faire de l'escalade",
+    "darija": "Tla3 l jbel (طلع للجبل)",
+    "audioFilename": null,
+    "aspirationTarget": {
+      "initial": "p",
+      "aspirated": true
+    },
+    "spanish": "Subir a la montaña",
+    "italian": "Scalare la montagna",
+    "english": "Climb a mountain"
+  },
+  {
+    "id": "paidui",
+    "hanzi": "排队",
+    "pinyin": "pái duì",
+    "tones": [
+      2,
+      4
+    ],
+    "category": "aspiration",
+    "focus": "P(送气)",
+    "french": "Faire la queue",
+    "darija": "Wqef f sef (وقف ف الصف)",
+    "audioFilename": null,
+    "aspirationTarget": {
+      "initial": "p",
+      "aspirated": true
+    },
+    "spanish": "Hacer cola",
+    "italian": "Fare la fila",
+    "english": "Stand in line"
+  },
+  {
+    "id": "guowai",
+    "hanzi": "国外",
+    "pinyin": "guó wài",
+    "tones": [
+      2,
+      4
+    ],
+    "category": "aspiration",
+    "focus": "G(不送气)",
+    "french": "À l'étranger",
+    "darija": "Lkharij (الخارج)",
+    "audioFilename": null,
+    "aspirationTarget": {
+      "initial": "g",
+      "aspirated": false
+    },
+    "spanish": "En el extranjero",
+    "italian": "All'estero",
+    "english": "Abroad"
+  },
+  {
+    "id": "canguan",
+    "hanzi": "参观",
+    "pinyin": "cān guān",
+    "tones": [
+      1,
+      1
+    ],
+    "category": "aspiration",
+    "focus": "C(送气)",
+    "french": "Visiter",
+    "darija": "Zar (زار)",
+    "audioFilename": null,
+    "aspirationTarget": {
+      "initial": "c",
+      "aspirated": true
+    },
+    "spanish": "Visitar",
+    "italian": "Visitare",
+    "english": "Visit (a place)"
+  },
+  {
+    "id": "congxiao",
+    "hanzi": "从小",
+    "pinyin": "cóng xiǎo",
+    "tones": [
+      2,
+      3
+    ],
+    "category": "aspiration",
+    "focus": "C(送气)",
+    "french": "Depuis l'enfance",
+    "darija": "Mn sghri (من صغري)",
+    "audioFilename": null,
+    "aspirationTarget": {
+      "initial": "c",
+      "aspirated": true
+    },
+    "spanish": "Desde pequeño",
+    "italian": "Fin da piccolo",
+    "english": "Since childhood"
+  },
+  {
+    "id": "cuowu",
+    "hanzi": "错误",
+    "pinyin": "cuò wù",
+    "tones": [
+      4,
+      4
+    ],
+    "category": "aspiration",
+    "focus": "C(送气)",
+    "french": "Erreur",
+    "darija": "Ghalat (غلط)",
+    "audioFilename": null,
+    "aspirationTarget": {
+      "initial": "c",
+      "aspirated": true
+    },
+    "spanish": "Error",
+    "italian": "Errore",
+    "english": "Mistake"
+  },
+  {
+    "id": "caise",
+    "hanzi": "彩色",
+    "pinyin": "cǎi sè",
+    "tones": [
+      3,
+      4
+    ],
+    "category": "aspiration",
+    "focus": "C(送气)",
+    "french": "En couleur",
+    "darija": "Mlowen (ملون)",
+    "audioFilename": null,
+    "aspirationTarget": {
+      "initial": "c",
+      "aspirated": true
+    },
+    "spanish": "De colores",
+    "italian": "A colori",
+    "english": "Colorful"
+  },
+  {
+    "id": "zengjia",
+    "hanzi": "增加",
+    "pinyin": "zēng jiā",
+    "tones": [
+      1,
+      1
+    ],
+    "category": "aspiration",
+    "focus": "Z(不送气)",
+    "french": "Augmenter",
+    "darija": "Zad (زاد)",
+    "audioFilename": null,
+    "aspirationTarget": {
+      "initial": "z",
+      "aspirated": false
+    },
+    "spanish": "Aumentar",
+    "italian": "Aumentare",
+    "english": "Increase"
+  },
+  {
+    "id": "ziyou",
+    "hanzi": "自由",
+    "pinyin": "zì yóu",
+    "tones": [
+      4,
+      2
+    ],
+    "category": "aspiration",
+    "focus": "Z(不送气)",
+    "french": "Liberté",
+    "darija": "Horriya (حرية)",
+    "audioFilename": null,
+    "aspirationTarget": {
+      "initial": "z",
+      "aspirated": false
+    },
+    "spanish": "Libertad",
+    "italian": "Libertà",
+    "english": "Freedom"
+  },
+  {
+    "id": "zoulu",
+    "hanzi": "走路",
+    "pinyin": "zǒu lù",
+    "tones": [
+      3,
+      4
+    ],
+    "category": "aspiration",
+    "focus": "Z(不送气)",
+    "french": "Marcher",
+    "darija": "Tmsha (تمشى)",
+    "audioFilename": null,
+    "aspirationTarget": {
+      "initial": "z",
+      "aspirated": false
+    },
+    "spanish": "Caminar",
+    "italian": "Camminare",
+    "english": "Walk"
+  },
+  {
+    "id": "zidian",
+    "hanzi": "字典",
+    "pinyin": "zì diǎn",
+    "tones": [
+      4,
+      3
+    ],
+    "category": "aspiration",
+    "focus": "Z(不送气)",
+    "french": "Dictionnaire de caractères",
+    "darija": "Qamous dyal lhourouf (قاموس ديال الحروف)",
+    "audioFilename": null,
+    "aspirationTarget": {
+      "initial": "z",
+      "aspirated": false
+    },
+    "spanish": "Diccionario de caracteres",
+    "italian": "Dizionario dei caratteri",
+    "english": "Character dictionary"
+  },
+  {
+    "id": "chifan",
+    "hanzi": "吃饭",
+    "pinyin": "chī fàn",
+    "tones": [
+      1,
+      4
+    ],
+    "category": "aspiration",
+    "focus": "CH(送气)",
+    "french": "Manger (un repas)",
+    "darija": "Kla (كلا)",
+    "audioFilename": null,
+    "aspirationTarget": {
+      "initial": "ch",
+      "aspirated": true
+    },
+    "spanish": "Comer",
+    "italian": "Mangiare",
+    "english": "Eat a meal"
+  },
+  {
+    "id": "chenshan",
+    "hanzi": "衬衫",
+    "pinyin": "chèn shān",
+    "tones": [
+      4,
+      1
+    ],
+    "category": "aspiration",
+    "focus": "CH(送气)",
+    "french": "Chemise",
+    "darija": "Qamija (قميجة)",
+    "audioFilename": null,
+    "aspirationTarget": {
+      "initial": "ch",
+      "aspirated": true
+    },
+    "spanish": "Camisa",
+    "italian": "Camicia",
+    "english": "Shirt"
+  },
+  {
+    "id": "chidao",
+    "hanzi": "迟到",
+    "pinyin": "chí dào",
+    "tones": [
+      2,
+      4
+    ],
+    "category": "aspiration",
+    "focus": "CH(送气)",
+    "french": "Être en retard",
+    "darija": "Tâttel (تعطّل)",
+    "audioFilename": null,
+    "aspirationTarget": {
+      "initial": "ch",
+      "aspirated": true
+    },
+    "spanish": "Llegar tarde",
+    "italian": "Arrivare in ritardo",
+    "english": "Be late"
+  },
+  {
+    "id": "zhongwu",
+    "hanzi": "中午",
+    "pinyin": "zhōng wǔ",
+    "tones": [
+      1,
+      3
+    ],
+    "category": "aspiration",
+    "focus": "ZH(不送气)",
+    "french": "Midi",
+    "darija": "Tnach (الطناش)",
+    "audioFilename": null,
+    "aspirationTarget": {
+      "initial": "zh",
+      "aspirated": false
+    },
+    "spanish": "Mediodía",
+    "italian": "Mezzogiorno",
+    "english": "Noon"
+  },
+  {
+    "id": "zhongwen",
+    "hanzi": "中文",
+    "pinyin": "zhōng wén",
+    "tones": [
+      1,
+      2
+    ],
+    "category": "aspiration",
+    "focus": "ZH(不送气)",
+    "french": "Chinois (langue)",
+    "darija": "Chinwiya (الشينوية)",
+    "audioFilename": null,
+    "aspirationTarget": {
+      "initial": "zh",
+      "aspirated": false
+    },
+    "spanish": "Chino (idioma)",
+    "italian": "Cinese (lingua)",
+    "english": "Chinese (language)"
+  },
+  {
+    "id": "zhuyao",
+    "hanzi": "主要",
+    "pinyin": "zhǔ yào",
+    "tones": [
+      3,
+      4
+    ],
+    "category": "aspiration",
+    "focus": "ZH(不送气)",
+    "french": "Principal",
+    "darija": "Lasasi (الأساسي)",
+    "audioFilename": null,
+    "aspirationTarget": {
+      "initial": "zh",
+      "aspirated": false
+    },
+    "spanish": "Principal",
+    "italian": "Principale",
+    "english": "Main"
+  },
+  {
+    "id": "zhoumo",
+    "hanzi": "周末",
+    "pinyin": "zhōu mò",
+    "tones": [
+      1,
+      4
+    ],
+    "category": "aspiration",
+    "focus": "ZH(不送气)",
+    "french": "Week-end",
+    "darija": "Wikend (ويكاند)",
+    "audioFilename": null,
+    "aspirationTarget": {
+      "initial": "zh",
+      "aspirated": false
+    },
+    "spanish": "Fin de semana",
+    "italian": "Fine settimana",
+    "english": "Weekend"
+  },
+  {
+    "id": "qifei",
+    "hanzi": "起飞",
+    "pinyin": "qǐ fēi",
+    "tones": [
+      3,
+      1
+    ],
+    "category": "aspiration",
+    "focus": "Q(送气)",
+    "french": "Décoller",
+    "darija": "Tar (طار)",
+    "audioFilename": null,
+    "aspirationTarget": {
+      "initial": "q",
+      "aspirated": true
+    },
+    "spanish": "Despegar",
+    "italian": "Decollare",
+    "english": "Take off"
+  },
+  {
+    "id": "qishi",
+    "hanzi": "其实",
+    "pinyin": "qí shí",
+    "tones": [
+      2,
+      2
+    ],
+    "category": "aspiration",
+    "focus": "Q(送气)",
+    "french": "En fait",
+    "darija": "F lhaqiqa (ف الحقيقة)",
+    "audioFilename": null,
+    "aspirationTarget": {
+      "initial": "q",
+      "aspirated": true
+    },
+    "spanish": "En realidad",
+    "italian": "In realtà",
+    "english": "Actually"
+  },
+  {
+    "id": "qiche",
+    "hanzi": "汽车",
+    "pinyin": "qì chē",
+    "tones": [
+      4,
+      1
+    ],
+    "category": "aspiration",
+    "focus": "Q(送气)",
+    "french": "Voiture",
+    "darija": "Tomobil (طوموبيل)",
+    "audioFilename": null,
+    "aspirationTarget": {
+      "initial": "q",
+      "aspirated": true
+    },
+    "spanish": "Coche",
+    "italian": "Automobile",
+    "english": "Car"
+  },
+  {
+    "id": "qiutian",
+    "hanzi": "秋天",
+    "pinyin": "qiū tiān",
+    "tones": [
+      1,
+      1
+    ],
+    "category": "aspiration",
+    "focus": "Q(送气)",
+    "french": "Automne",
+    "darija": "Lkhrif (الخريف)",
+    "audioFilename": null,
+    "aspirationTarget": {
+      "initial": "q",
+      "aspirated": true
+    },
+    "spanish": "Otoño",
+    "italian": "Autunno",
+    "english": "Autumn"
+  },
+  {
+    "id": "jihui",
+    "hanzi": "机会",
+    "pinyin": "jī huì",
+    "tones": [
+      1,
+      4
+    ],
+    "category": "aspiration",
+    "focus": "J(不送气)",
+    "french": "Occasion",
+    "darija": "Forsa (فرصة)",
+    "audioFilename": null,
+    "aspirationTarget": {
+      "initial": "j",
+      "aspirated": false
+    },
+    "spanish": "Oportunidad",
+    "italian": "Occasione",
+    "english": "Opportunity"
+  },
+  {
+    "id": "jiehun",
+    "hanzi": "结婚",
+    "pinyin": "jié hūn",
+    "tones": [
+      2,
+      1
+    ],
+    "category": "aspiration",
+    "focus": "J(不送气)",
+    "french": "Se marier",
+    "darija": "Tzewwej (تزوج)",
+    "audioFilename": null,
+    "aspirationTarget": {
+      "initial": "j",
+      "aspirated": false
+    },
+    "spanish": "Casarse",
+    "italian": "Sposarsi",
+    "english": "Get married"
+  },
+  {
+    "id": "jiejue",
+    "hanzi": "解决",
+    "pinyin": "jiě jué",
+    "tones": [
+      3,
+      2
+    ],
+    "category": "aspiration",
+    "focus": "J(不送气)",
+    "french": "Résoudre",
+    "darija": "Hell (حل)",
+    "audioFilename": null,
+    "aspirationTarget": {
+      "initial": "j",
+      "aspirated": false
+    },
+    "spanish": "Resolver",
+    "italian": "Risolvere",
+    "english": "Solve"
+  },
+  {
+    "id": "jianmian",
+    "hanzi": "见面",
+    "pinyin": "jiàn miàn",
+    "tones": [
+      4,
+      4
+    ],
+    "category": "aspiration",
+    "focus": "J(不送气)",
+    "french": "Se rencontrer",
+    "darija": "Tlaqa (تلاقى)",
+    "audioFilename": null,
+    "aspirationTarget": {
+      "initial": "j",
+      "aspirated": false
+    },
+    "spanish": "Encontrarse",
+    "italian": "Incontrarsi",
+    "english": "Meet"
+  },
+  {
     "id": "xianzai",
     "hanzi": "现在",
     "pinyin": "xiàn zài",

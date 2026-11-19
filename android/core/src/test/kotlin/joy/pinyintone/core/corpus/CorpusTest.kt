@@ -14,7 +14,7 @@ class CorpusTest {
     fun readsSharedCorpus() {
         val tone = corpus.orderedPool(LexemeCategory.TONE)
         assertEquals(98, tone.size)
-        assertEquals(46, corpus.orderedPool(LexemeCategory.ASPIRATION).size)
+        assertEquals(72, corpus.orderedPool(LexemeCategory.ASPIRATION).size)
         assertEquals("yisheng", tone.first().id)
         assertEquals(listOf(1, 1), tone.first().tones)
         // 目前没有母语者录音：参照全部用理想轮廓
