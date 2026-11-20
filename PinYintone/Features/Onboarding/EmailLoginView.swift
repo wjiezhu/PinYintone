@@ -10,7 +10,8 @@ struct EmailLoginView: View {
     @EnvironmentObject var userManager: UserManager
 
     let nickname: String?
-    let languages: [SpokenLanguage]
+    /// 会说的语言（ISO 639 代码，见 `SpokenLanguage`）
+    let languages: [String]
 
     @State private var email = ""
     @State private var code = ""

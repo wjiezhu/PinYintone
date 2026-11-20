@@ -30,6 +30,7 @@
 "lang_italian" = "Italien";
 "lang_amazigh" = "Tamazight";
 "lang_other" = "Autre";
+"signup_languages_search" = "Rechercher une autre langue";
 
 // Teacher signup
 "teacher_signup_subtitle" = "Créez votre compte enseignant.\nUn code de classe unique sera généré pour vos étudiants.";
@@ -136,7 +137,7 @@
 
 // Aide / instructions
 "help_title" = "Comment utiliser";
-"help_stage1_body" = "Les sons aspirés (p / t / k) demandent un souffle d'air qui disperse le pissenlit. Les sons non aspirés (b / d / g) n'en demandent pas : le pissenlit doit rester immobile. Touchez une fois pour commencer, une autre fois pour arrêter.";
+"help_stage1_body" = "Les sons aspirés (p / t / k / c / ch / q) demandent un souffle d'air qui disperse le pissenlit. Les sons non aspirés (b / d / g / z / zh / j) n'en demandent pas : le pissenlit doit rester immobile. Touchez une fois pour commencer, une autre fois pour arrêter.";
 "help_stage2_body" = "Touchez Écouter pour entendre le modèle, puis enregistrez-vous. Chaque enregistrement reçoit un résultat sur 100 (≥ 60 = réussi).";
 "help_stage3_body" = "Collez ou saisissez du chinois, il se découpe en mots, entraînez chaque mot. Marquez des mots pour les revoir dans Mes mots.";
 "help_tip" = "Pratiquez dans un endroit calme, micro près de la bouche.";

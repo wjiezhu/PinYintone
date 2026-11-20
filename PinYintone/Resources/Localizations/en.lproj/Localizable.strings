@@ -30,6 +30,7 @@
 "lang_italian" = "Italian";
 "lang_amazigh" = "Tamazight";
 "lang_other" = "Other";
+"signup_languages_search" = "Search other languages";
 
 // Teacher signup
 "teacher_signup_subtitle" = "Create your teacher account.\nA unique class code will be generated for your students.";
@@ -103,8 +104,8 @@
 "record_start" = "Start recording";
 "record_stop" = "Stop recording";
 "aspiration_calibrating" = "Measuring background noise. Please stay quiet…";
-"aspiration_success" = "Aspirated: the burst of air came through.";
-"aspiration_keep_going" = "Not enough air yet. Try again with a stronger burst.";
+"aspiration_success" = "Aspirated: the puff of air came through.";
+"aspiration_keep_going" = "Not enough air yet. Try again with a stronger puff of air.";
 
 // Per-character diagnostic
 "diagnostic_title" = "Per-character feedback";
@@ -136,7 +137,7 @@
 
 // Help / instructions
 "help_title" = "How to use";
-"help_stage1_body" = "Aspirated sounds (p / t / k) need a burst of air that blows the dandelion apart. Unaspirated sounds (b / d / g) need no burst, so the dandelion should stay still. Tap once to start and again to stop.";
+"help_stage1_body" = "Aspirated sounds (p / t / k / c / ch / q) need a puff of air that blows the dandelion apart. Unaspirated sounds (b / d / g / z / zh / j) need no puff of air, so the dandelion should stay still. Tap once to start and again to stop.";
 "help_stage2_body" = "Tap Listen to hear the model, then record yourself. Each recording gets a result out of 100 (60 or more passes).";
 "help_stage3_body" = "Paste or type Chinese, it splits into words, practice each one. Bookmark words to review later in My words.";
 "help_tip" = "Practice in a quiet place with the mic near your mouth.";
@@ -405,14 +406,14 @@
 "field_back_to_practice" = "Back to practice";
 
 /* 送气练习：开始 / 停止按钮，区分送气与不送气 */
-"aspiration_prompt_aspirated" = "Aspirated %1$@: say “%2$@” with a burst of air.";
-"aspiration_prompt_unaspirated" = "Unaspirated %1$@: say “%2$@” softly, with no burst of air.";
+"aspiration_prompt_aspirated" = "Aspirated %1$@: say “%2$@” with a puff of air.";
+"aspiration_prompt_unaspirated" = "Unaspirated %1$@: say “%2$@” softly, with no puff of air.";
 "aspiration_tag_aspirated" = "Aspirated · %@";
 "aspiration_tag_unaspirated" = "Unaspirated · %@";
 "aspiration_ready" = "Tap the microphone, say only the first character, then tap again to stop.";
 "aspiration_recording" = "Say it now, then tap stop.";
-"aspiration_unaspirated_success" = "No burst of air, which is right for this sound.";
-"aspiration_unaspirated_too_strong" = "Too much air. This sound needs no burst, so try it more softly.";
+"aspiration_unaspirated_success" = "No puff of air, which is right for this sound.";
+"aspiration_unaspirated_too_strong" = "Too much air. This sound needs no puff of air, so try it more softly.";
 "aspiration_stopped_early" = "Stopped during the noise check, so nothing was recorded. Wait for the prompt, then speak.";
 
 /* 注册后的知情同意与微信入口 */

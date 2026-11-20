@@ -1,5 +1,5 @@
 {
-  "translation_version": "research-survey-i18n-1.2",
+  "translation_version": "research-survey-i18n-1.3",
   "strings": {
     "previous": {
       "zh": "上一题",
@@ -146,12 +146,20 @@
       "it": "Invio non riuscito. Riprova."
     },
     "search_country": {
-      "zh": "搜索国家",
-      "en": "Search countries",
-      "fr": "Rechercher un pays",
-      "ar": "البحث عن بلد",
-      "es": "Buscar países",
-      "it": "Cerca paesi"
+      "zh": "搜索国家或地区",
+      "en": "Search countries and regions",
+      "fr": "Rechercher un pays ou une région",
+      "ar": "البحث عن بلد أو منطقة",
+      "es": "Buscar países y regiones",
+      "it": "Cerca paesi e regioni"
+    },
+    "search_language": {
+      "zh": "搜索语言",
+      "en": "Search languages",
+      "fr": "Rechercher une langue",
+      "ar": "البحث عن لغة",
+      "es": "Buscar idiomas",
+      "it": "Cerca lingue"
     },
     "report_issue": {
       "zh": "报告问题",

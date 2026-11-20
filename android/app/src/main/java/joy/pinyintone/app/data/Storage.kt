@@ -143,6 +143,12 @@ class PrefsPracticeStore(private val prefs: SharedPreferences) : PracticeStore {
         get() = prefs.getInt(CURSOR, 0)
         set(value) { prefs.edit().putInt(CURSOR, value).apply() }
 
+    override var practiceSeed: Long?
+        get() = if (prefs.contains(SEED)) prefs.getLong(SEED, 0) else null
+        set(value) {
+            prefs.edit().apply { if (value == null) remove(SEED) else putLong(SEED, value) }.apply()
+        }
+
     /** 显示模式：学习者自选，默认动态曲线。**不是实验条件** */
     var feedbackStyle: FeedbackStyle
         get() = FeedbackStyle.of(prefs.getString(STYLE, null))
@@ -173,6 +179,7 @@ class PrefsPracticeStore(private val prefs: SharedPreferences) : PracticeStore {
         // 键名沿用 iOS 的 UserDefaults 键，方便对照
         const val ATTEMPTS = "pt_tone_attempts."
         const val CURSOR = "pt_tone_practice_cursor"
+        const val SEED = "pt_tone_practice_seed"
         const val STYLE = "pt_feedback_style"
         const val MIC_ASKED = "mic_permission_requested"
     }

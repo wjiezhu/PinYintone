@@ -6,6 +6,7 @@ import joy.pinyintone.core.corpus.Corpus
 import joy.pinyintone.core.corpus.LexemeCategory
 import joy.pinyintone.core.corpus.Lexeme
 import java.util.UUID
+import kotlin.random.Random
 
 /** 本机持久化的练习状态（app 用 SharedPreferences 实现；测试用内存实现） */
 interface PracticeStore {
@@ -13,8 +14,10 @@ interface PracticeStore {
     fun attempts(lexemeID: String): Int
     /** 自增并返回本次的尝试序号（1-based） */
     fun incrementAttempts(lexemeID: String): Int
-    /** 普通练习停留的位置。对应 `pt_tone_practice_cursor` */
+    /** 普通练习停留的位置（词在词表里的下标）。对应 `pt_tone_practice_cursor` */
     var practiceCursor: Int
+    /** 这一轮随机出词顺序的种子；还没有过为 null。对应 `pt_tone_practice_seed` */
+    var practiceSeed: Long?
 }
 
 /** 记录落库（app 用 Room 实现） */
@@ -48,6 +51,8 @@ class TonePracticeSession(
     private val context: RecordContext,
     private val clock: () -> Long = System::currentTimeMillis,
     private val newID: () -> String = { UUID.randomUUID().toString() },
+    /** 取新一轮随机顺序的种子。每台设备各自随机，**不是实验条件**；测试里传固定值 */
+    private val newSeed: () -> Long = { Random.nextLong(1, Int.MAX_VALUE.toLong()) },
 ) {
     sealed class Stage {
         /** 正在准备参考曲线，不能录音 */
@@ -131,8 +136,10 @@ class TonePracticeSession(
     val progress: Pair<Int, Int> get() {
         val pool = practicePool
         if (pool.isEmpty()) return 0 to 0
-        return (normalizedCursor(pool.size) + 1) to pool.size
+        // 进度是这一轮里的第几个，不是词表里的第几个
+        return (maxOf(order(pool.size).indexOf(normalizedCursor(pool.size)), 0) + 1) to pool.size
     }
+    /** 全部声调词条。这是**选词列表里的排列顺序**，不是出词顺序 */
     val practicePool: List<Lexeme> get() = corpus.orderedPool(LexemeCategory.TONE)
 
     // ---- 内部 ----
@@ -152,16 +159,42 @@ class TonePracticeSession(
         if (mode != Mode.PRACTICE) return
         val pool = practicePool
         if (pool.isEmpty()) { lexeme = null; changed(); return }
+        order(pool.size)   // 第一次进来时定下这一轮的顺序与起点
         loadLexeme(pool[normalizedCursor(pool.size)])
     }
 
-    /** 下一个词，到末尾回到开头。录音、分析期间不可换词 */
+    /**
+     * 下一个词：**随机顺序**里的下一个（研究者 2026-11-19 要求）。一轮之内每个词出现一次，
+     * 一轮走完换一轮新的顺序。对应 Swift `ToneSequencer.advance`。录音、分析期间不可换词
+     */
     fun loadNext() {
         if (isBusy || mode != Mode.PRACTICE) return
         val total = practicePool.size
         if (total == 0) return
-        store.practiceCursor = (normalizedCursor(total) + 1) % total
+        val current = normalizedCursor(total)
+        val order = order(total)
+        val position = order.indexOf(current)
+        store.practiceCursor = if (position + 1 < total) {
+            order[position + 1]
+        } else {
+            store.practiceSeed = newSeed()
+            val next = order(total)
+            // 新一轮的头一个词不与刚练完的那个相同
+            if (next[0] == current && total > 1) next[1] else next[0]
+        }
         loadCurrent()
+    }
+
+    /** 这一轮的出词顺序（词表下标的一个排列）。同一个种子总是同一个顺序 */
+    private fun order(total: Int): List<Int> {
+        val seed = store.practiceSeed ?: newSeed().also { seed ->
+            store.practiceSeed = seed
+            // 第一次进练习：从这一轮的第一个词开始，不是人人都从同一个词开始
+            if (store.practiceCursor == 0 && total > 0) {
+                store.practiceCursor = (0 until total).shuffled(Random(seed)).first()
+            }
+        }
+        return (0 until total).shuffled(Random(seed))
     }
 
     /** 从词表里选了某个词。词表里没有就不动 */

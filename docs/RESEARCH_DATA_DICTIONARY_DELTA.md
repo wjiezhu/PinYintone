@@ -179,3 +179,68 @@ Apple 账号到内部编号的对应关系。设备行会被换账号登录改�
 尝试尚未上传 → 409 `attempt_not_uploaded`（客户端稍后重试）；取消的尝试 → 409 `attempt_cancelled`。
 `POST /research/withdraw` 的回执多了 `recordingsDeleted`。
 
+
+## 背景表 `background_v1-1.3`：国籍与语言选项改用标准代码（2026-11-18，未冻结进任何配置）
+
+研究者要求国籍、语言两类题给出完整的标准列表。只改了 iOS 端的问卷定义；
+安卓版没有问卷，服务端不校验选项码，都不用动。**线上配置绑定的仍是 `background_v1-1.2`**，
+带 1.3 的构建要等研究者冻结新配置后才能参加研究。
+
+- 代码表随包发布：`PinYintone/Resources/Surveys/survey_option_lists_v1.json`
+  （`survey-option-lists-1.0`）。显示名由系统按问卷语言本地化，**库里只有代码**。
+- `B02` 国籍：`option_codes` 是 ISO 3166-1 alpha-2（249 个正式代码）或 `prefer_not`。
+  1.1–1.2 的 `other` + `text_value`（自由填写的国籍）不再出现；旧答案原样保留，不归一化。
+  纳入规则不受影响：`eligibility-2.0` 仍看是否含 `MA`，`eligibility-3.0` 不看国籍。
+- `B04` / `B05` 语言：`option_codes` 是 ISO 639 代码（ISO 639-1 的 183 个两位代码，
+  另加 `ary` 摩洛哥阿拉伯语、`arb` 标准阿拉伯语、`ber` 阿马齐格语族），或 `other`（+ `text_value`）、
+  `prefer_not`。
+- **跨版本分析语言题时先把旧代码换成新代码**（按 `research_survey_instances.form_version` 区分）：
+
+  | 1.2 及更早 | 1.3 起 |
+  |---|---|
+  | `darija` | `ary` |
+  | `msa` | `arb` |
+  | `amazigh` | `ber` |
+  | `french` | `fr` |
+  | `english` | `en` |
+  | `chinese` | `zh` |
+  | `spanish` | `es` |
+  | `italian` | `it` |
+
+  1.3 起参与者还可以选 `ar`（阿拉伯语，不分变体）等旧版没有的代码；它与 `ary` / `arb` 是不同的回答，不合并。
+
+## 注册页「会说的语言」改用 ISO 639 代码（2026-11-20）
+
+`users.spoken_languages`（注册时上报，不属于研究表）跟背景表语言题用同一张代码表（`iso639`）：
+预置 `ary` `fr` `arb` `ber` `en` `es` `it` `other`，其余从完整列表里搜。只有 iOS 注册页有这一项，
+安卓版与服务端都不用动（服务端原样存 JSON 数组）。
+
+- **旧值不改写**。2.1（构建 23）及更早注册的账号存的是自定代码，分析前按下表换成 ISO 代码；
+  两套代码互不重叠，同一列里混着也能逐项分辨：
+
+  | 2.1 及更早 | 之后 |
+  |---|---|
+  | `darija` | `ary` |
+  | `arabic` | `arb` |
+  | `amazigh` | `ber` |
+  | `french` | `fr` |
+  | `english` | `en` |
+  | `spanish` | `es` |
+  | `italian` | `it` |
+  | `other` | `other` |
+
+- 注意注册页旧版的标准阿拉伯语是 `arabic`，背景表旧版是 `msa`，两者都对到 `arb`。
+- 不涉及练习记录的字段，`schemaVersion` 不变。
+
+## 词表扩充 `lex-2026.11-draft`（2026-11-18，草稿，未冻结进任何配置）
+
+研究者决定把候选词（去掉轻声词）加进语料，2026-11-19 又决定把 16 种非轻声组合、12 个送气考察声母各配平到 6 词：20 词 → 170 词（声调词 98、送气词 72）。
+
+- 原有 20 词的内容、`lexeme_version_id`、核对状态都没变。新增 150 词 `review_status = pending`，
+  汉字、拼音、声调、各语言释义待研究者逐词核对；核对后把版本号去掉 `-draft` 才能冻结正式配置。
+- 旧业务表 `training_sessions.word_set_id` 新增取值 `expansion`：2026-11 扩充的声调词。
+  它们只在普通练习里出现；自测词集（`assess-v1`）与实测协议（`field-1.0`）的词都没有动。
+- 送气词新增了塞擦音（`aspirationTarget.initial` 为 c / ch / q 与 z / zh / j）。能量检测对这类
+  不送气音能否稳定低于 0.6 没有数据，结果同样只是练习反馈。
+- 含上上连读的词（水果、手表、可以、洗澡、了解、所以）`tones` 写字典调 3+3，参考曲线是合成音的实读 2+3。
+- 选词依据与出处见研究者手里的候选词清单（未入库）；文献未能核实的条目不得在论文里引用。

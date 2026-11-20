@@ -2,7 +2,7 @@ import AVFoundation
 import Combine
 import Foundation
 
-/// 送气练习的判定规则。送气音要爆破，不送气音不要爆破，所以同一条通关线方向相反。
+/// 送气练习的判定规则。送气音要有一股强气流，不送气音不要，所以同一条通关线方向相反。
 nonisolated enum AspirationRule {
     /// CLAUDE.md 锁定的触发率通关线
     static let threshold: Float = 0.6
@@ -29,7 +29,7 @@ final class AspirationViewModel: ObservableObject {
     @Published private(set) var currentLexeme: Lexeme?
     /// 当前 600ms 窗口的触发率
     @Published private(set) var triggerRate: Float = 0
-    /// 这次录音到目前为止的最高触发率。判定看它：爆破只有一瞬间，停止时窗口早已回落
+    /// 这次录音到目前为止的最高触发率。判定看它：气流只有一瞬间，停止时窗口早已回落
     @Published private(set) var peakRate: Float = 0
     /// 本次结果；还没有结果时为 nil
     @Published private(set) var passed: Bool?

@@ -40,7 +40,7 @@ final class UserManager: ObservableObject {
     /// 学生注册（Sign in with Apple）。后端按 deviceID 幂等建档，Apple 账号以
     /// `identityToken` 验签为准；不再分配任何实验分组或反馈条件。
     func registerStudent(appleUserID: String, identityToken: String? = nil, nickname: String?,
-                         spokenLanguages: [SpokenLanguage] = []) async throws {
+                         spokenLanguages: [String] = []) async throws {
         self.identityToken = identityToken.map { ($0, appleUserID, Self.now()) }
         let p = UserProfile(
             deviceID: UIDevice.current.identifierForVendor?.uuidString ?? UUID().uuidString,
@@ -51,7 +51,7 @@ final class UserManager: ObservableObject {
             teacherEmail: nil,
             teacherToken: nil,
             nativeLanguage: Locale.current.language.languageCode?.identifier,
-            spokenLanguages: spokenLanguages.map(\.rawValue),
+            spokenLanguages: spokenLanguages,
             registeredAt: Date()
         )
         save(p)
@@ -81,7 +81,7 @@ final class UserManager: ObservableObject {
     /// 和 Apple 登录不同，这一步**必须等服务端**：验证码只有服务端能核对，
     /// 核对通过的同时就建好了档。失败抛 `EmailLoginError`，停在登录页。
     func registerStudentWithEmail(email: String, code: String, nickname: String?,
-                                  spokenLanguages: [SpokenLanguage] = []) async throws {
+                                  spokenLanguages: [String] = []) async throws {
         let normalized = Self.normalizedEmail(email)
         let p = UserProfile(
             deviceID: UIDevice.current.identifierForVendor?.uuidString ?? UUID().uuidString,
@@ -92,7 +92,7 @@ final class UserManager: ObservableObject {
             teacherEmail: nil,
             teacherToken: nil,
             nativeLanguage: Locale.current.language.languageCode?.identifier,
-            spokenLanguages: spokenLanguages.map(\.rawValue),
+            spokenLanguages: spokenLanguages,
             registeredAt: Date(),
             loginEmail: normalized
         )

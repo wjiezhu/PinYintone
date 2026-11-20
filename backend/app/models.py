@@ -129,7 +129,7 @@ class TrainingSession(Base):
     reference_switched = Column(Boolean, nullable=True)     # 应恒为 False
     # 研究字段（升级需求 §3.1 / §3.2）
     phase = Column(String, index=True, nullable=True)        # pretest|training|posttest
-    word_set_id = Column(String, nullable=True)              # set1|set2|assessment
+    word_set_id = Column(String, nullable=True)              # set1|set2|assessment|expansion
     presentation_order = Column(String, nullable=True)       # 历史列，A/B 取消后停写
     assessment_set_version = Column(String, nullable=True)   # 仅测试词集记录有值
     # 记录语义与版本（升级需求 §6.1 / §6.2）

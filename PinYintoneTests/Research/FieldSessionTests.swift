@@ -9,7 +9,7 @@ final class FieldSessionTests: XCTestCase {
     private var recorder: FakeRecorder!
     private var vm: ToneTrainingViewModel!
     private var savedDefaults: [String: Any?] = [:]
-    private let touchedKeys = ["pt_tone_attempts", "pt_tone_practice_cursor"]
+    private let touchedKeys = ["pt_tone_attempts", "pt_tone_practice_cursor", "pt_tone_practice_seed"]
 
     /// 一个测试词、一个训练词、每个训练词 2 次有效结果：走完全程只要几秒
     private let small = FieldProtocol(protocolVersion: "field-test", testWords: ["hanzi"],
@@ -416,7 +416,7 @@ final class FieldSessionTests: XCTestCase {
     /// 每个词在西语、意语、英语界面都有自己语言的释义，不回退到法语
     func testEveryWordHasSpanishItalianAndEnglishGlosses() {
         let words = CorpusLoader.shared.loadLexemes()
-        XCTAssertEqual(words.count, 20)
+        XCTAssertEqual(words.count, 170)
         for word in words {
             for (language, gloss) in [("es", word.spanish), ("it", word.italian), ("en", word.english)] {
                 XCTAssertFalse((gloss ?? "").isEmpty, "\(word.id) 缺 \(language) 释义")
@@ -428,15 +428,14 @@ final class FieldSessionTests: XCTestCase {
     /// 语言背景题与注册页都能选西班牙语、意大利语
     func testSpanishAndItalianCanBeChosenAsLanguages() throws {
         let form = try XCTUnwrap(SurveyFormLoader.bundled[SurveyCenter.backgroundKey])
-        XCTAssertEqual(form.formVersion, "background_v1-1.2", "选项变了版本号必须跟着变")
+        XCTAssertEqual(form.formVersion, "background_v1-1.3", "选项变了版本号必须跟着变")
         for id in ["B04", "B05"] {
             let q = try XCTUnwrap(form.questions.first { $0.questionId == id })
             let codes = q.options.map(\.code)
-            XCTAssertTrue(codes.contains("spanish") && codes.contains("italian"), id)
+            XCTAssertTrue(codes.contains("es") && codes.contains("it"), id)
             XCTAssertEqual(codes.last, "prefer_not", "互斥项仍排最后")
         }
-        XCTAssertTrue(SpokenLanguage.displayOrder.contains(.spanish))
-        XCTAssertTrue(SpokenLanguage.displayOrder.contains(.italian))
-        XCTAssertEqual(Set(SpokenLanguage.displayOrder), Set(SpokenLanguage.allCases))
+        let signup = SpokenLanguage.presets.map(\.code)
+        XCTAssertTrue(signup.contains("es") && signup.contains("it"))
     }
 }

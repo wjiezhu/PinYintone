@@ -396,8 +396,14 @@ final class ResearchUploaderTests: XCTestCase {
         let id = queueAttempt(cancelled: false)
         let pcm = (0..<8_000).map { Int16(sin(Double($0) * 0.05) * 8000) }
         ResearchRecordingQueue.shared.enqueue(pcm: pcm, attemptID: id)
-        for _ in 0..<60 where ResearchRecordingQueue.shared.pending.isEmpty {
+        // 编码是异步的。CI 机器忙时 3 秒不一定够（iOS 26.2 上实测超时过），等到 15 秒；
+        // 真超时就直说，免得被误读成「录音丢了」
+        let deadline = Date().addingTimeInterval(15)
+        while ResearchRecordingQueue.shared.pending.isEmpty, Date() < deadline {
             try? await Task.sleep(nanoseconds: 50_000_000)
+        }
+        if ResearchRecordingQueue.shared.pending.isEmpty {
+            XCTFail("录音 15 秒内没有编码进队列")
         }
         return id
     }

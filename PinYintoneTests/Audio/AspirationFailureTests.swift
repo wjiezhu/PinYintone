@@ -53,8 +53,8 @@ final class AspirationFailureTests: XCTestCase {
     func testCorpusMarksAspiratedAndUnaspiratedWords() throws {
         let words = CorpusLoader.shared.lexemes(in: .aspiration)
         let targets = try words.map { try XCTUnwrap($0.aspirationTarget, $0.id) }
-        XCTAssertEqual(Set(targets.filter(\.aspirated).map(\.initial)), ["p", "t", "k"])
-        XCTAssertEqual(Set(targets.filter { !$0.aspirated }.map(\.initial)), ["b", "d", "g"])
+        XCTAssertEqual(Set(targets.filter(\.aspirated).map(\.initial)), ["p", "t", "k", "c", "ch", "q"])
+        XCTAssertEqual(Set(targets.filter { !$0.aspirated }.map(\.initial)), ["b", "d", "g", "z", "zh", "j"])
         for w in words {
             XCTAssertTrue(w.pinyin.hasPrefix(w.aspirationTarget!.initial), w.id)
         }
@@ -77,7 +77,7 @@ final class AspirationFailureTests: XCTestCase {
         let (vm, recorder) = make()
         load(vm, aspirated: false)
         await run(vm, recorder, seconds: 0.3)
-        XCTAssertEqual(vm.passed, true, "没有爆破：不送气音就该这样")
+        XCTAssertEqual(vm.passed, true, "没有强气流：不送气音就该这样")
         await run(vm, recorder, seconds: 0.9)
         XCTAssertEqual(vm.passed, false, "气流太强：不送气音不通过")
     }

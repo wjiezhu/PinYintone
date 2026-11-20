@@ -22,16 +22,18 @@ class TonePracticeSessionTest {
         override fun attempts(lexemeID: String) = counts[lexemeID] ?: 0
         override fun incrementAttempts(lexemeID: String) = (attempts(lexemeID) + 1).also { counts[lexemeID] = it }
         override var practiceCursor = 0
+        override var practiceSeed: Long? = null
     }
 
     private val corpus = Corpus.parse(RepoFiles.read("PinYintone/Resources/Corpus/lexemes.json"))
     private val store = MemStore()
     private val records = ArrayList<TrainingRecord>()
     private var ids = 0
+    private val seeds = ArrayDeque(listOf(7L, 8L, 9L))
     private val session = TonePracticeSession(
         corpus, store, { records.add(it) }, RecordContext("dev-1", "0.1.0 (1)"),
-        clock = { 1_700_000_000_000 }, newID = { "id-${ids++}" },
-    ).apply { loadCurrent() }
+        clock = { 1_700_000_000_000 }, newID = { "id-${ids++}" }, newSeed = { seeds.removeFirst() },
+    ).apply { loadCurrent(); select("yisheng") }
 
     /** 按目标声调的理想轮廓「读」：每音节 40 帧 Hz，音节间 6 帧无声 */
     private fun read(tones: List<Int>, transform: (Float) -> Float = { it }): FloatArray {
@@ -56,7 +58,49 @@ class TonePracticeSessionTest {
         assertEquals(Stage.Ready, session.stage)
         assertEquals(ReferenceType.IDEAL, session.referenceType)
         assertArrayEquals(ToneScorer().idealReference(listOf(1, 1)), session.reference, 0f)
-        assertEquals(1 to 14, session.progress)
+        assertEquals(98, session.progress.second)
+    }
+
+    /** 「下一个」随机给出：一轮之内每个词出现一次，一轮走完换一轮新的顺序 */
+    @Test
+    fun nextWordIsRandomWithoutRepeatsWithinARound() {
+        val fresh = MemStore()
+        val s = TonePracticeSession(corpus, fresh, { }, RecordContext("dev-2", "0.1.0 (1)"),
+            newSeed = { seeds.removeFirst() }).apply { loadCurrent() }
+        val pool = s.practicePool.map { it.id }
+        val seen = arrayListOf(s.lexeme!!.id)
+        assertEquals(1, s.progress.first)
+        for (step in 1 until pool.size) {
+            s.loadNext()
+            seen.add(s.lexeme!!.id)
+            assertEquals(step + 1, s.progress.first)
+        }
+        assertEquals(pool.size, seen.toSet().size)
+        assertEquals(pool.toSet(), seen.toSet())
+        assertTrue("出词顺序仍是词表的固定顺序", seen != pool)
+
+        val last = seen.last()
+        s.loadNext()
+        assertTrue(s.lexeme!!.id != last)
+        val second = arrayListOf(s.lexeme!!.id)
+        while (second.size < pool.size - 1) { s.loadNext(); second.add(s.lexeme!!.id) }
+        assertEquals(second.size, second.toSet().size)
+        assertTrue(seen.take(10) != second.take(10))
+
+        // 重新进来：停在原来的词，接着同一轮
+        val again = TonePracticeSession(corpus, fresh, { }, RecordContext("dev-2", "0.1.0 (1)"),
+            newSeed = { 12345L }).apply { loadCurrent() }
+        assertEquals(s.lexeme!!.id, again.lexeme!!.id)
+        assertEquals(s.progress, again.progress)
+    }
+
+    @Test
+    fun differentSeedsStartOnDifferentWords() {
+        val firsts = (1L..12L).map { seed ->
+            TonePracticeSession(corpus, MemStore(), { }, RecordContext("d", "v"), newSeed = { seed })
+                .apply { loadCurrent() }.lexeme!!.id
+        }
+        assertTrue(firsts.toSet().size > 4)
     }
 
     @Test
@@ -205,9 +249,10 @@ class TonePracticeSessionTest {
         assertEquals("hanzi", session.lexeme?.id)
         assertEquals(13, store.practiceCursor)
         session.loadNext()
-        assertEquals("yisheng", session.lexeme?.id)
+        val next = session.lexeme?.id
+        assertTrue(next != "hanzi")
         session.select("not-a-word")
-        assertEquals("yisheng", session.lexeme?.id)
+        assertEquals(next, session.lexeme?.id)
     }
 
     @Test
@@ -271,6 +316,7 @@ class TonePracticeSessionTest {
         val withAudio = Corpus(corpus.lexemes.map { if (it.id == "yisheng") it.copy(audioFilename = "yisheng.wav") else it })
         val s = TonePracticeSession(withAudio, MemStore(), { records.add(it) }, RecordContext("d", "v"))
         s.loadCurrent()
+        s.select("yisheng")   // 起点是随机的，这里要的是带录音的那个词
         assertEquals(Stage.Preparing, s.stage)
         assertEquals("yisheng.wav", s.pendingReferenceFile)
         assertFalse("参照未就绪不能录", s.beginRecording())

@@ -23,6 +23,7 @@
 "lang_italian" = "Italiano";
 "lang_amazigh" = "Tamazight";
 "lang_other" = "Otro";
+"signup_languages_search" = "Buscar otros idiomas";
 "teacher_signup_subtitle" = "Crea tu cuenta docente.\nSe generará un código de clase único para tu alumnado.";
 "teacher_signup_name" = "Nombre completo";
 "teacher_signup_email" = "Correo electrónico";
@@ -106,7 +107,7 @@
 "saved_words_practice_count" = "Practicada %d veces";
 "play_sample" = "Reproducir el modelo";
 "help_title" = "Cómo se usa";
-"help_stage1_body" = "Los sonidos aspirados (p / t / k) necesitan un golpe de aire que disperse el diente de león. Los no aspirados (b / d / g) no lo necesitan: el diente de león debe quedarse quieto. Toca una vez para empezar y otra para detener.";
+"help_stage1_body" = "Los sonidos aspirados (p / t / k / c / ch / q) necesitan un golpe de aire que disperse el diente de león. Los no aspirados (b / d / g / z / zh / j) no lo necesitan: el diente de león debe quedarse quieto. Toca una vez para empezar y otra para detener.";
 "help_stage2_body" = "Toca Escuchar para oír el modelo y luego grábate. Cada grabación obtiene un resultado sobre 100 (se supera con 60 o más).";
 "help_stage3_body" = "Pega o escribe texto en chino; se separa en palabras y practicas cada una. Guarda palabras para repasarlas luego en Mis palabras.";
 "help_tip" = "Practica en un lugar tranquilo, con el micrófono cerca de la boca.";

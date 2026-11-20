@@ -40,13 +40,20 @@ final class ResearchLexiconTests: XCTestCase {
         XCTAssertEqual(ids.count, Set(ids).count)
     }
 
-    /// 正式采集要求全部词条经核对（字典 §6）：lex-2026.10 由研究者 2026-10-14 确认。
-    /// 词表版本不得带 draft——服务端冻结正式配置时会拒绝。
-    func testShippedLexiconIsApprovedForFormalCollection() {
-        XCTAssertEqual(ResearchLexicon.lexiconVersion, "lex-2026.10")
-        XCTAssertFalse(ResearchLexicon.lexiconVersion?.contains("draft") ?? true)
+    /// lex-2026.10 的 20 词由研究者 2026-10-14 确认，扩充后仍是已核对，版本编号也没有变。
+    /// 2026-11-18 扩充、11-19 配平后的 150 个新词还没有逐词核对：词表版本带 draft（服务端因此不会冻结成正式配置），
+    /// 新词不得标成已核对——**核对只能由研究者本人做**。
+    func testOnlyResearcherReviewedWordsAreApproved() {
+        XCTAssertEqual(ResearchLexicon.lexiconVersion, "lex-2026.11-draft")
+        let reviewed: Set<String> = ["paobu", "bangzhu", "tingdong", "dengdai", "kaoshi", "gaosu",
+                                     "xianzai", "dianshi", "sushe", "hanzi", "heshui", "shenti", "jingli",
+                                     "yisheng", "qingchu", "xiuxi", "ziji", "canjia", "zaocan", "xiangxin"]
         for lex in CorpusLoader.shared.loadLexemes() {
-            XCTAssertTrue(ResearchLexicon.isApproved(lex.id), "\(lex.hanzi)(\(lex.id)) 未标记为已核对")
+            XCTAssertEqual(ResearchLexicon.isApproved(lex.id), reviewed.contains(lex.id),
+                           "\(lex.hanzi)(\(lex.id)) 的核对状态不对")
         }
+        XCTAssertEqual(ResearchLexicon.versionID(for: "paobu"), "c5184b45-4e86-4d92-9aae-d4dc67f2dfb1",
+                       "已冻结词条的版本编号不得变")
+        XCTAssertEqual(ResearchLexicon.versionID(for: "xiangxin"), "e234b115-95fb-493f-b3d1-5dc882db1a1d")
     }
 }

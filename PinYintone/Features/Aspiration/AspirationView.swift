@@ -2,8 +2,8 @@ import SwiftUI
 
 /// 送气练习。补充练习，不进入本轮研究的声调主分析。
 ///
-/// 词分两类，方向相反：送气音（p / t / k）要爆破、吹散蒲公英；
-/// 不送气音（b / d / g）不要爆破、蒲公英不动。
+/// 词分两类，方向相反：送气音（p / t / k / c / ch / q）要送出一股气流、吹散蒲公英；
+/// 不送气音（b / d / g / z / zh / j）不送气、蒲公英不动。
 /// 点录音开始 → 500ms 噪声校准 → 念第一个字 → 再点一下停止 → 看结果。
 struct AspirationView: View {
     @StateObject private var vm = AspirationViewModel()

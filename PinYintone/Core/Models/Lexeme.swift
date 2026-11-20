@@ -29,6 +29,6 @@ struct Lexeme: Codable, Identifiable {
 
 /// 这个词考察的声母，以及它是不是送气音。写在语料里，不从 `focus` 的说明文字里猜。
 struct AspirationTarget: Codable, Equatable {
-    let initial: String         // p / t / k（送气）或 b / d / g（不送气）
+    let initial: String         // p / t / k / c / ch / q（送气）或 b / d / g / z / zh / j（不送气）
     let aspirated: Bool
 }
