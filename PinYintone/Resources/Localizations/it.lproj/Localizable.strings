@@ -106,7 +106,7 @@
 "saved_words_practice_count" = "Esercitata %d volte";
 "play_sample" = "Riproduci il modello";
 "help_title" = "Come si usa";
-"help_stage1_body" = "I suoni aspirati (p / t / k) richiedono un soffio d'aria che disperde il soffione. I suoni non aspirati (b / d / g) non lo richiedono: il soffione deve restare fermo. Tocca una volta per iniziare e di nuovo per fermare.";
+"help_stage1_body" = "I suoni aspirati (p / t / k / c / ch / q) richiedono un soffio d'aria che disperde il soffione. I suoni non aspirati (b / d / g / z / zh / j) non lo richiedono: il soffione deve restare fermo. Tocca una volta per iniziare e di nuovo per fermare.";
 "help_stage2_body" = "Tocca Ascolta per sentire il modello, poi registrati. Ogni registrazione ottiene un risultato su 100 (si supera con 60 o più).";
 "help_stage3_body" = "Incolla o scrivi del cinese: viene diviso in parole e ti eserciti su ciascuna. Salva le parole per ripassarle in Le mie parole.";
 "help_tip" = "Esercitati in un luogo tranquillo, con il microfono vicino alla bocca.";

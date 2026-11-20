@@ -136,7 +136,7 @@
 
 // Help / instructions
 "help_title" = "How to use";
-"help_stage1_body" = "Aspirated sounds (p / t / k) need a puff of air that blows the dandelion apart. Unaspirated sounds (b / d / g) need no puff of air, so the dandelion should stay still. Tap once to start and again to stop.";
+"help_stage1_body" = "Aspirated sounds (p / t / k / c / ch / q) need a puff of air that blows the dandelion apart. Unaspirated sounds (b / d / g / z / zh / j) need no puff of air, so the dandelion should stay still. Tap once to start and again to stop.";
 "help_stage2_body" = "Tap Listen to hear the model, then record yourself. Each recording gets a result out of 100 (60 or more passes).";
 "help_stage3_body" = "Paste or type Chinese, it splits into words, practice each one. Bookmark words to review later in My words.";
 "help_tip" = "Practice in a quiet place with the mic near your mouth.";
