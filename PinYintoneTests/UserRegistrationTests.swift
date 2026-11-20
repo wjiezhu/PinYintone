@@ -122,6 +122,16 @@ final class UserRegistrationTests: XCTestCase {
         XCTAssertEqual(sends(for: appleID).last?.nickname, "Amina B.")
     }
 
+    /// 注册页选的语言按 ISO 639 代码原样存档、上报
+    func testSpokenLanguagesAreStoredAsGiven() async throws {
+        let appleID = "apple-\(UUID().uuidString)"
+        try await UserManager.shared.registerStudent(
+            appleUserID: appleID, nickname: nil, spokenLanguages: ["ary", "fr", "wo", "other"])
+        XCTAssertEqual(UserManager.shared.profile?.spokenLanguages, ["ary", "fr", "wo", "other"])
+        try await waitUntil { delivered }
+        XCTAssertEqual(sends(for: appleID).last?.spokenLanguages, ["ary", "fr", "wo", "other"])
+    }
+
     func testLogoutForgetsDeliveryMarker() async throws {
         try await UserManager.shared.registerStudent(
             appleUserID: "apple-\(UUID().uuidString)", nickname: nil)

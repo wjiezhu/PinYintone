@@ -30,6 +30,7 @@
 "lang_italian" = "Italian";
 "lang_amazigh" = "Tamazight";
 "lang_other" = "Other";
+"signup_languages_search" = "Search other languages";
 
 // Teacher signup
 "teacher_signup_subtitle" = "Create your teacher account.\nA unique class code will be generated for your students.";

@@ -435,8 +435,7 @@ final class FieldSessionTests: XCTestCase {
             XCTAssertTrue(codes.contains("es") && codes.contains("it"), id)
             XCTAssertEqual(codes.last, "prefer_not", "互斥项仍排最后")
         }
-        XCTAssertTrue(SpokenLanguage.displayOrder.contains(.spanish))
-        XCTAssertTrue(SpokenLanguage.displayOrder.contains(.italian))
-        XCTAssertEqual(Set(SpokenLanguage.displayOrder), Set(SpokenLanguage.allCases))
+        let signup = SpokenLanguage.presets.map(\.code)
+        XCTAssertTrue(signup.contains("es") && signup.contains("it"))
     }
 }

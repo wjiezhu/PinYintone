@@ -30,6 +30,7 @@
 "lang_italian" = "意大利语";
 "lang_amazigh" = "塔马齐格特语";
 "lang_other" = "其他";
+"signup_languages_search" = "搜索其他语言";
 
 // 教师注册
 "teacher_signup_subtitle" = "创建教师账户。\n系统将为您的学生自动生成唯一班级码。";

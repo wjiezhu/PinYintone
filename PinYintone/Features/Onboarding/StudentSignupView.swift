@@ -10,7 +10,9 @@ struct StudentSignupView: View {
     @Environment(\.colorScheme) private var colorScheme
 
     @State private var nickname = ""
-    @State private var selectedLanguages: Set<SpokenLanguage> = []
+    /// 选中的 ISO 639 代码（含 `other`）
+    @State private var selectedLanguages: Set<String> = []
+    @State private var showLanguagePicker = false
     @State private var isLoading = false
     @State private var errorMessage: String?
 
@@ -39,6 +41,15 @@ struct StudentSignupView: View {
         .navigationBarTitleDisplayMode(.large)
         .disabled(isLoading)
         .overlay { if isLoading { ProgressView() } }
+        .sheet(isPresented: $showLanguagePicker) {
+            CodeListPickerSheet(source: SpokenLanguage.listSource, kind: .language,
+                                language: LocalizationManager.shared.language,
+                                overrides: SpokenLanguage.presetNames,
+                                selected: selectedLanguages,
+                                title: NSLocalizedString("signup_languages_search", comment: "")) { code in
+                toggleLanguage(code)
+            }
+        }
     }
 
     // MARK: - Sub-views
@@ -61,25 +72,57 @@ struct StudentSignupView: View {
             .fixedSize(horizontal: false, vertical: true)
     }
 
-    /// 会说的语言（多选，母语迁移分析用）
+    /// 会说的语言（多选，母语迁移分析用）。常见的几种直接列出，其余从 ISO 639 完整列表里搜
     private var languagesSection: some View {
         VStack(alignment: .leading, spacing: Theme.Space.s) {
             fieldLabel("signup_languages_label")
             // 自适应换行的多选标签
             FlowLayout(spacing: Theme.Space.s) {
-                ForEach(SpokenLanguage.displayOrder) { lang in
-                    languageChip(lang)
+                ForEach(SpokenLanguage.presets) { preset in
+                    languageChip(code: preset.code,
+                                 name: NSLocalizedString(preset.localizationKey, comment: ""))
+                }
+                // 从完整列表里选的，跟在预置项后面，点一下取消
+                ForEach(extraLanguages, id: \.self) { code in
+                    languageChip(code: code, name: languageName(code))
                 }
             }
+            Button {
+                showLanguagePicker = true
+            } label: {
+                Label(NSLocalizedString("signup_languages_search", comment: ""), systemImage: "magnifyingglass")
+                    .font(.body.weight(.medium))
+                    .foregroundStyle(Theme.primary)
+                    .multilineTextAlignment(.leading)
+                    .frame(maxWidth: .infinity, minHeight: Theme.minTap, alignment: .leading)
+                    .contentShape(Rectangle())
+            }
+            .buttonStyle(.plain)
+            .accessibilityIdentifier("signup.languageSearch")
         }
     }
 
+    /// 不在预置项里、由学习者从完整列表里选的代码，按显示名排
+    private var extraLanguages: [String] {
+        let preset = Set(SpokenLanguage.presets.map(\.code))
+        return selectedLanguages.filter { !preset.contains($0) }
+            .sorted { languageName($0).localizedStandardCompare(languageName($1)) == .orderedAscending }
+    }
+
+    private func languageName(_ code: String) -> String {
+        SpokenLanguage.name(for: code, language: LocalizationManager.shared.language)
+    }
+
+    private func toggleLanguage(_ code: String) {
+        if selectedLanguages.contains(code) { selectedLanguages.remove(code) }
+        else { selectedLanguages.insert(code) }
+    }
+
     /// 多选标签：选中用描边 + 对勾表示，不单靠颜色。不放国旗——语言不等于国家。
-    private func languageChip(_ lang: SpokenLanguage) -> some View {
-        let selected = selectedLanguages.contains(lang)
+    private func languageChip(code: String, name: String) -> some View {
+        let selected = selectedLanguages.contains(code)
         return Button {
-            if selected { selectedLanguages.remove(lang) }
-            else { selectedLanguages.insert(lang) }
+            toggleLanguage(code)
         } label: {
             HStack(spacing: Theme.Space.xs) {
                 if selected {
@@ -87,8 +130,10 @@ struct StudentSignupView: View {
                         .font(.footnote.weight(.bold))
                         .accessibilityHidden(true)
                 }
-                Text(NSLocalizedString(lang.localizationKey, comment: ""))
+                Text(name)
                     .font(.subheadline.weight(selected ? .semibold : .regular))
+                    .multilineTextAlignment(.leading)
+                    .fixedSize(horizontal: false, vertical: true)
             }
             .foregroundStyle(selected ? Theme.primary : Theme.textPrimary)
             .padding(.horizontal, Theme.Space.m)
@@ -101,6 +146,7 @@ struct StudentSignupView: View {
         }
         .buttonStyle(.plain)
         .accessibilityAddTraits(selected ? .isSelected : [])
+        .accessibilityIdentifier("signup.language.\(code)")
     }
 
     @ViewBuilder
@@ -127,7 +173,7 @@ struct StudentSignupView: View {
         NavigationLink {
             let typed = nickname.trimmingCharacters(in: .whitespacesAndNewlines)
             EmailLoginView(nickname: typed.isEmpty ? nil : typed,
-                           languages: Array(selectedLanguages))
+                           languages: selectedLanguages.sorted())
         } label: {
             Label(NSLocalizedString("signup_email_option", comment: ""), systemImage: "envelope")
                 .frame(maxWidth: .infinity, minHeight: 28)
@@ -170,7 +216,7 @@ struct StudentSignupView: View {
             // 拿不到时照旧登录：过渡期服务端仍放行，之后由服务端决定
             let token = cred.identityToken.flatMap { String(data: $0, encoding: .utf8) }
             submit(appleUserID: cred.user, identityToken: token, nickname: finalName,
-                   languages: Array(selectedLanguages))
+                   languages: selectedLanguages.sorted())
 
         case .failure(let error):
             // 用户主动取消不算错误：停在本页，登录按钮仍在，可重试，也可返回上一步
@@ -183,7 +229,7 @@ struct StudentSignupView: View {
     }
 
     private func submit(appleUserID: String, identityToken: String?, nickname: String?,
-                        languages: [SpokenLanguage]) {
+                        languages: [String]) {
         errorMessage = nil
         isLoading = true
         Task {

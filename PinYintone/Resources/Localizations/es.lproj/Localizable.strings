@@ -23,6 +23,7 @@
 "lang_italian" = "Italiano";
 "lang_amazigh" = "Tamazight";
 "lang_other" = "Otro";
+"signup_languages_search" = "Buscar otros idiomas";
 "teacher_signup_subtitle" = "Crea tu cuenta docente.\nSe generará un código de clase único para tu alumnado.";
 "teacher_signup_name" = "Nombre completo";
 "teacher_signup_email" = "Correo electrónico";

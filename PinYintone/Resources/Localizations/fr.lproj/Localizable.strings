@@ -30,6 +30,7 @@
 "lang_italian" = "Italien";
 "lang_amazigh" = "Tamazight";
 "lang_other" = "Autre";
+"signup_languages_search" = "Rechercher une autre langue";
 
 // Teacher signup
 "teacher_signup_subtitle" = "Créez votre compte enseignant.\nUn code de classe unique sera généré pour vos étudiants.";

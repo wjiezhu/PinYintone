@@ -9,7 +9,9 @@ struct UserProfile: Codable {
     var teacherEmail: String?      // 仅 teacher 角色
     var teacherToken: String?      // JWT Bearer Token；仅 teacher 角色
     var nativeLanguage: String?    // fr / darija / mixed（旧字段，保留兼容）
-    /// 学习者会说的语言（多选，SpokenLanguage.rawValue）。母语迁移分析用。
+    /// 学习者会说的语言（多选）。母语迁移分析用。
+    /// 2.1（构建 23）之后的版本存 ISO 639 代码（另有 `other`）；2.1 及更早是自定代码，
+    /// 对照见 `SpokenLanguage.legacyCodes`
     /// 旧档案无此字段，解码时默认空数组。
     var spokenLanguages: [String]?
     var registeredAt: Date

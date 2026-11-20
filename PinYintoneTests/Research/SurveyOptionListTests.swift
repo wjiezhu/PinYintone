@@ -230,4 +230,46 @@ final class SurveyOptionListTests: XCTestCase {
                                     status: "partial", startedAt: nil, submittedAt: nil)
         XCTAssertEqual(outcome.nationalities, ["DZ", "FR"])
     }
+
+    // MARK: - 注册页「会说的语言」
+
+    /// 注册页的预置项都是 ISO 639 代码（「其他」除外），与问卷语言题同一张表
+    func testSignupPresetsAreISO639Codes() throws {
+        let list = try XCTUnwrap(SurveyOptionLists.list(SpokenLanguage.listSource))
+        XCTAssertEqual(list.kind, .language)
+        let codes = SpokenLanguage.presets.map(\.code)
+        XCTAssertEqual(Set(codes).count, codes.count, "预置项不重复")
+        XCTAssertEqual(codes.last, "other", "「其他」排最后")
+        for code in codes.dropLast() {
+            XCTAssertTrue(list.codes.contains(code), code)
+        }
+        XCTAssertEqual(Array(codes.prefix(2)), ["ary", "fr"], "摩洛哥被试的常见语言优先")
+    }
+
+    /// 2.1 及更早注册页的自定代码都对到预置项；旧代码与 ISO 代码不撞，混在一起也分得清
+    func testLegacySignupCodesMapOntoPresets() throws {
+        let list = try XCTUnwrap(SurveyOptionLists.list(SpokenLanguage.listSource))
+        let presets = Set(SpokenLanguage.presets.map(\.code))
+        let legacy = ["darija", "arabic", "amazigh", "french", "english", "spanish", "italian"]
+        XCTAssertEqual(Set(SpokenLanguage.legacyCodes.keys), Set(legacy))
+        for code in legacy {
+            XCTAssertFalse(list.codes.contains(code), "旧代码与 ISO 代码撞了：\(code)")
+            XCTAssertTrue(presets.contains(SpokenLanguage.canonicalCode(code)), code)
+        }
+        XCTAssertEqual(SpokenLanguage.canonicalCode("arabic"), "arb")
+        XCTAssertEqual(SpokenLanguage.canonicalCode("other"), "other", "「其他」两版相同")
+        XCTAssertEqual(SpokenLanguage.canonicalCode("fr"), "fr", "已是 ISO 代码的不动")
+    }
+
+    /// 预置项用本地化名（完整列表里也一样），其余代码由系统给名
+    func testSignupLanguageNames() {
+        XCTAssertEqual(SpokenLanguage.name(for: "ary", language: "en"),
+                       NSLocalizedString("lang_darija", comment: ""))
+        XCTAssertEqual(SpokenLanguage.presetNames["ber"], NSLocalizedString("lang_amazigh", comment: ""))
+        XCTAssertEqual(SpokenLanguage.name(for: "de", language: "en"), "German")
+        XCTAssertEqual(SpokenLanguage.name(for: "de", language: "fr"), "Allemand")
+        let rows = SurveyOptionLists.rows(source: SpokenLanguage.listSource, language: "en",
+                                          overrides: SpokenLanguage.presetNames)
+        XCTAssertEqual(rows.first { $0.code == "ary" }?.name, NSLocalizedString("lang_darija", comment: ""))
+    }
 }

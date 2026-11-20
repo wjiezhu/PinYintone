@@ -32,6 +32,7 @@
 "lang_italian" = "الإيطالية";
 "lang_amazigh" = "الأمازيغية";
 "lang_other" = "أخرى";
+"signup_languages_search" = "البحث عن لغة أخرى";
 
 // تسجيل الأستاذ
 "teacher_signup_subtitle" = "أنشئ حساب الأستاذ.\nسيتم إنشاء رمز فصل فريد لطلابك تلقائياً.";
